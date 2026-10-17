@@ -77,6 +77,10 @@ document.Paragraphs[3].Range.Delete();
 
 These use points like `Font` and `ParagraphFormat`: `Row.Height`, `Row.HeightRule` (`Auto`, `AtLeast`, `Exactly`), `Row.HeadingFormat`, `Row.AllowBreakAcrossPages`, `Cell.VerticalAlignment`, `Cell.BackgroundColor` (six hex digits), `Table.Alignment`, `Table.PreferredWidth` (null unless a fixed width) and `Column.Index`. `Column.Delete` removes the grid column and the cell at its position in every row; it throws `NotSupportedException` for tables with horizontally merged cells. Cell and table borders are not implemented yet.
 
+## Bookmarks and comments
+
+`Bookmarks.Add(name, range)` bookmarks a paragraph, table cell, bookmark or comment range (an existing bookmark of the same name is moved), and `Bookmarks.Exists(name)` and `Bookmarks["name"]` ignore case. Names follow Word's rules: a letter first, then letters, digits and underscores, at most 40 characters. `Comment.Text` can be set (it replaces the body of the comment), `Comment.Date` is UTC, and `Comment.Delete()` removes the comment together with its range markers and reference.
+
 ## Build and test
 
 ```bash
