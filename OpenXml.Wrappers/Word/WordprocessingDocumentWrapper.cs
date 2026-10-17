@@ -103,6 +103,26 @@ public class WordprocessingDocumentWrapper : IDisposable
         //Flush any changes held in the part trees so that the copy contains them.
         _wordprocessingDocument.Save();
         WordprocessingDocument copy = _wordprocessingDocument.Clone(path, true);
+
+        //Clone does not carry over the core properties (title, author and so on), so copy them.
+#pragma warning disable OOXML0001 // Only the name of the experimental interface is used; the properties themselves are not marked.
+        IPackageProperties from = _wordprocessingDocument.PackageProperties;
+        IPackageProperties to = copy.PackageProperties;
+#pragma warning restore OOXML0001
+        to.Title = from.Title;
+        to.Subject = from.Subject;
+        to.Creator = from.Creator;
+        to.Keywords = from.Keywords;
+        to.Description = from.Description;
+        to.Category = from.Category;
+        to.LastModifiedBy = from.LastModifiedBy;
+        to.ContentStatus = from.ContentStatus;
+        to.Language = from.Language;
+        to.Version = from.Version;
+        to.Revision = from.Revision;
+        to.Created = from.Created;
+        to.Modified = from.Modified;
+        to.LastPrinted = from.LastPrinted;
         return new WordprocessingDocumentWrapper(copy);
     }
 
@@ -324,6 +344,30 @@ public class WordprocessingDocumentWrapper : IDisposable
     public ParagraphWrapperCollection Paragraphs
     {
         get { return new ParagraphWrapperCollection(new RangeWrapper(_wordprocessingDocument.MainDocumentPart.Document)); }
+    }
+
+    /// <summary>
+    /// The sections of the document. A document always has at least one.
+    /// </summary>
+    public SectionWrapperCollection Sections
+    {
+        get { return new SectionWrapperCollection(_wordprocessingDocument.MainDocumentPart.Document.Body); }
+    }
+
+    /// <summary>
+    /// The styles of the document.
+    /// </summary>
+    public StyleWrapperCollection Styles
+    {
+        get { return new StyleWrapperCollection(_wordprocessingDocument.MainDocumentPart); }
+    }
+
+    /// <summary>
+    /// The built-in properties of the document (title, author and so on).
+    /// </summary>
+    public DocumentPropertiesWrapper BuiltInDocumentProperties
+    {
+        get { return new DocumentPropertiesWrapper(_wordprocessingDocument); }
     }
 
     public CommentWrapperCollection Comments

@@ -79,6 +79,12 @@ These use points like `Font` and `ParagraphFormat`: `Row.Height`, `Row.HeightRul
 
 `Table.Borders` and `Cell.Borders` work like Word's: `Borders[BorderPosition.Top]` is a border with `LineStyle`, `LineWidth` (points, 0.25 to 12) and `Color` (hex or "auto"), and `SetOutside` / `SetInside` set several at once. Positions are `Top`, `Left`, `Bottom`, `Right`, `Horizontal` and `Vertical` (the lines between rows and columns), plus the two diagonals for cells only. Setting `LineStyle` to `None` writes an explicit "no border"; `Clear()` removes the direct setting so the table style applies. Only direct formatting is read, so a border that comes from a table style reads as `None`. `Row.SetTopBorder` and `SetBottomBorder` still work as before.
 
+## Sections, styles and document properties
+
+- `document.Sections` lists the sections in order (a document always has at least one). `Section.PageSetup` has `PageWidth`, `PageHeight`, `Orientation` (changing it swaps the size, as Word does), `TopMargin`, `BottomMargin`, `LeftMargin`, `RightMargin`, `Gutter`, `HeaderDistance`, `FooterDistance`, `SectionStart` and `DifferentFirstPageHeaderFooter`, all in points. A section without a setting reads Word's defaults (Letter, 72 point margins) and writes the setting when you set it.
+- `document.Styles` lists the styles (`Name`, `StyleId`, `Type`, `BuiltIn`, `BaseStyle`, `NextParagraphStyle`), looks them up by name or id, and has `Add(name, type)` and `Delete(style)`. Built-in and default styles cannot be deleted; deleting a style removes the references to it. Style formatting is not exposed.
+- `document.BuiltInDocumentProperties` has `Title`, `Subject`, `Author`, `Keywords`, `Comments`, `Category`, `LastAuthor`, `CreationDate`, `LastSaveTime`, `Company` and `Manager`. Custom properties are not implemented.
+
 ## Table structure
 
 - `Tables.Add(range, numRows, numColumns)` inserts an empty table with single 0.5 point borders immediately **before** the range (a paragraph, table, cell, bookmark, comment or the whole document) and fills the width between the margins or of the cell. Unlike Word it does not replace the text of the range.
