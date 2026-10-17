@@ -14,6 +14,31 @@ public class TableWrapperCollectionTest : System.IDisposable
         _document1 = WordprocessingDocumentWrapper.Open(TestFile.Document1);
     }
 
+    [Fact]
+    public void TablesOfABookmarkRangeAreTheTablesItSpans()
+    {
+        Table inner = new Table(new TableRow(new TableCell(new Paragraph())));
+        Table outer = new Table(new TableRow(new TableCell(inner, new Paragraph())));
+        BookmarkStart start = new BookmarkStart() { Id = "1", Name = "a" };
+        BookmarkEnd end = new BookmarkEnd() { Id = "1" };
+        Body body = new Body(new Paragraph(start), outer, new Paragraph(end));
+
+        TableWrapperCollection tables = new RangeWrapper(start, end).Tables;
+
+        Assert.Equal(1, tables.Count);
+        Assert.Same(outer, tables[0].Table);
+    }
+
+    [Fact]
+    public void TablesOfABookmarkRangeWithNoTablesIsEmpty()
+    {
+        BookmarkStart start = new BookmarkStart() { Id = "1", Name = "a" };
+        BookmarkEnd end = new BookmarkEnd() { Id = "1" };
+        Body body = new Body(new Paragraph(start, new Run(new Text("a")), end));
+
+        Assert.Equal(0, new RangeWrapper(start, end).Tables.Count);
+    }
+
     public void Dispose()
     {
         _document1.Close();

@@ -83,6 +83,14 @@ public class WordprocessingDocumentWrapper
         mainDocumentPart.WordprocessingCommentsPart.Comments = new Comments();
     }
 
+    private static void CopyPartData(OpenXmlPart fromPart, OpenXmlPart toPart)
+    {
+        using (Stream stream = fromPart.GetStream(FileMode.Open))
+        {
+            toPart.FeedData(stream);
+        }
+    }
+
     public void CopyAllPartsTo(WordprocessingDocumentWrapper wordprocessingDocumentWrapper)
     {
         MainDocumentPart fromMainDocumentPart = _wordprocessingDocument.MainDocumentPart;
@@ -92,56 +100,56 @@ public class WordprocessingDocumentWrapper
         if (fromThemePart != null)
         {
             ThemePart toThemePart = toMainDocumentPart.AddNewPart<ThemePart>();
-            toThemePart.FeedData(fromThemePart.GetStream(FileMode.Open));
+            CopyPartData(fromThemePart, toThemePart);
         }
 
         FontTablePart fromFontTablePart = fromMainDocumentPart.FontTablePart;
         if (fromFontTablePart != null)
         {
             FontTablePart toFontTablePart = toMainDocumentPart.AddNewPart<FontTablePart>();
-            toFontTablePart.FeedData(fromFontTablePart.GetStream(FileMode.Open));
+            CopyPartData(fromFontTablePart, toFontTablePart);
         }
 
         StyleDefinitionsPart fromStyleDefinitionsPart = fromMainDocumentPart.StyleDefinitionsPart;
         if (fromStyleDefinitionsPart != null)
         {
             StyleDefinitionsPart toStyleDefinitionsPart = toMainDocumentPart.AddNewPart<StyleDefinitionsPart>();
-            toStyleDefinitionsPart.FeedData(fromStyleDefinitionsPart.GetStream(FileMode.Open));
+            CopyPartData(fromStyleDefinitionsPart, toStyleDefinitionsPart);
         }
 
         NumberingDefinitionsPart fromNumberingDefinitionsPart = fromMainDocumentPart.NumberingDefinitionsPart;
         if (fromNumberingDefinitionsPart != null)
         {
             NumberingDefinitionsPart toNumberingDefinitionsPart = toMainDocumentPart.AddNewPart<NumberingDefinitionsPart>();
-            toNumberingDefinitionsPart.FeedData(fromNumberingDefinitionsPart.GetStream(FileMode.Open));
+            CopyPartData(fromNumberingDefinitionsPart, toNumberingDefinitionsPart);
         }
 
         FootnotesPart fromFootnotesPart = fromMainDocumentPart.FootnotesPart;
         if (fromFootnotesPart != null)
         {
             FootnotesPart toFootnotesPart = toMainDocumentPart.AddNewPart<FootnotesPart>();
-            toFootnotesPart.FeedData(fromFootnotesPart.GetStream(FileMode.Open));
+            CopyPartData(fromFootnotesPart, toFootnotesPart);
         }
 
         EndnotesPart fromEndnotesPart = fromMainDocumentPart.EndnotesPart;
         if (fromEndnotesPart != null)
         {
             EndnotesPart toEndnotesPart = toMainDocumentPart.AddNewPart<EndnotesPart>();
-            toEndnotesPart.FeedData(fromEndnotesPart.GetStream(FileMode.Open));
+            CopyPartData(fromEndnotesPart, toEndnotesPart);
         }
 
         DocumentSettingsPart fromDocumentSettingsPart = fromMainDocumentPart.DocumentSettingsPart;
         if (fromDocumentSettingsPart != null)
         {
             DocumentSettingsPart toDocumentSettingsPart = toMainDocumentPart.AddNewPart<DocumentSettingsPart>();
-            toDocumentSettingsPart.FeedData(fromDocumentSettingsPart.GetStream(FileMode.Open));
+            CopyPartData(fromDocumentSettingsPart, toDocumentSettingsPart);
         }
 
         WebSettingsPart fromWebSettingsPart = fromMainDocumentPart.WebSettingsPart;
         if (fromWebSettingsPart != null)
         {
             WebSettingsPart toWebSettingsPart = toMainDocumentPart.AddNewPart<WebSettingsPart>();
-            toWebSettingsPart.FeedData(fromWebSettingsPart.GetStream(FileMode.Open));
+            CopyPartData(fromWebSettingsPart, toWebSettingsPart);
         }
 
         //Copy the header parts to the target document with the same part id's
@@ -149,7 +157,7 @@ public class WordprocessingDocumentWrapper
         {
             string fromHeaderPartId = fromMainDocumentPart.GetIdOfPart(fromHeaderPart);
             HeaderPart toHeaderPart = toMainDocumentPart.AddNewPart<HeaderPart>(fromHeaderPartId);
-            toHeaderPart.FeedData(fromHeaderPart.GetStream(FileMode.Open));
+            CopyPartData(fromHeaderPart, toHeaderPart);
         }
 
         //Copy the footer parts to the target document with the same part id's
@@ -157,7 +165,7 @@ public class WordprocessingDocumentWrapper
         {
             string fromFooterPartId = fromMainDocumentPart.GetIdOfPart(fromFooterPart);
             FooterPart toFooterPart = toMainDocumentPart.AddNewPart<FooterPart>(fromFooterPartId);
-            toFooterPart.FeedData(fromFooterPart.GetStream(FileMode.Open));
+            CopyPartData(fromFooterPart, toFooterPart);
         }
     }
 
@@ -204,7 +212,7 @@ public class WordprocessingDocumentWrapper
                 string toId = toMainDocumentPart.GetIdOfPart(toHeaderPart);
 
                 //Feed the targer header part with the source header part
-                toHeaderPart.FeedData(fromHeaderPart.GetStream(FileMode.Open));
+                CopyPartData(fromHeaderPart, toHeaderPart);
 
                 //Update the header reference with the new id
                 headerReference.Id = toId;
@@ -221,7 +229,7 @@ public class WordprocessingDocumentWrapper
                 string toId = toMainDocumentPart.GetIdOfPart(toFooterPart);
 
                 //Feed the targer footer part with the source footer part
-                toFooterPart.FeedData(fromFooterPart.GetStream(FileMode.Open));
+                CopyPartData(fromFooterPart, toFooterPart);
 
                 //Update the footer reference with the new id
                 footerReference.Id = toId;

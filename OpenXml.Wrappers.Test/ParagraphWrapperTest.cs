@@ -118,6 +118,18 @@ public class ParagraphWrapperTest : System.IDisposable
     }
 
     [Fact]
+    public void ParagraphTextAndRangeTextSettersAgreeOnLineBreaks()
+    {
+        Paragraph viaParagraph = new Paragraph();
+        Paragraph viaRange = new Paragraph();
+        new ParagraphWrapper(viaParagraph).Text = "a\nb\tc";
+        new ParagraphWrapper(viaRange).Range.Text = "a\nb\tc";
+
+        Assert.Equal(new ParagraphWrapper(viaRange).Range.Text, new ParagraphWrapper(viaParagraph).Range.Text);
+        Assert.Equal("a\vb\tc\r", new ParagraphWrapper(viaParagraph).Range.Text);
+    }
+
+    [Fact]
     public void SettingTextToNullClearsTheParagraph()
     {
         Paragraph paragraph = new Paragraph(new Run(new Text("abc")));

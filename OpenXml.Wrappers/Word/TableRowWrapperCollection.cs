@@ -62,11 +62,23 @@ public class TableRowWrapperCollection : IEnumerable
 
     public TableRowWrapper Add()
     {
-        //Get the last row in the table.
-        TableRow lastTableRow = ((Table)_range.Start).Elements<TableRow>().Last();
+        Table table = _range.Start as Table;
+        if (table == null)
+        {
+            throw new InvalidOperationException("Rows can only be added to a collection of the rows of a table.");
+        }
 
-        //Clone a copy of the last table row and add it as the new last row in the table.
+        //Get the last row in the table.
+        TableRow lastTableRow = table.Elements<TableRow>().LastOrDefault();
+        if (lastTableRow == null)
+        {
+            throw new InvalidOperationException("A row cannot be added to a table that has no rows to use as a template.");
+        }
+
+        //Clone a copy of the last table row and add it as the new last row in the table. The clone must not carry any of the bookmark or
+        //comment anchors of the original since their ids would be duplicated.
         TableRow tableRow = (TableRow)lastTableRow.Clone();
+        tableRow.RemoveAnchors();
         tableRow.ClearText();
         lastTableRow.InsertAfterSelf(tableRow);
 

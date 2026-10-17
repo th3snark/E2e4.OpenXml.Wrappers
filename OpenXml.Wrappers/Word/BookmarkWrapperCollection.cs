@@ -80,13 +80,13 @@ public class BookmarkWrapperCollection : IEnumerable
 
     private sealed class BookmarkWrapperEnumerator : IEnumerator, IDisposable
     {
-        private BookmarkWrapperCollection _bookmarklWrapperCollection;
+        private BookmarkWrapperCollection _bookmarkWrapperCollection;
         private int _index;
         private BookmarkWrapper _current;
 
         public BookmarkWrapperEnumerator(BookmarkWrapperCollection bookmarkWrapperCollection)
         {
-            _bookmarklWrapperCollection = bookmarkWrapperCollection;
+            _bookmarkWrapperCollection = bookmarkWrapperCollection;
             _index = -1;
             _current = null;
         }
@@ -100,10 +100,10 @@ public class BookmarkWrapperCollection : IEnumerable
 
         public bool MoveNext()
         {
-            if (++_index >= _bookmarklWrapperCollection.Count)
+            if (++_index >= _bookmarkWrapperCollection.Count)
                 return false;
             else
-                _current = _bookmarklWrapperCollection[_index];
+                _current = _bookmarkWrapperCollection[_index];
             return true;
         }
 
@@ -119,7 +119,7 @@ public class BookmarkWrapperCollection : IEnumerable
 
         public void Dispose()
         {
-            _bookmarklWrapperCollection = null;
+            _bookmarkWrapperCollection = null;
             _current = null;
             _index = -1;
         }

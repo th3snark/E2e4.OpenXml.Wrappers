@@ -29,7 +29,7 @@ public class ParagraphWrapper
     public string Text
     {
         get { return Range.Text.Trim(new char[] { '\r' }); }
-        set { _paragraph.SetText(value); }
+        set { Range.Text = value; }
     }
 
     public int SpaceBefore

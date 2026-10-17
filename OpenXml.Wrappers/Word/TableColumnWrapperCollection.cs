@@ -44,18 +44,42 @@ public class TableColumnWrapperCollection : IEnumerable
 
     public TableColumnWrapper Add()
     {
+        Table table = _range.Start as Table;
+        if (table == null)
+        {
+            throw new InvalidOperationException("Columns can only be added to a collection of the columns of a table.");
+        }
+
         //Get the table grid of table.
-        TableGrid tableGrid = ((Table)_range.Start).Elements<TableGrid>().First();
+        TableGrid tableGrid = table.Elements<TableGrid>().First();
+        if (tableGrid.LastChild == null)
+        {
+            throw new InvalidOperationException("A column cannot be added to a table that has no columns to use as a template.");
+        }
 
         //Clone a copy of the last grid column and add it as the new last grid column to table grid.
         GridColumn gridColumn = (GridColumn)tableGrid.LastChild.Clone();
         tableGrid.Append(gridColumn);
+        int gridWidth = gridColumn.Width == null ? 0 : Convert.ToInt32(gridColumn.Width.Value, CultureInfo.InvariantCulture);
 
-        //Add a cloned copy of the last table cell in each table row to the end of each table row.
-        foreach (TableRow tableRow in ((Table)_range.Start).Elements<TableRow>())
+        //Add an empty copy of the last table cell in each table row to the end of each table row. The new cell spans just the new grid
+        //column, has the width of that column, and does not carry over the text or the bookmark and comment anchors of the original.
+        foreach (TableRow tableRow in table.Elements<TableRow>())
         {
-            TableCell lastTableCell = (TableCell)tableRow.Elements<TableCell>().Last();
+            TableCell lastTableCell = tableRow.Elements<TableCell>().LastOrDefault();
+            if (lastTableCell == null)
+            {
+                continue;
+            }
+
             TableCell tableCell = (TableCell)lastTableCell.Clone();
+            tableCell.RemoveAnchors();
+            tableCell.ClearText();
+            tableCell.SetGridSpan(1);
+            if (gridWidth > 0)
+            {
+                tableCell.SetWidth(gridWidth, TableWidthUnitValues.Dxa);
+            }
             lastTableCell.InsertAfterSelf(tableCell);
         }
 
@@ -75,13 +99,13 @@ public class TableColumnWrapperCollection : IEnumerable
 
     private sealed class GridColumnWrapperEnumerator : IEnumerator, IDisposable
     {
-        private TableColumnWrapperCollection _commentWrapperCollection;
+        private TableColumnWrapperCollection _tableColumnWrapperCollection;
         private int _index;
         private TableColumnWrapper _current;
 
-        public GridColumnWrapperEnumerator(TableColumnWrapperCollection commentWrapperCollection)
+        public GridColumnWrapperEnumerator(TableColumnWrapperCollection tableColumnWrapperCollection)
         {
-            _commentWrapperCollection = commentWrapperCollection;
+            _tableColumnWrapperCollection = tableColumnWrapperCollection;
             _index = -1;
             _current = null;
         }
@@ -95,10 +119,10 @@ public class TableColumnWrapperCollection : IEnumerable
 
         public bool MoveNext()
         {
-            if (++_index >= _commentWrapperCollection.Count)
+            if (++_index >= _tableColumnWrapperCollection.Count)
                 return false;
             else
-                _current = _commentWrapperCollection[_index];
+                _current = _tableColumnWrapperCollection[_index];
             return true;
         }
 
@@ -114,7 +138,7 @@ public class TableColumnWrapperCollection : IEnumerable
 
         public void Dispose()
         {
-            _commentWrapperCollection = null;
+            _tableColumnWrapperCollection = null;
             _current = null;
             _index = -1;
         }

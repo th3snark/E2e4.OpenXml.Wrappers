@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 using DocumentFormat.OpenXml.Wordprocessing;
 
@@ -48,6 +49,18 @@ public class TableWrapperCollection : IEnumerable
 
     private IList<Table> GetElementList()
     {
+        if (_rangeWrapper.Start is BookmarkStart)
+        {
+            //The tables touched by the bookmark. Where tables are nested only the outermost ones are returned, as for any other range.
+            IList<Table> tables = _rangeWrapper.Start.GetElements<Table>(_rangeWrapper.End).ToList();
+            if (tables.Count > 0)
+            {
+                int outermostLevel = tables.Min(e => e.NestingLevel<Table>());
+                tables = tables.Where(e => e.NestingLevel<Table>() == outermostLevel).ToList();
+            }
+            return tables;
+        }
+
         return _rangeWrapper.Start.DescendantsAtRelativeNestingLevel<Table>(1);
     }
 

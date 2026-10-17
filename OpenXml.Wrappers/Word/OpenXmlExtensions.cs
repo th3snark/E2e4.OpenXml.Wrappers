@@ -241,6 +241,32 @@ public static class OpenXmlExtensions
 
     #endregion
 
+    #region Anchor Routines
+
+    /// <summary>
+    /// Removes the bookmark and comment anchors from within the element. This is used on cloned content so that the clone does not
+    /// duplicate the ids of the anchors in the original (the ids must be unique in a document).
+    /// </summary>
+    internal static void RemoveAnchors(this OpenXmlElement openXmlElement)
+    {
+        IList<OpenXmlElement> anchors = openXmlElement
+            .Descendants()
+            .Where(e => e is BookmarkStart || e is BookmarkEnd || e is CommentRangeStart || e is CommentRangeEnd || e is CommentReference)
+            .ToList();
+        foreach (OpenXmlElement anchor in anchors)
+        {
+            //A comment reference lives in a run of its own, so remove the run as well if nothing else is left in it.
+            OpenXmlElement parent = anchor.Parent;
+            anchor.Remove();
+            if (anchor is CommentReference && parent is Run && !parent.Elements().Any(e => !(e is RunProperties)))
+            {
+                parent.Remove();
+            }
+        }
+    }
+
+    #endregion
+
     #region Run Routines
 
     public static bool IsLastWithText(this Run run)
@@ -637,7 +663,7 @@ public static class OpenXmlExtensions
         }
     }
 
-    private static void SetGridSpan(this TableCell tableCell, int span)
+    internal static void SetGridSpan(this TableCell tableCell, int span)
     {
         if (span < 1)
         {
@@ -721,10 +747,8 @@ public static class OpenXmlExtensions
         {
             tableCell.TableCellProperties = tableCellProperties;
         }
-        if (firstParagraph != null)
-        {
-            tableCell.AppendChild(firstParagraph);
-        }
+        //A table cell must always end with a paragraph so add an empty one if the cell did not have any.
+        tableCell.AppendChild(firstParagraph ?? new Paragraph());
     }
 
     #endregion
@@ -918,6 +942,7 @@ public static class OpenXmlExtensions
                     paragraph.PrependRun(run);
                     break;
 
+                case '\n':
                 case '\v':
                     run = new Run(new Break());
                     if (sb.Length > 0)
