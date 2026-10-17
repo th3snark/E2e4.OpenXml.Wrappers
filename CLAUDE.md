@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-A C# library (`OpenXml.Wrappers`, namespace `OpenXml.Wrappers.Word`) that wraps the Open XML SDK's WordprocessingML types to give a Word-object-model-like API (`Range`, `Paragraphs`, `Tables`, `Bookmarks`, `Comments`, etc.). Solution file: `E2e4.OpenXml.Wrappers.slnx`. Hosted in the private GitHub repo `th3snark/E2e4.OpenXml.Wrappers` (default branch `main`). See `README.md` for usage. There is no CI workflow.
+A C# library (`OpenXml.Wrappers`, namespace `OpenXml.Wrappers.Word`) that wraps the Open XML SDK's WordprocessingML types to give a Word-object-model-like API (`Range`, `Paragraphs`, `Tables`, `Bookmarks`, `Comments`, etc.). Solution file: `E2e4.OpenXml.Wrappers.slnx`. Hosted in the private GitHub repo `th3snark/E2e4.OpenXml.Wrappers` (default branch `main`). See `README.md` for usage. CI is `.github/workflows/ci.yml` (format check, Release build with warnings as errors, tests, pack to an artifact only; nothing is published to NuGet by it).
 
 ## Build & test
 

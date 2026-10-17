@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build, test and pack
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      # CI=true is set by GitHub Actions, so warnings are errors (see Directory.Build.props).
+      - name: Restore
+        run: dotnet restore E2e4.OpenXml.Wrappers.slnx
+
+      - name: Check formatting
+        run: dotnet format E2e4.OpenXml.Wrappers.slnx --verify-no-changes --no-restore
+
+      - name: Build
+        run: dotnet build E2e4.OpenXml.Wrappers.slnx --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test E2e4.OpenXml.Wrappers.slnx --configuration Release --no-build --logger trx --results-directory TestResults
+
+      - name: Pack (not published)
+        run: dotnet pack OpenXml.Wrappers/OpenXml.Wrappers.csproj --configuration Release --no-build --output artifacts
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults
+
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-package
+          path: artifacts/*
+          if-no-files-found: error
+
+  vulnerabilities:
+    name: Vulnerable packages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Check for vulnerable or deprecated packages
+        shell: bash
+        run: |
+          dotnet restore E2e4.OpenXml.Wrappers.slnx
+          dotnet list E2e4.OpenXml.Wrappers.slnx package --vulnerable --include-transitive 2>&1 | tee vuln.log
+          if grep -q "has the following vulnerable packages" vuln.log; then exit 1; fi

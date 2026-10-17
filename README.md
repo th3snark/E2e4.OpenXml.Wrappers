@@ -1,5 +1,7 @@
 # E2e4.OpenXml.Wrappers
 
+[![CI](https://github.com/th3snark/E2e4.OpenXml.Wrappers/actions/workflows/ci.yml/badge.svg)](https://github.com/th3snark/E2e4.OpenXml.Wrappers/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 <img src="assets/icon.png" alt="E2e4.OpenXml.Wrappers icon" width="96" align="right" />
 
 A .NET library that wraps the [Open XML SDK](https://github.com/dotnet/Open-XML-SDK) WordprocessingML types in a Word-object-model-like API: `Range`, `Paragraphs`, `Tables`, `Bookmarks`, `Comments` and friends.
