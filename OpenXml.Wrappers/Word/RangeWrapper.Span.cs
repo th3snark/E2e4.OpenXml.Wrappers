@@ -747,7 +747,7 @@ public partial class RangeWrapper
     {
         StoryMap map = SplitAtBoundaries(out int start, out int end);
         return map.AtomsIn(start, end)
-            .Where(a => !a.IsMark)
+            .Where(a => !a.IsMark && !a.IsSimpleFieldPart)
             .Select(a => (Run)a.Element.Parent)
             .Distinct()
             .GroupBy(r => r.Ancestors<Paragraph>().First())

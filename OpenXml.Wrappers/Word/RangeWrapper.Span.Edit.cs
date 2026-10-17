@@ -187,12 +187,12 @@ public partial class RangeWrapper
         if (atom == null)
         {
             int before = (index < 0 ? map.Atoms.Count : index) - 1;
-            if (before >= 0 && !map.Atoms[before].IsMark && ParagraphOf(map.Atoms[before]) == ParagraphAt(map, start))
+            if (before >= 0 && !map.Atoms[before].IsMark && !map.Atoms[before].IsSimpleFieldPart && ParagraphOf(map.Atoms[before]) == ParagraphAt(map, start))
             {
                 atom = map.Atoms[before];
             }
         }
-        if (atom == null && index >= 0 && !map.Atoms[index].IsMark)
+        if (atom == null && index >= 0 && !map.Atoms[index].IsMark && !map.Atoms[index].IsSimpleFieldPart)
         {
             atom = map.Atoms[index];
         }
@@ -275,7 +275,7 @@ public partial class RangeWrapper
         Atom previous = previousIndex >= 0 && !map.Atoms[previousIndex].IsMark ? map.Atoms[previousIndex] : null;
         if (previous != null && ParagraphOf(previous) == paragraph)
         {
-            OpenXmlElement anchor = previous.Element.Parent;
+            OpenXmlElement anchor = previous.Top;
             for (int i = runs.Count - 1; i >= 0; i--)
             {
                 anchor.InsertAfterSelf(runs[i]);
@@ -283,7 +283,7 @@ public partial class RangeWrapper
         }
         else if (next != null && !next.IsMark)
         {
-            OpenXmlElement anchor = next.Element.Parent;
+            OpenXmlElement anchor = next.Top;
             foreach (Run run in runs)
             {
                 anchor.InsertBeforeSelf(run);
@@ -313,7 +313,7 @@ public partial class RangeWrapper
         Atom first = index >= 0 && !map.Atoms[index].IsMark ? map.Atoms[index] : null;
         if (first != null)
         {
-            OpenXmlElement top = first.Element.Parent;
+            OpenXmlElement top = first.Top;
             if (top.Parent != paragraph)
             {
                 throw new NotSupportedException("A paragraph cannot be split inside a hyperlink or other element that holds runs.");
@@ -386,12 +386,12 @@ public partial class RangeWrapper
         Atom previous = previousIndex >= 0 && !map.Atoms[previousIndex].IsMark ? map.Atoms[previousIndex] : null;
         if (previous != null && ParagraphOf(previous) == paragraph)
         {
-            previous.Element.Parent.InsertAfterSelf(endMarker);
-            previous.Element.Parent.InsertAfterSelf(startMarker);
+            previous.Top.InsertAfterSelf(endMarker);
+            previous.Top.InsertAfterSelf(startMarker);
         }
         else if (index >= 0 && !map.Atoms[index].IsMark)
         {
-            map.Atoms[index].Element.Parent.InsertBeforeSelf(endMarker);
+            map.Atoms[index].Top.InsertBeforeSelf(endMarker);
             endMarker.InsertBeforeSelf(startMarker);
         }
         else
@@ -448,7 +448,25 @@ public partial class RangeWrapper
         Dictionary<Paragraph, int> paragraphStarts = markParagraphs.ToDictionary(p => p, p => FirstPositionOf(map, p));
 
         //The runs that hold the characters, and everything between them.
-        List<Run> charRuns = remaining.Where(a => !a.IsMark).Select(a => (Run)a.Element.Parent).Distinct().ToList();
+        List<Run> charRuns = remaining.Where(a => !a.IsMark && !a.IsSimpleFieldPart).Select(a => (Run)a.Element.Parent).Distinct().ToList();
+
+        //A field written as one element goes whole, with its result, when any of it is in the range.
+        HashSet<SimpleField> simpleFields = new HashSet<SimpleField>();
+        foreach (Atom atom in remaining)
+        {
+            SimpleField simple = SimpleFieldOf(atom);
+            if (simple != null)
+            {
+                simpleFields.Add(simple);
+            }
+        }
+        foreach (SimpleField simple in simpleFields.ToList())
+        {
+            foreach (SimpleField inner in simple.Descendants<SimpleField>())
+            {
+                simpleFields.Add(inner);
+            }
+        }
         List<OpenXmlElement> toRemove = new List<OpenXmlElement>();
         if (charRuns.Count > 0)
         {
@@ -459,6 +477,7 @@ public partial class RangeWrapper
             ExtendToWholeFields(allRuns, doomed);
             toRemove.AddRange(allRuns.Where(doomed.Contains));
         }
+        toRemove.AddRange(simpleFields);
 
         //Ranges that point into the text that is going (which can be more than the range, when a field is only partly in it) are moved to
         //where it was, before it is removed.
@@ -467,7 +486,12 @@ public partial class RangeWrapper
         int lastGoing = inRange.Count == 0 ? 0 : inRange[inRange.Count - 1].Index;
         foreach (Atom atom in map.Atoms)
         {
-            if (!atom.IsMark && goingRuns.Contains((Run)atom.Element.Parent))
+            if (simpleFields.Count > 0 && simpleFields.Contains(SimpleFieldOf(atom)))
+            {
+                going.Add(atom.Element);
+                lastGoing = Math.Max(lastGoing, atom.Index);
+            }
+            else if (!atom.IsMark && !atom.IsSimpleFieldPart && goingRuns.Contains((Run)atom.Element.Parent))
             {
                 going.Add(atom.Element);
                 lastGoing = Math.Max(lastGoing, atom.Index);
@@ -519,6 +543,24 @@ public partial class RangeWrapper
             next.Remove();
             SpanRegistry.ParagraphMerged(next, head);
         }
+    }
+
+    //The field written as one element that an atom belongs to: its begin, code and separator, its end or the text of its result.
+    private static SimpleField SimpleFieldOf(Atom atom)
+    {
+        if (atom.Kind == AtomKind.FieldCode && atom.Element is SimpleField field)
+        {
+            return field;
+        }
+        if (atom.Kind == AtomKind.FieldMark && !(atom.Element is FieldChar))
+        {
+            return atom.Element.Parent as SimpleField;
+        }
+        if (atom.Kind == AtomKind.Text || atom.Kind == AtomKind.Tab || atom.Kind == AtomKind.Break)
+        {
+            return atom.Element.Ancestors<SimpleField>().FirstOrDefault();
+        }
+        return null;
     }
 
     private static bool IsCellEnd(Paragraph paragraph)

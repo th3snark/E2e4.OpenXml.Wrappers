@@ -55,6 +55,20 @@ internal sealed class Atom
         get { return Kind == AtomKind.ParagraphMark || Kind == AtomKind.RowMark; }
     }
 
+    /// <summary>The child of the paragraph (or of an element round runs) that holds the atom: its run, or the field for a field written as one
+    /// element. New runs go next to it.</summary>
+    public OpenXmlElement Top
+    {
+        get { return Element is SimpleField ? Element : Element.Parent; }
+    }
+
+    /// <summary>True for the begin, code and separator, or the end, of a field written as one element (<c>w:fldSimple</c>), which are not in a
+    /// run and cannot be split.</summary>
+    public bool IsSimpleFieldPart
+    {
+        get { return (Kind == AtomKind.FieldCode && Element is SimpleField) || (Kind == AtomKind.FieldMark && !(Element is FieldChar)); }
+    }
+
     /// <summary>True for the atoms that take up positions but show no text: fields' begin, separator, end and code, and objects.</summary>
     public bool IsHidden
     {
@@ -69,8 +83,8 @@ internal sealed class Atom
 /// and one for each picture, drawing, embedded object, symbol and footnote, endnote or comment reference.
 /// </summary>
 /// <remarks>
-/// A map is a snapshot. Build a new one after the document changes. Fields written as a single element (<c>w:fldSimple</c>) keep their code
-/// in an attribute, so only their result takes up positions.
+/// A map is a snapshot. Build a new one after the document changes. A field written as a single element (<c>w:fldSimple</c>) keeps its code
+/// in an attribute; its begin, code and separator are one piece (with the field as its element) and its end another (with the last child of the field).
 /// </remarks>
 internal sealed class StoryMap
 {
@@ -385,6 +399,23 @@ internal sealed class StoryMap
                     {
                         yield return info;
                     }
+                }
+            }
+            else if (child is SimpleField field)
+            {
+                //As in Word a field has a begin, its code, a separator, its result and an end. This one keeps its code in an attribute, so the
+                //first three are one piece with the field as its element and the end is one piece with the last child of the field as its element
+                //(a field without a result has them all in the first).
+                int codeLength = field.Instruction?.Value?.Length ?? 0;
+                OpenXmlElement last = field.LastChild;
+                yield return new AtomInfo(AtomKind.FieldCode, field, last == null ? codeLength + 3 : codeLength + 2, String.Empty);
+                foreach (AtomInfo info in EnumerateInline(field))
+                {
+                    yield return info;
+                }
+                if (last != null)
+                {
+                    yield return new AtomInfo(AtomKind.FieldMark, last, 1, String.Empty);
                 }
             }
             else if (child is OpenXmlCompositeElement && !(child is Paragraph) && !(child is ParagraphProperties))
@@ -789,7 +820,8 @@ internal sealed class StoryMap
         int index = start >= Length ? Atoms.Count : IndexAt(start);
         for (int i = Math.Max(index, 0); i < Atoms.Count && Atoms[i].Start < end; i++)
         {
-            if (Atoms[i].Start >= start && Atoms[i].End <= end)
+            //The begin, code and separator of a field written as one element cannot be split, so a range that takes in part of them has all.
+            if ((Atoms[i].Start >= start && Atoms[i].End <= end) || (Atoms[i].IsSimpleFieldPart && Atoms[i].End > start))
             {
                 yield return Atoms[i];
             }
@@ -916,7 +948,7 @@ internal sealed class StoryMap
             return this;
         }
         Atom atom = Atoms[index];
-        if (atom.IsMark)
+        if (atom.IsMark || atom.IsSimpleFieldPart)
         {
             return this;
         }
