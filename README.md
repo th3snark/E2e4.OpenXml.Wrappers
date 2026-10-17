@@ -73,6 +73,10 @@ document.Paragraphs[3].Range.Delete();
 
 `Font` and `ParagraphFormat` properties are `null` when the range has mixed values, and setting one to `null` removes the direct formatting. They only see direct formatting, not values inherited from styles.
 
+## Table formatting
+
+These use points like `Font` and `ParagraphFormat`: `Row.Height`, `Row.HeightRule` (`Auto`, `AtLeast`, `Exactly`), `Row.HeadingFormat`, `Row.AllowBreakAcrossPages`, `Cell.VerticalAlignment`, `Cell.BackgroundColor` (six hex digits), `Table.Alignment`, `Table.PreferredWidth` (null unless a fixed width) and `Column.Index`. `Column.Delete` removes the grid column and the cell at its position in every row; it throws `NotSupportedException` for tables with horizontally merged cells. Cell and table borders are not implemented yet.
+
 ## Build and test
 
 ```bash
