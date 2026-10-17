@@ -5,7 +5,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
 
-public class TableColumnWrapper
+public class TableColumnWrapper : System.IEquatable<TableColumnWrapper>
 {
     GridColumn _gridColumn;
 
@@ -39,4 +39,35 @@ public class TableColumnWrapper
             }
         }
     }
+
+    #region Equality
+
+    // Two wrappers are equal when they wrap the same underlying element(s), so a new wrapper obtained for the same item compares equal.
+
+    public override bool Equals(object obj)
+    {
+        return Equals(obj as TableColumnWrapper);
+    }
+
+    public bool Equals(TableColumnWrapper other)
+    {
+        return !ReferenceEquals(other, null) && ReferenceEquals(_gridColumn, other._gridColumn);
+    }
+
+    public override int GetHashCode()
+    {
+        return System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(_gridColumn);
+    }
+
+    public static bool operator ==(TableColumnWrapper left, TableColumnWrapper right)
+    {
+        return ReferenceEquals(left, null) ? ReferenceEquals(right, null) : left.Equals(right);
+    }
+
+    public static bool operator !=(TableColumnWrapper left, TableColumnWrapper right)
+    {
+        return !(left == right);
+    }
+
+    #endregion
 }

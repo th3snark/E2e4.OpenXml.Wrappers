@@ -8,7 +8,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
 
-public class TableWrapperCollection : IEnumerable
+public class TableWrapperCollection : IEnumerable<TableWrapper>
 {
     private RangeWrapper _rangeWrapper;
 
@@ -71,62 +71,19 @@ public class TableWrapperCollection : IEnumerable
 
     #region IEnumerable Members
 
-    public IEnumerator GetEnumerator()
+    public IEnumerator<TableWrapper> GetEnumerator()
     {
-        return new TableWrapperEnumerator(this);
+        //The elements are fetched once for the whole enumeration so that enumerating is linear and so that deleting the
+        //current item while enumerating does not disturb the enumeration.
+        foreach (Table element in GetElementList())
+        {
+            yield return new TableWrapper(element);
+        }
     }
 
-    #endregion
-
-    #region Nested Private Classes
-
-    private sealed class TableWrapperEnumerator : IEnumerator, IDisposable
+    IEnumerator IEnumerable.GetEnumerator()
     {
-        private TableWrapperCollection _tableWrapperCollection;
-        private int _index;
-        private TableWrapper _current;
-
-        public TableWrapperEnumerator(TableWrapperCollection tableWrapperCollection)
-        {
-            _tableWrapperCollection = tableWrapperCollection;
-            _index = -1;
-            _current = null;
-        }
-
-        #region IEnumerator Members
-
-        public object Current
-        {
-            get { return _current; }
-        }
-
-        public bool MoveNext()
-        {
-            if (++_index >= _tableWrapperCollection.Count)
-                return false;
-            else
-                _current = _tableWrapperCollection[_index];
-            return true;
-        }
-
-        public void Reset()
-        {
-            _current = null;
-            _index = -1;
-        }
-
-        #endregion
-
-        #region IDisposable Members
-
-        public void Dispose()
-        {
-            _tableWrapperCollection = null;
-            _current = null;
-            _index = -1;
-        }
-
-        #endregion
+        return GetEnumerator();
     }
 
     #endregion

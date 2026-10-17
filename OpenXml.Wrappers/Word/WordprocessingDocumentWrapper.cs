@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Linq;
 
@@ -7,7 +8,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
 
-public class WordprocessingDocumentWrapper
+public class WordprocessingDocumentWrapper : IDisposable
 {
     private WordprocessingDocument _wordprocessingDocument;
 
@@ -32,23 +33,96 @@ public class WordprocessingDocumentWrapper
         return new WordprocessingDocumentWrapper(wordprocessingDocument);
     }
 
+    /// <summary>
+    /// Opens a document from a stream. The stream must remain open for the life of the document and must be writable when
+    /// <paramref name="isEditable"/> is true.
+    /// </summary>
+    public static WordprocessingDocumentWrapper Open(Stream stream, bool isEditable)
+    {
+        WordprocessingDocument wordprocessingDocument = WordprocessingDocument.Open(stream, isEditable);
+        return new WordprocessingDocumentWrapper(wordprocessingDocument);
+    }
+
+    /// <summary>
+    /// Creates a new document file. When the main document part is added it is initialised with an empty body (see
+    /// <see cref="InitializeMainDocumentPart"/>) and, if requested, an empty comments part (see <see cref="InitializeCommentsPart"/>).
+    /// </summary>
     public static WordprocessingDocumentWrapper Create(string path, bool addMainDocumentPart, bool addWordprocessingCommentsPart)
     {
+        ValidateCreateArguments(addMainDocumentPart, addWordprocessingCommentsPart);
         WordprocessingDocument wordprocessingDocument = WordprocessingDocument.Create(path, WordprocessingDocumentType.Document);
+        return InitializeNewDocument(wordprocessingDocument, addMainDocumentPart, addWordprocessingCommentsPart);
+    }
+
+    /// <summary>
+    /// Creates a new document in a stream. See <see cref="Create(string, bool, bool)"/>.
+    /// </summary>
+    public static WordprocessingDocumentWrapper Create(Stream stream, bool addMainDocumentPart, bool addWordprocessingCommentsPart)
+    {
+        ValidateCreateArguments(addMainDocumentPart, addWordprocessingCommentsPart);
+        WordprocessingDocument wordprocessingDocument = WordprocessingDocument.Create(stream, WordprocessingDocumentType.Document);
+        return InitializeNewDocument(wordprocessingDocument, addMainDocumentPart, addWordprocessingCommentsPart);
+    }
+
+    private static void ValidateCreateArguments(bool addMainDocumentPart, bool addWordprocessingCommentsPart)
+    {
+        if (addWordprocessingCommentsPart && !addMainDocumentPart)
+        {
+            throw new ArgumentException("A comments part can only be added together with a main document part.", nameof(addWordprocessingCommentsPart));
+        }
+    }
+
+    private static WordprocessingDocumentWrapper InitializeNewDocument(WordprocessingDocument wordprocessingDocument, bool addMainDocumentPart, bool addWordprocessingCommentsPart)
+    {
+        WordprocessingDocumentWrapper wrapper = new WordprocessingDocumentWrapper(wordprocessingDocument);
         if (addMainDocumentPart)
         {
-            MainDocumentPart mainDocumentPart = wordprocessingDocument.AddMainDocumentPart();
+            wordprocessingDocument.AddMainDocumentPart();
+            wrapper.InitializeMainDocumentPart();
             if (addWordprocessingCommentsPart)
             {
-                WordprocessingCommentsPart wordprocessingCommentsPart = mainDocumentPart.AddNewPart<WordprocessingCommentsPart>();
+                wrapper.InitializeCommentsPart();
             }
         }
-        return new WordprocessingDocumentWrapper(wordprocessingDocument);
+        return wrapper;
+    }
+
+    /// <summary>
+    /// Saves any changes made to the document to its file or stream. Documents opened as editable also save when closed or disposed.
+    /// </summary>
+    public void Save()
+    {
+        _wordprocessingDocument.Save();
+    }
+
+    /// <summary>
+    /// Saves a copy of the document to a new file and returns a wrapper over the copy. This document remains open and unchanged.
+    /// </summary>
+    public WordprocessingDocumentWrapper SaveAs(string path)
+    {
+        //Flush any changes held in the part trees so that the copy contains them.
+        _wordprocessingDocument.Save();
+        WordprocessingDocument copy = _wordprocessingDocument.Clone(path, true);
+        return new WordprocessingDocumentWrapper(copy);
     }
 
     public void Close()
     {
-        _wordprocessingDocument.Dispose();
+        Dispose();
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _wordprocessingDocument.Dispose();
+        }
     }
 
     public RangeWrapper Range

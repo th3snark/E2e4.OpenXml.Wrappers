@@ -4,7 +4,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
 
-public class TableRowWrapper
+public class TableRowWrapper : System.IEquatable<TableRowWrapper>
 {
     TableRow _tableRow;
 
@@ -115,4 +115,35 @@ public class TableRowWrapper
             bottomBorder.Val = visible ? BorderValues.Single : BorderValues.Nil;
         }
     }
+
+    #region Equality
+
+    // Two wrappers are equal when they wrap the same underlying element(s), so a new wrapper obtained for the same item compares equal.
+
+    public override bool Equals(object obj)
+    {
+        return Equals(obj as TableRowWrapper);
+    }
+
+    public bool Equals(TableRowWrapper other)
+    {
+        return !ReferenceEquals(other, null) && ReferenceEquals(_tableRow, other._tableRow);
+    }
+
+    public override int GetHashCode()
+    {
+        return System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(_tableRow);
+    }
+
+    public static bool operator ==(TableRowWrapper left, TableRowWrapper right)
+    {
+        return ReferenceEquals(left, null) ? ReferenceEquals(right, null) : left.Equals(right);
+    }
+
+    public static bool operator !=(TableRowWrapper left, TableRowWrapper right)
+    {
+        return !(left == right);
+    }
+
+    #endregion
 }

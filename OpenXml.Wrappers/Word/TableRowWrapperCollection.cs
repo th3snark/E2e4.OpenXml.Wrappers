@@ -8,7 +8,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
 
-public class TableRowWrapperCollection : IEnumerable
+public class TableRowWrapperCollection : IEnumerable<TableRowWrapper>
 {
     private RangeWrapper _range;
 
@@ -92,62 +92,19 @@ public class TableRowWrapperCollection : IEnumerable
 
     #region IEnumerable Members
 
-    public IEnumerator GetEnumerator()
+    public IEnumerator<TableRowWrapper> GetEnumerator()
     {
-        return new TableRowWrapperEnumerator(this);
+        //The elements are fetched once for the whole enumeration so that enumerating is linear and so that deleting the
+        //current item while enumerating does not disturb the enumeration.
+        foreach (TableRow element in GetElementList())
+        {
+            yield return new TableRowWrapper(element);
+        }
     }
 
-    #endregion
-
-    #region Nested Private Classes
-
-    private sealed class TableRowWrapperEnumerator : IEnumerator, IDisposable
+    IEnumerator IEnumerable.GetEnumerator()
     {
-        private TableRowWrapperCollection _tableRowWrapperCollection;
-        private int _index;
-        private TableRowWrapper _current;
-
-        public TableRowWrapperEnumerator(TableRowWrapperCollection tableRowWrapperCollection)
-        {
-            _tableRowWrapperCollection = tableRowWrapperCollection;
-            _index = -1;
-            _current = null;
-        }
-
-        #region IEnumerator Members
-
-        public object Current
-        {
-            get { return _current; }
-        }
-
-        public bool MoveNext()
-        {
-            if (++_index >= _tableRowWrapperCollection.Count)
-                return false;
-            else
-                _current = _tableRowWrapperCollection[_index];
-            return true;
-        }
-
-        public void Reset()
-        {
-            _current = null;
-            _index = -1;
-        }
-
-        #endregion
-
-        #region IDisposable Members
-
-        public void Dispose()
-        {
-            _tableRowWrapperCollection = null;
-            _current = null;
-            _index = -1;
-        }
-
-        #endregion
+        return GetEnumerator();
     }
 
     #endregion

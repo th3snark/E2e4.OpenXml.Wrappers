@@ -7,7 +7,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
 
-public class TableCellWrapperCollection : IEnumerable
+public class TableCellWrapperCollection : IEnumerable<TableCellWrapper>
 {
     private RangeWrapper _range;
 
@@ -66,62 +66,19 @@ public class TableCellWrapperCollection : IEnumerable
 
     #region IEnumerable Members
 
-    public IEnumerator GetEnumerator()
+    public IEnumerator<TableCellWrapper> GetEnumerator()
     {
-        return new TableCellWrapperEnumerator(this);
+        //The elements are fetched once for the whole enumeration so that enumerating is linear and so that deleting the
+        //current item while enumerating does not disturb the enumeration.
+        foreach (TableCell element in GetElementList())
+        {
+            yield return new TableCellWrapper(element);
+        }
     }
 
-    #endregion
-
-    #region Nested Private Classes
-
-    private sealed class TableCellWrapperEnumerator : IEnumerator, IDisposable
+    IEnumerator IEnumerable.GetEnumerator()
     {
-        private TableCellWrapperCollection _tableCellWrapperCollection;
-        private int _index;
-        private TableCellWrapper _current;
-
-        public TableCellWrapperEnumerator(TableCellWrapperCollection tableCellWrapperCollection)
-        {
-            _tableCellWrapperCollection = tableCellWrapperCollection;
-            _index = -1;
-            _current = null;
-        }
-
-        #region IEnumerator Members
-
-        public object Current
-        {
-            get { return _current; }
-        }
-
-        public bool MoveNext()
-        {
-            if (++_index >= _tableCellWrapperCollection.Count)
-                return false;
-            else
-                _current = _tableCellWrapperCollection[_index];
-            return true;
-        }
-
-        public void Reset()
-        {
-            _current = null;
-            _index = -1;
-        }
-
-        #endregion
-
-        #region IDisposable Members
-
-        public void Dispose()
-        {
-            _tableCellWrapperCollection = null;
-            _current = null;
-            _index = -1;
-        }
-
-        #endregion
+        return GetEnumerator();
     }
 
     #endregion

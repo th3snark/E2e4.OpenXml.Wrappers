@@ -26,6 +26,51 @@ public class ParagraphWrapperTest : System.IDisposable
     }
 
     [Fact]
+    public void WrappersOfTheSameParagraphAreEqual()
+    {
+        Paragraph paragraph = new Paragraph();
+        ParagraphWrapper first = new ParagraphWrapper(paragraph);
+        ParagraphWrapper second = new ParagraphWrapper(paragraph);
+
+        Assert.True(first == second);
+        Assert.False(first != second);
+        Assert.True(first.Equals((object)second));
+        Assert.Equal(first.GetHashCode(), second.GetHashCode());
+        Assert.Contains(second, new HashSet<ParagraphWrapper> { first });
+    }
+
+    [Fact]
+    public void WrappersOfDifferentParagraphsAreNotEqual()
+    {
+        ParagraphWrapper first = new ParagraphWrapper(new Paragraph());
+        ParagraphWrapper second = new ParagraphWrapper(new Paragraph());
+
+        Assert.False(first == second);
+        Assert.True(first != second);
+        Assert.False(first.Equals((object)"text"));
+    }
+
+    [Fact]
+    public void ParagraphWrapperComparesCorrectlyWithNull()
+    {
+        ParagraphWrapper wrapper = new ParagraphWrapper(new Paragraph());
+        ParagraphWrapper none = null;
+
+        Assert.False(wrapper == null);
+        Assert.False(null == wrapper);
+        Assert.True(none == null);
+        Assert.True(wrapper != null);
+        Assert.False(wrapper.Equals(null));
+    }
+
+    [Fact]
+    public void ParagraphsFromTheSameDocumentPositionAreEqual()
+    {
+        Assert.True(_document1.Paragraphs[0] == _document1.Paragraphs[0]);
+        Assert.True(_document1.Paragraphs[0] != _document1.Paragraphs[1]);
+    }
+
+    [Fact]
     public void RangeTextPropertyIsCorrect()
     {
         Assert.Equal("Test Document\r", _document1.Range.FirstParagraph.Range.Text);

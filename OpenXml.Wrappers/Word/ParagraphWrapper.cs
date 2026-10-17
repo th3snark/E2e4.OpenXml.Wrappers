@@ -7,7 +7,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
 
-public class ParagraphWrapper
+public class ParagraphWrapper : System.IEquatable<ParagraphWrapper>
 {
     Paragraph _paragraph;
 
@@ -290,4 +290,35 @@ public class ParagraphWrapper
         }
         return runProperties;
     }
+
+    #region Equality
+
+    // Two wrappers are equal when they wrap the same underlying element(s), so a new wrapper obtained for the same item compares equal.
+
+    public override bool Equals(object obj)
+    {
+        return Equals(obj as ParagraphWrapper);
+    }
+
+    public bool Equals(ParagraphWrapper other)
+    {
+        return !ReferenceEquals(other, null) && ReferenceEquals(_paragraph, other._paragraph);
+    }
+
+    public override int GetHashCode()
+    {
+        return System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(_paragraph);
+    }
+
+    public static bool operator ==(ParagraphWrapper left, ParagraphWrapper right)
+    {
+        return ReferenceEquals(left, null) ? ReferenceEquals(right, null) : left.Equals(right);
+    }
+
+    public static bool operator !=(ParagraphWrapper left, ParagraphWrapper right)
+    {
+        return !(left == right);
+    }
+
+    #endregion
 }

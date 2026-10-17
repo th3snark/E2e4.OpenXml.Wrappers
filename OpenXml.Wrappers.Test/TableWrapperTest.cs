@@ -25,6 +25,15 @@ public class TableWrapperTest : System.IDisposable
     }
 
     [Fact]
+    public void TableWrappersOfTheSameTableAreEqual()
+    {
+        Assert.True(_document1.Tables[0] == _document1.Tables[0]);
+        Assert.True(_document1.Tables[0] != _document1.Tables[1]);
+        Assert.Equal(_document1.Tables[1].GetHashCode(), _document1.Tables[1].GetHashCode());
+        Assert.True(_document1.Tables[1].Tables[0].Parent == _document1.Tables[1]);
+    }
+
+    [Fact]
     public void ParentIsTheDirectlyEnclosingTable()
     {
         Table inner = new Table(new TableRow(new TableCell(new Paragraph())));

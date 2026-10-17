@@ -15,6 +15,31 @@ public class TableWrapperCollectionTest : System.IDisposable
     }
 
     [Fact]
+    public void AllCollectionsImplementTheGenericEnumerable()
+    {
+        Assert.IsAssignableFrom<System.Collections.Generic.IEnumerable<TableWrapper>>(_document1.Tables);
+        Assert.IsAssignableFrom<System.Collections.Generic.IEnumerable<TableRowWrapper>>(_document1.Tables[0].Rows);
+        Assert.IsAssignableFrom<System.Collections.Generic.IEnumerable<TableCellWrapper>>(_document1.Tables[0].Rows[0].Cells);
+        Assert.IsAssignableFrom<System.Collections.Generic.IEnumerable<TableColumnWrapper>>(_document1.Tables[0].Columns);
+        Assert.IsAssignableFrom<System.Collections.Generic.IEnumerable<BookmarkWrapper>>(_document1.Bookmarks);
+        Assert.IsAssignableFrom<System.Collections.Generic.IEnumerable<CommentWrapper>>(_document1.Comments);
+        Assert.IsAssignableFrom<System.Collections.Generic.IEnumerable<ParagraphWrapper>>(_document1.Paragraphs);
+    }
+
+    [Fact]
+    public void EnumeratingTheTablesMatchesTheIndexer()
+    {
+        int index = 0;
+        foreach (TableWrapper table in _document1.Tables)
+        {
+            Assert.True(table == _document1.Tables[index]);
+            index++;
+        }
+
+        Assert.Equal(_document1.Tables.Count, index);
+    }
+
+    [Fact]
     public void TablesOfABookmarkRangeAreTheTablesItSpans()
     {
         Table inner = new Table(new TableRow(new TableCell(new Paragraph())));

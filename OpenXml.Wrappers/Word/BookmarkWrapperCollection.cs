@@ -8,7 +8,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
 
-public class BookmarkWrapperCollection : IEnumerable
+public class BookmarkWrapperCollection : IEnumerable<BookmarkWrapper>
 {
     private RangeWrapper _rangeWrapper;
 
@@ -45,6 +45,11 @@ public class BookmarkWrapperCollection : IEnumerable
         }
     }
 
+    private IList<BookmarkStart> GetElementList()
+    {
+        return _rangeWrapper.Start.GetElements<BookmarkStart>(_rangeWrapper.End).ToList();
+    }
+
     public int Count
     {
         get { return _rangeWrapper.Start.GetElements<BookmarkStart>(_rangeWrapper.End).Count(); }
@@ -69,62 +74,19 @@ public class BookmarkWrapperCollection : IEnumerable
 
     #region IEnumerable Members
 
-    public IEnumerator GetEnumerator()
+    public IEnumerator<BookmarkWrapper> GetEnumerator()
     {
-        return new BookmarkWrapperEnumerator(this);
+        //The elements are fetched once for the whole enumeration so that enumerating is linear and so that deleting the
+        //current item while enumerating does not disturb the enumeration.
+        foreach (BookmarkStart element in GetElementList())
+        {
+            yield return new BookmarkWrapper(element);
+        }
     }
 
-    #endregion
-
-    #region Nested Private Classes
-
-    private sealed class BookmarkWrapperEnumerator : IEnumerator, IDisposable
+    IEnumerator IEnumerable.GetEnumerator()
     {
-        private BookmarkWrapperCollection _bookmarkWrapperCollection;
-        private int _index;
-        private BookmarkWrapper _current;
-
-        public BookmarkWrapperEnumerator(BookmarkWrapperCollection bookmarkWrapperCollection)
-        {
-            _bookmarkWrapperCollection = bookmarkWrapperCollection;
-            _index = -1;
-            _current = null;
-        }
-
-        #region IEnumerator Members
-
-        public object Current
-        {
-            get { return _current; }
-        }
-
-        public bool MoveNext()
-        {
-            if (++_index >= _bookmarkWrapperCollection.Count)
-                return false;
-            else
-                _current = _bookmarkWrapperCollection[_index];
-            return true;
-        }
-
-        public void Reset()
-        {
-            _current = null;
-            _index = -1;
-        }
-
-        #endregion
-
-        #region IDisposable Members
-
-        public void Dispose()
-        {
-            _bookmarkWrapperCollection = null;
-            _current = null;
-            _index = -1;
-        }
-
-        #endregion
+        return GetEnumerator();
     }
 
     #endregion

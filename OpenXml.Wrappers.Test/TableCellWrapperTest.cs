@@ -28,6 +28,13 @@ public class TableCellWrapperTest : System.IDisposable
     }
 
     [Fact]
+    public void CellWrappersOfTheSameCellAreEqual()
+    {
+        Assert.True(_document1.Tables[0].Cell(0, 0) == _document1.Tables[0].Cell(0, 0));
+        Assert.True(_document1.Tables[0].Cell(0, 0) != _document1.Tables[0].Cell(1, 0));
+    }
+
+    [Fact]
     public void RangeTextPropertyIsCorrect()
     {
         Assert.Equal("R1C1\r\a", _document1.Tables[0].Rows[0].Cells[0].Range.Text);

@@ -8,7 +8,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
 
-public class ParagraphWrapperCollection : IEnumerable
+public class ParagraphWrapperCollection : IEnumerable<ParagraphWrapper>
 {
     private RangeWrapper _range;
 
@@ -56,62 +56,19 @@ public class ParagraphWrapperCollection : IEnumerable
 
     #region IEnumerable Members
 
-    public IEnumerator GetEnumerator()
+    public IEnumerator<ParagraphWrapper> GetEnumerator()
     {
-        return new ParagraphWrapperEnumerator(this);
+        //The elements are fetched once for the whole enumeration so that enumerating is linear and so that deleting the
+        //current item while enumerating does not disturb the enumeration.
+        foreach (Paragraph element in GetElementList())
+        {
+            yield return new ParagraphWrapper(element);
+        }
     }
 
-    #endregion
-
-    #region Nested Private Classes
-
-    private sealed class ParagraphWrapperEnumerator : IEnumerator, IDisposable
+    IEnumerator IEnumerable.GetEnumerator()
     {
-        private ParagraphWrapperCollection _paragraphWrapperCollection;
-        private int _index;
-        private ParagraphWrapper _current;
-
-        public ParagraphWrapperEnumerator(ParagraphWrapperCollection paragraphWrapperCollection)
-        {
-            _paragraphWrapperCollection = paragraphWrapperCollection;
-            _index = -1;
-            _current = null;
-        }
-
-        #region IEnumerator Members
-
-        public object Current
-        {
-            get { return _current; }
-        }
-
-        public bool MoveNext()
-        {
-            if (++_index >= _paragraphWrapperCollection.Count)
-                return false;
-            else
-                _current = _paragraphWrapperCollection[_index];
-            return true;
-        }
-
-        public void Reset()
-        {
-            _current = null;
-            _index = -1;
-        }
-
-        #endregion
-
-        #region IDisposable Members
-
-        public void Dispose()
-        {
-            _paragraphWrapperCollection = null;
-            _current = null;
-            _index = -1;
-        }
-
-        #endregion
+        return GetEnumerator();
     }
 
     #endregion

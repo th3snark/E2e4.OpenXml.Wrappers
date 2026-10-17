@@ -9,7 +9,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
 
-public class RangeWrapper
+public class RangeWrapper : System.IEquatable<RangeWrapper>
 {
     OpenXmlElement _startOpenXmlElement;
     OpenXmlElement _endOpenXmlElement;
@@ -371,6 +371,37 @@ public class RangeWrapper
         {
             AppendParagraphText(sb, paragraph);
         }
+    }
+
+    #endregion
+
+    #region Equality
+
+    // Two wrappers are equal when they wrap the same underlying element(s), so a new wrapper obtained for the same item compares equal.
+
+    public override bool Equals(object obj)
+    {
+        return Equals(obj as RangeWrapper);
+    }
+
+    public bool Equals(RangeWrapper other)
+    {
+        return !ReferenceEquals(other, null) && ReferenceEquals(_startOpenXmlElement, other._startOpenXmlElement) && ReferenceEquals(_endOpenXmlElement, other._endOpenXmlElement);
+    }
+
+    public override int GetHashCode()
+    {
+        return System.HashCode.Combine(System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(_startOpenXmlElement), System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(_endOpenXmlElement));
+    }
+
+    public static bool operator ==(RangeWrapper left, RangeWrapper right)
+    {
+        return ReferenceEquals(left, null) ? ReferenceEquals(right, null) : left.Equals(right);
+    }
+
+    public static bool operator !=(RangeWrapper left, RangeWrapper right)
+    {
+        return !(left == right);
     }
 
     #endregion

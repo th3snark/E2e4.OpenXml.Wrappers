@@ -5,7 +5,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
 
-public class BookmarkWrapper
+public class BookmarkWrapper : System.IEquatable<BookmarkWrapper>
 {
     BookmarkStart _bookmarkStart;
     BookmarkEnd _bookmarkEnd;
@@ -36,4 +36,35 @@ public class BookmarkWrapper
         _bookmarkStart.Parent.RemoveChild(_bookmarkStart);
         _bookmarkEnd.Parent.RemoveChild(_bookmarkEnd);
     }
+
+    #region Equality
+
+    // Two wrappers are equal when they wrap the same underlying element(s), so a new wrapper obtained for the same item compares equal.
+
+    public override bool Equals(object obj)
+    {
+        return Equals(obj as BookmarkWrapper);
+    }
+
+    public bool Equals(BookmarkWrapper other)
+    {
+        return !ReferenceEquals(other, null) && ReferenceEquals(_bookmarkStart, other._bookmarkStart);
+    }
+
+    public override int GetHashCode()
+    {
+        return System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(_bookmarkStart);
+    }
+
+    public static bool operator ==(BookmarkWrapper left, BookmarkWrapper right)
+    {
+        return ReferenceEquals(left, null) ? ReferenceEquals(right, null) : left.Equals(right);
+    }
+
+    public static bool operator !=(BookmarkWrapper left, BookmarkWrapper right)
+    {
+        return !(left == right);
+    }
+
+    #endregion
 }

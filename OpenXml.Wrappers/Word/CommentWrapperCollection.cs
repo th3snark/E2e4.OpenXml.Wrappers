@@ -10,7 +10,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
 
-public class CommentWrapperCollection : IEnumerable
+public class CommentWrapperCollection : IEnumerable<CommentWrapper>
 {
     private RangeWrapper _rangeWrapper;
 
@@ -141,62 +141,19 @@ public class CommentWrapperCollection : IEnumerable
 
     #region IEnumerable Members
 
-    public IEnumerator GetEnumerator()
+    public IEnumerator<CommentWrapper> GetEnumerator()
     {
-        return new CommentWrapperEnumerator(this);
+        //The elements are fetched once for the whole enumeration so that enumerating is linear and so that deleting the
+        //current item while enumerating does not disturb the enumeration.
+        foreach (CommentRangeStart element in GetElementList())
+        {
+            yield return new CommentWrapper(element);
+        }
     }
 
-    #endregion
-
-    #region Nested Private Classes
-
-    private sealed class CommentWrapperEnumerator : IEnumerator, IDisposable
+    IEnumerator IEnumerable.GetEnumerator()
     {
-        private CommentWrapperCollection _commentWrapperCollection;
-        private int _index;
-        private CommentWrapper _current;
-
-        public CommentWrapperEnumerator(CommentWrapperCollection commentWrapperCollection)
-        {
-            _commentWrapperCollection = commentWrapperCollection;
-            _index = -1;
-            _current = null;
-        }
-
-        #region IEnumerator Members
-
-        public object Current
-        {
-            get { return _current; }
-        }
-
-        public bool MoveNext()
-        {
-            if (++_index >= _commentWrapperCollection.Count)
-                return false;
-            else
-                _current = _commentWrapperCollection[_index];
-            return true;
-        }
-
-        public void Reset()
-        {
-            _current = null;
-            _index = -1;
-        }
-
-        #endregion
-
-        #region IDisposable Members
-
-        public void Dispose()
-        {
-            _commentWrapperCollection = null;
-            _current = null;
-            _index = -1;
-        }
-
-        #endregion
+        return GetEnumerator();
     }
 
     #endregion

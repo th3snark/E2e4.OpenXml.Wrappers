@@ -16,6 +16,16 @@ public class TableColumnWrapperTest
     }
 
     [Fact]
+    public void ColumnWrappersOfTheSameGridColumnAreEqual()
+    {
+        Table table = CreateTable();
+        TableWrapper wrapper = new TableWrapper(table);
+
+        Assert.True(wrapper.Columns[0] == wrapper.Columns[0]);
+        Assert.True(wrapper.Columns[0] != wrapper.Columns[1]);
+    }
+
+    [Fact]
     public void WidthIsReadFromTheGridColumn()
     {
         Table table = CreateTable();

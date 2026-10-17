@@ -5,7 +5,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
 
-public class CommentWrapper
+public class CommentWrapper : System.IEquatable<CommentWrapper>
 {
     CommentRangeStart _commentRangeStart;
     CommentRangeEnd _commentRangeEnd;
@@ -42,4 +42,35 @@ public class CommentWrapper
     {
         get { return Convert.ToInt32(_commentRangeStart.Id.Value, CultureInfo.InvariantCulture); }
     }
+
+    #region Equality
+
+    // Two wrappers are equal when they wrap the same underlying element(s), so a new wrapper obtained for the same item compares equal.
+
+    public override bool Equals(object obj)
+    {
+        return Equals(obj as CommentWrapper);
+    }
+
+    public bool Equals(CommentWrapper other)
+    {
+        return !ReferenceEquals(other, null) && ReferenceEquals(_commentRangeStart, other._commentRangeStart);
+    }
+
+    public override int GetHashCode()
+    {
+        return System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(_commentRangeStart);
+    }
+
+    public static bool operator ==(CommentWrapper left, CommentWrapper right)
+    {
+        return ReferenceEquals(left, null) ? ReferenceEquals(right, null) : left.Equals(right);
+    }
+
+    public static bool operator !=(CommentWrapper left, CommentWrapper right)
+    {
+        return !(left == right);
+    }
+
+    #endregion
 }

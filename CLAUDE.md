@@ -26,7 +26,6 @@ dotnet format E2e4.OpenXml.Wrappers.slnx --verify-no-changes
 - `.editorconfig` is authoritative for formatting (4-space indent, CRLF, UTF-8 without BOM, file-scoped namespaces) and analyzer severities. `.gitattributes` stores text as LF in the repo and checks source/project files out as CRLF.
 - `AnalysisLevel` is `latest-recommended`: the build must stay at zero warnings, and under `CI=true` warnings are errors.
 - `Nullable` is deliberately **disabled**: the code predates nullable annotations and enabling it yields ~250 warnings.
-- `GlobalSuppressions.cs` suppresses CA1010 because the collections intentionally implement only the non-generic `IEnumerable`.
 
 ## Architecture
 
@@ -34,7 +33,9 @@ dotnet format E2e4.OpenXml.Wrappers.slnx --verify-no-changes
 - **`WordprocessingDocumentWrapper`** is the entry point (`Open`/`Create`); its `Range`, `Paragraphs`, `Tables`, `Bookmarks`, `Comments` all build a `RangeWrapper` over `MainDocumentPart.Document`. It also has part-copying helpers (`CopyAllPartsTo`, `CopyLayoutTo`).
 - **Element wrappers** (`ParagraphWrapper`, `TableWrapper`, `BookmarkWrapper`, `CommentWrapper`, ...) hold the underlying SDK element, expose it via a property of the same name, and expose a `Range`.
 - **`OpenXmlExtensions`** holds the low-level tree-walking logic the wrappers depend on (`GetElements` between two elements, `GetLowestCommonAncestor`, `GetElementsBetween`, table merge/width helpers, `Paragraph.SetText`, etc.). Put new XML-traversal primitives here rather than in wrappers.
-- Collections implement non-generic `IEnumerable` with a hand-written nested enumerator that indexes into the collection; follow that pattern for new collections.
+- Collections implement `IEnumerable<TWrapper>` (the non-generic `IEnumerable` is an explicit implementation) with an iterator method over a `GetElementList()` snapshot taken when enumeration starts; follow that pattern for new collections. The indexer and `Count` re-query the tree each time, so they are live.
+- Wrappers implement `IEquatable<T>` and `==`/`!=` by reference equality of the wrapped element(s); give any new wrapper the same `Equality` region.
+- `WordprocessingDocumentWrapper` is `IDisposable`; `Close()` is the same as `Dispose()`. `Create` initialises the main document and comments roots.
 
 ## Conventions
 

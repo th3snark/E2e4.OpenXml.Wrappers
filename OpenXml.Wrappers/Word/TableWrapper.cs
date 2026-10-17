@@ -3,7 +3,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
 
-public class TableWrapper
+public class TableWrapper : System.IEquatable<TableWrapper>
 {
     Table _table;
 
@@ -82,4 +82,35 @@ public class TableWrapper
     {
         get { return Convert.ToInt32(_table.GetTableWidth()); }
     }
+
+    #region Equality
+
+    // Two wrappers are equal when they wrap the same underlying element(s), so a new wrapper obtained for the same item compares equal.
+
+    public override bool Equals(object obj)
+    {
+        return Equals(obj as TableWrapper);
+    }
+
+    public bool Equals(TableWrapper other)
+    {
+        return !ReferenceEquals(other, null) && ReferenceEquals(_table, other._table);
+    }
+
+    public override int GetHashCode()
+    {
+        return System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(_table);
+    }
+
+    public static bool operator ==(TableWrapper left, TableWrapper right)
+    {
+        return ReferenceEquals(left, null) ? ReferenceEquals(right, null) : left.Equals(right);
+    }
+
+    public static bool operator !=(TableWrapper left, TableWrapper right)
+    {
+        return !(left == right);
+    }
+
+    #endregion
 }

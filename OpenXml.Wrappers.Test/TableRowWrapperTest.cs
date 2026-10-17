@@ -24,6 +24,14 @@ public class TableRowWrapperTest : System.IDisposable
     }
 
     [Fact]
+    public void RowWrappersOfTheSameRowAreEqual()
+    {
+        Assert.True(_document1.Tables[0].Rows[0] == _document1.Tables[0].Rows[0]);
+        Assert.True(_document1.Tables[0].Rows[0] != _document1.Tables[0].Rows[1]);
+        Assert.True(_document1.Tables[0].Rows[1].Cells[0].Parent == _document1.Tables[0].Rows[1]);
+    }
+
+    [Fact]
     public void CellsPropertyIsNotNull()
     {
         Assert.NotNull(_document1.Tables[0].Rows[0].Cells);

@@ -8,7 +8,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
 
-public class TableColumnWrapperCollection : IEnumerable
+public class TableColumnWrapperCollection : IEnumerable<TableColumnWrapper>
 {
     private RangeWrapper _range;
 
@@ -88,62 +88,19 @@ public class TableColumnWrapperCollection : IEnumerable
 
     #region IEnumerable Members
 
-    public IEnumerator GetEnumerator()
+    public IEnumerator<TableColumnWrapper> GetEnumerator()
     {
-        return new GridColumnWrapperEnumerator(this);
+        //The elements are fetched once for the whole enumeration so that enumerating is linear and so that deleting the
+        //current item while enumerating does not disturb the enumeration.
+        foreach (GridColumn element in GetElementList())
+        {
+            yield return new TableColumnWrapper(element);
+        }
     }
 
-    #endregion
-
-    #region Nested Private Classes
-
-    private sealed class GridColumnWrapperEnumerator : IEnumerator, IDisposable
+    IEnumerator IEnumerable.GetEnumerator()
     {
-        private TableColumnWrapperCollection _tableColumnWrapperCollection;
-        private int _index;
-        private TableColumnWrapper _current;
-
-        public GridColumnWrapperEnumerator(TableColumnWrapperCollection tableColumnWrapperCollection)
-        {
-            _tableColumnWrapperCollection = tableColumnWrapperCollection;
-            _index = -1;
-            _current = null;
-        }
-
-        #region IEnumerator Members
-
-        public object Current
-        {
-            get { return _current; }
-        }
-
-        public bool MoveNext()
-        {
-            if (++_index >= _tableColumnWrapperCollection.Count)
-                return false;
-            else
-                _current = _tableColumnWrapperCollection[_index];
-            return true;
-        }
-
-        public void Reset()
-        {
-            _current = null;
-            _index = -1;
-        }
-
-        #endregion
-
-        #region IDisposable Members
-
-        public void Dispose()
-        {
-            _tableColumnWrapperCollection = null;
-            _current = null;
-            _index = -1;
-        }
-
-        #endregion
+        return GetEnumerator();
     }
 
     #endregion

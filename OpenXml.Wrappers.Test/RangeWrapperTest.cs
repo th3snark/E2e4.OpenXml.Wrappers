@@ -28,6 +28,16 @@ public class RangeWrapperTest
         }
 
         [Fact]
+        public void RangesOverTheSameElementsAreEqual()
+        {
+            Assert.True(_document1.Range == _document1.Range);
+            Assert.True(_document1.Tables[0].Range == _document1.Tables[0].Range);
+            Assert.True(_document1.Tables[0].Range != _document1.Tables[1].Range);
+            Assert.True(_document1.Bookmarks[0].Range == _document1.Bookmarks[0].Range);
+            Assert.Equal(_document1.Bookmarks[0].Range.GetHashCode(), _document1.Bookmarks[0].Range.GetHashCode());
+        }
+
+        [Fact]
         public void RangeTextPropertyIsCorrect()
         {
             Assert.Equal("R1C1\r\a", _document1.Tables[0].Rows[0].Cells[0].Range.Text);

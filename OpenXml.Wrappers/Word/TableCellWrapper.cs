@@ -7,7 +7,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
 
-public class TableCellWrapper
+public class TableCellWrapper : System.IEquatable<TableCellWrapper>
 {
     TableCell _tableCell;
 
@@ -176,4 +176,35 @@ public class TableCellWrapper
             paragraph.SetFontColor(color);
         }
     }
+
+    #region Equality
+
+    // Two wrappers are equal when they wrap the same underlying element(s), so a new wrapper obtained for the same item compares equal.
+
+    public override bool Equals(object obj)
+    {
+        return Equals(obj as TableCellWrapper);
+    }
+
+    public bool Equals(TableCellWrapper other)
+    {
+        return !ReferenceEquals(other, null) && ReferenceEquals(_tableCell, other._tableCell);
+    }
+
+    public override int GetHashCode()
+    {
+        return System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(_tableCell);
+    }
+
+    public static bool operator ==(TableCellWrapper left, TableCellWrapper right)
+    {
+        return ReferenceEquals(left, null) ? ReferenceEquals(right, null) : left.Equals(right);
+    }
+
+    public static bool operator !=(TableCellWrapper left, TableCellWrapper right)
+    {
+        return !(left == right);
+    }
+
+    #endregion
 }

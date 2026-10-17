@@ -24,6 +24,17 @@ public class CommentWrapperTest : System.IDisposable
     }
 
     [Fact]
+    public void CommentWrappersOfTheSameCommentAreEqual()
+    {
+        Assert.True(_document3.Comments[0] == _document3.Comments[0]);
+        Assert.Equal(_document3.Comments[0].GetHashCode(), _document3.Comments[0].GetHashCode());
+        if (_document3.Comments.Count > 1)
+        {
+            Assert.True(_document3.Comments[0] != _document3.Comments[1]);
+        }
+    }
+
+    [Fact]
     public void IndexPropertyIsCorrect()
     {
         for (int index = 0; index < _document3.Comments.Count; index++)

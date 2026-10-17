@@ -24,6 +24,14 @@ public class BookmarkWrapperTest : System.IDisposable
     }
 
     [Fact]
+    public void BookmarkWrappersOfTheSameBookmarkAreEqual()
+    {
+        Assert.True(_document1.Bookmarks[0] == _document1.Bookmarks[0]);
+        Assert.True(_document1.Bookmarks[0] != _document1.Bookmarks[1]);
+        Assert.Equal(_document1.Bookmarks[0].GetHashCode(), _document1.Bookmarks[0].GetHashCode());
+    }
+
+    [Fact]
     public void NamePropertyIsCorrect()
     {
         Assert.Equal("myBookMark2", _document1.Bookmarks["myBookMark2"].Name);
