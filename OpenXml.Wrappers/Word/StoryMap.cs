@@ -13,25 +13,36 @@ internal enum AtomKind
     Tab,
     Break,
     ParagraphMark,
-    RowMark
+    RowMark,
+
+    /// <summary>The begin, separator or end of a field. One position, no text.</summary>
+    FieldMark,
+
+    /// <summary>The characters of the code of a field. A position for each character, no text.</summary>
+    FieldCode,
+
+    /// <summary>A picture, drawing, embedded object, symbol or footnote, endnote or comment reference. One position, no text.</summary>
+    Object
 }
 
 /// <summary>
-/// A piece of the text of a story: the text of a <c>w:t</c>, one tab or break, or an end of paragraph or end of row marker. Every character of
-/// the story belongs to exactly one atom and an atom is <see cref="Length"/> character positions long.
+/// A piece of the text of a story: the text of a <c>w:t</c>, one tab or break, an end of paragraph or end of row marker, or something that
+/// takes up positions without showing as text. Every position of the story belongs to exactly one atom and an atom is <see cref="Length"/>
+/// positions long.
 /// </summary>
 internal sealed class Atom
 {
     public AtomKind Kind;
 
-    /// <summary>The text, tab or break element, the paragraph for a paragraph mark and the table row for a row mark.</summary>
+    /// <summary>The text, tab, break or other element, the paragraph for a paragraph mark and the table row for a row mark.</summary>
     public OpenXmlElement Element;
 
     public int Index;
     public int Start;
     public int Length;
 
-    /// <summary>What <c>Range.Text</c> shows for the atom. This is longer than <see cref="Length"/> for the marker that ends a table cell or row.</summary>
+    /// <summary>What <c>Range.Text</c> shows for the atom. This is longer than <see cref="Length"/> for the marker that ends a table cell or row,
+    /// and empty for the atoms that take up positions without showing.</summary>
     public string Text;
 
     public int End
@@ -43,15 +54,23 @@ internal sealed class Atom
     {
         get { return Kind == AtomKind.ParagraphMark || Kind == AtomKind.RowMark; }
     }
+
+    /// <summary>True for the atoms that take up positions but show no text: fields' begin, separator, end and code, and objects.</summary>
+    public bool IsHidden
+    {
+        get { return Kind == AtomKind.FieldMark || Kind == AtomKind.FieldCode || Kind == AtomKind.Object; }
+    }
 }
 
 /// <summary>
 /// The text of a story (the body, a header or footer or a comment) as a sequence of character positions, as Word numbers them: the characters
-/// of the text, a position for each tab and break, and one for each end of paragraph (which is also the end of a table cell for the last
-/// paragraph of a cell) and for each end of table row. Positions of things that are not text (pictures, fields codes) are not counted.
+/// of the text, a position for each tab and break, one for each end of paragraph (which is also the end of a table cell for the last
+/// paragraph of a cell) and for each end of table row, one for each begin, separator and end of a field and for each character of its code,
+/// and one for each picture, drawing, embedded object, symbol and footnote, endnote or comment reference.
 /// </summary>
 /// <remarks>
-/// A map is a snapshot. Build a new one after the document changes.
+/// A map is a snapshot. Build a new one after the document changes. Fields written as a single element (<c>w:fldSimple</c>) keep their code
+/// in an attribute, so only their result takes up positions.
 /// </remarks>
 internal sealed class StoryMap
 {
@@ -66,15 +85,12 @@ internal sealed class StoryMap
         Root = root;
         _blocks = blocks;
         Atoms = new List<Atom>();
-        if (blocks == null)
+        foreach (OpenXmlElement block in blocks ?? new[] { root })
         {
-            Walk(root);
-        }
-        else
-        {
-            foreach (OpenXmlElement block in blocks)
+            foreach (AtomInfo info in Enumerate(block))
             {
-                Walk(block);
+                int start = Atoms.Count == 0 ? 0 : Atoms[Atoms.Count - 1].End;
+                Atoms.Add(new Atom() { Kind = info.Kind, Element = info.Element, Index = Atoms.Count, Start = start, Length = info.Length, Text = info.Text });
             }
         }
         Length = Atoms.Count == 0 ? 0 : Atoms[Atoms.Count - 1].End;
@@ -116,7 +132,7 @@ internal sealed class StoryMap
     private Dictionary<OpenXmlElement, Atom> _byElement;
 
     /// <summary>
-    /// The atom for a text, tab or break element, a paragraph (its mark) or a table row (its end), or false if the element is not in this map.
+    /// The atom for a text, tab, break or other element, a paragraph (its mark) or a table row (its end), or false if the element is not in this map.
     /// </summary>
     public bool TryGetAtom(OpenXmlElement element, out Atom atom)
     {
@@ -216,20 +232,26 @@ internal sealed class StoryMap
     /// </summary>
     internal readonly struct AtomInfo
     {
-        public AtomInfo(OpenXmlElement element, int length)
+        public AtomInfo(AtomKind kind, OpenXmlElement element, int length, string text)
         {
+            Kind = kind;
             Element = element;
             Length = length;
+            Text = text;
         }
+
+        public AtomKind Kind { get; }
 
         public OpenXmlElement Element { get; }
 
         public int Length { get; }
+
+        public string Text { get; }
     }
 
     /// <summary>
-    /// The pieces of the text of the story, in order, produced one at a time. This sees the same text as <see cref="Build"/>, and
-    /// walking part of the way costs only that part.
+    /// The pieces of the text of the story, in order, produced one at a time. This is the one description of what takes up positions: the map
+    /// is built from it, and walking part of the way costs only that part.
     /// </summary>
     public static IEnumerable<AtomInfo> Enumerate(OpenXmlElement root)
     {
@@ -244,7 +266,10 @@ internal sealed class StoryMap
             {
                 yield return info;
             }
-            yield return new AtomInfo(paragraph, 1);
+
+            //Every paragraph, including an empty one, ends with an end of paragraph marker, and the last one in a table cell also ends the cell.
+            bool endsCell = paragraph.Parent is TableCell && paragraph.Parent.LastChild == paragraph;
+            yield return new AtomInfo(AtomKind.ParagraphMark, paragraph, 1, endsCell ? "\r\a" : "\r");
         }
         else if (element is Table table)
         {
@@ -260,7 +285,7 @@ internal sealed class StoryMap
                         }
                     }
                 }
-                yield return new AtomInfo(row, 1);
+                yield return new AtomInfo(AtomKind.RowMark, row, 1, "\r\a");
             }
         }
         else if (element is OpenXmlCompositeElement && !(element is Run) && !(element is SectionProperties))
@@ -275,6 +300,8 @@ internal sealed class StoryMap
         }
     }
 
+    //Runs can be nested inside other elements (hyperlinks, content controls, smart tags etc.). Runs are not searched for paragraphs, so the
+    //paragraphs nested in a run (for example in a text box) are not part of this paragraph.
     private static IEnumerable<AtomInfo> EnumerateInline(OpenXmlElement container)
     {
         foreach (OpenXmlElement child in container.ChildElements)
@@ -283,17 +310,9 @@ internal sealed class StoryMap
             {
                 foreach (OpenXmlElement part in run.ChildElements)
                 {
-                    if (part is Text text)
+                    if (TryClassify(part, out AtomInfo info))
                     {
-                        int length = text.Text?.Length ?? 0;
-                        if (length > 0)
-                        {
-                            yield return new AtomInfo(part, length);
-                        }
-                    }
-                    else if (part is TabChar || part is Break)
-                    {
-                        yield return new AtomInfo(part, 1);
+                        yield return info;
                     }
                 }
             }
@@ -304,6 +323,67 @@ internal sealed class StoryMap
                     yield return info;
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// What a child of a run is in terms of positions: its text, or a tab, a break, or a field character, field code or object that takes up
+    /// positions but shows no text. False for what takes up none.
+    /// </summary>
+    private static bool TryClassify(OpenXmlElement part, out AtomInfo info)
+    {
+        info = default;
+        switch (part)
+        {
+            case Text text:
+                string value = text.Text ?? String.Empty;
+                if (value.Length == 0)
+                {
+                    return false;
+                }
+                info = new AtomInfo(AtomKind.Text, part, value.Length, value);
+                return true;
+            case TabChar:
+                info = new AtomInfo(AtomKind.Tab, part, 1, "\t");
+                return true;
+            case Break lineBreak:
+                //Word represents a page break as a form feed and any other break as a vertical tab.
+                bool page = lineBreak.Type != null && lineBreak.Type.HasValue && lineBreak.Type.Value == BreakValues.Page;
+                info = new AtomInfo(AtomKind.Break, part, 1, page ? "\f" : "\v");
+                return true;
+            case CarriageReturn:
+                info = new AtomInfo(AtomKind.Break, part, 1, "\v");
+                return true;
+            case FieldChar:
+                info = new AtomInfo(AtomKind.FieldMark, part, 1, String.Empty);
+                return true;
+            case FieldCode code:
+                int codeLength = code.Text?.Length ?? 0;
+                if (codeLength == 0)
+                {
+                    return false;
+                }
+                info = new AtomInfo(AtomKind.FieldCode, part, codeLength, String.Empty);
+                return true;
+            case Drawing:
+            case Picture:
+            case EmbeddedObject:
+            case FootnoteReference:
+            case EndnoteReference:
+            case FootnoteReferenceMark:
+            case EndnoteReferenceMark:
+            case AnnotationReferenceMark:
+            case SymbolChar:
+                info = new AtomInfo(AtomKind.Object, part, 1, String.Empty);
+                return true;
+            default:
+                //Drawings are often wrapped in alternate content, which is one object whatever it offers.
+                if (part.LocalName == "AlternateContent")
+                {
+                    info = new AtomInfo(AtomKind.Object, part, 1, String.Empty);
+                    return true;
+                }
+                return false;
         }
     }
 
@@ -513,7 +593,8 @@ internal sealed class StoryMap
 
     /// <summary>
     /// The characters of the story, one for each position: the text itself, a tab, a vertical tab or form feed for a break, a carriage return
-    /// for the end of a paragraph and a bell for the end of a table row.
+    /// for the end of a paragraph, a bell for the end of a table row and a null for a position that shows no text (see
+    /// <see cref="Atom.IsHidden"/>).
     /// </summary>
     public char[] ToCharacters()
     {
@@ -531,8 +612,12 @@ internal sealed class StoryMap
                 case AtomKind.RowMark:
                     characters[atom.Start] = '\a';
                     break;
-                default:
+                case AtomKind.Tab:
+                case AtomKind.Break:
                     characters[atom.Start] = atom.Text[0];
+                    break;
+                default:
+                    //Positions that show no text are already null characters.
                     break;
             }
         }
@@ -592,13 +677,13 @@ internal sealed class StoryMap
 
         bool changed = false;
         OpenXmlElement element = atom.Element;
-        if (atom.Kind == AtomKind.Text && position > atom.Start)
+        if ((atom.Kind == AtomKind.Text || atom.Kind == AtomKind.FieldCode) && position > atom.Start)
         {
-            element = SplitText((Text)element, position - atom.Start);
+            element = SplitText(element, position - atom.Start);
             changed = true;
         }
 
-        //The first character of a run: the element must not follow another text, tab or break in the same run.
+        //The first character of a run: the element must not follow another text, tab, break or object in the same run.
         Run run = (Run)element.Parent;
         if (element.ElementsBefore().Any(IsAtomElement))
         {
@@ -611,11 +696,24 @@ internal sealed class StoryMap
 
     private static bool IsAtomElement(OpenXmlElement element)
     {
-        return element is Text || element is TabChar || element is Break;
+        return TryClassify(element, out _);
     }
 
-    private static Text SplitText(Text text, int offset)
+    //Splits a text or field code element in two at a character, the second part taking the rest. Both parts keep their spaces.
+    private static OpenXmlElement SplitText(OpenXmlElement element, int offset)
     {
+        if (element is FieldCode code)
+        {
+            string codeValue = code.Text;
+            code.Text = codeValue.Substring(0, offset);
+            code.Space = SpaceProcessingModeValues.Preserve;
+            FieldCode secondCode = new FieldCode(codeValue.Substring(offset)) { Space = SpaceProcessingModeValues.Preserve };
+            code.InsertAfterSelf(secondCode);
+            SpanRegistry.TextSplit(code, secondCode, offset);
+            return secondCode;
+        }
+
+        Text text = (Text)element;
         string value = text.Text;
         text.Text = value.Substring(0, offset);
         text.Space = SpaceProcessingModeValues.Preserve;
@@ -641,95 +739,6 @@ internal sealed class StoryMap
         }
         run.InsertAfterSelf(second);
         return second;
-    }
-
-    #endregion
-
-    #region Building
-
-    private void Walk(OpenXmlElement element)
-    {
-        if (element is Paragraph paragraph)
-        {
-            AddParagraph(paragraph);
-        }
-        else if (element is Table table)
-        {
-            foreach (TableRow row in table.Elements<TableRow>())
-            {
-                foreach (TableCell cell in row.Elements<TableCell>())
-                {
-                    foreach (OpenXmlElement block in cell.ChildElements)
-                    {
-                        Walk(block);
-                    }
-                }
-                Add(AtomKind.RowMark, row, 1, "\r\a");
-            }
-        }
-        else if (element is OpenXmlCompositeElement && !(element is Run) && !(element is SectionProperties))
-        {
-            foreach (OpenXmlElement child in element.ChildElements)
-            {
-                Walk(child);
-            }
-        }
-    }
-
-    private void AddParagraph(Paragraph paragraph)
-    {
-        //Runs can be nested inside other elements (hyperlinks, content controls, smart tags etc.). Runs are not searched for paragraphs, so
-        //the paragraphs nested in a run (for example in a text box) are not part of this paragraph.
-        AddInline(paragraph);
-
-        //Every paragraph, including an empty one, ends with an end of paragraph marker, and the last one in a table cell also ends the cell.
-        bool endsCell = paragraph.Parent is TableCell && paragraph.Parent.LastChild == paragraph;
-        Add(AtomKind.ParagraphMark, paragraph, 1, endsCell ? "\r\a" : "\r");
-    }
-
-    private void AddInline(OpenXmlElement container)
-    {
-        foreach (OpenXmlElement child in container.ChildElements)
-        {
-            if (child is Run run)
-            {
-                AddRun(run);
-            }
-            else if (child is OpenXmlCompositeElement && !(child is Paragraph) && !(child is ParagraphProperties))
-            {
-                AddInline(child);
-            }
-        }
-    }
-
-    private void AddRun(Run run)
-    {
-        foreach (OpenXmlElement child in run.ChildElements)
-        {
-            if (child is Text text)
-            {
-                string value = text.Text ?? String.Empty;
-                if (value.Length > 0)
-                {
-                    Add(AtomKind.Text, child, value.Length, value);
-                }
-            }
-            else if (child is TabChar)
-            {
-                Add(AtomKind.Tab, child, 1, "\t");
-            }
-            else if (child is Break lineBreak)
-            {
-                //Word represents a page break as a form feed and any other break as a vertical tab.
-                bool page = lineBreak.Type != null && lineBreak.Type.HasValue && lineBreak.Type.Value == BreakValues.Page;
-                Add(AtomKind.Break, child, 1, page ? "\f" : "\v");
-            }
-        }
-    }
-    private void Add(AtomKind kind, OpenXmlElement element, int length, string text)
-    {
-        int start = Atoms.Count == 0 ? 0 : Atoms[Atoms.Count - 1].End;
-        Atoms.Add(new Atom() { Kind = kind, Element = element, Index = Atoms.Count, Start = start, Length = length, Text = text });
     }
 
     #endregion

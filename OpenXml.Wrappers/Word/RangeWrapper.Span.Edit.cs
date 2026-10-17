@@ -122,7 +122,7 @@ public partial class RangeWrapper
         {
             for (int i = Math.Max(index, 0); i < map.Atoms.Count && map.Atoms[i].Start < end; i++)
             {
-                if (!map.Atoms[i].IsMark)
+                if (!map.Atoms[i].IsMark && !map.Atoms[i].IsHidden)
                 {
                     atom = map.Atoms[i];
                     break;
@@ -379,8 +379,6 @@ public partial class RangeWrapper
         map = map.EnsureBoundary(start);
         List<Atom> inRange = map.AtomsIn(start, end).ToList();
 
-        //Ranges that point into the text that is going are moved to where it was, before it is removed.
-        SpanRegistry.Removing(map.Root, new HashSet<OpenXmlElement>(inRange.Select(a => a.Element)), Anchor.At(map, end));
 
         //Tables and rows that are wholly inside the range go. This needs the end of a row in the range.
         List<OpenXmlElement> blocks = inRange.Any(a => a.Kind == AtomKind.RowMark) ? FindCoveredBlocks(map, start, end) : new List<OpenXmlElement>();
@@ -406,6 +404,27 @@ public partial class RangeWrapper
             ExtendToWholeFields(allRuns, doomed);
             toRemove.AddRange(allRuns.Where(doomed.Contains));
         }
+
+        //Ranges that point into the text that is going (which can be more than the range, when a field is only partly in it) are moved to
+        //where it was, before it is removed.
+        HashSet<Run> goingRuns = new HashSet<Run>(toRemove.OfType<Run>());
+        HashSet<OpenXmlElement> going = new HashSet<OpenXmlElement>(inRange.Select(a => a.Element));
+        int lastGoing = inRange.Count == 0 ? 0 : inRange[inRange.Count - 1].Index;
+        foreach (Atom atom in map.Atoms)
+        {
+            if (!atom.IsMark && goingRuns.Contains((Run)atom.Element.Parent))
+            {
+                going.Add(atom.Element);
+                lastGoing = Math.Max(lastGoing, atom.Index);
+            }
+        }
+        int afterIndex = lastGoing + 1;
+        while (afterIndex < map.Atoms.Count && going.Contains(map.Atoms[afterIndex].Element))
+        {
+            afterIndex++;
+        }
+        Anchor afterAnchor = afterIndex < map.Atoms.Count ? Anchor.At(map, map.Atoms[afterIndex].Start) : map.EndAnchor();
+        SpanRegistry.Removing(map.Root, going, afterAnchor);
 
         List<OpenXmlElement> containers = toRemove.Select(r => r.Parent).Distinct().ToList();
         foreach (OpenXmlElement block in blocks)

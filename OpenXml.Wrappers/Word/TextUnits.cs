@@ -38,6 +38,28 @@ internal static class TextUnits
     /// </summary>
     public static List<int> GetBoundaries(char[] text, TextUnit unit)
     {
+        if (unit == TextUnit.Character || Array.IndexOf(text, '\0') < 0)
+        {
+            return GetBoundariesOfVisible(text, unit);
+        }
+
+        //Positions that show no text (field codes, pictures) do not make words or sentences of their own: they go with the unit that follows.
+        List<int> positions = new List<int>();
+        for (int i = 0; i < text.Length; i++)
+        {
+            if (text[i] != '\0')
+            {
+                positions.Add(i);
+            }
+        }
+        char[] visible = positions.Select(p => text[p]).ToArray();
+        return GetBoundariesOfVisible(visible, unit)
+            .Select(b => b >= visible.Length ? text.Length : b == 0 ? 0 : positions[b - 1] + 1)
+            .ToList();
+    }
+
+    private static List<int> GetBoundariesOfVisible(char[] text, TextUnit unit)
+    {
         List<int> starts = new List<int>();
         int n = text.Length;
         switch (unit)

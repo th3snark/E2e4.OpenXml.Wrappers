@@ -155,7 +155,7 @@ internal static class SpanRegistry
     /// <summary>
     /// A text element was split: what was after the first <paramref name="offset"/> characters of <paramref name="text"/> is now in <paramref name="suffix"/>.
     /// </summary>
-    public static void TextSplit(Text text, Text suffix, int offset)
+    public static void TextSplit(OpenXmlElement text, OpenXmlElement suffix, int offset)
     {
         foreach (RangeWrapper range in Live(text))
         {

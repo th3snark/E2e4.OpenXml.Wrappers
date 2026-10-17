@@ -172,19 +172,19 @@ public class FindWrapper
             windowEnd = Math.Min(windowEnd < 0 ? map.Length - 1 : windowEnd, map.Length - 1);
             if (windowEnd > windowStart)
             {
-                List<int> matches = FindMatches(new string(map.ToCharacters()), find, windowStart, windowEnd, comparison, replace == ReplaceMode.All);
+                List<(int Start, int Length)> matches = FindMatches(map, find, windowStart, windowEnd, comparison, replace == ReplaceMode.All);
                 if (matches.Count > 0)
                 {
                     any = true;
                     if (replace == ReplaceMode.None)
                     {
-                        Remember(map, matches[0], matches[0] + find.Length);
+                        Remember(map, matches[0].Start, matches[0].Start + matches[0].Length);
                         return true;
                     }
                     if (replace == ReplaceMode.One)
                     {
-                        int length = Replace(map, matches[0], find.Length, replacement);
-                        Remember(StoryMap.Build(paragraph), matches[0], matches[0] + length);
+                        int length = Replace(map, matches[0].Start, matches[0].Length, replacement);
+                        Remember(StoryMap.Build(paragraph), matches[0].Start, matches[0].Start + length);
                         return true;
                     }
 
@@ -196,7 +196,7 @@ public class FindWrapper
                     }
                     for (int i = matches.Count - 1; i >= 0; i--)
                     {
-                        Replace(map, matches[i], find.Length, replacement);
+                        Replace(map, matches[i].Start, matches[i].Length, replacement);
                     }
                 }
             }
@@ -233,7 +233,7 @@ public class FindWrapper
         fromPosition = Math.Max(fromPosition, 0);
         toPosition = toPosition < 0 ? map.Length : toPosition;
 
-        List<int> matches = FindMatches(new string(map.ToCharacters()), find, fromPosition, toPosition, comparison, replace == ReplaceMode.All);
+        List<(int Start, int Length)> matches = FindMatches(map, find, fromPosition, toPosition, comparison, replace == ReplaceMode.All);
         if (matches.Count == 0)
         {
             return false;
@@ -241,14 +241,14 @@ public class FindWrapper
 
         if (replace == ReplaceMode.None)
         {
-            Remember(map, matches[0], matches[0] + find.Length);
+            Remember(map, matches[0].Start, matches[0].Start + matches[0].Length);
             return true;
         }
 
         if (replace == ReplaceMode.One)
         {
-            int length = Replace(map, matches[0], find.Length, replacement);
-            Remember(StoryMap.Build(story), matches[0], matches[0] + length);
+            int length = Replace(map, matches[0].Start, matches[0].Length, replacement);
+            Remember(StoryMap.Build(story), matches[0].Start, matches[0].Start + length);
             return true;
         }
 
@@ -260,7 +260,7 @@ public class FindWrapper
         //Replace from the end so that the positions of the matches that are still to be replaced stay valid.
         for (int i = matches.Count - 1; i >= 0; i--)
         {
-            Replace(map, matches[i], find.Length, replacement);
+            Replace(map, matches[i].Start, matches[i].Length, replacement);
         }
         _lastMatch = null;
         return true;
@@ -303,9 +303,37 @@ public class FindWrapper
             .Replace('\n', '\v');
     }
 
-    private List<int> FindMatches(string haystack, string find, int from, int to, StringComparison comparison, bool all)
+    //Finds the matches in the positions from windowStart up to windowEnd. Positions that show no text (field codes, pictures) are skipped over,
+    //so a match can run across them; each match is given as the position it starts at and the number of positions it takes up.
+    private List<(int Start, int Length)> FindMatches(StoryMap map, string find, int windowStart, int windowEnd, StringComparison comparison, bool all)
     {
-        List<int> matches = new List<int>();
+        char[] characters = map.ToCharacters();
+        List<int> positions = null;
+        string haystack;
+        if (Array.IndexOf(characters, '\0') < 0)
+        {
+            haystack = new string(characters);
+        }
+        else
+        {
+            positions = new List<int>(characters.Length);
+            System.Text.StringBuilder visible = new System.Text.StringBuilder(characters.Length);
+            for (int i = 0; i < characters.Length; i++)
+            {
+                if (characters[i] != '\0')
+                {
+                    positions.Add(i);
+                    visible.Append(characters[i]);
+                }
+            }
+            haystack = visible.ToString();
+        }
+
+        //The window in the characters that show.
+        int from = positions == null ? windowStart : FirstIndexAtOrAfter(positions, windowStart);
+        int to = positions == null ? windowEnd : FirstIndexAtOrAfter(positions, windowEnd);
+
+        List<(int Start, int Length)> matches = new List<(int, int)>();
         int position = from;
         while (position <= to - find.Length)
         {
@@ -317,7 +345,9 @@ public class FindWrapper
 
             if (!MatchWholeWord || IsWholeWord(haystack, index, find.Length))
             {
-                matches.Add(index);
+                int start = positions == null ? index : positions[index];
+                int end = positions == null ? index + find.Length : positions[index + find.Length - 1] + 1;
+                matches.Add((start, end - start));
                 position = index + find.Length;
                 if (!all)
                 {
@@ -332,6 +362,11 @@ public class FindWrapper
         return matches;
     }
 
+    private static int FirstIndexAtOrAfter(List<int> positions, int position)
+    {
+        int index = positions.BinarySearch(position);
+        return index >= 0 ? index : ~index;
+    }
     private static bool IsWholeWord(string haystack, int index, int length)
     {
         //Only the edges of the match that are themselves part of a word need a word boundary.
