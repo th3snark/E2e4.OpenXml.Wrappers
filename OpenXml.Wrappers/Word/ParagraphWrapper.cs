@@ -26,6 +26,14 @@ public class ParagraphWrapper : System.IEquatable<ParagraphWrapper>
         get { return new RangeWrapper(_paragraph); }
     }
 
+    /// <summary>
+    /// The formatting of the paragraph, as <c>Paragraph.Format</c> in Word.
+    /// </summary>
+    public ParagraphFormatWrapper Format
+    {
+        get { return Range.ParagraphFormat; }
+    }
+
     public string Text
     {
         get { return Range.Text.Trim(new char[] { '\r' }); }

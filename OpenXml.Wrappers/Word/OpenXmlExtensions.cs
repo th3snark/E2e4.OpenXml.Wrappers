@@ -369,7 +369,7 @@ public static class OpenXmlExtensions
         return runProperties;
     }
 
-    internal static ParagraphMarkRunProperties GetOrAddParagraphMarkRunProperties(this Paragraph paragraph)
+    internal static ParagraphProperties GetOrAddParagraphProperties(this Paragraph paragraph)
     {
         ParagraphProperties paragraphProperties = paragraph.ParagraphProperties;
         if (paragraphProperties == null)
@@ -377,6 +377,12 @@ public static class OpenXmlExtensions
             paragraphProperties = new ParagraphProperties();
             paragraph.PrependChild(paragraphProperties);
         }
+        return paragraphProperties;
+    }
+
+    internal static ParagraphMarkRunProperties GetOrAddParagraphMarkRunProperties(this Paragraph paragraph)
+    {
+        ParagraphProperties paragraphProperties = paragraph.GetOrAddParagraphProperties();
 
         ParagraphMarkRunProperties paragraphMarkRunProperties = paragraphProperties.ParagraphMarkRunProperties;
         if (paragraphMarkRunProperties == null)
