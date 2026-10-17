@@ -1,0 +1,58 @@
+name: Publish to NuGet
+
+# Manual only: nothing is published by a push. The key is the NUGET_API_KEY secret of the "nuget" environment, which only the
+# repository owner can create; nobody (including tools working on the repository) ever sees its value.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish; must equal the version the build produces (for example 1.0.0-preview.1)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Build, test and push
+    runs-on: ubuntu-24.04
+    # Add required reviewers to this environment in the repository settings to approve every publish by hand.
+    environment: nuget
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore E2e4.OpenXml.Wrappers.slnx
+
+      - name: Build
+        run: dotnet build E2e4.OpenXml.Wrappers.slnx --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test E2e4.OpenXml.Wrappers.slnx --configuration Release --no-build
+
+      - name: Pack
+        run: dotnet pack OpenXml.Wrappers/OpenXml.Wrappers.csproj --configuration Release --no-build --output artifacts
+
+      - name: Check the version
+        shell: bash
+        run: |
+          if [ ! -f "artifacts/E2e4.OpenXml.Wrappers.${{ inputs.version }}.nupkg" ]; then
+            echo "The build produced:"; ls artifacts
+            echo "::error::The requested version ${{ inputs.version }} is not the version of the build."
+            exit 1
+          fi
+
+      - name: Push
+        shell: bash
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          dotnet nuget push "artifacts/E2e4.OpenXml.Wrappers.${{ inputs.version }}.nupkg" \
+            --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+          dotnet nuget push "artifacts/E2e4.OpenXml.Wrappers.${{ inputs.version }}.snupkg" \
+            --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
