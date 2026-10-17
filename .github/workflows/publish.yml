@@ -1,7 +1,7 @@
 name: Publish to NuGet
 
-# Manual only: nothing is published by a push. The key is the NUGET_API_KEY secret of the "nuget" environment, which only the
-# repository owner can create; nobody (including tools working on the repository) ever sees its value.
+# Manual only: nothing is published by a push. Trusted Publishing: nuget.org trusts this repository, workflow file and environment,
+# and issues a one-hour key per run. There is no stored API key. The policy is created by the owner on nuget.org.
 on:
   workflow_dispatch:
     inputs:
@@ -12,6 +12,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
   publish:
@@ -47,10 +48,16 @@ jobs:
             exit 1
           fi
 
+      - name: Get a short-lived NuGet key
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ vars.NUGET_USER }}
+
       - name: Push
         shell: bash
         env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+          NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
         run: |
           dotnet nuget push "artifacts/E2e4.OpenXml.Wrappers.${{ inputs.version }}.nupkg" \
             --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
