@@ -195,6 +195,77 @@ internal sealed class StoryMap
         return null;
     }
 
+    /// <summary>
+    /// A map of the blocks (paragraphs and tables) from the one that holds <paramref name="first"/> to the one that holds
+    /// <paramref name="last"/>, at the level where both are in the same body or table cell. Null if there is no such run of blocks.
+    /// </summary>
+    public static StoryMap BuildWindowFor(Paragraph first, Paragraph last, OpenXmlElement story)
+    {
+        if (!ReferenceEquals(FindRoot(first), story) || !ReferenceEquals(FindRoot(last), story))
+        {
+            return null;
+        }
+
+        OpenXmlElement container = CommonAncestor(first, last);
+        while (container is TableRow || container is Table)
+        {
+            container = container.Parent;
+        }
+        if (container == null)
+        {
+            return null;
+        }
+
+        OpenXmlElement firstBlock = ChildOf(container, first);
+        OpenXmlElement lastBlock = ChildOf(container, last);
+        if (firstBlock == null || lastBlock == null)
+        {
+            return null;
+        }
+
+        List<OpenXmlElement> blocks = new List<OpenXmlElement>();
+        for (OpenXmlElement block = firstBlock; block != null; block = block.NextSibling())
+        {
+            blocks.Add(block);
+            if (ReferenceEquals(block, lastBlock))
+            {
+                break;
+            }
+        }
+        return ReferenceEquals(blocks[blocks.Count - 1], lastBlock) ? BuildWindow(container, blocks) : null;
+    }
+
+    //The ancestor of an element (or the element itself) that is a child of the container.
+    private static OpenXmlElement ChildOf(OpenXmlElement container, OpenXmlElement element)
+    {
+        OpenXmlElement current = element;
+        while (current != null && !ReferenceEquals(current.Parent, container))
+        {
+            current = current.Parent;
+        }
+        return current;
+    }
+
+    /// <summary>
+    /// The lowest element that holds both elements (or one of them, if it holds the other).
+    /// </summary>
+    public static OpenXmlElement CommonAncestor(OpenXmlElement first, OpenXmlElement second)
+    {
+        HashSet<OpenXmlElement> ancestors = new HashSet<OpenXmlElement>(ReferenceEqualityComparer.Instance);
+        for (OpenXmlElement current = first; current != null; current = current.Parent)
+        {
+            ancestors.Add(current);
+        }
+        for (OpenXmlElement current = second; current != null; current = current.Parent)
+        {
+            if (ancestors.Contains(current))
+            {
+                return current;
+            }
+        }
+        return null;
+    }
+
     #region Walking without a map
 
     /// <summary>

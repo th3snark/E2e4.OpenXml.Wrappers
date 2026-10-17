@@ -113,9 +113,11 @@ public class FindWrapper
             _limit = RangeWrapper.CreateAt(story, to);
         }
 
-        bool? found = find.Contains('\r', StringComparison.Ordinal) || find.Contains('\a', StringComparison.Ordinal)
+        bool? found = find.Contains('\a', StringComparison.Ordinal)
             ? null
-            : ExecuteByParagraph(story, scopeMap, scopeStart, scopeEnd, from, to, find, replacement, replace, comparison);
+            : find.Contains('\r', StringComparison.Ordinal)
+                ? ExecuteAcrossParagraphs(story, scopeMap, scopeStart, scopeEnd, from, to, find, replacement, replace, comparison)
+                : ExecuteByParagraph(story, scopeMap, scopeStart, scopeEnd, from, to, find, replacement, replace, comparison);
         if (found == null)
         {
             found = ExecuteInStory(story, from, to, find, replacement, replace, comparison, scopeMap, scopeStart, scopeEnd);
@@ -205,6 +207,98 @@ public class FindWrapper
             {
                 break;
             }
+        }
+
+        _lastMatch = null;
+        return any;
+    }
+
+    /// <summary>
+    /// Searches for text that includes paragraph marks. A match starts in one paragraph and runs on into the next few, so each paragraph is
+    /// searched together with as many of those after it as the text has marks. Returns null when the window cannot be worked out that way.
+    /// </summary>
+    private bool? ExecuteAcrossParagraphs(OpenXmlElement story, StoryMap scopeMap, int scopeStart, int scopeEnd, Anchor from, Anchor to, string find, string replacement, ReplaceMode replace, StringComparison comparison)
+    {
+        int marks = find.Count(c => c == '\r');
+        Paragraph first = ParagraphOf(from);
+        Paragraph last = to.Element == null ? null : ParagraphOf(to);
+        if (first == null || (to.Element != null && last == null))
+        {
+            return null;
+        }
+
+        bool any = false;
+        bool madeSpan = _range.IsSpan;
+        Paragraph paragraph = first;
+        Anchor startAt = from;
+        while (paragraph != null)
+        {
+            Paragraph reach = paragraph;
+            for (int i = 0; i < marks && reach != null; i++)
+            {
+                reach = StoryMap.NextParagraph(reach, story);
+            }
+            if (reach == null)
+            {
+                break;
+            }
+
+            StoryMap map = StoryMap.BuildWindowFor(paragraph, reach, story);
+            if (map == null)
+            {
+                return any ? any : (bool?)null;
+            }
+
+            int windowStart = startAt == null ? 0 : RangeWrapper.ResolveLocal(map, startAt);
+            int windowEnd = to.Element == null ? map.Length : RangeWrapper.ResolveLocal(map, to);
+            if (windowEnd < 0)
+            {
+                windowEnd = map.Length;
+            }
+            if (windowStart < 0 || !map.TryGetAtom(paragraph, out Atom mark))
+            {
+                return any ? any : (bool?)null;
+            }
+
+            //A match belongs to the paragraph it starts in, so that it is found once.
+            List<(int Start, int Length)> matches = FindMatches(map, find, windowStart, windowEnd, comparison, false, mark.End);
+            if (matches.Count > 0)
+            {
+                any = true;
+                int matchStart = matches[0].Start;
+                int matchLength = matches[0].Length;
+                if (replace == ReplaceMode.None)
+                {
+                    Remember(map, matchStart, matchStart + matchLength);
+                    return true;
+                }
+
+                RangeWrapper replaced = RangeWrapper.FromMap(map, matchStart, matchStart + matchLength);
+                replaced.ReplaceSpanText(replacement);
+                if (replace == ReplaceMode.One)
+                {
+                    _range.MakeSpanAnchors(replaced.StartAnchor, replaced.EndAnchor);
+                    _lastMatch = _range.Duplicate();
+                    return true;
+                }
+
+                //A replace all goes on from the end of the replacement, which can be in the middle of a paragraph now.
+                if (!madeSpan)
+                {
+                    _range.MakeSpan(scopeMap, scopeStart, scopeEnd);
+                    madeSpan = true;
+                }
+                paragraph = ParagraphOf(replaced.EndAnchor);
+                startAt = replaced.EndAnchor;
+                continue;
+            }
+
+            if (last != null && paragraph == last)
+            {
+                break;
+            }
+            paragraph = StoryMap.NextParagraph(paragraph, story);
+            startAt = null;
         }
 
         _lastMatch = null;
@@ -305,7 +399,7 @@ public class FindWrapper
 
     //Finds the matches in the positions from windowStart up to windowEnd. Positions that show no text (field codes, pictures) are skipped over,
     //so a match can run across them; each match is given as the position it starts at and the number of positions it takes up.
-    private List<(int Start, int Length)> FindMatches(StoryMap map, string find, int windowStart, int windowEnd, StringComparison comparison, bool all)
+    private List<(int Start, int Length)> FindMatches(StoryMap map, string find, int windowStart, int windowEnd, StringComparison comparison, bool all, int maxStart = int.MaxValue)
     {
         char[] characters = map.ToCharacters();
         List<int> positions = null;
@@ -335,10 +429,11 @@ public class FindWrapper
 
         List<(int Start, int Length)> matches = new List<(int, int)>();
         int position = from;
+        int startLimit = positions == null ? maxStart : FirstIndexAtOrAfter(positions, maxStart);
         while (position <= to - find.Length)
         {
             int index = haystack.IndexOf(find, position, to - position, comparison);
-            if (index < 0)
+            if (index < 0 || index >= startLimit)
             {
                 break;
             }

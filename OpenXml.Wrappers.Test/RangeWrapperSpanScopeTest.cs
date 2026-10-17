@@ -197,6 +197,91 @@ public class RangeWrapperSpanScopeTest
 
     #endregion
 
+    #region Windows, finds across paragraphs and moves in a large document
+
+    [Fact]
+    public void DeletingFromBeforeATableToAfterItNeedsOnlyThoseBlocks()
+    {
+        Body body = BigBody(6000);
+        Paragraph anchor = body.Elements<Paragraph>().ElementAt(3000);
+        anchor.InsertAfterSelf(Paragraph("after"));
+        anchor.InsertAfterSelf(new Table(new TableRow(new TableCell(Paragraph("cell")))));
+        anchor.InsertAfterSelf(Paragraph("before"));
+
+        //From after "bef" to after "af": the rest of "before", its paragraph mark, the whole table, and the start of "after".
+        RangeWrapper before = new RangeWrapper(body);
+        before.Find.Execute("before");
+        RangeWrapper after = new RangeWrapper(body);
+        after.Find.Execute("after");
+        RangeWrapper span = before.Duplicate();
+        span.Collapse();
+        span.MoveEnd(TextUnit.Character, 3);
+        span.Collapse(CollapseDirection.End);
+        RangeWrapper till = after.Duplicate();
+        till.Collapse();
+        till.MoveEnd(TextUnit.Character, 2);
+        till.Collapse(CollapseDirection.End);
+        span.SetRange(span.Start, till.Start);
+        Stopwatch watch = Stopwatch.StartNew();
+
+        span.Delete();
+
+        watch.Stop();
+        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(3), "Took " + watch.Elapsed);
+        Assert.Equal("befter", new ParagraphWrapper(body.Elements<Paragraph>().ElementAt(3001)).Text);
+        Assert.Empty(body.Descendants<Table>());
+        Assert.Equal(6001, body.Elements<Paragraph>().Count());
+    }
+    [Fact]
+    public void AFindWithAParagraphMarkFindsAndReplacesAcrossParagraphs()
+    {
+        Body body = new Body(Paragraph("a"), Paragraph("b a"), Paragraph("b"), Paragraph("x"));
+
+        Assert.True(new RangeWrapper(body).Find.Execute("a^pb a^pb"));
+
+        RangeWrapper all = new RangeWrapper(body);
+        Assert.True(all.Find.Execute("a^pb", replaceWith: "X", replace: ReplaceMode.All));
+        Assert.Equal("X X\rx\r", new RangeWrapper(body).Text);
+        Assert.Equal(2, body.Elements<Paragraph>().Count());
+    }
+
+    [Fact]
+    public void AFindWithAParagraphMarkIsQuickInALargeDocument()
+    {
+        Body body = BigBody(6000);
+        body.Elements<Paragraph>().ElementAt(5000).InsertAfterSelf(Paragraph("zebra"));
+        body.Elements<Paragraph>().ElementAt(5001).InsertAfterSelf(Paragraph("crossing"));
+        Stopwatch watch = Stopwatch.StartNew();
+
+        RangeWrapper range = new RangeWrapper(body);
+        bool found = range.Find.Execute("zebra^pcrossing");
+
+        watch.Stop();
+        Assert.True(found);
+        Assert.Equal("zebra\rcrossing", range.Text);
+        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(4), "Took " + watch.Elapsed);
+    }
+
+    [Fact]
+    public void MovingByWordsThroughALargeDocumentIsQuick()
+    {
+        Body body = BigBody(6000);
+        RangeWrapper range = new RangeWrapper(body);
+        range.SetRange(100000, 100000);
+        Stopwatch watch = Stopwatch.StartNew();
+
+        for (int i = 0; i < 2000; i++)
+        {
+            range.Move(TextUnit.Word, 7);
+        }
+
+        watch.Stop();
+        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(4), "Took " + watch.Elapsed);
+        Assert.True(range.Start > 100000);
+    }
+
+    #endregion
+
     #region Positions
 
     [Fact]
