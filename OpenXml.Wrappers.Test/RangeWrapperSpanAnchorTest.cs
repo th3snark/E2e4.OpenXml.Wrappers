@@ -174,18 +174,41 @@ public class RangeWrapperSpanAnchorTest
     }
 
     [Fact]
-    public void ASpanPastADeletedParagraphUsesItsLastPosition()
+    public void ARangeWhoseParagraphIsRemovedWithTheSdkCollapsesToWhereItWas()
     {
         Paragraph doomed = Paragraph("middle");
         Body body = new Body(Paragraph("first"), doomed, Paragraph("last"));
         RangeWrapper inDoomed = Range(body, 6, 12);
+        RangeWrapper last = Range(body, 13, 17);
 
-        //Removed behind the library's back, so it cannot be followed: the range keeps its last position instead of failing.
+        //Removed behind the library's back.
         doomed.Remove();
 
-        Assert.True(inDoomed.Start >= 0);
-        Assert.True(inDoomed.End >= inDoomed.Start);
-        Assert.NotNull(inDoomed.Text);
+        Assert.Equal(6, inDoomed.Start);
+        Assert.Equal(6, inDoomed.End);
+        Assert.Equal(string.Empty, inDoomed.Text);
+        Assert.Equal("last", last.Text);
+        Assert.Equal(6, last.Start);
+
+        //The range goes on following the text from there.
+        new ParagraphWrapper(body.Elements<Paragraph>().First()).Range.InsertBefore(">>");
+        Assert.Equal(8, inDoomed.Start);
+    }
+
+    [Fact]
+    public void ARangeWhoseRunIsRemovedWithTheSdkCollapsesToWhereItWas()
+    {
+        Paragraph paragraph = Paragraph("Hello ", "big", " world");
+        Body body = new Body(paragraph);
+        RangeWrapper big = Range(body, 6, 9);
+        RangeWrapper world = Range(body, 10, 15);
+
+        paragraph.Elements<Run>().ElementAt(1).Remove();
+
+        Assert.Equal(6, big.Start);
+        Assert.Equal(6, big.End);
+        Assert.Equal("world", world.Text);
+        Assert.Equal(7, world.Start);
     }
 
     #endregion
@@ -237,6 +260,26 @@ public class RangeWrapperSpanAnchorTest
         watch.Stop();
         Assert.Equal(6000, count);
         Assert.True(watch.Elapsed < TimeSpan.FromSeconds(8), "Took " + watch.Elapsed);
+    }
+
+    [Fact]
+    public void WalkingAParagraphCollectionByIndexIsFast()
+    {
+        Body body = BigBody(6000);
+        ParagraphWrapperCollection paragraphs = new RangeWrapper(body).Paragraphs;
+        Stopwatch watch = Stopwatch.StartNew();
+
+        int length = 0;
+        for (int i = 0; i < paragraphs.Count; i++)
+        {
+            length += paragraphs[i].Text.Length;
+        }
+
+        watch.Stop();
+        Assert.True(length > 6000 * 40);
+        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(8), "Took " + watch.Elapsed);
+        Assert.Throws<ArgumentOutOfRangeException>(() => paragraphs[6000]);
+        Assert.Throws<ArgumentOutOfRangeException>(() => paragraphs[-1]);
     }
 
     [Fact]

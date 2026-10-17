@@ -38,25 +38,40 @@ public partial class RangeWrapper
     internal int ReplaceSpanText(string text)
     {
         string newText = text ?? String.Empty;
-        GetScoped(MakesParagraphs(newText), out StoryMap map, out int start, out int end);
+        GetScoped(false, out StoryMap map, out int start, out int end);
 
         //Formatting is taken from the text before it goes.
         RunProperties formatting = FindFormatting(map, start, end);
-        OpenXmlElement scope = map.Root;
         if (end > start)
         {
+            //The anchors of this range go to where the deleted text was, which is where the new text belongs.
             DeleteSpanContent(map, start, end);
         }
 
-        int length = InsertSpanText(scope, start, newText, formatting);
-        MakeSpan(StoryMap.Build(scope), start, start + length);
-        return length;
+        Paragraph paragraph = ParagraphToInsertInto(_startAnchor);
+        int local = ResolveLocal(StoryMap.Build(paragraph), _startAnchor);
+        (Paragraph last, int lastLocal) = InsertSpanText(paragraph, local, newText, formatting);
+
+        MakeSpanAnchors(Anchor.At(StoryMap.Build(paragraph), local), Anchor.At(StoryMap.Build(last), lastLocal));
+        return newText.Replace("\a", String.Empty, StringComparison.Ordinal).Replace("\r\n", "\r", StringComparison.Ordinal).Length;
     }
 
-    //Text with a carriage return starts new paragraphs, which a map of one paragraph cannot hold.
-    private static bool MakesParagraphs(string text)
+    //The paragraph an anchor is in; when the anchor is the end of the story, the last paragraph of it.
+    private Paragraph ParagraphToInsertInto(Anchor anchor)
     {
-        return text.Contains('\r', StringComparison.Ordinal);
+        Paragraph paragraph = ParagraphOfAnchor(anchor);
+        if (paragraph != null)
+        {
+            return paragraph;
+        }
+
+        StoryMap story = StoryMap.Build(_root);
+        Atom lastParagraphMark = story.Atoms.LastOrDefault(a => a.Kind == AtomKind.ParagraphMark);
+        if (lastParagraphMark == null)
+        {
+            throw new InvalidOperationException("The story has no paragraph to put text in.");
+        }
+        return (Paragraph)lastParagraphMark.Element;
     }
 
     private void InsertIntoSpan(string text, bool after)
@@ -66,22 +81,31 @@ public partial class RangeWrapper
             return;
         }
 
-        GetScoped(MakesParagraphs(text), out StoryMap map, out int start, out int end);
+        GetScoped(false, out StoryMap map, out int start, out int end);
         int position = after ? end : start;
         RunProperties formatting = FindFormatting(map, position, position);
-        OpenXmlElement scope = map.Root;
-        int length = InsertSpanText(scope, position, text, formatting);
+        Paragraph paragraph = ParagraphAt(map, position);
+        int local = position - FirstPositionOf(map, paragraph);
+        (Paragraph last, int lastLocal) = InsertSpanText(paragraph, local, text, formatting);
 
         //As in Word the range grows to include the text that was added to it.
-        MakeSpan(StoryMap.Build(scope), start, end + length);
+        if (after)
+        {
+            MakeSpanAnchors(_startAnchor, Anchor.At(StoryMap.Build(last), lastLocal));
+        }
+        else
+        {
+            MakeSpanAnchors(Anchor.At(StoryMap.Build(paragraph), local), _endAnchor);
+        }
     }
 
     private void DeleteSpan()
     {
         GetScoped(false, out StoryMap map, out int start, out int end);
-        OpenXmlElement scope = map.Root;
         DeleteSpanContent(map, start, end);
-        MakeSpan(StoryMap.Build(scope), start, start);
+
+        //The anchors have gone to where the text was.
+        MakeSpanAnchors(_startAnchor, _startAnchor.Clone());
     }
 
     #region Formatting of new text
@@ -143,29 +167,26 @@ public partial class RangeWrapper
     /// <summary>
     /// Inserts text at a position. A carriage return in the text starts a new paragraph. Returns the number of positions that were added.
     /// </summary>
-    private int InsertSpanText(OpenXmlElement scope, int position, string text, RunProperties formatting)
+    private (Paragraph Last, int LastPosition) InsertSpanText(Paragraph paragraph, int position, string text, RunProperties formatting)
     {
-        int added = 0;
+        Paragraph current = paragraph;
+        int at = position;
         string[] lines = text.Replace("\a", String.Empty, StringComparison.Ordinal).Replace("\r\n", "\r", StringComparison.Ordinal).Split('\r');
         for (int i = 0; i < lines.Length; i++)
         {
             if (i > 0)
             {
-                SplitParagraphAt(scope, position + added);
-                added++;
+                current = SplitParagraphAt(current, at);
+                at = 0;
             }
             if (lines[i].Length > 0)
             {
-                added += InsertLine(scope, position + added, lines[i], formatting);
+                string line = lines[i];
+                InsertRunsAt(current, at, p => BuildNewRunListFromText(line, p), formatting);
+                at += line.Length;
             }
         }
-        return added;
-    }
-
-    private int InsertLine(OpenXmlElement scope, int position, string line, RunProperties formatting)
-    {
-        InsertRunsAt(scope, position, paragraph => BuildNewRunListFromText(line, paragraph), formatting);
-        return line.Length;
+        return (current, at);
     }
 
     /// <summary>
@@ -227,15 +248,10 @@ public partial class RangeWrapper
     /// Splits the paragraph that holds the position in two, with a paragraph mark at the position. The second paragraph has the same
     /// properties as the first. Returns the second paragraph.
     /// </summary>
-    private Paragraph SplitParagraphAt(OpenXmlElement scope, int position)
+    private static Paragraph SplitParagraphAt(Paragraph paragraph, int position)
     {
-        StoryMap map = StoryMap.Build(scope).EnsureBoundary(position);
+        StoryMap map = StoryMap.Build(paragraph).EnsureBoundary(position);
         int index = map.IndexAt(position);
-        Paragraph paragraph = ParagraphAt(map, position);
-        if (paragraph == null || (index >= 0 && map.Atoms[index].Kind == AtomKind.RowMark))
-        {
-            throw new InvalidOperationException("A paragraph cannot be started here, after the last cell of a table row.");
-        }
 
         //Everything in the paragraph from the position on goes into the new paragraph.
         List<OpenXmlElement> moved = new List<OpenXmlElement>();
@@ -383,7 +399,7 @@ public partial class RangeWrapper
         List<OpenXmlElement> toRemove = new List<OpenXmlElement>();
         if (charRuns.Count > 0)
         {
-            List<Run> allRuns = map.Root.Descendants<Run>().ToList();
+            List<Run> allRuns = map.Runs().ToList();
             int first = allRuns.IndexOf(charRuns.First());
             int last = allRuns.IndexOf(charRuns.Last());
             HashSet<Run> doomed = new HashSet<Run>(allRuns.Skip(first).Take(last - first + 1));

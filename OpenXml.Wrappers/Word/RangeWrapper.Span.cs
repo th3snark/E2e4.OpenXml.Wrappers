@@ -59,6 +59,24 @@ public partial class RangeWrapper
         }
     }
 
+    //The two anchors and the neighbours they remember, which a change of the document has to correct as well.
+    internal IEnumerable<Anchor> AllAnchors()
+    {
+        if (_isSpan)
+        {
+            yield return _startAnchor;
+            foreach (Anchor neighbour in _startAnchor.Neighbours)
+            {
+                yield return neighbour;
+            }
+            yield return _endAnchor;
+            foreach (Anchor neighbour in _endAnchor.Neighbours)
+            {
+                yield return neighbour;
+            }
+        }
+    }
+
     internal Anchor StartAnchor
     {
         get { return _startAnchor; }
@@ -77,18 +95,23 @@ public partial class RangeWrapper
     /// </summary>
     /// <remarks>
     /// A range follows its text, so the positions change when text is added or removed before it. They are worked out each time they are read,
-    /// by looking through the story, so keep a range (or its words) rather than calling this over and over on a very large document.
+    /// by counting through the story up to the range (nothing is built, but it is as far as the range from the start of the story), so keep
+    /// a range (or its words) rather than calling this over and over on a very large document.
     /// </remarks>
     public int Start
     {
         get
         {
-            GetPositions(out _, out int start, out _);
+            if (_isSpan && StoryMap.TryPositionOf(_root, _startAnchor, out int position))
+            {
+                return position;
+            }
+            GetStoryPositions(out int start, out _);
             return start;
         }
         set
         {
-            GetPositions(out _, out _, out int end);
+            GetStoryPositions(out _, out int end);
             SetRange(value, Math.Max(value, end));
         }
     }
@@ -100,12 +123,12 @@ public partial class RangeWrapper
     {
         get
         {
-            GetPositions(out _, out _, out int end);
+            GetStoryPositions(out _, out int end);
             return end;
         }
         set
         {
-            GetPositions(out _, out int start, out _);
+            GetStoryPositions(out int start, out _);
             SetRange(Math.Min(start, value), value);
         }
     }
@@ -115,11 +138,7 @@ public partial class RangeWrapper
     /// </summary>
     public int StoryLength
     {
-        get
-        {
-            GetPositions(out StoryMap map, out _, out _);
-            return map.Length;
-        }
+        get { return StoryMap.CountLength(StoryMap.FindRoot(AnchorElement)); }
     }
 
     /// <summary>
@@ -130,12 +149,25 @@ public partial class RangeWrapper
     /// <exception cref="ArgumentOutOfRangeException">The positions are not in order, or are beyond the end of the story.</exception>
     public void SetRange(int start, int end)
     {
-        GetPositions(out StoryMap map, out _, out _);
-        if (start < 0 || end < start || end > map.Length)
+        OpenXmlElement story = StoryMap.FindRoot(AnchorElement);
+        if (start < 0 || end < start || !StoryMap.TryAnchorsFor(story, start, end, out Anchor startAnchor, out Anchor endAnchor))
         {
-            throw new ArgumentOutOfRangeException(nameof(end), String.Format(CultureInfo.InvariantCulture, "The range {0} to {1} is not inside the story, which is {2} positions long.", start, end, map.Length));
+            throw new ArgumentOutOfRangeException(nameof(end), String.Format(CultureInfo.InvariantCulture, "The range {0} to {1} is not inside the story, which is {2} positions long.", start, end, StoryMap.CountLength(story)));
         }
-        MakeSpan(map, start, end);
+
+        bool register = !_isSpan || !ReferenceEquals(_root, story);
+        _isSpan = true;
+        _root = story;
+        _startAnchor = startAnchor;
+        _endAnchor = endAnchor;
+        _startOpenXmlElement = null;
+        _endOpenXmlElement = null;
+        _lastStart = start;
+        _lastEnd = end;
+        if (register)
+        {
+            SpanRegistry.Register(story, this);
+        }
     }
 
     /// <summary>
@@ -154,10 +186,32 @@ public partial class RangeWrapper
     /// </summary>
     public int MoveStart(TextUnit unit, int count = 1)
     {
-        GetPositions(out StoryMap map, out int start, out int end);
-        int moved = Shift(map, unit, start, count, out int position);
-        MakeSpan(map, position, Math.Max(position, end));
-        return moved;
+        if (TryShiftLocal(_startAnchor, unit, count, out Anchor moved, out int units))
+        {
+            //The start may have passed the end, which collapses the range there.
+            Anchor end = _endAnchor;
+            Paragraph oldParagraph = ParagraphOfAnchor(_startAnchor);
+            if (ReferenceEquals(ParagraphOfAnchor(end), oldParagraph))
+            {
+                bool passed = !ReferenceEquals(ParagraphOfAnchor(moved), oldParagraph);
+                if (!passed)
+                {
+                    StoryMap map = StoryMap.Build(oldParagraph);
+                    passed = ResolveLocal(map, moved) > ResolveLocal(map, end);
+                }
+                if (passed)
+                {
+                    end = moved.Clone();
+                }
+            }
+            MakeSpanAnchors(moved, end);
+            return units;
+        }
+
+        GetPositions(out StoryMap whole, out int start, out int wholeEnd);
+        int unitsMoved = Shift(whole, unit, start, count, out int position);
+        MakeSpan(whole, position, Math.Max(position, wholeEnd));
+        return unitsMoved;
     }
 
     /// <summary>
@@ -166,22 +220,82 @@ public partial class RangeWrapper
     /// </summary>
     public int MoveEnd(TextUnit unit, int count = 1)
     {
-        GetPositions(out StoryMap map, out int start, out int end);
-        int moved = Shift(map, unit, end, count, out int position);
-        MakeSpan(map, Math.Min(start, position), position);
-        return moved;
-    }
+        if (TryShiftLocal(_endAnchor, unit, count, out Anchor moved, out int units))
+        {
+            //The end may have passed the start, which collapses the range there.
+            Anchor start = _startAnchor;
+            Paragraph oldParagraph = ParagraphOfAnchor(_endAnchor);
+            if (ReferenceEquals(ParagraphOfAnchor(start), oldParagraph) && ReferenceEquals(ParagraphOfAnchor(moved), oldParagraph))
+            {
+                StoryMap map = StoryMap.Build(oldParagraph);
+                if (ResolveLocal(map, moved) < ResolveLocal(map, start))
+                {
+                    start = moved.Clone();
+                }
+            }
+            MakeSpanAnchors(start, moved);
+            return units;
+        }
 
+        GetPositions(out StoryMap whole, out int wholeStart, out int end);
+        int unitsMoved = Shift(whole, unit, end, count, out int position);
+        MakeSpan(whole, Math.Min(wholeStart, position), position);
+        return unitsMoved;
+    }
     /// <summary>
     /// Collapses the range to its end and then moves that point by <paramref name="count"/> units, as <c>Range.Move</c> in Word. Returns the
     /// number of units it moved.
     /// </summary>
     public int Move(TextUnit unit, int count = 1)
     {
-        GetPositions(out StoryMap map, out _, out int end);
-        int moved = Shift(map, unit, end, count, out int position);
-        MakeSpan(map, position, position);
-        return moved;
+        if (TryShiftLocal(_isSpan ? _endAnchor : EndAnchorOfElements(), unit, count, out Anchor moved, out int units))
+        {
+            MakeSpanAnchors(moved, moved.Clone());
+            return units;
+        }
+
+        GetPositions(out StoryMap whole, out _, out int end);
+        int count1 = Shift(whole, unit, end, count, out int position);
+        MakeSpan(whole, position, position);
+        return count1;
+    }
+
+    //The end of a range of elements as an anchor, found in the map of the part of the story it is in.
+    private Anchor EndAnchorOfElements()
+    {
+        GetScoped(false, out StoryMap map, out _, out int end);
+        return Anchor.At(map, end);
+    }
+
+    /// <summary>
+    /// Moves an anchor by units within its own paragraph. False when that cannot be done there (the anchor is not in a paragraph, or the
+    /// move would go past the start of the paragraph or past its end), and a map of the story is needed.
+    /// </summary>
+    private bool TryShiftLocal(Anchor anchor, TextUnit unit, int count, out Anchor result, out int moved)
+    {
+        result = null;
+        moved = 0;
+        Paragraph paragraph = anchor == null ? null : ParagraphOfAnchor(anchor);
+        if (paragraph == null || !ReferenceEquals(StoryMap.FindRoot(paragraph), StoryMap.FindRoot(AnchorElement)))
+        {
+            return false;
+        }
+
+        StoryMap map = StoryMap.Build(paragraph);
+        int position = ResolveLocal(map, anchor);
+        if (position < 0 || unit == TextUnit.Paragraph)
+        {
+            return false;
+        }
+
+        int units = Shift(map, unit, position, count, out int target);
+        if (Math.Abs(units) < Math.Abs(count))
+        {
+            return false;
+        }
+        result = Anchor.At(map, target);
+        moved = units;
+        return true;
     }
 
     /// <summary>
@@ -191,7 +305,7 @@ public partial class RangeWrapper
     public void Expand(TextUnit unit)
     {
         //Words, sentences and characters of a range inside one paragraph are all inside that paragraph.
-        GetScoped(unit == TextUnit.Paragraph, out StoryMap map, out int start, out int end);
+        GetScoped(false, out StoryMap map, out int start, out int end);
         List<int> boundaries = TextUnits.GetBoundaries(map.ToCharacters(), unit);
         int newStart = boundaries.LastOrDefault(b => b <= start);
         int newEnd = end > start ? boundaries.FirstOrDefault(b => b >= end) : boundaries.FirstOrDefault(b => b > start);
@@ -230,8 +344,27 @@ public partial class RangeWrapper
     #region Positions
 
     /// <summary>
+    /// Makes the range the span between two anchors in the story of the range.
+    /// </summary>
+    internal void MakeSpanAnchors(Anchor startAnchor, Anchor endAnchor)
+    {
+        OpenXmlElement story = _isSpan ? _root : StoryMap.FindRoot(_startOpenXmlElement);
+        bool register = !_isSpan;
+        _isSpan = true;
+        _root = story;
+        _startAnchor = startAnchor;
+        _endAnchor = endAnchor;
+        _startOpenXmlElement = null;
+        _endOpenXmlElement = null;
+        if (register)
+        {
+            SpanRegistry.Register(story, this);
+        }
+    }
+
+    /// <summary>
     /// Makes the range the span from <paramref name="start"/> to <paramref name="end"/> in the map, which can be the map of the whole story or
-    /// of one paragraph in it.
+    /// of part of it.
     /// </summary>
     internal void MakeSpan(StoryMap map, int start, int end)
     {
@@ -282,6 +415,31 @@ public partial class RangeWrapper
     }
 
     /// <summary>
+    /// The positions of the start and end of the range in the story, found by counting through it without building a map.
+    /// </summary>
+    internal void GetStoryPositions(out int start, out int end)
+    {
+        if (_isSpan)
+        {
+            if (StoryMap.TryPositionOf(_root, _startAnchor, out start) && StoryMap.TryPositionOf(_root, _endAnchor, out end))
+            {
+                end = Math.Max(start, end);
+                return;
+            }
+        }
+        else if (TryGetLocal(out StoryMap local, out int localStart, out int localEnd))
+        {
+            int offset = StoryMap.OffsetOf(local.Root);
+            start = offset + localStart;
+            end = offset + localEnd;
+            return;
+        }
+
+        //The text the range was on has gone, or it is a range of elements that is not inside one paragraph.
+        GetPositions(out _, out start, out end);
+    }
+
+    /// <summary>
     /// Builds the map of the story of the range and finds the positions of the start and end of the range in it.
     /// </summary>
     internal void GetPositions(out StoryMap map, out int start, out int end)
@@ -289,8 +447,8 @@ public partial class RangeWrapper
         if (_isSpan)
         {
             map = StoryMap.Build(_root);
-            start = ResolveStory(map, _startAnchor, _lastStart);
-            end = Math.Max(start, ResolveStory(map, _endAnchor, _lastEnd));
+            start = ResolveStory(map, ref _startAnchor, _lastStart);
+            end = Math.Max(start, ResolveStory(map, ref _endAnchor, _lastEnd));
             _lastStart = start;
             _lastEnd = end;
             return;
@@ -310,11 +468,61 @@ public partial class RangeWrapper
     /// <param name="end">The position of the end of the range in the map.</param>
     internal void GetScoped(bool forceStory, out StoryMap map, out int start, out int end)
     {
-        if (!forceStory && TryGetLocal(out map, out start, out end))
+        if (!forceStory && (TryGetLocal(out map, out start, out end) || TryGetWindow(out map, out start, out end)))
         {
             return;
         }
         GetPositions(out map, out start, out end);
+    }
+
+    //A span from one paragraph to a later one that are among the same run of paragraphs (the paragraphs of a body or table cell with no table
+    //between them) only needs a map of those paragraphs.
+    private bool TryGetWindow(out StoryMap map, out int start, out int end)
+    {
+        map = null;
+        start = 0;
+        end = 0;
+        if (!_isSpan)
+        {
+            return false;
+        }
+
+        Paragraph first = ParagraphOfAnchor(_startAnchor);
+        Paragraph last = ParagraphOfAnchor(_endAnchor);
+        if (first == null || last == null || ReferenceEquals(first, last) || !ReferenceEquals(first.Parent, last.Parent) || !ReferenceEquals(StoryMap.FindRoot(first), _root))
+        {
+            return false;
+        }
+
+        List<OpenXmlElement> blocks = new List<OpenXmlElement>();
+        for (OpenXmlElement block = first; block != null; block = block.NextSibling())
+        {
+            if (!(block is Paragraph))
+            {
+                return false;
+            }
+            blocks.Add(block);
+            if (ReferenceEquals(block, last))
+            {
+                break;
+            }
+        }
+        if (!ReferenceEquals(blocks[blocks.Count - 1], last))
+        {
+            return false;
+        }
+
+        StoryMap window = StoryMap.BuildWindow(first.Parent, blocks);
+        start = ResolveLocal(window, _startAnchor);
+        end = ResolveLocal(window, _endAnchor);
+        if (start < 0 || end < start)
+        {
+            return false;
+        }
+        _startAnchor.Refresh(window);
+        _endAnchor.Refresh(window);
+        map = window;
+        return true;
     }
 
     private bool TryGetLocal(out StoryMap map, out int start, out int end)
@@ -323,33 +531,26 @@ public partial class RangeWrapper
         start = 0;
         end = 0;
 
-        Paragraph paragraph;
+        OpenXmlElement scope;
         if (_isSpan)
         {
-            paragraph = ParagraphOfAnchor(_startAnchor);
+            Paragraph paragraph = ParagraphOfAnchor(_startAnchor);
             if (paragraph == null || !ReferenceEquals(paragraph, ParagraphOfAnchor(_endAnchor)) || !ReferenceEquals(StoryMap.FindRoot(paragraph), _root))
             {
                 return false;
             }
+            scope = paragraph;
         }
-        else if (_startOpenXmlElement is Paragraph && ReferenceEquals(_startOpenXmlElement, _endOpenXmlElement))
+        else
         {
-            paragraph = (Paragraph)_startOpenXmlElement;
-        }
-        else if (_startOpenXmlElement is BookmarkStart || _startOpenXmlElement is CommentRangeStart)
-        {
-            paragraph = _startOpenXmlElement.Ancestors<Paragraph>().FirstOrDefault();
-            if (paragraph == null || !ReferenceEquals(paragraph, _endOpenXmlElement.Ancestors<Paragraph>().FirstOrDefault()))
+            scope = ElementScope();
+            if (scope == null)
             {
                 return false;
             }
         }
-        else
-        {
-            return false;
-        }
 
-        StoryMap local = StoryMap.Build(paragraph);
+        StoryMap local = StoryMap.Build(scope);
         if (_isSpan)
         {
             start = ResolveLocal(local, _startAnchor);
@@ -358,6 +559,8 @@ public partial class RangeWrapper
             {
                 return false;
             }
+            _startAnchor.Refresh(local);
+            _endAnchor.Refresh(local);
         }
         else
         {
@@ -365,6 +568,28 @@ public partial class RangeWrapper
         }
         map = local;
         return true;
+    }
+
+    /// <summary>
+    /// The smallest part of the story that holds a range of elements and has a map of its own: the paragraph, table cell or table, or the
+    /// table of a table row; the paragraph that holds a bookmark or comment range. Null for ranges that need the whole story.
+    /// </summary>
+    private OpenXmlElement ElementScope()
+    {
+        if (_startOpenXmlElement is BookmarkStart || _startOpenXmlElement is CommentRangeStart)
+        {
+            Paragraph paragraph = _startOpenXmlElement.Ancestors<Paragraph>().FirstOrDefault();
+            return paragraph != null && ReferenceEquals(paragraph, _endOpenXmlElement.Ancestors<Paragraph>().FirstOrDefault()) ? paragraph : null;
+        }
+        if (!ReferenceEquals(_startOpenXmlElement, _endOpenXmlElement))
+        {
+            return null;
+        }
+        if (_startOpenXmlElement is TableRow row)
+        {
+            return row.Parent as Table;
+        }
+        return _startOpenXmlElement is Paragraph || _startOpenXmlElement is TableCell || _startOpenXmlElement is Table ? _startOpenXmlElement : null;
     }
 
     private static Paragraph ParagraphOfAnchor(Anchor anchor)
@@ -376,14 +601,37 @@ public partial class RangeWrapper
         return anchor.Element as Paragraph ?? anchor.Element.Ancestors<Paragraph>().FirstOrDefault();
     }
 
-    private static int ResolveStory(StoryMap map, Anchor anchor, int fallback)
+    //The position of an anchor in the map of the whole story. If the text it was on has gone (without the library being told) the nearest
+    //neighbour it remembers that is still there gives the place, and failing that the position it last had. The anchor is then moved to that
+    //place so that it follows the text from there.
+    private static int ResolveStory(StoryMap map, ref Anchor anchor, int fallback)
     {
         if (anchor.Element == null)
         {
             return map.Length;
         }
         int position = ResolveLocal(map, anchor);
-        return position >= 0 ? position : Math.Min(fallback, map.Length);
+        if (position >= 0)
+        {
+            anchor.Refresh(map);
+            return position;
+        }
+
+        position = -1;
+        foreach (Anchor neighbour in anchor.Neighbours)
+        {
+            if (map.TryGetAtom(neighbour.Element, out Atom atom))
+            {
+                position = atom.Start + Math.Min(neighbour.Offset, atom.Length);
+                break;
+            }
+        }
+        if (position < 0)
+        {
+            position = Math.Min(fallback, map.Length);
+        }
+        anchor = Anchor.At(map, position);
+        return position;
     }
 
     internal static int ResolveLocal(StoryMap map, Anchor anchor)

@@ -38,9 +38,19 @@ public partial class RangeWrapper
     {
         if (_isSpan)
         {
-            GetPositions(out StoryMap map, out int start, out int end);
-            Paragraph split = SplitParagraphAt(map.Root, after ? end : start);
-            MakeSpan(StoryMap.Build(map.Root), start, end + 1);
+            GetScoped(false, out StoryMap map, out int start, out int end);
+            int position = after ? end : start;
+            Paragraph holder = ParagraphAt(map, position);
+            int local = position - FirstPositionOf(map, holder);
+            Paragraph split = SplitParagraphAt(holder, local);
+            if (after)
+            {
+                MakeSpanAnchors(_startAnchor, Anchor.At(StoryMap.Build(split), 0));
+            }
+            else
+            {
+                MakeSpanAnchors(Anchor.At(StoryMap.Build(holder), local), _endAnchor);
+            }
             return new ParagraphWrapper(split);
         }
 

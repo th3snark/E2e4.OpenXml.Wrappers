@@ -56,11 +56,55 @@ internal sealed class Atom
 internal sealed class StoryMap
 {
     private StoryMap(OpenXmlElement root)
+        : this(root, null)
+    {
+    }
+
+    //A map of the whole of the root, or when blocks is given of those blocks only (children of the root, in order).
+    private StoryMap(OpenXmlElement root, IReadOnlyList<OpenXmlElement> blocks)
     {
         Root = root;
+        _blocks = blocks;
         Atoms = new List<Atom>();
-        Walk(root);
+        if (blocks == null)
+        {
+            Walk(root);
+        }
+        else
+        {
+            foreach (OpenXmlElement block in blocks)
+            {
+                Walk(block);
+            }
+        }
         Length = Atoms.Count == 0 ? 0 : Atoms[Atoms.Count - 1].End;
+    }
+
+    private readonly IReadOnlyList<OpenXmlElement> _blocks;
+
+    /// <summary>
+    /// A map of just some of the blocks (consecutive paragraphs, say) of an element, so that work on a few paragraphs does not need a map of
+    /// everything around them. Positions are counted from the start of the first block.
+    /// </summary>
+    public static StoryMap BuildWindow(OpenXmlElement parent, IReadOnlyList<OpenXmlElement> blocks)
+    {
+        return new StoryMap(parent, blocks);
+    }
+
+    /// <summary>
+    /// True when the map is of the whole of a story, so that its end is the end of the story.
+    /// </summary>
+    public bool IsStory
+    {
+        get { return _blocks == null && ReferenceEquals(FindRoot(Root), Root); }
+    }
+
+    /// <summary>
+    /// The runs in the part of the story that the map covers.
+    /// </summary>
+    public IEnumerable<Run> Runs()
+    {
+        return _blocks == null ? Root.Descendants<Run>() : _blocks.SelectMany(b => b.Descendants<Run>());
     }
 
     public OpenXmlElement Root { get; }
@@ -135,6 +179,250 @@ internal sealed class StoryMap
         return null;
     }
 
+    #region Walking without a map
+
+    /// <summary>
+    /// The paragraphs in an element, in order, produced one at a time without looking inside paragraphs: those of a body, table cell,
+    /// table, header and so on (or the paragraph itself). Paragraphs in text boxes are not part of the text of a story and are not included.
+    /// </summary>
+    public static IEnumerable<Paragraph> ParagraphsIn(OpenXmlElement container)
+    {
+        if (container is Paragraph paragraph)
+        {
+            yield return paragraph;
+            yield break;
+        }
+        if (container is Run || container is SectionProperties || !(container is OpenXmlCompositeElement))
+        {
+            yield break;
+        }
+
+        foreach (OpenXmlElement child in container.ChildElements)
+        {
+            if (child is Paragraph direct)
+            {
+                yield return direct;
+                continue;
+            }
+            foreach (Paragraph inner in ParagraphsIn(child))
+            {
+                yield return inner;
+            }
+        }
+    }
+
+    /// <summary>
+    /// One piece of the text of a story, as <see cref="Atom"/> but without the work of building a map.
+    /// </summary>
+    internal readonly struct AtomInfo
+    {
+        public AtomInfo(OpenXmlElement element, int length)
+        {
+            Element = element;
+            Length = length;
+        }
+
+        public OpenXmlElement Element { get; }
+
+        public int Length { get; }
+    }
+
+    /// <summary>
+    /// The pieces of the text of the story, in order, produced one at a time. This sees the same text as <see cref="Build"/>, and
+    /// walking part of the way costs only that part.
+    /// </summary>
+    public static IEnumerable<AtomInfo> Enumerate(OpenXmlElement root)
+    {
+        return EnumerateBlock(root);
+    }
+
+    private static IEnumerable<AtomInfo> EnumerateBlock(OpenXmlElement element)
+    {
+        if (element is Paragraph paragraph)
+        {
+            foreach (AtomInfo info in EnumerateInline(paragraph))
+            {
+                yield return info;
+            }
+            yield return new AtomInfo(paragraph, 1);
+        }
+        else if (element is Table table)
+        {
+            foreach (TableRow row in table.Elements<TableRow>())
+            {
+                foreach (TableCell cell in row.Elements<TableCell>())
+                {
+                    foreach (OpenXmlElement block in cell.ChildElements)
+                    {
+                        foreach (AtomInfo info in EnumerateBlock(block))
+                        {
+                            yield return info;
+                        }
+                    }
+                }
+                yield return new AtomInfo(row, 1);
+            }
+        }
+        else if (element is OpenXmlCompositeElement && !(element is Run) && !(element is SectionProperties))
+        {
+            foreach (OpenXmlElement child in element.ChildElements)
+            {
+                foreach (AtomInfo info in EnumerateBlock(child))
+                {
+                    yield return info;
+                }
+            }
+        }
+    }
+
+    private static IEnumerable<AtomInfo> EnumerateInline(OpenXmlElement container)
+    {
+        foreach (OpenXmlElement child in container.ChildElements)
+        {
+            if (child is Run run)
+            {
+                foreach (OpenXmlElement part in run.ChildElements)
+                {
+                    if (part is Text text)
+                    {
+                        int length = text.Text?.Length ?? 0;
+                        if (length > 0)
+                        {
+                            yield return new AtomInfo(part, length);
+                        }
+                    }
+                    else if (part is TabChar || part is Break)
+                    {
+                        yield return new AtomInfo(part, 1);
+                    }
+                }
+            }
+            else if (child is OpenXmlCompositeElement && !(child is Paragraph) && !(child is ParagraphProperties))
+            {
+                foreach (AtomInfo info in EnumerateInline(child))
+                {
+                    yield return info;
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// The number of positions in the story.
+    /// </summary>
+    public static int CountLength(OpenXmlElement root)
+    {
+        int length = 0;
+        foreach (AtomInfo info in Enumerate(root))
+        {
+            length += info.Length;
+        }
+        return length;
+    }
+
+    /// <summary>
+    /// The position of an anchor in the story, or false if the text it is on is not in the story.
+    /// </summary>
+    public static bool TryPositionOf(OpenXmlElement root, Anchor anchor, out int position)
+    {
+        position = 0;
+        if (anchor.Element == null)
+        {
+            position = CountLength(root);
+            return true;
+        }
+        foreach (AtomInfo info in Enumerate(root))
+        {
+            if (ReferenceEquals(info.Element, anchor.Element))
+            {
+                position += Math.Min(anchor.Offset, info.Length);
+                return true;
+            }
+            position += info.Length;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// The number of positions in the story before the first piece of text in <paramref name="scope"/>, an element inside the story (a
+    /// paragraph, table cell or table). It is the amount to add to positions in a map of just the scope to get positions in the story.
+    /// </summary>
+    public static int OffsetOf(OpenXmlElement scope)
+    {
+        OpenXmlElement story = FindRoot(scope);
+        if (ReferenceEquals(story, scope))
+        {
+            return 0;
+        }
+
+        OpenXmlElement firstInScope = null;
+        foreach (AtomInfo info in Enumerate(scope))
+        {
+            firstInScope = info.Element;
+            break;
+        }
+        if (firstInScope == null)
+        {
+            return 0;
+        }
+
+        int position = 0;
+        foreach (AtomInfo info in Enumerate(story))
+        {
+            if (ReferenceEquals(info.Element, firstInScope))
+            {
+                return position;
+            }
+            position += info.Length;
+        }
+        return 0;
+    }
+
+    /// <summary>
+    /// The anchors for two positions in the story, found by walking to them. False if a position is beyond the end of the story.
+    /// </summary>
+    public static bool TryAnchorsFor(OpenXmlElement root, int start, int end, out Anchor startAnchor, out Anchor endAnchor)
+    {
+        startAnchor = null;
+        endAnchor = null;
+        int position = 0;
+        List<AtomInfo> before = new List<AtomInfo>();
+        foreach (AtomInfo info in Enumerate(root))
+        {
+            int atomEnd = position + info.Length;
+            if (startAnchor == null && start < atomEnd)
+            {
+                startAnchor = new Anchor(info.Element, start - position);
+                startAnchor.SetNeighbours(before);
+            }
+            if (endAnchor == null && end < atomEnd)
+            {
+                endAnchor = new Anchor(info.Element, end - position);
+                endAnchor.SetNeighbours(before);
+                break;
+            }
+            before.Add(info);
+            if (before.Count > 3)
+            {
+                before.RemoveAt(0);
+            }
+            position = atomEnd;
+        }
+
+        //A position at the very end of the story is the end of the story.
+        if (startAnchor == null && start == position)
+        {
+            startAnchor = new Anchor(null, 0);
+        }
+        if (endAnchor == null && end == position)
+        {
+            endAnchor = new Anchor(null, 0);
+        }
+        return startAnchor != null && endAnchor != null;
+    }
+
+    #endregion
+
     public static StoryMap Build(OpenXmlElement root)
     {
         return new StoryMap(root);
@@ -188,16 +476,37 @@ internal sealed class StoryMap
     /// </summary>
     public Anchor EndAnchor()
     {
-        OpenXmlElement story = FindRoot(Root);
-        if (ReferenceEquals(story, Root) || Atoms.Count == 0)
+        if (IsStory || Atoms.Count == 0)
         {
             return new Anchor(null, 0);
         }
 
-        StoryMap whole = Build(story);
-        if (whole.TryGetAtom(Atoms[Atoms.Count - 1].Element, out Atom last) && last.Index + 1 < whole.Atoms.Count)
+        return AnchorAfter(Atoms[Atoms.Count - 1].Element, FindRoot(Root));
+    }
+
+    /// <summary>
+    /// The anchor for the first piece of text after an element (the last paragraph or table row of a part of the story), found by looking
+    /// at what follows it rather than walking the story.
+    /// </summary>
+    public static Anchor AnchorAfter(OpenXmlElement element, OpenXmlElement story)
+    {
+        OpenXmlElement current = element;
+        while (current != null && !ReferenceEquals(current, story))
         {
-            return new Anchor(whole.Atoms[last.Index + 1].Element, 0);
+            for (OpenXmlElement sibling = current.NextSibling(); sibling != null; sibling = sibling.NextSibling())
+            {
+                foreach (AtomInfo info in Enumerate(sibling))
+                {
+                    return new Anchor(info.Element, 0);
+                }
+            }
+
+            //The end of a table row follows its last cell.
+            if (current is TableCell && current.Parent is TableRow row)
+            {
+                return new Anchor(row, 0);
+            }
+            current = current.Parent;
         }
         return new Anchor(null, 0);
     }
@@ -297,7 +606,7 @@ internal sealed class StoryMap
             changed = true;
         }
 
-        return changed ? new StoryMap(Root) : this;
+        return changed ? new StoryMap(Root, _blocks) : this;
     }
 
     private static bool IsAtomElement(OpenXmlElement element)

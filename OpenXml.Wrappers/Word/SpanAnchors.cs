@@ -21,13 +21,74 @@ internal sealed class Anchor
         Offset = offset;
     }
 
+    private const int NeighbourCount = 3;
+
     public OpenXmlElement Element { get; set; }
 
     public int Offset { get; set; }
 
+    /// <summary>
+    /// The ends of the few text elements before this one, nearest first. If the text this anchor is on is removed without the library being
+    /// told, the nearest of these that is still there says where it was.
+    /// </summary>
+    public Anchor[] Neighbours { get; private set; } = Array.Empty<Anchor>();
+
     public Anchor Clone()
     {
-        return new Anchor(Element, Offset);
+        Anchor copy = new Anchor(Element, Offset);
+        copy.Neighbours = Neighbours.Select(n => new Anchor(n.Element, n.Offset)).ToArray();
+        return copy;
+    }
+
+    public void CopyFrom(Anchor other)
+    {
+        Element = other.Element;
+        Offset = other.Offset;
+        Neighbours = other.Neighbours.Select(n => new Anchor(n.Element, n.Offset)).ToArray();
+    }
+
+    /// <summary>
+    /// Remembers the text before this anchor as it is in the map. The old neighbours are kept to make up the number when the map (of one
+    /// paragraph, say) does not reach back far enough.
+    /// </summary>
+    public void Refresh(StoryMap map)
+    {
+        if (Element == null || !map.TryGetAtom(Element, out Atom atom))
+        {
+            return;
+        }
+
+        List<Anchor> fresh = NeighboursBefore(map, atom.Index);
+        foreach (Anchor old in Neighbours)
+        {
+            if (fresh.Count >= NeighbourCount)
+            {
+                break;
+            }
+            if (!fresh.Any(f => ReferenceEquals(f.Element, old.Element)))
+            {
+                fresh.Add(old);
+            }
+        }
+        Neighbours = fresh.ToArray();
+    }
+
+    /// <summary>
+    /// Sets the neighbours from the last few pieces of text walked past, the nearest last.
+    /// </summary>
+    internal void SetNeighbours(List<StoryMap.AtomInfo> before)
+    {
+        Neighbours = before.AsEnumerable().Reverse().Take(NeighbourCount).Select(info => new Anchor(info.Element, info.Length)).ToArray();
+    }
+
+    private static List<Anchor> NeighboursBefore(StoryMap map, int index)
+    {
+        List<Anchor> list = new List<Anchor>(NeighbourCount);
+        for (int i = index - 1; i >= 0 && list.Count < NeighbourCount; i--)
+        {
+            list.Add(new Anchor(map.Atoms[i].Element, map.Atoms[i].Length));
+        }
+        return list;
     }
 
     public bool SameAs(Anchor other)
@@ -46,7 +107,9 @@ internal sealed class Anchor
             return map.EndAnchor();
         }
         Atom atom = map.Atoms[index];
-        return new Anchor(atom.Element, position - atom.Start);
+        Anchor anchor = new Anchor(atom.Element, position - atom.Start);
+        anchor.Neighbours = NeighboursBefore(map, index).ToArray();
+        return anchor;
     }
 }
 
@@ -96,7 +159,7 @@ internal static class SpanRegistry
     {
         foreach (RangeWrapper range in Live(text))
         {
-            foreach (Anchor anchor in range.Anchors())
+            foreach (Anchor anchor in range.AllAnchors())
             {
                 if (ReferenceEquals(anchor.Element, text) && anchor.Offset > offset)
                 {
@@ -114,7 +177,7 @@ internal static class SpanRegistry
     {
         foreach (RangeWrapper range in Live(text))
         {
-            foreach (Anchor anchor in range.Anchors())
+            foreach (Anchor anchor in range.AllAnchors())
             {
                 if (!ReferenceEquals(anchor.Element, text))
                 {
@@ -139,7 +202,7 @@ internal static class SpanRegistry
     {
         foreach (RangeWrapper range in Live(original))
         {
-            foreach (Anchor anchor in range.Anchors())
+            foreach (Anchor anchor in range.AllAnchors())
             {
                 if (ReferenceEquals(anchor.Element, original))
                 {
@@ -156,7 +219,7 @@ internal static class SpanRegistry
     {
         foreach (RangeWrapper range in Live(into))
         {
-            foreach (Anchor anchor in range.Anchors())
+            foreach (Anchor anchor in range.AllAnchors())
             {
                 if (ReferenceEquals(anchor.Element, removed))
                 {
@@ -177,8 +240,7 @@ internal static class SpanRegistry
             {
                 if (anchor.Element != null && removed.Contains(anchor.Element))
                 {
-                    anchor.Element = after.Element;
-                    anchor.Offset = after.Offset;
+                    anchor.CopyFrom(after);
                 }
             }
         }
