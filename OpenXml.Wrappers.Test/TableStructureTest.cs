@@ -122,12 +122,31 @@ public class TableStructureTest
     }
 
     [Fact]
-    public void MergeRejectsARectangleThatCutsThroughAVerticalMerge()
+    public void MergeCutsAVerticalMergeThatSticksOutOfTheRectangle()
     {
         Table table = CreateTable(3, 1);
         Cell(table, 0, 0).Merge(Cell(table, 1, 0));
 
-        Assert.Throws<NotSupportedException>(() => Cell(table, 1, 0).Merge(Cell(table, 2, 0)));
+        Cell(table, 1, 0).Merge(Cell(table, 2, 0));
+
+        TableRow[] rows = table.Elements<TableRow>().ToArray();
+        Assert.Null(rows[0].Elements<TableCell>().Single().TableCellProperties.VerticalMerge);
+        Assert.Equal(MergedCellValues.Restart, rows[1].Elements<TableCell>().Single().TableCellProperties.VerticalMerge.Val.Value);
+        Assert.NotNull(rows[2].Elements<TableCell>().Single().TableCellProperties.VerticalMerge);
+    }
+
+    [Fact]
+    public void AVerticalMergeThatSticksOutBelowKeepsTheRestOfItself()
+    {
+        Table table = CreateTable(4, 2);
+        Cell(table, 0, 0).Merge(Cell(table, 3, 0));
+
+        Cell(table, 0, 0).Merge(Cell(table, 1, 1));
+
+        TableRow[] rows = table.Elements<TableRow>().ToArray();
+        Assert.Equal(MergedCellValues.Restart, rows[2].Elements<TableCell>().First().TableCellProperties.VerticalMerge.Val.Value);
+        Assert.NotNull(rows[3].Elements<TableCell>().First().TableCellProperties.VerticalMerge);
+        Assert.Single(rows[0].Elements<TableCell>());
     }
 
     [Fact]
@@ -225,12 +244,12 @@ public class TableStructureTest
     }
 
     [Fact]
-    public void SplitRejectsMergedCellsIntoRowsAndBadCounts()
+    public void SplitRejectsBadCountsAndMergedCellsIntoRowsAndColumns()
     {
         Table table = CreateTable(3, 2);
         Cell(table, 0, 0).Merge(Cell(table, 1, 0));
 
-        Assert.Throws<NotSupportedException>(() => Cell(table, 0, 0).Split(2, 1));
+        Assert.Throws<NotSupportedException>(() => Cell(table, 0, 0).Split(2, 2));
         Assert.Throws<ArgumentOutOfRangeException>(() => Cell(table, 2, 0).Split(0, 1));
         Cell(table, 2, 0).Split(1, 1);
         Assert.Equal(3, table.Elements<TableRow>().Count());
@@ -267,6 +286,47 @@ public class TableStructureTest
         Assert.Equal(MergedCellValues.Restart, rows[0].Elements<TableCell>().First().TableCellProperties.VerticalMerge.Val.Value);
         Assert.NotNull(rows[1].Elements<TableCell>().First().TableCellProperties.VerticalMerge);
         Assert.NotNull(rows[2].Elements<TableCell>().First().TableCellProperties.VerticalMerge);
+    }
+
+    [Fact]
+    public void AMergedCellSplitIntoAsManyRowsAsItHasIsUnmerged()
+    {
+        Table table = CreateTable(3, 2);
+        Cell(table, 0, 0).Merge(Cell(table, 1, 0));
+
+        Cell(table, 0, 0).Split(2, 1);
+
+        Assert.Equal(3, table.Elements<TableRow>().Count());
+        Assert.All(table.Elements<TableRow>(), r => Assert.Null(r.Elements<TableCell>().First().TableCellProperties?.VerticalMerge));
+    }
+
+    [Fact]
+    public void AMergedCellSplitIntoMoreRowsGetsNewRowsAndTheOthersRunThroughThem()
+    {
+        Table table = CreateTable(2, 2);
+        Cell(table, 0, 0).Merge(Cell(table, 1, 0));
+
+        Cell(table, 0, 0).Split(3, 1);
+
+        TableRow[] rows = table.Elements<TableRow>().ToArray();
+        Assert.Equal(3, rows.Length);
+        Assert.All(rows, r => Assert.Null(r.Elements<TableCell>().First().TableCellProperties?.VerticalMerge));
+        Assert.Equal(MergedCellValues.Restart, rows[1].Elements<TableCell>().Last().TableCellProperties.VerticalMerge.Val.Value);
+        Assert.NotNull(rows[2].Elements<TableCell>().Last().TableCellProperties.VerticalMerge);
+    }
+
+    [Fact]
+    public void AMergedCellSplitIntoFewerRowsSharesTheRowsOut()
+    {
+        Table table = CreateTable(3, 1);
+        Cell(table, 0, 0).Merge(Cell(table, 2, 0));
+
+        Cell(table, 0, 0).Split(2, 1);
+
+        TableRow[] rows = table.Elements<TableRow>().ToArray();
+        Assert.Equal(MergedCellValues.Restart, rows[0].Elements<TableCell>().Single().TableCellProperties.VerticalMerge.Val.Value);
+        Assert.NotNull(rows[1].Elements<TableCell>().Single().TableCellProperties.VerticalMerge);
+        Assert.Null(rows[2].Elements<TableCell>().Single().TableCellProperties.VerticalMerge);
     }
 
     #endregion

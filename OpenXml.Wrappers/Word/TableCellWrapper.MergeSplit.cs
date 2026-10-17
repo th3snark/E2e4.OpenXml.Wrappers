@@ -15,7 +15,7 @@ public partial class TableCellWrapper
     /// <c>Cell.Merge</c> in Word. The text of the other cells is added to the end of this rectangle's first cell.
     /// </summary>
     /// <exception cref="ArgumentException">The cells are not in the same table.</exception>
-    /// <exception cref="NotSupportedException">The rectangle cuts through a cell that is merged (a vertical merge is absorbed only when all of it is inside the rectangle), or contains older horizontal merges.</exception>
+    /// <exception cref="NotSupportedException">The rectangle cuts through a cell that is merged horizontally, or contains older horizontal merges (<c>hMerge</c>).</exception>
     public void Merge(TableCellWrapper mergeTo)
     {
         ArgumentNullException.ThrowIfNull(mergeTo);
@@ -37,7 +37,8 @@ public partial class TableCellWrapper
         int firstColumn = Math.Min(start1, start2);
         int lastColumn = Math.Max(end1, end2);
 
-        //Check the whole rectangle before changing anything.
+        //Check the whole rectangle before changing anything. A vertical merge that sticks out of the rectangle is cut afterwards.
+        List<(int Top, int Bottom, int GridColumn)> protruding = new List<(int, int, int)>();
         List<List<TableCell>> rectangle = new List<List<TableCell>>();
         for (int i = firstRow; i <= lastRow; i++)
         {
@@ -60,11 +61,10 @@ public partial class TableCellWrapper
                 }
                 if (cell.TableCellProperties?.VerticalMerge != null)
                 {
-                    //A vertical merge can be absorbed only when all of it is inside the rectangle.
                     GetVerticalExtent(rows, i, start, out int top, out int bottom);
-                    if (top < firstRow || bottom > lastRow)
+                    if ((top < firstRow || bottom > lastRow) && !protruding.Contains((top, bottom, start)))
                     {
-                        throw new NotSupportedException("The cells to merge cut through a cell that is already merged vertically.");
+                        protruding.Add((top, bottom, start));
                     }
                 }
                 cells.Add(cell);
@@ -75,6 +75,20 @@ public partial class TableCellWrapper
                 throw new NotSupportedException("The cells to merge are not all present in every row.");
             }
             rectangle.Add(cells);
+        }
+
+        //The parts of vertical merges that stick out above or below the rectangle stay merged among themselves; a part of one cell is
+        //not a merge any more.
+        foreach ((int top, int bottom, int gridColumn) in protruding)
+        {
+            if (top < firstRow)
+            {
+                ReMerge(rows, top, firstRow - 1, gridColumn);
+            }
+            if (bottom > lastRow)
+            {
+                ReMerge(rows, lastRow + 1, bottom, gridColumn);
+            }
         }
 
         //Merge each row of the rectangle sideways.
@@ -116,7 +130,7 @@ public partial class TableCellWrapper
     /// text stays in the top left cell. Splitting into columns divides the grid column of the cell, and the other cells of the table that
     /// span it grow to match; splitting into rows adds rows below and vertically merges the other cells of the row with them.
     /// </summary>
-    /// <exception cref="NotSupportedException">The cell is merged vertically and is to be split into rows, or the cell spans columns and the number of
+    /// <exception cref="NotSupportedException">A vertically merged cell is to be split into rows and columns at once, or the cell spans columns and the number of
     /// columns to split into does not divide the span, or a cell involved uses the older horizontal merge.</exception>
     public void Split(int numRows, int numColumns)
     {
@@ -142,9 +156,14 @@ public partial class TableCellWrapper
             int gridColumn = GetGridStart(_tableCell);
             GetVerticalExtent(tableRows, tableRows.IndexOf(row), gridColumn, out int top, out int bottom);
             group = Enumerable.Range(top, bottom - top + 1).Select(i => CellAtGridColumn(tableRows[i], gridColumn)).ToList();
+            if (numRows > 1 && numColumns > 1)
+            {
+                throw new NotSupportedException("A vertically merged cell can be split into rows or into columns, not both at once.");
+            }
             if (numRows > 1)
             {
-                throw new NotSupportedException("Splitting a vertically merged cell into rows is not supported.");
+                SplitMergedIntoRows(table, row, group, numRows);
+                return;
             }
         }
         int span = Span(_tableCell);
@@ -222,6 +241,75 @@ public partial class TableCellWrapper
                 last.InsertAfterSelf(newRow);
                 last = newRow;
             }
+        }
+    }
+
+    /// <summary>
+    /// Makes the cells in the grid column from <paramref name="first"/> to <paramref name="last"/> a vertical merge of their own: none at all
+    /// when it is a single row.
+    /// </summary>
+    private static void ReMerge(List<TableRow> rows, int first, int last, int gridColumn)
+    {
+        for (int i = first; i <= last; i++)
+        {
+            TableCell cell = CellAtGridColumn(rows[i], gridColumn);
+            cell.TableCellProperties.VerticalMerge = first == last ? null : i == first ? new VerticalMerge() { Val = MergedCellValues.Restart } : new VerticalMerge();
+        }
+    }
+
+    /// <summary>
+    /// Splits a cell that is merged down several rows into <paramref name="numRows"/> rows. With more rows than the merge has, rows are added
+    /// below it (the other cells of the row run down through them); with fewer, the rows are shared out among the new cells, as evenly as
+    /// they go, the first ones taking the extra.
+    /// </summary>
+    private static void SplitMergedIntoRows(Table table, TableRow row, List<TableCell> group, int numRows)
+    {
+        List<TableRow> rows = table.Elements<TableRow>().ToList();
+        int gridColumn = GetGridStart(group[0]);
+        int first = rows.IndexOf((TableRow)group[0].Parent);
+        int last = first + group.Count - 1;
+        int extra = Math.Max(0, numRows - group.Count);
+
+        if (extra > 0)
+        {
+            TableRow lastRow = rows[last];
+            foreach (TableCell other in lastRow.Elements<TableCell>().Where(c => !group.Contains(c) && c.TableCellProperties?.VerticalMerge == null))
+            {
+                GetOrAddTableCellProperties(other).VerticalMerge = new VerticalMerge() { Val = MergedCellValues.Restart };
+            }
+
+            TableRow previous = lastRow;
+            for (int i = 0; i < extra; i++)
+            {
+                TableRow newRow = new TableRow();
+                if (lastRow.TableRowProperties != null)
+                {
+                    newRow.AppendChild(lastRow.TableRowProperties.CloneNode(true));
+                }
+                foreach (TableCell cell in lastRow.Elements<TableCell>())
+                {
+                    TableCell newCell = CreateLike(cell);
+                    if (!group.Contains(cell))
+                    {
+                        GetOrAddTableCellProperties(newCell).VerticalMerge = new VerticalMerge();
+                    }
+                    newRow.AppendChild(newCell);
+                }
+                previous.InsertAfterSelf(newRow);
+                previous = newRow;
+            }
+            rows = table.Elements<TableRow>().ToList();
+        }
+
+        int total = Math.Max(group.Count, numRows);
+        int baseSize = total / numRows;
+        int remainder = total % numRows;
+        int at = first;
+        for (int piece = 0; piece < numRows; piece++)
+        {
+            int size = baseSize + (piece < remainder ? 1 : 0);
+            ReMerge(rows, at, at + size - 1, gridColumn);
+            at += size;
         }
     }
 
