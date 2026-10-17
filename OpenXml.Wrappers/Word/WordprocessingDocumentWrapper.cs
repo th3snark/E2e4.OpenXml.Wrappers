@@ -336,6 +336,11 @@ public class WordprocessingDocumentWrapper : IDisposable
         get { return new TableWrapperCollection(new RangeWrapper(_wordprocessingDocument.MainDocumentPart.Document)); }
     }
 
+    public FieldWrapperCollection Fields
+    {
+        get { return new FieldWrapperCollection(new RangeWrapper(_wordprocessingDocument.MainDocumentPart.Document)); }
+    }
+
     public BookmarkWrapperCollection Bookmarks
     {
         get { return new BookmarkWrapperCollection(new RangeWrapper(_wordprocessingDocument.MainDocumentPart.Document)); }

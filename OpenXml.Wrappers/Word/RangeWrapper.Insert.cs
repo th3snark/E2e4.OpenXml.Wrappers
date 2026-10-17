@@ -39,9 +39,18 @@ public partial class RangeWrapper
             return;
         }
 
+        InsertRuns(paragraph => BuildNewRunListFromText(text, paragraph), after);
+    }
+
+    /// <summary>
+    /// Inserts the runs made by <paramref name="build"/> at the start or end of the range, by the rules of <see cref="InsertBefore"/> and
+    /// <see cref="InsertAfter"/>.
+    /// </summary>
+    private void InsertRuns(Func<Paragraph, List<Run>> build, bool after)
+    {
         if (_startOpenXmlElement is Paragraph)
         {
-            InsertRunsIntoParagraph((Paragraph)_startOpenXmlElement, text, after);
+            InsertRunsIntoParagraph((Paragraph)_startOpenXmlElement, build, after);
         }
         else if (_startOpenXmlElement is TableCell)
         {
@@ -52,15 +61,15 @@ public partial class RangeWrapper
                 paragraph = new Paragraph();
                 _startOpenXmlElement.AppendChild(paragraph);
             }
-            InsertRunsIntoParagraph(paragraph, text, after);
+            InsertRunsIntoParagraph(paragraph, build, after);
         }
         else if (_startOpenXmlElement is BookmarkStart || _startOpenXmlElement is CommentRangeStart)
         {
-            InsertRunsAtMarker(after ? _endOpenXmlElement : _startOpenXmlElement, text, after);
+            InsertRunsAtMarker(after ? _endOpenXmlElement : _startOpenXmlElement, build, after);
         }
         else if (_startOpenXmlElement is Document || _startOpenXmlElement is Body)
         {
-            InsertRunsIntoBody(GetBody(), text, after);
+            InsertRunsIntoBody(GetBody(), build, after);
         }
         else
         {
@@ -78,9 +87,9 @@ public partial class RangeWrapper
         return body;
     }
 
-    private void InsertRunsIntoParagraph(Paragraph paragraph, string text, bool after)
+    private void InsertRunsIntoParagraph(Paragraph paragraph, Func<Paragraph, List<Run>> build, bool after)
     {
-        List<Run> runs = BuildNewRunListFromText(text, paragraph);
+        List<Run> runs = build(paragraph);
         if (after)
         {
             foreach (Run run in runs)
@@ -98,7 +107,7 @@ public partial class RangeWrapper
         }
     }
 
-    private void InsertRunsAtMarker(OpenXmlElement marker, string text, bool after)
+    private void InsertRunsAtMarker(OpenXmlElement marker, Func<Paragraph, List<Run>> build, bool after)
     {
         //New runs can only be placed next to the marker when the marker is a direct child of the paragraph.
         Paragraph paragraph = marker.Parent as Paragraph;
@@ -107,7 +116,7 @@ public partial class RangeWrapper
             throw new NotSupportedException("Inserting text is only supported when the markers of the range are directly inside a paragraph.");
         }
 
-        List<Run> runs = BuildNewRunListFromText(text, paragraph);
+        List<Run> runs = build(paragraph);
         if (after)
         {
             //The end marker closes the range so the new runs go immediately before it, which keeps them inside the range.
@@ -125,7 +134,7 @@ public partial class RangeWrapper
         }
     }
 
-    private void InsertRunsIntoBody(Body body, string text, bool after)
+    private void InsertRunsIntoBody(Body body, Func<Paragraph, List<Run>> build, bool after)
     {
         //The section properties are not content, so they are never the first or last block.
         OpenXmlElement block = after
@@ -134,13 +143,13 @@ public partial class RangeWrapper
 
         if (block is Paragraph)
         {
-            InsertRunsIntoParagraph((Paragraph)block, text, after);
+            InsertRunsIntoParagraph((Paragraph)block, build, after);
             return;
         }
 
         //The body starts or ends with something other than a paragraph (such as a table) so the text needs a paragraph of its own.
         Paragraph paragraph = new Paragraph();
-        foreach (Run run in BuildNewRunListFromText(text, paragraph))
+        foreach (Run run in build(paragraph))
         {
             paragraph.AppendChild(run);
         }

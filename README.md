@@ -98,6 +98,12 @@ Merging and splitting throw `NotSupportedException` when they would cut through 
 
 `Bookmarks.Add(name, range)` bookmarks a paragraph, table cell, bookmark or comment range (an existing bookmark of the same name is moved), and `Bookmarks.Exists(name)` and `Bookmarks["name"]` ignore case. Names follow Word's rules: a letter first, then letters, digits and underscores, at most 40 characters. `Comment.Text` can be set (it replaces the body of the comment), `Comment.Date` is UTC, and `Comment.Delete()` removes the comment together with its range markers and reference.
 
+## Fields
+
+`document.Fields` and `range.Fields` list the fields in document order: complex fields (begin, separate and end characters around a code) and simple fields, including fields nested in the result of another. A field has `Code` (read and set, without the surrounding spaces), `Type` (a `FieldType`, `Other` for kinds not in the enum), `Result` (the stored text, read and set), `Range`, `Parent` and `Delete()`. `Fields.Add(range, FieldType.Page, "\* MERGEFORMAT")` or `Fields.Add(range, "MERGEFIELD Name")` adds a complex field at the end of the range, by the rules of `InsertAfter`, with an empty result and the dirty flag so Word updates it when the document opens.
+
+Fields are never calculated by the library, so `Result` is whatever the document stores. Setting a result needs the whole result to be inside one paragraph; the result takes the formatting of the first run it replaces.
+
 ## Navigation
 
 `Paragraph.Next()` / `Previous()` walk the paragraphs of the document in order, through table cells, and return `null` at either end. `Row.Next()` / `Previous()` / `IsFirst` / `IsLast` and `Cell.Next()` / `Previous()` work within a table (a cell's neighbour wraps to the adjacent row). `Range.Duplicate()` returns a new range over the same elements. Integer `Start`/`End`, `Collapse` and `SetRange` are not provided: a range is made of whole elements, so there are no character positions to move.
