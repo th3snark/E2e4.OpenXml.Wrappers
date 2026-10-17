@@ -60,6 +60,29 @@ public class TableRowWrapperCollection : IEnumerable<TableRowWrapper>
         return list;
     }
 
+    /// <summary>
+    /// Adds an empty row before <paramref name="beforeRow"/>, as <c>Rows.Add(BeforeRow)</c> in Word. The new row has the same cells and
+    /// row and cell formatting as that row. With null the row is added at the end, as <see cref="Add()"/> does.
+    /// </summary>
+    /// <exception cref="ArgumentException">The row is not a row of this table.</exception>
+    public TableRowWrapper Add(TableRowWrapper beforeRow)
+    {
+        if (beforeRow == null)
+        {
+            return Add();
+        }
+        if (!(_range.Start is Table table) || beforeRow.TableRow.Parent != table)
+        {
+            throw new ArgumentException("The row must be a row of this table.", nameof(beforeRow));
+        }
+
+        TableRow tableRow = (TableRow)beforeRow.TableRow.Clone();
+        tableRow.RemoveAnchors();
+        tableRow.ClearText();
+        beforeRow.TableRow.InsertBeforeSelf(tableRow);
+        return new TableRowWrapper(tableRow);
+    }
+
     public TableRowWrapper Add()
     {
         Table table = _range.Start as Table;

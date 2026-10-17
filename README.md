@@ -79,6 +79,15 @@ These use points like `Font` and `ParagraphFormat`: `Row.Height`, `Row.HeightRul
 
 `Table.Borders` and `Cell.Borders` work like Word's: `Borders[BorderPosition.Top]` is a border with `LineStyle`, `LineWidth` (points, 0.25 to 12) and `Color` (hex or "auto"), and `SetOutside` / `SetInside` set several at once. Positions are `Top`, `Left`, `Bottom`, `Right`, `Horizontal` and `Vertical` (the lines between rows and columns), plus the two diagonals for cells only. Setting `LineStyle` to `None` writes an explicit "no border"; `Clear()` removes the direct setting so the table style applies. Only direct formatting is read, so a border that comes from a table style reads as `None`. `Row.SetTopBorder` and `SetBottomBorder` still work as before.
 
+## Table structure
+
+- `Tables.Add(range, numRows, numColumns)` inserts an empty table with single 0.5 point borders immediately **before** the range (a paragraph, table, cell, bookmark, comment or the whole document) and fills the width between the margins or of the cell. Unlike Word it does not replace the text of the range.
+- `Rows.Add(beforeRow)` inserts an empty row with the cells and formatting of `beforeRow` before it; with `null` it appends.
+- `Cell.Merge(otherCell)` merges the rectangle between two cells (in either order) using `gridSpan` and vertical merges, and moves the text of the merged cells into the first one.
+- `Cell.Split(numRows, numColumns)` divides a cell. Splitting into columns divides the grid column, so cells in other rows that span it get wider spans; splitting into rows adds rows and vertically merges the rest of the row.
+
+Merging and splitting throw `NotSupportedException` when they would cut through an existing merge, rather than guess: merging cells that are already vertically merged, splitting a vertically merged cell, splitting a cell with a vertically merged neighbour into rows, or splitting a cell that spans columns into a number that does not divide the span.
+
 ## Bookmarks and comments
 
 `Bookmarks.Add(name, range)` bookmarks a paragraph, table cell, bookmark or comment range (an existing bookmark of the same name is moved), and `Bookmarks.Exists(name)` and `Bookmarks["name"]` ignore case. Names follow Word's rules: a letter first, then letters, digits and underscores, at most 40 characters. `Comment.Text` can be set (it replaces the body of the comment), `Comment.Date` is UTC, and `Comment.Delete()` removes the comment together with its range markers and reference.

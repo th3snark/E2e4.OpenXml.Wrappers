@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
+using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
@@ -62,6 +63,101 @@ public class TableWrapperCollection : IEnumerable<TableWrapper>
         }
 
         return _rangeWrapper.Start.DescendantsAtRelativeNestingLevel<Table>(1);
+    }
+
+    /// <summary>
+    /// Adds an empty table with the given number of rows and columns immediately before the range, as <c>Tables.Add</c> in Word, and
+    /// returns it. The table has single 0.5 point borders and fills the width available to it.
+    /// </summary>
+    /// <remarks>
+    /// A range of a paragraph, table, table cell (the table goes before its first block), bookmark or comment (before its paragraph),
+    /// or of the whole document (at the start) is supported. Unlike Word the text of the range is not replaced.
+    /// </remarks>
+    /// <exception cref="NotSupportedException">The range is of a type that cannot take a table.</exception>
+    public TableWrapper Add(RangeWrapper range, int numRows, int numColumns)
+    {
+        ArgumentNullException.ThrowIfNull(range);
+        ArgumentOutOfRangeException.ThrowIfLessThan(numRows, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(numColumns, 1);
+
+        OpenXmlElement anchor = range.Start;
+        if (anchor is BookmarkStart || anchor is CommentRangeStart)
+        {
+            anchor = anchor.Ancestors<Paragraph>().FirstOrDefault();
+        }
+        else if (anchor is TableCell cell)
+        {
+            anchor = cell.Elements().FirstOrDefault(e => e is Paragraph || e is Table);
+        }
+        else if (anchor is Document document)
+        {
+            anchor = document.Body;
+        }
+
+        if (anchor is Body body)
+        {
+            anchor = body.Elements().FirstOrDefault(e => !(e is SectionProperties));
+            if (anchor == null)
+            {
+                //The table needs a paragraph after it, and the section properties must stay last.
+                Paragraph paragraph = new Paragraph();
+                SectionProperties sectionProperties = body.Elements<SectionProperties>().FirstOrDefault();
+                if (sectionProperties != null)
+                {
+                    sectionProperties.InsertBeforeSelf(paragraph);
+                }
+                else
+                {
+                    body.AppendChild(paragraph);
+                }
+                anchor = paragraph;
+            }
+        }
+        if (!(anchor is Paragraph || anchor is Table))
+        {
+            throw new NotSupportedException(String.Format(CultureInfo.InvariantCulture, "Adding a table to a range starting with the type {0} is not currently supported.", range.Start.GetType().Name));
+        }
+
+        int totalWidth = GetAvailableWidth(anchor);
+        int columnWidth = totalWidth / numColumns;
+        Table table = new Table(
+            new TableProperties(new TableWidth() { Width = totalWidth.ToString(CultureInfo.InvariantCulture), Type = TableWidthUnitValues.Dxa }),
+            new TableGrid(Enumerable.Range(0, numColumns).Select(i => new GridColumn() { Width = columnWidth.ToString(CultureInfo.InvariantCulture) })));
+        for (int row = 0; row < numRows; row++)
+        {
+            table.AppendChild(new TableRow(Enumerable.Range(0, numColumns).Select(i => new TableCell(
+                new TableCellProperties(new TableCellWidth() { Width = columnWidth.ToString(CultureInfo.InvariantCulture), Type = TableWidthUnitValues.Dxa }),
+                new Paragraph()))));
+        }
+
+        anchor.InsertBeforeSelf(table);
+        TableWrapper wrapper = new TableWrapper(table);
+        wrapper.Borders.SetOutside(BorderLineStyle.SingleLine, 0.5, "auto");
+        wrapper.Borders.SetInside(BorderLineStyle.SingleLine, 0.5, "auto");
+        return wrapper;
+    }
+
+    /// <summary>
+    /// The width, in twips, between the margins of the page or the width of the table cell that the element is in.
+    /// </summary>
+    private static int GetAvailableWidth(OpenXmlElement element)
+    {
+        TableCell cell = element.Ancestors<TableCell>().FirstOrDefault();
+        TableWidthUnitValues? cellType = cell?.TableCellProperties?.TableCellWidth?.Type?.Value;
+        if (cell != null && (cellType == null || cellType == TableWidthUnitValues.Dxa)
+            && Int32.TryParse(cell.TableCellProperties?.TableCellWidth?.Width?.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int cellWidth) && cellWidth > 0)
+        {
+            return cellWidth;
+        }
+
+        //The section properties at the end of the body are those of the last section; Word's default page is 8.5 x 11 inches with 1 inch margins.
+        SectionProperties sectionProperties = element.Ancestors<Body>().LastOrDefault()?.Elements<SectionProperties>().LastOrDefault();
+        uint pageWidth = sectionProperties?.GetFirstChild<PageSize>()?.Width?.Value ?? 12240;
+        PageMargin margin = sectionProperties?.GetFirstChild<PageMargin>();
+        long left = margin?.Left?.Value ?? 1440;
+        long right = margin?.Right?.Value ?? 1440;
+        long width = pageWidth - left - right;
+        return width > 0 ? (int)width : 9360;
     }
 
     public int NestingLevel

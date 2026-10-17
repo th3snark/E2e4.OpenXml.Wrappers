@@ -7,7 +7,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
 
-public class TableCellWrapper : System.IEquatable<TableCellWrapper>
+public partial class TableCellWrapper : System.IEquatable<TableCellWrapper>
 {
     TableCell _tableCell;
 
