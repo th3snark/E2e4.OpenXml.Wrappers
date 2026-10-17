@@ -235,60 +235,12 @@ public class ParagraphWrapper : System.IEquatable<ParagraphWrapper>
 
     public void SetFontBold(bool bold)
     {
-        GetOrAddParagraphMarkRunProperties().SetFontBold(bold);
-
-        foreach (Run run in _paragraph.Elements<Run>())
-        {
-            GetOrAddRunProperties(run).SetFontBold(bold);
-        }
+        Range.Font.Bold = bold;
     }
 
     public void SetFontColor(string color)
     {
-        GetOrAddParagraphMarkRunProperties().SetFontColor(color);
-
-        foreach (Run run in _paragraph.Elements<Run>())
-        {
-            GetOrAddRunProperties(run).SetFontColor(color);
-        }
-    }
-
-    private ParagraphMarkRunProperties GetOrAddParagraphMarkRunProperties()
-    {
-        ParagraphProperties paragraphProperties = _paragraph.ParagraphProperties;
-        if (paragraphProperties == null)
-        {
-            paragraphProperties = new ParagraphProperties();
-            _paragraph.PrependChild(paragraphProperties);
-        }
-
-        ParagraphMarkRunProperties paragraphMarkRunProperties = paragraphProperties.ParagraphMarkRunProperties;
-        if (paragraphMarkRunProperties == null)
-        {
-            //The paragraph mark run properties must come before the section properties and the paragraph properties change.
-            paragraphMarkRunProperties = new ParagraphMarkRunProperties();
-            OpenXmlElement successor = paragraphProperties.ChildElements.FirstOrDefault(e => e is SectionProperties || e is ParagraphPropertiesChange);
-            if (successor != null)
-            {
-                successor.InsertBeforeSelf(paragraphMarkRunProperties);
-            }
-            else
-            {
-                paragraphProperties.AppendChild(paragraphMarkRunProperties);
-            }
-        }
-        return paragraphMarkRunProperties;
-    }
-
-    private static RunProperties GetOrAddRunProperties(Run run)
-    {
-        RunProperties runProperties = run.RunProperties;
-        if (runProperties == null)
-        {
-            runProperties = new RunProperties();
-            run.PrependChild(runProperties);
-        }
-        return runProperties;
+        Range.Font.Color = color;
     }
 
     #region Equality

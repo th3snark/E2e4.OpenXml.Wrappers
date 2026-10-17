@@ -288,74 +288,112 @@ public static class OpenXmlExtensions
 
     public static void SetFontBold(this RunProperties runProperties, bool bold)
     {
-        SetBold(runProperties, bold);
+        runProperties.SetRunProperty(new Bold() { Val = bold });
     }
 
     public static void SetFontColor(this RunProperties runProperties, string rgbColor)
     {
-        SetColor(runProperties, rgbColor);
+        runProperties.SetRunProperty(new Color() { Val = rgbColor });
     }
 
     public static void SetFontBold(this ParagraphMarkRunProperties runProperties, bool bold)
     {
-        SetBold(runProperties, bold);
+        runProperties.SetRunProperty(new Bold() { Val = bold });
     }
 
     public static void SetFontColor(this ParagraphMarkRunProperties runProperties, string rgbColor)
     {
-        SetColor(runProperties, rgbColor);
+        runProperties.SetRunProperty(new Color() { Val = rgbColor });
     }
 
-    private static void SetBold(OpenXmlCompositeElement runProperties, bool bold)
+    //The order of the children of the run properties (and paragraph mark run properties) in the schema. Tracked changes of the paragraph
+    //mark come before all of them and the tracked change of the properties after all of them.
+    private static readonly string[] RunPropertyOrder =
     {
-        Bold existing = runProperties.Elements<Bold>().FirstOrDefault();
-        if (existing == null)
+        "rStyle", "rFonts", "b", "bCs", "i", "iCs", "caps", "smallCaps", "strike", "dstrike", "outline", "shadow", "emboss", "imprint",
+        "noProof", "snapToGrid", "vanish", "webHidden", "color", "spacing", "w", "kern", "position", "sz", "szCs", "highlight", "u",
+        "effect", "bdr", "shd", "fitText", "vertAlign", "rtl", "cs", "em", "lang", "eastAsianLayout", "specVanish", "oMath",
+    };
+
+    private static int GetRunPropertyOrder(OpenXmlElement element)
+    {
+        string name = element.LocalName;
+        if (name == "ins" || name == "del" || name == "moveFrom" || name == "moveTo")
         {
-            if (bold)
-            {
-                //Bold must come after the run style and run fonts but before everything else.
-                runProperties.InsertAfterLast(new Bold(), typeof(RunStyle), typeof(RunFonts));
-            }
+            return -1;
+        }
+
+        int index = Array.IndexOf(RunPropertyOrder, name);
+        return index >= 0 ? index : RunPropertyOrder.Length;
+    }
+
+    /// <summary>
+    /// Sets one property of run properties (or paragraph mark run properties), replacing any existing property of the same kind and placing
+    /// the new one where the schema requires it.
+    /// </summary>
+    internal static void SetRunProperty(this OpenXmlCompositeElement runProperties, OpenXmlElement property)
+    {
+        runProperties.RemoveRunProperty(property.LocalName);
+
+        int order = GetRunPropertyOrder(property);
+        OpenXmlElement predecessor = runProperties.ChildElements.LastOrDefault(e => GetRunPropertyOrder(e) < order);
+        if (predecessor == null)
+        {
+            runProperties.PrependChild(property);
         }
         else
         {
-            //Remove the explicit value for 'true' (the default) otherwise state the value explicitly.
-            existing.Val = bold ? null : new OnOffValue(false);
-        }
-    }
-
-    private static void SetColor(OpenXmlCompositeElement runProperties, string rgbColor)
-    {
-        Color color = runProperties.Elements<Color>().FirstOrDefault();
-        if (color == null)
-        {
-            runProperties.InsertAfterLast(
-                new Color() { Val = rgbColor },
-                typeof(RunStyle), typeof(RunFonts), typeof(Bold), typeof(BoldComplexScript), typeof(Italic), typeof(ItalicComplexScript),
-                typeof(Caps), typeof(SmallCaps), typeof(Strike), typeof(DoubleStrike), typeof(Outline), typeof(Shadow), typeof(Emboss),
-                typeof(Imprint), typeof(NoProof), typeof(SnapToGrid), typeof(Vanish), typeof(WebHidden));
-        }
-        else
-        {
-            color.Val = rgbColor;
+            predecessor.InsertAfterSelf(property);
         }
     }
 
     /// <summary>
-    /// Inserts the new child after the last existing child whose type is one of the predecessor types, or as the first
-    /// child if there is none. This preserves the schema element order of the property containers.
+    /// Removes the properties with the given element name (for example "b" for bold) from run properties or paragraph mark run properties.
     /// </summary>
-    internal static void InsertAfterLast(this OpenXmlCompositeElement parent, OpenXmlElement newChild, params Type[] predecessorTypes)
+    internal static void RemoveRunProperty(this OpenXmlCompositeElement runProperties, string localName)
     {
-        OpenXmlElement predecessor = parent.ChildElements.LastOrDefault(e => predecessorTypes.Contains(e.GetType()));
-        if (predecessor == null)
+        foreach (OpenXmlElement existing in runProperties.ChildElements.Where(e => e.LocalName == localName).ToList())
         {
-            parent.PrependChild(newChild);
+            existing.Remove();
         }
-        else
+    }
+
+    internal static RunProperties GetOrAddRunProperties(this Run run)
+    {
+        RunProperties runProperties = run.RunProperties;
+        if (runProperties == null)
         {
-            predecessor.InsertAfterSelf(newChild);
+            runProperties = new RunProperties();
+            run.PrependChild(runProperties);
         }
+        return runProperties;
+    }
+
+    internal static ParagraphMarkRunProperties GetOrAddParagraphMarkRunProperties(this Paragraph paragraph)
+    {
+        ParagraphProperties paragraphProperties = paragraph.ParagraphProperties;
+        if (paragraphProperties == null)
+        {
+            paragraphProperties = new ParagraphProperties();
+            paragraph.PrependChild(paragraphProperties);
+        }
+
+        ParagraphMarkRunProperties paragraphMarkRunProperties = paragraphProperties.ParagraphMarkRunProperties;
+        if (paragraphMarkRunProperties == null)
+        {
+            //The paragraph mark run properties must come before the section properties and the paragraph properties change.
+            paragraphMarkRunProperties = new ParagraphMarkRunProperties();
+            OpenXmlElement successor = paragraphProperties.ChildElements.FirstOrDefault(e => e is SectionProperties || e is ParagraphPropertiesChange);
+            if (successor != null)
+            {
+                successor.InsertBeforeSelf(paragraphMarkRunProperties);
+            }
+            else
+            {
+                paragraphProperties.AppendChild(paragraphMarkRunProperties);
+            }
+        }
+        return paragraphMarkRunProperties;
     }
 
     #endregion
