@@ -281,31 +281,6 @@ public static class OpenXmlExtensions
 
     #region RunProperties Routines
 
-    public static void SetFontBold(this RunProperties runProperties)
-    {
-        runProperties.SetFontBold(true);
-    }
-
-    public static void SetFontBold(this RunProperties runProperties, bool bold)
-    {
-        runProperties.SetRunProperty(new Bold() { Val = bold });
-    }
-
-    public static void SetFontColor(this RunProperties runProperties, string rgbColor)
-    {
-        runProperties.SetRunProperty(new Color() { Val = rgbColor });
-    }
-
-    public static void SetFontBold(this ParagraphMarkRunProperties runProperties, bool bold)
-    {
-        runProperties.SetRunProperty(new Bold() { Val = bold });
-    }
-
-    public static void SetFontColor(this ParagraphMarkRunProperties runProperties, string rgbColor)
-    {
-        runProperties.SetRunProperty(new Color() { Val = rgbColor });
-    }
-
     //The order of the children of the run properties (and paragraph mark run properties) in the schema. Tracked changes of the paragraph
     //mark come before all of them and the tracked change of the properties after all of them.
     private static readonly string[] RunPropertyOrder =

@@ -28,7 +28,12 @@ public class ParagraphWrapperCollection : IEnumerable<ParagraphWrapper>
         {
             try
             {
-                return new ParagraphWrapper(GetElementList()[index]);
+                ArgumentOutOfRangeException.ThrowIfNegative(index);
+                return new ParagraphWrapper(GetElements().Skip(index).First());
+            }
+            catch (InvalidOperationException ex)
+            {
+                throw new ArgumentOutOfRangeException(String.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index), ex);
             }
             catch (ArgumentOutOfRangeException ex)
             {
@@ -39,12 +44,19 @@ public class ParagraphWrapperCollection : IEnumerable<ParagraphWrapper>
 
     public int Count
     {
-        get { return GetElementList().Count; }
+        get { return GetElements().Count(); }
     }
 
-    private IList<Paragraph> GetElementList()
+    //The paragraphs of the range, produced as they are asked for so that the first few do not need the rest to be looked at.
+    private IEnumerable<Paragraph> GetElements()
     {
-        return _range.Start.GetElements<Paragraph>(_range.End).ToList();
+        if (_range.IsSpan)
+        {
+            return _range.GetTouchedParagraphs();
+        }
+        return ReferenceEquals(_range.StartElement, _range.EndElement)
+            ? StoryMap.ParagraphsIn(_range.StartElement)
+            : _range.StartElement.GetElements<Paragraph>(_range.EndElement);
     }
 
     public ParagraphWrapper Add()
@@ -60,7 +72,7 @@ public class ParagraphWrapperCollection : IEnumerable<ParagraphWrapper>
     {
         //The elements are fetched once for the whole enumeration so that enumerating is linear and so that deleting the
         //current item while enumerating does not disturb the enumeration.
-        foreach (Paragraph element in GetElementList())
+        foreach (Paragraph element in GetElements().ToList())
         {
             yield return new ParagraphWrapper(element);
         }

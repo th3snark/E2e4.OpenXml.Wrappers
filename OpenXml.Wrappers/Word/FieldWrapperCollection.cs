@@ -51,10 +51,10 @@ public class FieldWrapperCollection : IEnumerable<FieldWrapper>
     private IList<FieldWrapper> GetElementList()
     {
         List<OpenXmlElement> starts = new List<OpenXmlElement>();
-        starts.AddRange(_range.Start.GetElements<Run>(_range.End)
+        starts.AddRange(_range.StartElement.GetElements<Run>(_range.EndElement)
             .SelectMany(r => r.Elements<FieldChar>())
             .Where(f => f.FieldCharType != null && f.FieldCharType.HasValue && f.FieldCharType.Value == FieldCharValues.Begin));
-        starts.AddRange(_range.Start.GetElements<SimpleField>(_range.End));
+        starts.AddRange(_range.StartElement.GetElements<SimpleField>(_range.EndElement));
 
         //Complex fields and simple fields are found separately, so put them back in document order.
         starts.Sort((a, b) => ReferenceEquals(a, b) ? 0 : a.IsBefore(b) ? -1 : 1);

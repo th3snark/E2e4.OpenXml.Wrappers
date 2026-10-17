@@ -12,7 +12,7 @@ internal static class RowExample
         using (WordprocessingDocumentWrapper document = WordprocessingDocumentWrapper.Create(path, true, false))
         {
             document.Paragraphs[0].Range.Text = "Task list";
-            ParagraphWrapper after = document.Range.InsertParagraphAfter();
+            ParagraphWrapper after = document.Content.InsertParagraphAfter();
             TableWrapper table = document.Tables.Add(after.Range, 3, 2);
             table.Cell(0, 0).Range.Text = "Task";
             table.Cell(0, 1).Range.Text = "Owner";

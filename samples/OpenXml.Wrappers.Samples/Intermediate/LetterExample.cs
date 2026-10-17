@@ -25,7 +25,7 @@ internal static class LetterExample
             foreach (KeyValuePair<string, string> pair in data)
             {
                 //ReplaceMode.All changes every occurrence in the range, including those in tables.
-                letter.Range.Find.Execute(pair.Key, matchCase: true, replaceWith: pair.Value, replace: ReplaceMode.All);
+                letter.Content.Find.Execute(pair.Key, matchCase: true, replaceWith: pair.Value, replace: ReplaceMode.All);
             }
 
             //A bookmark marks the place for text that is more than one word. "\n" in the text becomes a line break.
@@ -38,7 +38,7 @@ internal static class LetterExample
             letter.BuiltInDocumentProperties.Subject = "Welcome letter";
 
             //Placeholders that were not in the data would be a mistake in the letter, so check that none are left.
-            if (letter.Range.Find.Execute("{{"))
+            if (letter.Content.Find.Execute("{{"))
             {
                 throw new InvalidOperationException("The letter still has placeholders.");
             }

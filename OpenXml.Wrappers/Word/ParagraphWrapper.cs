@@ -49,26 +49,21 @@ public class ParagraphWrapper : System.IEquatable<ParagraphWrapper>
     }
 
     /// <summary>
-    /// The space before the paragraph in twentieths of a point (twips); <see cref="Format"/> has the same setting in points.
+    /// The space before the paragraph in points, 0 when none is set. The same as <see cref="Format"/>.<c>SpaceBefore</c>.
     /// </summary>
-    public int SpaceBefore
+    public double SpaceBefore
     {
-        get { return ParseTwips(_paragraph.ParagraphProperties?.SpacingBetweenLines?.Before?.Value); }
-        set { GetOrAddSpacing().Before = value.ToString(CultureInfo.InvariantCulture); }
+        get { return Format.SpaceBefore ?? 0; }
+        set { Format.SpaceBefore = value; }
     }
 
     /// <summary>
-    /// The space after the paragraph in twentieths of a point (twips); <see cref="Format"/> has the same setting in points.
+    /// The space after the paragraph in points, 0 when none is set. The same as <see cref="Format"/>.<c>SpaceAfter</c>.
     /// </summary>
-    public int SpaceAfter
+    public double SpaceAfter
     {
-        get { return ParseTwips(_paragraph.ParagraphProperties?.SpacingBetweenLines?.After?.Value); }
-        set { GetOrAddSpacing().After = value.ToString(CultureInfo.InvariantCulture); }
-    }
-
-    private static int ParseTwips(string value)
-    {
-        return Int32.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int twips) ? twips : 0;
+        get { return Format.SpaceAfter ?? 0; }
+        set { Format.SpaceAfter = value; }
     }
 
     private SpacingBetweenLines GetOrAddSpacing()
@@ -242,21 +237,6 @@ public class ParagraphWrapper : System.IEquatable<ParagraphWrapper>
         get { return Format.KeepWithNext == true; }
         set { Format.KeepWithNext = value ? true : null; }
     }
-    public void SetFontBold()
-    {
-        SetFontBold(true);
-    }
-
-    public void SetFontBold(bool bold)
-    {
-        Range.Font.Bold = bold;
-    }
-
-    public void SetFontColor(string color)
-    {
-        Range.Font.Color = color;
-    }
-
     #region Equality
 
     // Two wrappers are equal when they wrap the same underlying element(s), so a new wrapper obtained for the same item compares equal.

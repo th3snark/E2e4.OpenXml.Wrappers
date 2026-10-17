@@ -39,6 +39,12 @@ public partial class RangeWrapper
             return;
         }
 
+        if (_isSpan)
+        {
+            InsertIntoSpan(text, after);
+            return;
+        }
+
         InsertRuns(paragraph => BuildNewRunListFromText(text, paragraph), after);
     }
 
@@ -48,6 +54,27 @@ public partial class RangeWrapper
     /// </summary>
     private void InsertRuns(Func<Paragraph, List<Run>> build, bool after)
     {
+        if (_isSpan)
+        {
+            GetScoped(false, out StoryMap map, out int start, out int end);
+            int position = after ? end : start;
+            Paragraph paragraph = ParagraphForPosition(map, position, out int local);
+            int lengthBefore = StoryMap.Build(paragraph).Length;
+            InsertRunsAt(paragraph, local, build, null);
+
+            //The range grows to include what was added.
+            StoryMap changed = StoryMap.Build(paragraph);
+            if (after)
+            {
+                MakeSpanAnchors(_startAnchor, Anchor.At(changed, local + changed.Length - lengthBefore));
+            }
+            else
+            {
+                MakeSpanAnchors(Anchor.At(changed, local), _endAnchor);
+            }
+            return;
+        }
+
         if (_startOpenXmlElement is Paragraph)
         {
             InsertRunsIntoParagraph((Paragraph)_startOpenXmlElement, build, after);

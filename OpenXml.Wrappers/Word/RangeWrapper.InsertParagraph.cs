@@ -36,6 +36,23 @@ public partial class RangeWrapper
 
     private ParagraphWrapper InsertParagraph(bool after)
     {
+        if (_isSpan)
+        {
+            GetScoped(false, out StoryMap map, out int start, out int end);
+            int position = after ? end : start;
+            Paragraph holder = ParagraphForPosition(map, position, out int local);
+            Paragraph split = SplitParagraphAt(holder, local);
+            if (after)
+            {
+                MakeSpanAnchors(_startAnchor, Anchor.At(StoryMap.Build(split), 0));
+            }
+            else
+            {
+                MakeSpanAnchors(Anchor.At(StoryMap.Build(holder), local), _endAnchor);
+            }
+            return new ParagraphWrapper(split);
+        }
+
         Paragraph paragraph = new Paragraph();
         if (_startOpenXmlElement is Paragraph || _startOpenXmlElement is Table)
         {

@@ -56,11 +56,11 @@ public class LegacyMembersTest
         ParagraphWrapper wrapper = new ParagraphWrapper(paragraph);
 
         Assert.Equal(0, wrapper.SpaceBefore);
-        Assert.Equal(120, wrapper.SpaceAfter);
+        Assert.Equal(6, wrapper.SpaceAfter);
 
-        wrapper.SpaceBefore = 240;
-        Assert.Equal(240, wrapper.SpaceBefore);
-        Assert.Equal(120, wrapper.SpaceAfter);
+        wrapper.SpaceBefore = 12;
+        Assert.Equal(12, wrapper.SpaceBefore);
+        Assert.Equal(6, wrapper.SpaceAfter);
     }
 
     [Fact]
@@ -75,20 +75,6 @@ public class LegacyMembersTest
 
         wrapper.KeepNext = false;
         Assert.False(wrapper.KeepNext);
-    }
-
-    [Fact]
-    public void RowBordersSetWithTheOldMembersAreVisibleThroughBorders()
-    {
-        TableRow row = new TableRow(new TableCell(new Paragraph()), new TableCell(new Paragraph()));
-        Table table = new Table(row);
-        TableRowWrapper wrapper = new TableRowWrapper(row);
-
-        wrapper.SetTopBorder(true);
-        wrapper.SetBottomBorder(false);
-
-        Assert.Equal(BorderLineStyle.SingleLine, wrapper.Borders[BorderPosition.Top].LineStyle);
-        Assert.Equal(BorderLineStyle.None, wrapper.Borders[BorderPosition.Bottom].LineStyle);
     }
 
     [Fact]

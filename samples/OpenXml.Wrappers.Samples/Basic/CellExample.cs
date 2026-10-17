@@ -14,7 +14,7 @@ internal static class CellExample
         using (WordprocessingDocumentWrapper document = WordprocessingDocumentWrapper.Create(path, true, false))
         {
             document.Paragraphs[0].Range.Text = "Merged, split and shaded cells";
-            ParagraphWrapper after = document.Range.InsertParagraphAfter();
+            ParagraphWrapper after = document.Content.InsertParagraphAfter();
             TableWrapper table = document.Tables.Add(after.Range, 4, 4);
             for (int row = 0; row < 4; row++)
             {

@@ -232,13 +232,6 @@ public class TableRowWrapper : System.IEquatable<TableRowWrapper>
     }
 
     /// <summary>
-    /// Shows or hides the top border of the row; <c>Borders[BorderPosition.Top].LineStyle</c> does the same and can set more.
-    /// </summary>
-    public void SetTopBorder(bool visible)
-    {
-        Borders[BorderPosition.Top].LineStyle = visible ? BorderLineStyle.SingleLine : BorderLineStyle.None;
-    }
-    /// <summary>
     /// The borders of the row, as <c>Row.Borders</c> in Word. They are stored as the borders of the cells of the row. There is no horizontal or
     /// diagonal border.
     /// </summary>
@@ -247,13 +240,6 @@ public class TableRowWrapper : System.IEquatable<TableRowWrapper>
         get { return new BordersWrapper(_tableRow, false); }
     }
 
-    /// <summary>
-    /// Shows or hides the bottom border of the row; <c>Borders[BorderPosition.Bottom].LineStyle</c> does the same and can set more.
-    /// </summary>
-    public void SetBottomBorder(bool visible)
-    {
-        Borders[BorderPosition.Bottom].LineStyle = visible ? BorderLineStyle.SingleLine : BorderLineStyle.None;
-    }
     #region Equality
 
     // Two wrappers are equal when they wrap the same underlying element(s), so a new wrapper obtained for the same item compares equal.

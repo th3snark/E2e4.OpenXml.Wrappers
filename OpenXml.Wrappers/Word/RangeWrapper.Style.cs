@@ -35,7 +35,7 @@ public partial class RangeWrapper
                 List<string> characterStyleIds = GetRuns().Select(r => r.RunProperties?.RunStyle?.Val?.Value).Distinct().ToList();
                 if (characterStyleIds.Count == 1 && characterStyleIds[0] != null)
                 {
-                    return StyleHelper.GetStyleName(_startOpenXmlElement, characterStyleIds[0]);
+                    return StyleHelper.GetStyleName(AnchorElement, characterStyleIds[0]);
                 }
             }
 
@@ -45,8 +45,8 @@ public partial class RangeWrapper
                 return null;
             }
             return paragraphStyleIds[0] == null
-                ? StyleHelper.GetDefaultStyleName(_startOpenXmlElement, StyleValues.Paragraph) ?? "Normal"
-                : StyleHelper.GetStyleName(_startOpenXmlElement, paragraphStyleIds[0]);
+                ? StyleHelper.GetDefaultStyleName(AnchorElement, StyleValues.Paragraph) ?? "Normal"
+                : StyleHelper.GetStyleName(AnchorElement, paragraphStyleIds[0]);
         }
         set
         {
@@ -77,7 +77,7 @@ public partial class RangeWrapper
                 return;
             }
 
-            string styleId = StyleHelper.FindStyleId(_startOpenXmlElement, value, out StyleValues type);
+            string styleId = StyleHelper.FindStyleId(AnchorElement, value, out StyleValues type);
             if (type == StyleValues.Paragraph)
             {
                 foreach (Paragraph paragraph in GetStyledParagraphs())
@@ -108,7 +108,7 @@ public partial class RangeWrapper
     /// </summary>
     private bool IsPartialParagraphRange()
     {
-        return _startOpenXmlElement is BookmarkStart || _startOpenXmlElement is CommentRangeStart;
+        return _isSpan || _startOpenXmlElement is BookmarkStart || _startOpenXmlElement is CommentRangeStart;
     }
 
     /// <summary>

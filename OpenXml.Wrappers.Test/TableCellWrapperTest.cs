@@ -94,22 +94,34 @@ public class TableCellWrapperTest : System.IDisposable
         }
     }
 
-    [Fact]
-    public void CellWidthOfACellWithoutPropertiesIsZeroAndCanBeSet()
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(double.NaN)]
+    [InlineData(40000)]
+    public void WidthsOutsideTheRangeAreRejected(double points)
     {
         TableCellWrapper cell = new TableCellWrapper(new TableCell(new Paragraph()));
-        Assert.Equal(0, cell.CellWidth);
 
-        cell.CellWidth = 1234;
-
-        Assert.Equal(1234, cell.CellWidth);
+        Assert.Throws<System.ArgumentOutOfRangeException>(() => cell.Width = points);
     }
 
     [Fact]
-    public void SetShadingFillColorOnACellWithoutPropertiesAddsShading()
+    public void WidthOfACellWithoutPropertiesIsZeroAndCanBeSetInPoints()
+    {
+        TableCellWrapper cell = new TableCellWrapper(new TableCell(new Paragraph()));
+        Assert.Equal(0, cell.Width);
+
+        cell.Width = 61.7;
+
+        Assert.Equal(61.7, cell.Width);
+        Assert.Equal("1234", cell.TableCell.TableCellProperties.TableCellWidth.Width.Value);
+    }
+
+    [Fact]
+    public void BackgroundColorOnACellWithoutPropertiesAddsShading()
     {
         TableCell tableCell = new TableCell(new Paragraph());
-        new TableCellWrapper(tableCell).SetShadingFillColor("FF0000");
+        new TableCellWrapper(tableCell).BackgroundColor = "FF0000";
 
         Assert.Equal("FF0000", tableCell.TableCellProperties.Shading.Fill.Value);
     }

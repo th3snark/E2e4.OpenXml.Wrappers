@@ -17,7 +17,7 @@ internal static class TableExample
             document.Paragraphs[0].Range.Font.Bold = true;
 
             //Tables.Add puts the table before the range it is given, so give it the paragraph that should follow the table.
-            ParagraphWrapper after = document.Range.InsertParagraphAfter();
+            ParagraphWrapper after = document.Content.InsertParagraphAfter();
             TableWrapper table = document.Tables.Add(after.Range, 4, 3);
 
             int[][] sales = { new[] { 120, 134 }, new[] { 98, 105 }, new[] { 143, 151 } };

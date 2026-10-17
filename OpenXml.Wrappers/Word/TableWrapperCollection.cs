@@ -23,7 +23,7 @@ public class TableWrapperCollection : IEnumerable<TableWrapper>
         get
         {
             //A table is itself at the nesting level of the collection's parent so its parent table is one level out.
-            Table table = _rangeWrapper.Start.ParentAtRelativeNestingLevel<Table>(_rangeWrapper.Start is Table ? -1 : 0);
+            Table table = _rangeWrapper.StartElement.ParentAtRelativeNestingLevel<Table>(_rangeWrapper.StartElement is Table ? -1 : 0);
             return table != null ? new TableWrapper(table) : null;
         }
     }
@@ -50,10 +50,10 @@ public class TableWrapperCollection : IEnumerable<TableWrapper>
 
     private IList<Table> GetElementList()
     {
-        if (_rangeWrapper.Start is BookmarkStart)
+        if (_rangeWrapper.StartElement is BookmarkStart)
         {
             //The tables touched by the bookmark. Where tables are nested only the outermost ones are returned, as for any other range.
-            IList<Table> tables = _rangeWrapper.Start.GetElements<Table>(_rangeWrapper.End).ToList();
+            IList<Table> tables = _rangeWrapper.StartElement.GetElements<Table>(_rangeWrapper.EndElement).ToList();
             if (tables.Count > 0)
             {
                 int outermostLevel = tables.Min(e => e.NestingLevel<Table>());
@@ -62,7 +62,7 @@ public class TableWrapperCollection : IEnumerable<TableWrapper>
             return tables;
         }
 
-        return _rangeWrapper.Start.DescendantsAtRelativeNestingLevel<Table>(1);
+        return _rangeWrapper.StartElement.DescendantsAtRelativeNestingLevel<Table>(1);
     }
 
     /// <summary>
@@ -80,7 +80,7 @@ public class TableWrapperCollection : IEnumerable<TableWrapper>
         ArgumentOutOfRangeException.ThrowIfLessThan(numRows, 1);
         ArgumentOutOfRangeException.ThrowIfLessThan(numColumns, 1);
 
-        OpenXmlElement anchor = range.Start;
+        OpenXmlElement anchor = range.StartElement;
         if (anchor is BookmarkStart || anchor is CommentRangeStart)
         {
             anchor = anchor.Ancestors<Paragraph>().FirstOrDefault();
@@ -115,7 +115,7 @@ public class TableWrapperCollection : IEnumerable<TableWrapper>
         }
         if (!(anchor is Paragraph || anchor is Table))
         {
-            throw new NotSupportedException(String.Format(CultureInfo.InvariantCulture, "Adding a table to a range starting with the type {0} is not currently supported.", range.Start.GetType().Name));
+            throw new NotSupportedException(String.Format(CultureInfo.InvariantCulture, "Adding a table to a range starting with the type {0} is not currently supported.", range.StartElement.GetType().Name));
         }
 
         int totalWidth = GetAvailableWidth(anchor);
@@ -162,7 +162,7 @@ public class TableWrapperCollection : IEnumerable<TableWrapper>
 
     public int NestingLevel
     {
-        get { return _rangeWrapper.Start.NestingLevel<Table>() + 1; }
+        get { return _rangeWrapper.StartElement.NestingLevel<Table>() + 1; }
     }
 
     #region IEnumerable Members

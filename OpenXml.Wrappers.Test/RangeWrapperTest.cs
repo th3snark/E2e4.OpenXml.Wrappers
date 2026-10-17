@@ -30,7 +30,7 @@ public class RangeWrapperTest
         [Fact]
         public void RangesOverTheSameElementsAreEqual()
         {
-            Assert.True(_document1.Range == _document1.Range);
+            Assert.True(_document1.Content == _document1.Content);
             Assert.True(_document1.Tables[0].Range == _document1.Tables[0].Range);
             Assert.True(_document1.Tables[0].Range != _document1.Tables[1].Range);
             Assert.True(_document1.Bookmarks[0].Range == _document1.Bookmarks[0].Range);

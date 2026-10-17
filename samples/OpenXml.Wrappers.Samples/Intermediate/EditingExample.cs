@@ -18,7 +18,7 @@ internal static class EditingExample
         using (WordprocessingDocumentWrapper document = WordprocessingDocumentWrapper.Open(path, true))
         {
             //1. Rename the product everywhere, in the text and in the table.
-            document.Range.Find.Execute("Quillpad", matchCase: true, replaceWith: "Quillpad Pro", replace: ReplaceMode.All);
+            document.Content.Find.Execute("Quillpad", matchCase: true, replaceWith: "Quillpad Pro", replace: ReplaceMode.All);
 
             //2. Remove the paragraphs that were written as drafts. ToList takes a copy first, so deleting while looping is safe.
             foreach (ParagraphWrapper paragraph in document.Paragraphs.ToList())

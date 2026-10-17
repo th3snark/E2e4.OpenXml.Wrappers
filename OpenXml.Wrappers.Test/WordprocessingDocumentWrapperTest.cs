@@ -196,15 +196,15 @@ public class WordprocessingDocumentWrapperTest : System.IDisposable
     [Fact]
     public void LastParagraphPropertyIsCorrect()
     {
-        Assert.Equal("Last Line\r", _document1.Range.LastParagraph.Range.Text);
-        Assert.Equal("Last Line", _document1.Range.LastParagraph.Text);
+        Assert.Equal("Last Line\r", _document1.Content.LastParagraph.Range.Text);
+        Assert.Equal("Last Line", _document1.Content.LastParagraph.Text);
     }
 
     [Fact]
     public void FirstParagraphPropertyIsCorrect()
     {
-        Assert.Equal("Test Document\r", _document1.Range.FirstParagraph.Range.Text);
-        Assert.Equal("Test Document", _document1.Range.FirstParagraph.Text);
+        Assert.Equal("Test Document\r", _document1.Content.FirstParagraph.Range.Text);
+        Assert.Equal("Test Document", _document1.Content.FirstParagraph.Text);
     }
 
     [Fact]

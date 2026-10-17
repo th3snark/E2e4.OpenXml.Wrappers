@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Wordprocessing;
@@ -36,17 +35,26 @@ public class ReplacementWrapper
 /// Finds, and optionally replaces, text in a range, as <c>Range.Find</c> does in Word.
 /// </summary>
 /// <remarks>
-/// <para>A match can span several runs but not several paragraphs. A replacement takes the formatting of the first run of the match.</para>
-/// <para>Unlike in Word, a find never changes the range it was called on: ranges are made of whole elements so they cannot be narrowed to
-/// the match. <see cref="Execute(ReplaceMode)"/> returns whether the text was found and <see cref="Found"/> remembers that.</para>
-/// <para>Tabs and line breaks in the text to find match tab and break characters (<c>\t</c>, <c>\v</c> and <c>\f</c> for a page break). The
-/// replacement text must not contain them (or <c>\r</c> or <c>\n</c>) because it replaces text within a run.</para>
+/// <para>When the text is found the range becomes the span of characters that matched (and for <see cref="ReplaceMode.One"/> the replacement
+/// text), so it can be formatted or read, and the next <c>Execute</c> carries on from the end of it up to the end of the range that the search
+/// started in, as in Word. For <see cref="ReplaceMode.All"/> the range keeps covering the same region, with the replacements in it. A range
+/// that is collapsed is searched to the end of the story.</para>
+/// <para>A match can span paragraphs. A replacement takes the formatting of the first character of the match. The text to find and the
+/// replacement can use <c>\t</c> or <c>^t</c> for a tab, <c>\v</c>, <c>\n</c> or <c>^l</c> for a line break, <c>\f</c> or <c>^m</c> for a page break,
+/// <c>\r</c> or <c>^p</c> for a paragraph mark and <c>^^</c> for a caret. A replacement containing a paragraph mark starts a new paragraph.</para>
+/// <para>A search for text that does not include a paragraph mark goes through the paragraphs one at a time from where it starts, so looking
+/// for the next match in a large document costs only as much as the distance to it.</para>
 /// </remarks>
 public class FindWrapper
 {
     private static readonly System.Buffers.SearchValues<char> ControlCharacters = System.Buffers.SearchValues.Create("\t\n\r\v\f");
 
     private readonly RangeWrapper _range;
+
+    //The state that lets the next Execute carry on from the last match: a copy of the range as it was after that match, and a range at the point
+    //where the search is to stop. They are ranges so that they follow the text, as the range itself does, when the text is formatted or changed.
+    private RangeWrapper _lastMatch;
+    private RangeWrapper _limit;
 
     public FindWrapper(RangeWrapper range)
     {
@@ -81,40 +89,40 @@ public class FindWrapper
             return false;
         }
 
-        string replacement = Replacement.Text ?? String.Empty;
-        if (replace != ReplaceMode.None && replacement.AsSpan().IndexOfAny(ControlCharacters) >= 0)
-        {
-            throw new NotSupportedException("Replacement text containing tabs, line breaks or paragraph marks is not currently supported.");
-        }
-
+        string find = Unescape(Text);
+        string replacement = Unescape(Replacement.Text ?? String.Empty);
         StringComparison comparison = MatchCase ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
-        foreach (List<Atom> atoms in GetParagraphAtoms())
+
+        //Where the search starts and ends. Looking for the same thing again from the match carries on from its end.
+        _range.GetScoped(false, out StoryMap scopeMap, out int scopeStart, out int scopeEnd);
+        OpenXmlElement story = StoryMap.FindRoot(_range.AnchorElement);
+        Anchor start = _range.IsSpan ? _range.StartAnchor : Anchor.At(scopeMap, scopeStart);
+        Anchor end = _range.IsSpan ? _range.EndAnchor : Anchor.At(scopeMap, scopeEnd);
+        bool continuing = _lastMatch != null && start.SameAs(_lastMatch.StartAnchor) && end.SameAs(_lastMatch.EndAnchor);
+        Anchor from;
+        Anchor to;
+        if (continuing)
         {
-            string haystack = String.Concat(atoms.Select(a => a.Content));
-            List<int> matches = FindMatches(haystack, comparison);
-            if (matches.Count == 0)
-            {
-                continue;
-            }
-
-            Found = true;
-            if (replace == ReplaceMode.None)
-            {
-                return true;
-            }
-
-            if (replace == ReplaceMode.One)
-            {
-                ReplaceMatch(atoms, matches[0], Text.Length, replacement);
-                return true;
-            }
-
-            //Replace from the end so that the offsets of the matches that are still to be replaced stay valid.
-            for (int i = matches.Count - 1; i >= 0; i--)
-            {
-                ReplaceMatch(atoms, matches[i], Text.Length, replacement);
-            }
+            from = end;
+            to = _limit.StartAnchor;
         }
+        else
+        {
+            from = start;
+            to = scopeStart == scopeEnd ? new Anchor(null, 0) : end;
+            _limit = RangeWrapper.CreateAt(story, to);
+        }
+
+        bool? found = find.Contains('\a', StringComparison.Ordinal)
+            ? null
+            : find.Contains('\r', StringComparison.Ordinal)
+                ? ExecuteAcrossParagraphs(story, scopeMap, scopeStart, scopeEnd, from, to, find, replacement, replace, comparison)
+                : ExecuteByParagraph(story, scopeMap, scopeStart, scopeEnd, from, to, find, replacement, replace, comparison);
+        if (found == null)
+        {
+            found = ExecuteInStory(story, from, to, find, replacement, replace, comparison, scopeMap, scopeStart, scopeEnd);
+        }
+        Found = found.Value;
         return Found;
     }
 
@@ -131,22 +139,315 @@ public class FindWrapper
         return Execute(replace);
     }
 
-    private List<int> FindMatches(string haystack, StringComparison comparison)
+    #region By paragraph
+
+    /// <summary>
+    /// Searches the paragraphs one at a time. Returns null when the window cannot be worked out that way (it ends in a table row, say), in
+    /// which case nothing has been changed.
+    /// </summary>
+    private bool? ExecuteByParagraph(OpenXmlElement story, StoryMap scopeMap, int scopeStart, int scopeEnd, Anchor from, Anchor to, string find, string replacement, ReplaceMode replace, StringComparison comparison)
     {
-        List<int> matches = new List<int>();
-        int position = 0;
-        while (position <= haystack.Length - Text.Length)
+        Paragraph first = ParagraphOf(from);
+        Paragraph last = to.Element == null ? null : ParagraphOf(to);
+        if (first == null || (to.Element != null && last == null))
         {
-            int index = haystack.IndexOf(Text, position, comparison);
-            if (index < 0)
+            return null;
+        }
+
+        bool any = false;
+        bool madeSpan = _range.IsSpan;
+        for (Paragraph paragraph = first; paragraph != null; paragraph = StoryMap.NextParagraph(paragraph, story))
+        {
+            StoryMap map = StoryMap.Build(paragraph);
+            int windowStart = paragraph == first ? RangeWrapper.ResolveLocal(map, from) : 0;
+            int windowEnd = last != null && paragraph == last ? RangeWrapper.ResolveLocal(map, to) : map.Length - 1;
+            if (windowStart < 0)
+            {
+                if (any)
+                {
+                    break;
+                }
+                return null;
+            }
+
+            //The mark that ends the paragraph is not text that can match.
+            windowEnd = Math.Min(windowEnd < 0 ? map.Length - 1 : windowEnd, map.Length - 1);
+            if (windowEnd > windowStart)
+            {
+                List<(int Start, int Length)> matches = FindMatches(map, find, windowStart, windowEnd, comparison, replace == ReplaceMode.All);
+                if (matches.Count > 0)
+                {
+                    any = true;
+                    if (replace == ReplaceMode.None)
+                    {
+                        Remember(map, matches[0].Start, matches[0].Start + matches[0].Length);
+                        return true;
+                    }
+                    if (replace == ReplaceMode.One)
+                    {
+                        int length = Replace(map, matches[0].Start, matches[0].Length, replacement);
+                        Remember(StoryMap.Build(paragraph), matches[0].Start, matches[0].Start + length);
+                        return true;
+                    }
+
+                    //A replace all keeps the range as it was, but as a span, which the replacements then keep up to date.
+                    if (!madeSpan)
+                    {
+                        _range.MakeSpan(scopeMap, scopeStart, scopeEnd);
+                        madeSpan = true;
+                    }
+                    for (int i = matches.Count - 1; i >= 0; i--)
+                    {
+                        Replace(map, matches[i].Start, matches[i].Length, replacement);
+                    }
+                }
+            }
+
+            if (last != null && paragraph == last)
+            {
+                break;
+            }
+        }
+
+        _lastMatch = null;
+        return any;
+    }
+
+    /// <summary>
+    /// Searches for text that includes paragraph marks. A match starts in one paragraph and runs on into the next few, so each paragraph is
+    /// searched together with as many of those after it as the text has marks. Returns null when the window cannot be worked out that way.
+    /// </summary>
+    private bool? ExecuteAcrossParagraphs(OpenXmlElement story, StoryMap scopeMap, int scopeStart, int scopeEnd, Anchor from, Anchor to, string find, string replacement, ReplaceMode replace, StringComparison comparison)
+    {
+        int marks = find.Count(c => c == '\r');
+        Paragraph first = ParagraphOf(from);
+        Paragraph last = to.Element == null ? null : ParagraphOf(to);
+        if (first == null || (to.Element != null && last == null))
+        {
+            return null;
+        }
+
+        bool any = false;
+        bool madeSpan = _range.IsSpan;
+        Paragraph paragraph = first;
+        Anchor startAt = from;
+        while (paragraph != null)
+        {
+            Paragraph reach = paragraph;
+            for (int i = 0; i < marks && reach != null; i++)
+            {
+                reach = StoryMap.NextParagraph(reach, story);
+            }
+            if (reach == null)
             {
                 break;
             }
 
-            if (!MatchWholeWord || IsWholeWord(haystack, index, Text.Length))
+            StoryMap map = StoryMap.BuildWindowFor(paragraph, reach, story);
+            if (map == null)
             {
-                matches.Add(index);
-                position = index + Text.Length;
+                return any ? any : (bool?)null;
+            }
+
+            int windowStart = startAt == null ? 0 : RangeWrapper.ResolveLocal(map, startAt);
+            int windowEnd = to.Element == null ? map.Length : RangeWrapper.ResolveLocal(map, to);
+            if (windowEnd < 0)
+            {
+                windowEnd = map.Length;
+            }
+            if (windowStart < 0 || !map.TryGetAtom(paragraph, out Atom mark))
+            {
+                return any ? any : (bool?)null;
+            }
+
+            //A match belongs to the paragraph it starts in, so that it is found once.
+            List<(int Start, int Length)> matches = FindMatches(map, find, windowStart, windowEnd, comparison, false, mark.End);
+            if (matches.Count > 0)
+            {
+                any = true;
+                int matchStart = matches[0].Start;
+                int matchLength = matches[0].Length;
+                if (replace == ReplaceMode.None)
+                {
+                    Remember(map, matchStart, matchStart + matchLength);
+                    return true;
+                }
+
+                RangeWrapper replaced = RangeWrapper.FromMap(map, matchStart, matchStart + matchLength);
+                replaced.ReplaceSpanText(replacement);
+                if (replace == ReplaceMode.One)
+                {
+                    _range.MakeSpanAnchors(replaced.StartAnchor, replaced.EndAnchor);
+                    _lastMatch = _range.Duplicate();
+                    return true;
+                }
+
+                //A replace all goes on from the end of the replacement, which can be in the middle of a paragraph now.
+                if (!madeSpan)
+                {
+                    _range.MakeSpan(scopeMap, scopeStart, scopeEnd);
+                    madeSpan = true;
+                }
+                paragraph = ParagraphOf(replaced.EndAnchor);
+                startAt = replaced.EndAnchor;
+                continue;
+            }
+
+            if (last != null && paragraph == last)
+            {
+                break;
+            }
+            paragraph = StoryMap.NextParagraph(paragraph, story);
+            startAt = null;
+        }
+
+        _lastMatch = null;
+        return any;
+    }
+
+    private static Paragraph ParagraphOf(Anchor anchor)
+    {
+        if (anchor.Element == null || anchor.Element is TableRow)
+        {
+            return null;
+        }
+        return anchor.Element as Paragraph ?? anchor.Element.Ancestors<Paragraph>().FirstOrDefault();
+    }
+
+    #endregion
+
+    #region By story
+
+    //Searches the whole story at once, which a match across paragraphs needs.
+    private bool ExecuteInStory(OpenXmlElement story, Anchor from, Anchor to, string find, string replacement, ReplaceMode replace, StringComparison comparison, StoryMap scopeMap, int scopeStart, int scopeEnd)
+    {
+        StoryMap map = StoryMap.Build(story);
+        int fromPosition = RangeWrapper.ResolveLocal(map, from);
+        int toPosition = to.Element == null ? map.Length : RangeWrapper.ResolveLocal(map, to);
+        fromPosition = Math.Max(fromPosition, 0);
+        toPosition = toPosition < 0 ? map.Length : toPosition;
+
+        List<(int Start, int Length)> matches = FindMatches(map, find, fromPosition, toPosition, comparison, replace == ReplaceMode.All);
+        if (matches.Count == 0)
+        {
+            return false;
+        }
+
+        if (replace == ReplaceMode.None)
+        {
+            Remember(map, matches[0].Start, matches[0].Start + matches[0].Length);
+            return true;
+        }
+
+        if (replace == ReplaceMode.One)
+        {
+            int length = Replace(map, matches[0].Start, matches[0].Length, replacement);
+            Remember(StoryMap.Build(story), matches[0].Start, matches[0].Start + length);
+            return true;
+        }
+
+        if (!_range.IsSpan)
+        {
+            _range.MakeSpan(scopeMap, scopeStart, scopeEnd);
+        }
+
+        //Replace from the end so that the positions of the matches that are still to be replaced stay valid.
+        for (int i = matches.Count - 1; i >= 0; i--)
+        {
+            Replace(map, matches[i].Start, matches[i].Length, replacement);
+        }
+        _lastMatch = null;
+        return true;
+    }
+
+    #endregion
+
+    //Replaces the match. A match inside one piece of text, replaced by plain text, is done in place; anything else goes through the range.
+    //The map is the one made before any replacement; replacing from the end means the text before the match is as it was.
+    private static int Replace(StoryMap map, int start, int length, string replacement)
+    {
+        int index = map.IndexAt(start);
+        if (index >= 0 && map.Atoms[index].Kind == AtomKind.Text && start + length <= map.Atoms[index].End
+            && replacement.AsSpan().IndexOfAny(ControlCharacters) < 0 && replacement.Length > 0)
+        {
+            Atom atom = map.Atoms[index];
+            Text text = (Text)atom.Element;
+            string current = text.Text ?? String.Empty;
+            int offset = start - atom.Start;
+            text.Text = String.Concat(current.AsSpan(0, offset), replacement, current.AsSpan(offset + length));
+            text.Space = SpaceProcessingModeValues.Preserve;
+            SpanRegistry.TextEdited(text, offset, length, replacement.Length);
+            return replacement.Length;
+        }
+        return RangeWrapper.FromMap(map, start, start + length).ReplaceSpanText(replacement);
+    }
+
+    //Makes the range the match and remembers it, so that the next find carries on from it.
+    private void Remember(StoryMap map, int start, int end)
+    {
+        _range.MakeSpan(map, start, end);
+        _lastMatch = _range.Duplicate();
+    }
+
+    //The codes that Word accepts for characters that cannot be typed, and the escapes of C#.
+    private static string Unescape(string text)
+    {
+        return text.Replace("^^", "\u0001", StringComparison.Ordinal).Replace("^p", "\r", StringComparison.Ordinal).Replace("^t", "\t", StringComparison.Ordinal)
+            .Replace("^l", "\v", StringComparison.Ordinal).Replace("^m", "\f", StringComparison.Ordinal).Replace("\u0001", "^", StringComparison.Ordinal)
+            .Replace('\n', '\v');
+    }
+
+    //Finds the matches in the positions from windowStart up to windowEnd. Positions that show no text (field codes, pictures) are skipped over,
+    //so a match can run across them; each match is given as the position it starts at and the number of positions it takes up.
+    private List<(int Start, int Length)> FindMatches(StoryMap map, string find, int windowStart, int windowEnd, StringComparison comparison, bool all, int maxStart = int.MaxValue)
+    {
+        char[] characters = map.ToCharacters();
+        List<int> positions = null;
+        string haystack;
+        if (Array.IndexOf(characters, '\0') < 0)
+        {
+            haystack = new string(characters);
+        }
+        else
+        {
+            positions = new List<int>(characters.Length);
+            System.Text.StringBuilder visible = new System.Text.StringBuilder(characters.Length);
+            for (int i = 0; i < characters.Length; i++)
+            {
+                if (characters[i] != '\0')
+                {
+                    positions.Add(i);
+                    visible.Append(characters[i]);
+                }
+            }
+            haystack = visible.ToString();
+        }
+
+        //The window in the characters that show.
+        int from = positions == null ? windowStart : FirstIndexAtOrAfter(positions, windowStart);
+        int to = positions == null ? windowEnd : FirstIndexAtOrAfter(positions, windowEnd);
+
+        List<(int Start, int Length)> matches = new List<(int, int)>();
+        int position = from;
+        int startLimit = positions == null ? maxStart : FirstIndexAtOrAfter(positions, maxStart);
+        while (position <= to - find.Length)
+        {
+            int index = haystack.IndexOf(find, position, to - position, comparison);
+            if (index < 0 || index >= startLimit)
+            {
+                break;
+            }
+
+            if (!MatchWholeWord || IsWholeWord(haystack, index, find.Length))
+            {
+                int start = positions == null ? index : positions[index];
+                int end = positions == null ? index + find.Length : positions[index + find.Length - 1] + 1;
+                matches.Add((start, end - start));
+                position = index + find.Length;
+                if (!all)
+                {
+                    break;
+                }
             }
             else
             {
@@ -156,6 +457,11 @@ public class FindWrapper
         return matches;
     }
 
+    private static int FirstIndexAtOrAfter(List<int> positions, int position)
+    {
+        int index = positions.BinarySearch(position);
+        return index >= 0 ? index : ~index;
+    }
     private static bool IsWholeWord(string haystack, int index, int length)
     {
         //Only the edges of the match that are themselves part of a word need a word boundary.
@@ -163,107 +469,5 @@ public class FindWrapper
         int end = index + length;
         bool endOk = !Char.IsLetterOrDigit(haystack[end - 1]) || end == haystack.Length || !Char.IsLetterOrDigit(haystack[end]);
         return startOk && endOk;
-    }
-
-    /// <summary>
-    /// A piece of the text of a paragraph and the element that holds it: a text element, or a tab or break character.
-    /// </summary>
-    private sealed class Atom
-    {
-        public OpenXmlElement Element { get; set; }
-
-        public string Content { get; set; }
-    }
-
-    private IEnumerable<List<Atom>> GetParagraphAtoms()
-    {
-        foreach (List<Run> runs in _range.GetRunsByParagraph())
-        {
-            List<Atom> atoms = new List<Atom>();
-            foreach (Run run in runs)
-            {
-                foreach (OpenXmlElement element in run.ChildElements)
-                {
-                    if (element is Text)
-                    {
-                        atoms.Add(new Atom { Element = element, Content = ((Text)element).Text ?? String.Empty });
-                    }
-                    else if (element is TabChar)
-                    {
-                        atoms.Add(new Atom { Element = element, Content = "\t" });
-                    }
-                    else if (element is Break)
-                    {
-                        Break lineBreak = (Break)element;
-                        bool isPageBreak = lineBreak.Type != null && lineBreak.Type.HasValue && lineBreak.Type.Value == BreakValues.Page;
-                        atoms.Add(new Atom { Element = element, Content = isPageBreak ? "\f" : "\v" });
-                    }
-                }
-            }
-            yield return atoms;
-        }
-    }
-
-    private static void ReplaceMatch(List<Atom> atoms, int matchStart, int matchLength, string replacement)
-    {
-        int matchEnd = matchStart + matchLength;
-        List<Run> touchedRuns = new List<Run>();
-        bool replaced = false;
-
-        int atomStart = 0;
-        foreach (Atom atom in atoms)
-        {
-            int atomEnd = atomStart + atom.Content.Length;
-            if (atomEnd > matchStart && atomStart < matchEnd)
-            {
-                Run run = atom.Element.Parent as Run;
-                if (run != null)
-                {
-                    touchedRuns.Add(run);
-                }
-
-                //The part of this atom before and after the match is kept.
-                string before = atom.Content.Substring(0, Math.Max(0, matchStart - atomStart));
-                string after = atom.Content.Substring(Math.Min(atom.Content.Length, matchEnd - atomStart));
-                string kept = (replaced ? String.Empty : before + replacement) + after;
-
-                if (atom.Element is Text)
-                {
-                    Text text = (Text)atom.Element;
-                    text.Text = kept;
-                    text.Space = SpaceProcessingModeValues.Preserve;
-                    if (kept.Length == 0)
-                    {
-                        text.Remove();
-                    }
-                }
-                else if (kept.Length > 0)
-                {
-                    //A tab or break at the edge of the match is replaced by the text.
-                    Text newText = new Text(kept) { Space = SpaceProcessingModeValues.Preserve };
-                    atom.Element.InsertBeforeSelf(newText);
-                    atom.Element.Remove();
-                    atom.Element = newText;
-                }
-                else
-                {
-                    atom.Element.Remove();
-                }
-
-                //Keep the atom in step with the document so that the matches still to be replaced (all of which are earlier) see the new text.
-                atom.Content = kept;
-                replaced = true;
-            }
-            atomStart = atomEnd;
-        }
-
-        //Runs left with nothing but their properties are removed.
-        foreach (Run run in touchedRuns.Distinct())
-        {
-            if (run.Parent != null && !run.ChildElements.Any(e => !(e is RunProperties)))
-            {
-                run.Remove();
-            }
-        }
     }
 }

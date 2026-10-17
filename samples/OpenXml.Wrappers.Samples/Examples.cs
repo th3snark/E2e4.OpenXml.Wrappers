@@ -32,6 +32,7 @@ public static class Examples
         new("Basic", "Field", "basic-10-field.docx", FieldExample.Create),
         new("Basic", "Header and footer", "basic-11-header-footer.docx", HeaderFooterExample.Create),
         new("Basic", "Document properties", "basic-12-properties.docx", PropertiesExample.Create),
+        new("Basic", "Character ranges", "basic-13-characters.docx", CharactersExample.Create),
 
         new("Intermediate", "Letter from a template", "intermediate-01-letter.docx", LetterExample.Create),
         new("Intermediate", "Invoice", "intermediate-02-invoice.docx", InvoiceExample.Create),

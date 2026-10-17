@@ -34,6 +34,11 @@ public partial class RangeWrapper
     /// </summary>
     internal IList<List<Run>> GetRunsByParagraph()
     {
+        if (_isSpan)
+        {
+            return GetSpanRunsByParagraph();
+        }
+
         if (_startOpenXmlElement is BookmarkStart || _startOpenXmlElement is CommentRangeStart)
         {
             return _startOpenXmlElement.GetElements<Run>(_endOpenXmlElement)

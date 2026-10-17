@@ -123,6 +123,6 @@ public class CommentWrapperCollectionTest : System.IDisposable
     [Fact]
     public void AddCommentIsCorrect()
     {
-        CommentWrapper comment = _document3.Comments.Add(_document3.Range.LastParagraph.Range, "**Comment Text**");
+        CommentWrapper comment = _document3.Comments.Add(_document3.Content.LastParagraph.Range, "**Comment Text**");
     }
 }

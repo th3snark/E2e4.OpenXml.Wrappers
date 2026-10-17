@@ -103,7 +103,7 @@ public class TableFormattingTest
         TableCellWrapper wrapper = new TableCellWrapper(cell);
         wrapper.VerticalAlignment = CellVerticalAlignment.Center;
         wrapper.BackgroundColor = "FFCC00";
-        wrapper.CellWidth = 2000;
+        wrapper.Width = 100;
 
         Assert.Equal(new[] { "tcW", "shd", "vAlign" }, cell.TableCellProperties.ChildElements.Select(e => e.LocalName).ToArray());
     }

@@ -73,22 +73,22 @@ public class ParagraphWrapperTest : System.IDisposable
     [Fact]
     public void RangeTextPropertyIsCorrect()
     {
-        Assert.Equal("Test Document\r", _document1.Range.FirstParagraph.Range.Text);
-        Assert.Equal("Test Document", _document1.Range.FirstParagraph.Text);
+        Assert.Equal("Test Document\r", _document1.Content.FirstParagraph.Range.Text);
+        Assert.Equal("Test Document", _document1.Content.FirstParagraph.Text);
     }
 
     [Fact]
     public void RangeFirstParagraphRangeTextPropertyIsCorrect()
     {
-        Assert.Equal("Test Document\r", _document1.Range.FirstParagraph.Range.Text);
-        Assert.Equal("Test Document", _document1.Range.FirstParagraph.Text);
+        Assert.Equal("Test Document\r", _document1.Content.FirstParagraph.Range.Text);
+        Assert.Equal("Test Document", _document1.Content.FirstParagraph.Text);
     }
 
     [Fact]
     public void SetFontBoldOnParagraphWithoutPropertiesUsesParagraphMarkRunProperties()
     {
         Paragraph paragraph = new Paragraph(new Run(new Text("abc")));
-        new ParagraphWrapper(paragraph).SetFontBold();
+        new ParagraphWrapper(paragraph).Range.Font.Bold = true;
 
         Assert.NotNull(paragraph.ParagraphProperties.ParagraphMarkRunProperties);
         Assert.Empty(paragraph.ParagraphProperties.Elements<RunProperties>());
@@ -101,8 +101,8 @@ public class ParagraphWrapperTest : System.IDisposable
     {
         Paragraph paragraph = new Paragraph(new Run(new Text("abc")));
         ParagraphWrapper wrapper = new ParagraphWrapper(paragraph);
-        wrapper.SetFontBold();
-        wrapper.SetFontBold();
+        wrapper.Range.Font.Bold = true;
+        wrapper.Range.Font.Bold = true;
 
         Assert.Single(paragraph.ParagraphProperties.Elements<ParagraphMarkRunProperties>());
         Assert.Single(paragraph.ParagraphProperties.ParagraphMarkRunProperties.Elements<Bold>());
@@ -112,7 +112,7 @@ public class ParagraphWrapperTest : System.IDisposable
     public void SetFontBoldFalseTurnsOffExistingBold()
     {
         Paragraph paragraph = new Paragraph(new Run(new RunProperties(new Bold()), new Text("abc")));
-        new ParagraphWrapper(paragraph).SetFontBold(false);
+        new ParagraphWrapper(paragraph).Range.Font.Bold = false;
 
         Bold bold = paragraph.Elements<Run>().First().RunProperties.Elements<Bold>().Single();
         Assert.False(bold.Val.Value);
@@ -122,7 +122,7 @@ public class ParagraphWrapperTest : System.IDisposable
     public void SetFontColorKeepsSchemaOrderAfterBold()
     {
         Paragraph paragraph = new Paragraph(new Run(new RunProperties(new Bold()), new Text("abc")));
-        new ParagraphWrapper(paragraph).SetFontColor("FF0000");
+        new ParagraphWrapper(paragraph).Range.Font.Color = "FF0000";
 
         RunProperties runProperties = paragraph.Elements<Run>().First().RunProperties;
         Assert.IsType<Bold>(runProperties.ChildElements[0]);
@@ -133,7 +133,7 @@ public class ParagraphWrapperTest : System.IDisposable
     public void ParagraphMarkRunPropertiesAreInsertedBeforeSectionProperties()
     {
         Paragraph paragraph = new Paragraph(new ParagraphProperties(new SectionProperties()), new Run(new Text("abc")));
-        new ParagraphWrapper(paragraph).SetFontColor("FF0000");
+        new ParagraphWrapper(paragraph).Range.Font.Color = "FF0000";
 
         Assert.IsType<ParagraphMarkRunProperties>(paragraph.ParagraphProperties.ChildElements[0]);
         Assert.IsType<SectionProperties>(paragraph.ParagraphProperties.ChildElements[1]);

@@ -33,7 +33,7 @@ public class TableColumnWrapperCollectionTest
         TableColumnWrapper column = new TableWrapper(table).Columns.Add();
 
         Assert.Equal(3, table.Elements<TableGrid>().Single().Elements<GridColumn>().Count());
-        Assert.Equal(2000, column.Width);
+        Assert.Equal(100, column.Width);
 
         TableCell added = table.Elements<TableRow>().First().Elements<TableCell>().Last();
         Assert.Equal(String.Empty, new RangeWrapper(added).Text.TrimEnd('\r', '\a'));

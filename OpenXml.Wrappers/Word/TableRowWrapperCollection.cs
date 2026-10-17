@@ -19,7 +19,7 @@ public class TableRowWrapperCollection : IEnumerable<TableRowWrapper>
 
     public TableWrapper Parent
     {
-        get { return new TableWrapper((Table)_range.Start); }
+        get { return new TableWrapper((Table)_range.StartElement); }
     }
 
     public TableRowWrapper this[int index]
@@ -45,17 +45,17 @@ public class TableRowWrapperCollection : IEnumerable<TableRowWrapper>
     private IList<TableRow> GetElementList()
     {
         IList<TableRow> list = null;
-        if (_range.Start is BookmarkStart)
+        if (_range.StartElement is BookmarkStart)
         {
             list = new List<TableRow>();
-            foreach (TableRow tableRow in _range.Start.GetElements<TableRow>(_range.End))
+            foreach (TableRow tableRow in _range.StartElement.GetElements<TableRow>(_range.EndElement))
             {
                 list.Add(tableRow);
             }
         }
         else
         {
-            list = _range.Start.DescendantsAtRelativeNestingLevel<TableRow>(1).ToList();
+            list = _range.StartElement.DescendantsAtRelativeNestingLevel<TableRow>(1).ToList();
         }
         return list;
     }
@@ -71,7 +71,7 @@ public class TableRowWrapperCollection : IEnumerable<TableRowWrapper>
         {
             return Add();
         }
-        if (!(_range.Start is Table table) || beforeRow.TableRow.Parent != table)
+        if (!(_range.StartElement is Table table) || beforeRow.TableRow.Parent != table)
         {
             throw new ArgumentException("The row must be a row of this table.", nameof(beforeRow));
         }
@@ -85,7 +85,7 @@ public class TableRowWrapperCollection : IEnumerable<TableRowWrapper>
 
     public TableRowWrapper Add()
     {
-        Table table = _range.Start as Table;
+        Table table = _range.StartElement as Table;
         if (table == null)
         {
             throw new InvalidOperationException("Rows can only be added to a collection of the rows of a table.");
@@ -110,7 +110,7 @@ public class TableRowWrapperCollection : IEnumerable<TableRowWrapper>
 
     public int NestingLevel
     {
-        get { return _range.Start.NestingLevel<TableRow>() + 1; }
+        get { return _range.StartElement.NestingLevel<TableRow>() + 1; }
     }
 
     #region IEnumerable Members

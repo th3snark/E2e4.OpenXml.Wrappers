@@ -29,6 +29,11 @@ public partial class RangeWrapper
     /// </summary>
     internal IList<Paragraph> GetParagraphs()
     {
+        if (_isSpan)
+        {
+            return GetSpanParagraphs();
+        }
+
         if (_startOpenXmlElement is Paragraph || _startOpenXmlElement is TableCell || _startOpenXmlElement is TableRow || _startOpenXmlElement is Table
             || _startOpenXmlElement is Document || _startOpenXmlElement is Body || _startOpenXmlElement is Comment
             || _startOpenXmlElement is Header || _startOpenXmlElement is Footer)

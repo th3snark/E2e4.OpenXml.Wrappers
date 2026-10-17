@@ -45,7 +45,7 @@ using (WordprocessingDocumentWrapper document = WordprocessingDocumentWrapper.Op
 
 ## Examples
 
-The [`samples`](samples/OpenXml.Wrappers.Samples) project holds 20 runnable examples. Each one builds a complete `.docx` that opens in Word, and each is checked by the test suite (it is created and validated against the Open XML schema). Run them all with:
+The [`samples`](samples/OpenXml.Wrappers.Samples) project holds 21 runnable examples. Each one builds a complete `.docx` that opens in Word, and each is checked by the test suite (it is created and validated against the Open XML schema). Run them all with:
 
 ```bash
 dotnet run --project samples/OpenXml.Wrappers.Samples [output folder]
@@ -69,6 +69,7 @@ The documents are written to `output` (or the folder you give). The code in each
 | [Field](samples/OpenXml.Wrappers.Samples/Basic/FieldExample.cs) | Adding fields and reading their code and result |
 | [Header and footer](samples/OpenXml.Wrappers.Samples/Basic/HeaderFooterExample.cs) | Text, page numbers, a different first page |
 | [Properties](samples/OpenXml.Wrappers.Samples/Basic/PropertiesExample.cs) | Built-in and custom document properties |
+| [Character ranges](samples/OpenXml.Wrappers.Samples/Basic/CharactersExample.cs) | Format part of a sentence, words and sentences, find and narrow, bookmark and comment on a few characters |
 
 **Intermediate: several objects together**
 
@@ -94,10 +95,10 @@ The API follows the shape of the Word object model, but it is C# over Open XML r
 
 - **Indexes are 0-based.** `Paragraphs[0]` is the first paragraph, where Word's `Paragraphs(1)` is. This applies to every collection, to `Index`, `RowIndex` and `ColumnIndex`, and to `Table.Cell(row, column)`. There is no `Item()` method; use the indexer. An index out of range throws `ArgumentOutOfRangeException`. `Bookmarks["name"]` returns `null` when the bookmark does not exist.
 - **Collections are `IEnumerable<T>`**, so `foreach` and LINQ work without casts. Enumeration works on a snapshot taken when it starts, so it is safe to delete items while enumerating. `Count` and the indexers are live: they look at the document each time.
-- **Ranges are made of elements, not character positions.** `Range.Start` and `Range.End` are the Open XML elements that bound the range.
+- **A range is made of elements or of a span of characters.** `Range.Start` and `Range.End` are character positions as in Word (see [Character ranges](#character-ranges)); the Open XML elements that bound a range of elements are `StartElement` and `EndElement`. `document.Content` is the whole document, because `document.Range(start, end)` is a span of it.
 - **Wrappers compare by the item they wrap.** Two wrappers of the same paragraph, table, bookmark and so on are `==` and have the same hash code, even though each property access creates a new wrapper.
-- **Units are mostly the raw Open XML values**, which means the widths and spacing of the older members (`ParagraphWrapper.SpaceBefore`, `CellWidth`, column and table widths) are in twentieths of a point (twips), not points. `Font` and `ParagraphFormat` use points as Word does.
-- **`Range.Text` uses Word's markers**: `\r` ends a paragraph, `\a` ends a table cell, `\r\a` ends a table row, `\v` is a line break and `\f` a page break. Reading text is supported for paragraphs, table cells, rows and tables, bookmarks and comments (not for a whole document range). Setting it is supported for table cells, paragraphs and bookmarks; other types throw `InvalidOperationException`.
+- **Units are points**, as in Word, for every width, height, indent and spacing: `ParagraphWrapper.SpaceBefore`/`SpaceAfter`, `Cell.Width`, `Column.Width`, `Table.Width`, `Table.PreferredWidth`, `Row.Height`, `Font.Size`, `ParagraphFormat` and `PageSetup`. The low-level helpers in `OpenXmlExtensions` and `ConversionHelper` that work on Open XML elements keep Open XML's own units (twips, called dxa there).
+- **`Range.Text` uses Word's markers**: `\r` ends a paragraph, `\a` ends a table cell, `\r\a` ends a table row, `\v` is a line break and `\f` a page break. Reading text is supported for every kind of range. Setting it is supported for table cells, paragraphs, bookmarks, headers and footers, the whole document and spans of characters; rows and tables throw `InvalidOperationException`.
 - **Not everything is implemented.** Features that are not supported throw `NotSupportedException`, `NotImplementedException` or `InvalidOperationException` rather than doing nothing, for example adding a comment to a range other than a bookmark, paragraph or table cell.
 
 ## Editing a range
@@ -118,7 +119,7 @@ range.ParagraphFormat.SpaceAfter = 6;   // points
 range.Style = "Heading 2";
 
 // Find and replace, in a range, a table or the whole document.
-document.Range.Find.Execute("colour", matchCase: true, replaceWith: "color", replace: ReplaceMode.All);
+document.Content.Find.Execute("colour", matchCase: true, replaceWith: "color", replace: ReplaceMode.All);
 
 document.Paragraphs[3].Range.Delete();
 ```
@@ -127,19 +128,44 @@ document.Paragraphs[3].Range.Delete();
 | --- | --- |
 | `InsertBefore`, `InsertAfter` | Inside the markers of a bookmark or comment range. For a paragraph, table cell or the document the text goes in the first or last paragraph, before the paragraph mark (Word puts the text of `InsertAfter` on a whole paragraph in the next paragraph). Not supported for tables and rows. |
 | `Delete` | Removes paragraphs, rows and tables; empties table cells and the document (a cell and the body must keep a paragraph); removes the runs of a bookmark or comment range. Bookmarks and comments anchored in deleted content are removed with it. |
-| `Find` | `Execute` returns whether the text was found. It never changes the range or the document, because a range is made of whole elements and cannot be narrowed to the match. Replace keeps the formatting of the first run of the match. Matches can span runs but not paragraphs. |
-| `Font` | `Bold`, `Italic`, `Underline`, `Strikethrough`, `Size`, `Name` and `Color`. Applies to whole runs, so it cannot format part of a run. |
+| `Find` | `Execute` returns whether the text was found and narrows the range to the match. A replacement keeps the formatting of the first character it replaces. Matches can span runs and paragraphs. See [Character ranges](#character-ranges). |
+| `Font` | `Bold`, `Italic`, `Underline`, `Strikethrough`, `Size`, `Name` and `Color`. Applies to the characters of the range, splitting runs where it starts and ends in the middle of one. |
 | `ParagraphFormat` | `Alignment`, indents, `SpaceBefore`, `SpaceAfter`, `LineSpacing`, `LineSpacingRule`, `KeepWithNext`, `KeepTogether`, `PageBreakBefore` and `WidowControl`, in points. Also available as `Paragraph.Format`. |
 | `Style` | A paragraph or character style by name. `Table.Style` sets a table style. |
 | `InsertParagraphAfter`, `InsertParagraphBefore` | Add an empty paragraph next to a paragraph, table, bookmark, comment, table cell, the document or a header/footer, and return it. |
 
 `Font` and `ParagraphFormat` properties are `null` when the range has mixed values, and setting one to `null` removes the direct formatting. They only see direct formatting, not values inherited from styles.
 
+## Character ranges
+
+A range is either made of whole elements (a paragraph, table, bookmark and so on) or, as in Word, a span of characters. `range.Start` and `range.End` are integer positions counted from the start of the text, which is the main text of the document or one header, footer or comment (a range in a header counts from the start of that header). A position counts each character, each tab and line break, each end of paragraph (which is also the end of a table cell for the last paragraph of a cell) and each end of table row. Fields, pictures and references count too (see below).
+
+```csharp
+RangeWrapper range = document.Range(6, 11);       // 'world' in 'Hello world'
+range.Font.Bold = true;                            // splits the run; nothing else is touched
+range.Text = "there";                              // replaces the text, keeping the formatting
+range.Collapse(CollapseDirection.End);             // an insertion point
+range.InsertAfter(", friend");
+
+RangeWrapper paragraph = document.Paragraphs[2].Range;
+paragraph.Words[3].Font.Italic = true;             // Characters, Words and Sentences are ranges
+paragraph.MoveEnd(TextUnit.Word, 2);               // MoveStart, MoveEnd, Move, Expand and SetRange
+```
+
+- `document.Content` is the whole document and `document.Range(start, end)` a span of it. `SetRange`, `Collapse`, `MoveStart`, `MoveEnd`, `Move` and `Expand` turn a range of elements into a span in place, as in Word, and `Duplicate()` copies one. Indexes of the `Characters`, `Words` and `Sentences` collections are 0-based. A word includes the spaces after it, a sentence the spaces after its full stop, and a word or sentence only partly inside the range is included whole.
+- A span is made of whole runs when it is used: reading or changing the formatting of part of a run, or deleting part of one, first splits the run in two. That does not change how the document looks, and it means `Font`, `Style` and `Find` work on exactly the characters of the range.
+- **Find** narrows the range to the match when it finds the text, so a loop works as in VBA: `while (range.Find.Execute("text")) { range.Font.Bold = true; }` carries on from the end of each match up to the end of the range it started in (a collapsed range is searched to the end of the text). A match can span paragraphs and the text can use `^p` (paragraph mark), `^t` (tab), `^l` (line break), `^m` (page break) and `^^` (a caret). After a replace all the range keeps its start and covers the same region with the replacements in it.
+- `InsertBefore` and `InsertAfter` on a span insert at its start or end and grow the range to include the text, and a carriage return in the text starts a new paragraph. `Delete` removes the characters: a range that takes in paragraph marks joins the paragraphs, whole paragraphs, rows and tables go, the end of a table cell stays, and a field that is only partly in the range is removed whole. `Bookmarks.Add`, `Comments.Add`, `Fields.Add`, `Style`, `ParagraphFormat` (which applies to every paragraph the range touches) and `InsertParagraphAfter` all work on a span, including a collapsed one.
+- `Text` of a table row or table cannot be set.
+- **A range follows its text.** The ends of a span are tied to the text itself, not to numbers, so when text is inserted or removed before, inside or after a range the range stays on the same text, however the change was made: through another range, through the other wrappers or directly with the Open XML SDK. Text inserted inside a range is part of it. If the text a range covered is removed through the library the range collapses to where it was. If it is removed behind the library's back (by deleting a paragraph element with the SDK, say) the range falls back on the pieces of text it remembers around its ends, the nearest eight on each side (and some farther ones for ranges made with `SetRange` or `Document.Range`), and collapses to the nearest that is still there: exactly where the text was when up to about eight pieces went (a few words, or a paragraph), and roughly when more did. Only if all of those are gone as well does it keep the position it last had. Ranges can be made and used from several threads (like the Open XML SDK, the document itself must not be changed from several at once).
+- **Cost.** Reading `Start` and `End` counts through the story up to the range (nothing is built, so it is quick, but it takes as long as the distance from the start of the story); to read the positions of many ranges build a `PositionIndex` once (`document.CreatePositionIndex()`) and ask it, which takes the same time for the thousandth as for the first. Everything else looks only at the part of the document involved: formatting, replacing, inserting, deleting, `Words` and `Sentences`, `Collapse`, `Expand`, bookmarks and comments work on the paragraph, table cell or table the range is in, or for a range from one paragraph to another on the blocks between them; moving by units (`MoveStart`, `MoveEnd`, `Move`) walks the paragraphs it crosses; text with carriage returns makes paragraphs one at a time; and `Find` carries on from where it stopped, one paragraph at a time (a text with `^p` in it is searched a few paragraphs at a time). Looping over the matches of a document of thousands of paragraphs takes about a second. Only a range of a whole document does work on all of it, which it cannot avoid.
+- **Positions count what Word counts.** Besides the text, each tab and break, each end of paragraph and of table row, a position is taken by the begin, separator and end of a field and by each character of its code, and by each picture, drawing, embedded object, symbol and footnote, endnote or comment reference. These show no text, so `Text` leaves them out and `Words` and `Sentences` pass over them, but they count for `Start`, `End`, `Characters` and `SetRange`. A field written as a single element (`w:fldSimple`) is counted the same way (the code comes from its attribute); its begin, code and separator cannot be split, so deleting part of them deletes the whole field, as in Word. A hyperlink is counted as the field Word makes of it (its address or place, frame and tip go into a code of the form `HYPERLINK ... \h`), a content control takes a position at each end, text deleted while changes were tracked takes positions but shows no text, and a comment reference takes one position. These counts were checked against Word on the sample documents. Known differences: Word updates fields marked dirty when it opens a document, which changes lengths; a `REF` field with `\h` takes one more position in Word; text in math zones, VML text boxes and block-level content controls are not counted as Word counts them; and the range of a comment body is relative to the comment, not numbered across all comments as in Word. Editing across the edge of a table follows Word too: a range that takes in part of a table and runs outside it cannot be deleted or have its text replaced (`InvalidOperationException`).
+- **The edges of tables and paragraphs follow Word** (checked against Word). Text put at the end of a table row, where none can go, goes at the start of the paragraph after the table. Deleting the end of a paragraph joins it to the next: the joined paragraph keeps the formatting of the first, unless the first is deleted whole, when the second's remains. A delete that crosses the edge of table cells throws `InvalidOperationException` (Word: "Cannot edit Range.") unless the range is whole cells, which are cleared and kept; a table that is the whole range is cleared too, and one with text around it in the range is removed. Setting `Text` on a range that crosses a cell edge replaces only what is in the first cell.
 ## Table formatting
 
 These use points like `Font` and `ParagraphFormat`: `Row.Height`, `Row.HeightRule` (`Auto`, `AtLeast`, `Exactly`), `Row.HeadingFormat`, `Row.AllowBreakAcrossPages`, `Cell.VerticalAlignment`, `Cell.BackgroundColor` (six hex digits), `Table.Alignment`, `Table.PreferredWidth` (null unless a fixed width) and `Column.Index`. `Column.Delete` removes the grid column and the cell at its position in every row; a cell that spans the column loses one column of its span instead, and the start of a vertical merge passes to the next row. It throws `NotSupportedException` only for the older `hMerge` kind of merge.
 
-`Table.Borders` and `Cell.Borders` work like Word's: `Borders[BorderPosition.Top]` is a border with `LineStyle`, `LineWidth` (points, 0.25 to 12) and `Color` (hex or "auto"), and `SetOutside` / `SetInside` set several at once. Positions are `Top`, `Left`, `Bottom`, `Right`, `Horizontal` and `Vertical` (the lines between rows and columns), plus the two diagonals for cells only. Setting `LineStyle` to `None` writes an explicit "no border"; `Clear()` removes the direct setting so the table style applies. A border with no direct setting reads from the table (a cell takes the table's outside borders on the edges of the table and its inside borders elsewhere) and from the table style and the styles it is based on; the conditional formatting of a style for the first and last row and column is read when the table's look switches it on (banded rows are not). `Row.Borders` works the same way but is stored on the cells of the row: `Top` and `Bottom` go on every cell, `Left` on the first, `Right` on the last and `Vertical` between the cells; a row has no `Horizontal` or diagonal border. A row border whose cells disagree reads `LineStyle` as `Other`, `LineWidth` as 0 and `Color` as null. `Row.SetTopBorder` and `SetBottomBorder` still work as before.
+`Table.Borders` and `Cell.Borders` work like Word's: `Borders[BorderPosition.Top]` is a border with `LineStyle`, `LineWidth` (points, 0.25 to 12) and `Color` (hex or "auto"), and `SetOutside` / `SetInside` set several at once. Positions are `Top`, `Left`, `Bottom`, `Right`, `Horizontal` and `Vertical` (the lines between rows and columns), plus the two diagonals for cells only. Setting `LineStyle` to `None` writes an explicit "no border"; `Clear()` removes the direct setting so the table style applies. A border with no direct setting reads from the table (a cell takes the table's outside borders on the edges of the table and its inside borders elsewhere) and from the table style and the styles it is based on; the conditional formatting of a style for the first and last row and column is read when the table's look switches it on (banded rows are not). `Row.Borders` works the same way but is stored on the cells of the row: `Top` and `Bottom` go on every cell, `Left` on the first, `Right` on the last and `Vertical` between the cells; a row has no `Horizontal` or diagonal border. A row border whose cells disagree reads `LineStyle` as `Other`, `LineWidth` as 0 and `Color` as null.
 
 ## Sections, styles and document properties
 
@@ -181,7 +207,7 @@ Fields are never calculated by the library, so `Result` is whatever the document
 
 ## Navigation
 
-`Paragraph.Next()` / `Previous()` walk the paragraphs of the document in order, through table cells, and return `null` at either end. `Row.Next()` / `Previous()` / `IsFirst` / `IsLast` and `Cell.Next()` / `Previous()` work within a table (a cell's neighbour wraps to the adjacent row). `Range.Duplicate()` returns a new range over the same elements. Integer `Start`/`End`, `Collapse` and `SetRange` are not provided: a range is made of whole elements, so there are no character positions to move.
+`Paragraph.Next()` / `Previous()` walk the paragraphs of the document in order, through table cells, and return `null` at either end. `Row.Next()` / `Previous()` / `IsFirst` / `IsLast` and `Cell.Next()` / `Previous()` work within a table (a cell's neighbour wraps to the adjacent row). `Range.Duplicate()` returns a new range over the same text; `Collapse`, `SetRange`, `MoveStart`, `MoveEnd`, `Move` and `Expand` move through characters, words, sentences and paragraphs (see [Character ranges](#character-ranges)).
 
 ## Parent
 
@@ -202,7 +228,7 @@ dotnet format E2e4.OpenXml.Wrappers.slnx --verify-no-changes
 | `OpenXml.Wrappers/Word` | The wrappers, their collections and the `OpenXmlExtensions` tree-walking helpers |
 | `OpenXml.Wrappers/Helpers` | Unit conversion helpers |
 | `OpenXml.Wrappers.Test` | xUnit tests and the fixture documents in `TestFiles` |
-| `samples/OpenXml.Wrappers.Samples` | The 20 runnable examples |
+| `samples/OpenXml.Wrappers.Samples` | The 21 runnable examples |
 | `assets` | The icon (`icon.svg`, and `icon.png` used for the NuGet package) |
 
 See [CLAUDE.md](CLAUDE.md) for architecture notes and conventions.

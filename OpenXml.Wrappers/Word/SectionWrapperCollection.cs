@@ -21,6 +21,18 @@ public class SectionWrapperCollection : IEnumerable<SectionWrapper>
         _body = body;
     }
 
+    /// <summary>
+    /// The range of the whole document, as the parent of the other collections of the document.
+    /// </summary>
+    public RangeWrapper Parent
+    {
+        get
+        {
+            Document document = _body.Ancestors<Document>().FirstOrDefault();
+            return new RangeWrapper(document == null ? _body : document);
+        }
+    }
+
     public SectionWrapper this[int index]
     {
         get

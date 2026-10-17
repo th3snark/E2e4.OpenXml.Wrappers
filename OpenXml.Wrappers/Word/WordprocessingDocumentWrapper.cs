@@ -145,9 +145,32 @@ public class WordprocessingDocumentWrapper : IDisposable
         }
     }
 
-    public RangeWrapper Range
+    /// <summary>
+    /// The whole content of the document, as <c>Document.Content</c> in Word.
+    /// </summary>
+    public RangeWrapper Content
     {
         get { return new RangeWrapper(_wordprocessingDocument.MainDocumentPart.Document); }
+    }
+
+    /// <summary>
+    /// The positions of the main text of the document, worked out once so that the positions of many ranges can be read at once.
+    /// </summary>
+    public PositionIndex CreatePositionIndex()
+    {
+        return Content.CreatePositionIndex();
+    }
+
+    /// <summary>
+    /// The span of characters from <paramref name="start"/> up to <paramref name="end"/> in the main text of the document, as
+    /// <c>Document.Range(Start, End)</c> in Word. See <see cref="RangeWrapper.Start"/> for how positions are counted.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">The positions are not in order or are beyond the end of the text.</exception>
+    public RangeWrapper Range(int start, int end)
+    {
+        RangeWrapper range = Content;
+        range.SetRange(start, end);
+        return range;
     }
 
     public void InitializeMainDocumentPart()

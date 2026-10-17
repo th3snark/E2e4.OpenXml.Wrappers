@@ -98,7 +98,7 @@ public partial class TableCellWrapper
             TableCell first = cells[0];
             if (cells.Count > 1)
             {
-                int width = cells.Sum(c => new TableCellWrapper(c).CellWidth);
+                int width = cells.Sum(c => new TableCellWrapper(c).WidthTwips);
                 int span = cells.Sum(Span);
                 foreach (TableCell other in cells.Skip(1))
                 {
@@ -106,7 +106,7 @@ public partial class TableCellWrapper
                     other.Remove();
                 }
                 GetOrAddTableCellProperties(first).GridSpan = new GridSpan() { Val = span };
-                new TableCellWrapper(first).CellWidth = width;
+                new TableCellWrapper(first).WidthTwips = width;
             }
             merged.Add(first);
         }
@@ -187,7 +187,7 @@ public partial class TableCellWrapper
 
             foreach (TableCell cell in group)
             {
-                int width = new TableCellWrapper(cell).CellWidth;
+                int width = new TableCellWrapper(cell).WidthTwips;
                 TableCell previous = cell;
                 for (int i = 0; i < numColumns; i++)
                 {
@@ -207,7 +207,7 @@ public partial class TableCellWrapper
                         //Every piece keeps the vertical merge of the cell, which CreateLike leaves out.
                         properties.VerticalMerge = (VerticalMerge)cell.TableCellProperties.VerticalMerge.CloneNode(true);
                     }
-                    new TableCellWrapper(piece).CellWidth = i == numColumns - 1 ? width - (width / numColumns * (numColumns - 1)) : width / numColumns;
+                    new TableCellWrapper(piece).WidthTwips = i == numColumns - 1 ? width - (width / numColumns * (numColumns - 1)) : width / numColumns;
                     previous = piece;
                 }
             }

@@ -46,7 +46,7 @@ public class CommentWrapperCollection : IEnumerable<CommentWrapper>
 
     private IList<CommentRangeStart> GetElementList()
     {
-        return _rangeWrapper.Start.GetElements<CommentRangeStart>(_rangeWrapper.End).ToList();
+        return _rangeWrapper.StartElement.GetElements<CommentRangeStart>(_rangeWrapper.EndElement).ToList();
     }
 
     public CommentWrapper Add(RangeWrapper range, string text)
@@ -54,12 +54,12 @@ public class CommentWrapperCollection : IEnumerable<CommentWrapper>
         ArgumentNullException.ThrowIfNull(range);
 
         //Check that the range can be anchored before anything is changed so that no orphan comment is left behind.
-        if (!(range.Start is BookmarkStart || range.Start is Paragraph || range.Start is TableCell))
+        if (!range.IsSpan && !(range.StartElement is BookmarkStart || range.StartElement is Paragraph || range.StartElement is TableCell))
         {
-            throw new NotSupportedException(String.Format(CultureInfo.InvariantCulture, "Adding a comment to a range starting with the type {0} is not currently supported.", range.Start.GetType().Name));
+            throw new NotSupportedException(String.Format(CultureInfo.InvariantCulture, "Adding a comment to a range starting with the type {0} is not currently supported.", range.StartElement.GetType().Name));
         }
 
-        MainDocumentPart mainDocumentPart = _rangeWrapper.Start.GetDocument().MainDocumentPart;
+        MainDocumentPart mainDocumentPart = _rangeWrapper.StartElement.GetDocument().MainDocumentPart;
 
         WordprocessingCommentsPart wordprocessingCommentsPart = mainDocumentPart.WordprocessingCommentsPart;
         if (wordprocessingCommentsPart == null)
@@ -108,15 +108,20 @@ public class CommentWrapperCollection : IEnumerable<CommentWrapper>
         //The comment reference must always be inside a run.
         Run commentReferenceRun = new Run(new RunProperties(new RunStyle() { Val = "CommentReference" }), new CommentReference() { Id = idText });
 
-        if (range.Start is BookmarkStart)
+        if (range.IsSpan)
         {
-            range.Start.InsertBeforeSelf(commentRangeStart);
-            range.End.InsertAfterSelf(commentRangeEnd);
+            range.PlaceMarkers(commentRangeStart, commentRangeEnd);
             commentRangeEnd.InsertAfterSelf(commentReferenceRun);
         }
-        else if (range.Start is Paragraph)
+        else if (range.StartElement is BookmarkStart)
         {
-            Paragraph paragraph = (Paragraph)range.Start;
+            range.StartElement.InsertBeforeSelf(commentRangeStart);
+            range.EndElement.InsertAfterSelf(commentRangeEnd);
+            commentRangeEnd.InsertAfterSelf(commentReferenceRun);
+        }
+        else if (range.StartElement is Paragraph)
+        {
+            Paragraph paragraph = (Paragraph)range.StartElement;
             //If the paragraph has no runs then add a single space run to define the range for the comment.
             if (!paragraph.Elements<Run>().Any())
             {
@@ -128,7 +133,7 @@ public class CommentWrapperCollection : IEnumerable<CommentWrapper>
         }
         else
         {
-            TableCell tableCell = (TableCell)range.Start;
+            TableCell tableCell = (TableCell)range.StartElement;
             Paragraph firstParagraph = tableCell.Elements<Paragraph>().First();
             //If there are no runs in any of the paragraphs in the table cell then add a new single space run to the first paragraph.
             //This will be the text that defines the range for the comment. This is a quick workaround for now since it is actually
