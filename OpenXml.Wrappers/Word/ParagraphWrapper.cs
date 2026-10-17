@@ -237,21 +237,6 @@ public class ParagraphWrapper : System.IEquatable<ParagraphWrapper>
         get { return Format.KeepWithNext == true; }
         set { Format.KeepWithNext = value ? true : null; }
     }
-    public void SetFontBold()
-    {
-        SetFontBold(true);
-    }
-
-    public void SetFontBold(bool bold)
-    {
-        Range.Font.Bold = bold;
-    }
-
-    public void SetFontColor(string color)
-    {
-        Range.Font.Color = color;
-    }
-
     #region Equality
 
     // Two wrappers are equal when they wrap the same underlying element(s), so a new wrapper obtained for the same item compares equal.

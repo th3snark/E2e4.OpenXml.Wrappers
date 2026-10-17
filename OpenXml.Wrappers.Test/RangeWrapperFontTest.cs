@@ -302,17 +302,4 @@ public class RangeWrapperFontTest
     {
         Assert.Throws<NotSupportedException>(() => new RangeWrapper(new Run(new Text("a"))).Font.Bold = true);
     }
-
-    [Fact]
-    public void ParagraphSetFontBoldAndColorUseTheSameFormatting()
-    {
-        Paragraph paragraph = CreateParagraph("a");
-        ParagraphWrapper wrapper = new ParagraphWrapper(paragraph);
-        wrapper.SetFontBold();
-        wrapper.SetFontColor("FF0000");
-        wrapper.SetFontBold(false);
-
-        Assert.False(wrapper.Range.Font.Bold);
-        Assert.Equal("FF0000", wrapper.Range.Font.Color);
-    }
 }

@@ -118,10 +118,10 @@ public class TableCellWrapperTest : System.IDisposable
     }
 
     [Fact]
-    public void SetShadingFillColorOnACellWithoutPropertiesAddsShading()
+    public void BackgroundColorOnACellWithoutPropertiesAddsShading()
     {
         TableCell tableCell = new TableCell(new Paragraph());
-        new TableCellWrapper(tableCell).SetShadingFillColor("FF0000");
+        new TableCellWrapper(tableCell).BackgroundColor = "FF0000";
 
         Assert.Equal("FF0000", tableCell.TableCellProperties.Shading.Fill.Value);
     }

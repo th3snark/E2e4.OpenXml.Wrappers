@@ -78,20 +78,6 @@ public class LegacyMembersTest
     }
 
     [Fact]
-    public void RowBordersSetWithTheOldMembersAreVisibleThroughBorders()
-    {
-        TableRow row = new TableRow(new TableCell(new Paragraph()), new TableCell(new Paragraph()));
-        Table table = new Table(row);
-        TableRowWrapper wrapper = new TableRowWrapper(row);
-
-        wrapper.SetTopBorder(true);
-        wrapper.SetBottomBorder(false);
-
-        Assert.Equal(BorderLineStyle.SingleLine, wrapper.Borders[BorderPosition.Top].LineStyle);
-        Assert.Equal(BorderLineStyle.None, wrapper.Borders[BorderPosition.Bottom].LineStyle);
-    }
-
-    [Fact]
     public void MergeRightAddsTheSpansAndMovesTheText()
     {
         TableCell left = new TableCell(new Paragraph(new Run(new Text("L"))));

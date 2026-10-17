@@ -205,7 +205,7 @@ public partial class TableCellWrapper : System.IEquatable<TableCellWrapper>
         }
     }
 
-    public void SetShadingFillColor(string rgbColor)
+    private void SetShadingFillColor(string rgbColor)
     {
         TableCellProperties tableCellProperties = GetOrAddTableCellProperties();
         Shading shading = tableCellProperties.Shading;
@@ -270,22 +270,6 @@ public partial class TableCellWrapper : System.IEquatable<TableCellWrapper>
             {
                 Val = value == CellVerticalAlignment.Center ? TableVerticalAlignmentValues.Center : TableVerticalAlignmentValues.Bottom
             };
-        }
-    }
-
-    public void SetFontBold()
-    {
-        foreach (ParagraphWrapper paragraph in Range.Paragraphs)
-        {
-            paragraph.SetFontBold();
-        }
-    }
-
-    public void SetFontColor(string color)
-    {
-        foreach (ParagraphWrapper paragraph in Range.Paragraphs)
-        {
-            paragraph.SetFontColor(color);
         }
     }
 
