@@ -198,15 +198,26 @@ public class RangeWrapperSpanTest
     }
 
     [Fact]
-    public void DeletingAWholeTableRemovesIt()
+    public void DeletingAWholeTableAloneClearsItAsInWord()
     {
         Body body = new Body(Paragraph("before"), new Table(new TableRow(new TableCell(Paragraph("a")))), Paragraph("after"));
 
-        //The table is the cell's text and end of cell, and the end of the row.
+        //The table is the cell's text and end of cell, and the end of the row. Word clears a table that is the whole range and keeps it.
         Range(body, 7, 7 + 2 + 1).Delete();
 
+        Assert.Single(body.Descendants<Table>());
+        Assert.Equal("before\r\r\a\r\aafter\r", StoryText(body));
+    }
+
+    [Fact]
+    public void DeletingAWholeTableWithTextAroundItRemovesIt()
+    {
+        Body body = new Body(Paragraph("before"), new Table(new TableRow(new TableCell(Paragraph("a")))), Paragraph("after"));
+
+        Range(body, 0, 7 + 2 + 1).Delete();
+
         Assert.Empty(body.Descendants<Table>());
-        Assert.Equal("before\rafter\r", StoryText(body));
+        Assert.Equal("after\r", StoryText(body));
     }
 
     [Fact]

@@ -41,6 +41,12 @@ public partial class RangeWrapper
         GetScoped(false, out StoryMap map, out int start, out int end);
 
         //Formatting is taken from the text before it goes.
+        //As in Word, text replacing a range that crosses the edge of a cell replaces only what is in the first cell.
+        CellCrossing crossing = CellCrossing.Of(map, start, end);
+        if (crossing.Crosses)
+        {
+            end = crossing.FirstEdge;
+        }
         RunProperties formatting = FindFormatting(map, start, end);
         if (end > start)
         {
@@ -134,7 +140,24 @@ public partial class RangeWrapper
     private void DeleteSpan()
     {
         GetScoped(false, out StoryMap map, out int start, out int end);
-        DeleteSpanContent(map, start, end);
+        CellCrossing crossing = CellCrossing.Of(map, start, end);
+        if (crossing.Crosses)
+        {
+            //As in Word, a range across the edge of cells cannot be deleted, unless it is whole cells, which are cleared.
+            if (!crossing.WholeCells)
+            {
+                throw new InvalidOperationException("Cannot edit Range.");
+            }
+            List<RangeWrapper> parts = crossing.Parts.Select(p => FromMap(map, p.Start, p.End)).ToList();
+            foreach (RangeWrapper part in parts)
+            {
+                part.DeleteSpan();
+            }
+        }
+        else
+        {
+            DeleteSpanContent(map, start, end);
+        }
 
         //The anchors have gone to where the text was.
         MakeSpanAnchors(_startAnchor, _startAnchor);

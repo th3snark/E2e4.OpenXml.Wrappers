@@ -102,19 +102,40 @@ public class RangeWrapperTableEdgeTest
         Assert.Equal(JustificationValues.Center, joined.ParagraphProperties.Justification.Val.Value);
     }
 
-    [Fact]
-    public void DeletingAcrossTheEdgeOfCellsClearsWhatIsInTheRangeAndKeepsTheCells()
+    private static Body ThreeCells(out Body unused)
     {
-        TableCell first = new TableCell(Paragraph("aaa"));
-        TableCell second = new TableCell(Paragraph("bbb"));
-        TableCell third = new TableCell(Paragraph("ccc"));
-        Body body = new Body(new Table(new TableRow(first, second, third)), Paragraph("end"));
+        unused = null;
+        return new Body(new Table(new TableRow(new TableCell(Paragraph("aaa")), new TableCell(Paragraph("bbb")), new TableCell(Paragraph("ccc")))), Paragraph("end"));
+    }
 
-        //From the second a of the first cell to the end of the text of the second. Word itself does nothing for a range that crosses cells; here
-        //what is in the range goes, and the end of the first cell, which cannot go, stays.
-        Range(body, 1, 7).Delete();
+    [Fact]
+    public void DeletingAcrossTheEdgeOfCellsFailsAsInWord()
+    {
+        Body body = ThreeCells(out _);
+
+        //Word: "Cannot edit Range."
+        Assert.Throws<System.InvalidOperationException>(() => Range(body, 1, 7).Delete());
+        Assert.Equal("aaa\r\abbb\r\accc\r\a\r\aend\r", new RangeWrapper(body).Text);
+    }
+
+    [Fact]
+    public void DeletingWholeCellsClearsThemAndKeepsTheCells()
+    {
+        Body body = ThreeCells(out _);
+
+        Range(body, 0, 8).Delete();
 
         Assert.Equal(3, body.Descendants<TableCell>().Count());
-        Assert.Equal("a\r\a\r\accc\r\a\r\aend\r", new RangeWrapper(body).Text);
+        Assert.Equal("\r\a\r\accc\r\a\r\aend\r", new RangeWrapper(body).Text);
+    }
+
+    [Fact]
+    public void ReplacingTextAcrossTheEdgeOfCellsReplacesOnlyWhatIsInTheFirstCell()
+    {
+        Body body = ThreeCells(out _);
+
+        Range(body, 1, 7).Text = "ZZ";
+
+        Assert.Equal("aZZ\r\abbb\r\accc\r\a\r\aend\r", new RangeWrapper(body).Text);
     }
 }
