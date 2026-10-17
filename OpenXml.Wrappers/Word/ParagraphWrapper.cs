@@ -96,6 +96,29 @@ public class ParagraphWrapper : System.IEquatable<ParagraphWrapper>
         }
     }
 
+    /// <summary>
+    /// The paragraph after this one in the document, including paragraphs in table cells, or null for the last paragraph (<c>Paragraph.Next</c> in Word).
+    /// </summary>
+    public ParagraphWrapper Next()
+    {
+        return GetNeighbour(1);
+    }
+
+    /// <summary>
+    /// The paragraph before this one in the document, or null for the first paragraph (<c>Paragraph.Previous</c> in Word).
+    /// </summary>
+    public ParagraphWrapper Previous()
+    {
+        return GetNeighbour(-1);
+    }
+
+    private ParagraphWrapper GetNeighbour(int offset)
+    {
+        System.Collections.Generic.List<Paragraph> paragraphs = _paragraph.GetRoot().Descendants<Paragraph>().ToList();
+        int index = paragraphs.IndexOf(_paragraph) + offset;
+        return index < 0 || index >= paragraphs.Count ? null : new ParagraphWrapper(paragraphs[index]);
+    }
+
     public void Delete()
     {
         _paragraph.Parent.RemoveChild(_paragraph);

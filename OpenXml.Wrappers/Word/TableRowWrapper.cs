@@ -35,6 +35,34 @@ public class TableRowWrapper : System.IEquatable<TableRowWrapper>
         get { return new RangeWrapper(_tableRow); }
     }
 
+    /// <summary>
+    /// The row after this one in the table, or null for the last row (<c>Row.Next</c> in Word).
+    /// </summary>
+    public TableRowWrapper Next()
+    {
+        TableRow row = _tableRow.NextSibling<TableRow>();
+        return row == null ? null : new TableRowWrapper(row);
+    }
+
+    /// <summary>
+    /// The row before this one in the table, or null for the first row (<c>Row.Previous</c> in Word).
+    /// </summary>
+    public TableRowWrapper Previous()
+    {
+        TableRow row = _tableRow.PreviousSibling<TableRow>();
+        return row == null ? null : new TableRowWrapper(row);
+    }
+
+    public bool IsFirst
+    {
+        get { return _tableRow.PreviousSibling<TableRow>() == null; }
+    }
+
+    public bool IsLast
+    {
+        get { return _tableRow.NextSibling<TableRow>() == null; }
+    }
+
     public int Index
     {
         get { return _tableRow.ElementsBefore().Where(element => element is TableRow).Count(); }

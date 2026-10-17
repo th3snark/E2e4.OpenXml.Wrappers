@@ -49,6 +49,32 @@ public partial class TableCellWrapper : System.IEquatable<TableCellWrapper>
         get { return new BordersWrapper(_tableCell, false); }
     }
 
+    /// <summary>
+    /// The next cell in the row, or the first cell of the next row; null for the last cell of the table (<c>Cell.Next</c> in Word).
+    /// </summary>
+    public TableCellWrapper Next()
+    {
+        TableCell cell = _tableCell.NextSibling<TableCell>();
+        if (cell == null)
+        {
+            cell = ((TableRow)_tableCell.Parent).NextSibling<TableRow>()?.Elements<TableCell>().FirstOrDefault();
+        }
+        return cell == null ? null : new TableCellWrapper(cell);
+    }
+
+    /// <summary>
+    /// The previous cell in the row, or the last cell of the previous row; null for the first cell of the table (<c>Cell.Previous</c> in Word).
+    /// </summary>
+    public TableCellWrapper Previous()
+    {
+        TableCell cell = _tableCell.PreviousSibling<TableCell>();
+        if (cell == null)
+        {
+            cell = ((TableRow)_tableCell.Parent).PreviousSibling<TableRow>()?.Elements<TableCell>().LastOrDefault();
+        }
+        return cell == null ? null : new TableCellWrapper(cell);
+    }
+
     public int CellWidth
     {
         get

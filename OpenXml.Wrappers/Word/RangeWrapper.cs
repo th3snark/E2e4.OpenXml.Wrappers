@@ -260,6 +260,14 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
         }
     }
 
+    /// <summary>
+    /// A new range over the same elements (<c>Range.Duplicate</c> in Word).
+    /// </summary>
+    public RangeWrapper Duplicate()
+    {
+        return new RangeWrapper(_startOpenXmlElement, _endOpenXmlElement);
+    }
+
     public ParagraphWrapper FirstParagraph
     {
         get { return Paragraphs[0]; }
