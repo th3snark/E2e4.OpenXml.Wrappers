@@ -64,7 +64,7 @@ public class BookmarkWrapperTest : System.IDisposable
     public void RangeFirstParagraphRangeTextPropertyIsCorrect()
     {
         Assert.Equal("StabilitySummary\r\a", _document2.Bookmarks["confReportType"].Range.FirstParagraph.Range.Text);
-        Assert.Equal("StabilitySummary\r\a", _document2.Bookmarks["confReportType"].Range.FirstParagraph.Text);
+        Assert.Equal("StabilitySummary", _document2.Bookmarks["confReportType"].Range.FirstParagraph.Text);
         Assert.Equal("StabilitySummary", _document2.Bookmarks["confReportType"].Range.Text);
 
         Assert.Equal("SomeBoldText", _document1.Bookmarks["myBookMark8"].Range.Text);

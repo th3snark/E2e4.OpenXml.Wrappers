@@ -15,7 +15,7 @@ public partial class RangeWrapper
     /// <list type="bullet">
     /// <item><description>A paragraph, table row or table is removed. Where the document needs it to stay (the only paragraph of a table cell, or
     /// the last paragraph of the body after a table) the paragraph is emptied instead, and deleting the last row of a table removes the table.</description></item>
-    /// <item><description>A table cell, and the whole document, are emptied but remain (with one empty paragraph).</description></item>
+    /// <item><description>A table cell, a header or footer, and the whole document, are emptied but remain (with one empty paragraph).</description></item>
     /// <item><description>A bookmark or comment range loses the runs inside it. The bookmark or comment itself is kept.</description></item>
     /// </list>
     /// Bookmarks and comments that are anchored in the deleted content are deleted with it, so no dangling markers are left. A comment is
@@ -47,6 +47,10 @@ public partial class RangeWrapper
         else if (_startOpenXmlElement is Document || _startOpenXmlElement is Body)
         {
             EmptyBody(GetBody());
+        }
+        else if (_startOpenXmlElement is Header || _startOpenXmlElement is Footer)
+        {
+            EmptyHeaderFooter(_startOpenXmlElement);
         }
         else
         {
@@ -109,6 +113,13 @@ public partial class RangeWrapper
         {
             DeleteElements(new List<OpenXmlElement> { tableRow });
         }
+    }
+
+    private static void EmptyHeaderFooter(OpenXmlElement headerOrFooter)
+    {
+        //A header or footer keeps one empty paragraph, as Word does.
+        DeleteElements(headerOrFooter.ChildElements.ToList());
+        headerOrFooter.AppendChild(new Paragraph());
     }
 
     private static void EmptyBody(Body body)

@@ -15,7 +15,7 @@ public partial class TableCellWrapper
     /// <c>Cell.Merge</c> in Word. The text of the other cells is added to the end of this rectangle's first cell.
     /// </summary>
     /// <exception cref="ArgumentException">The cells are not in the same table.</exception>
-    /// <exception cref="NotSupportedException">The rectangle contains cells that are already vertically merged, or cuts through a merged cell.</exception>
+    /// <exception cref="NotSupportedException">The rectangle cuts through a cell that is merged (a vertical merge is absorbed only when all of it is inside the rectangle), or contains older horizontal merges.</exception>
     public void Merge(TableCellWrapper mergeTo)
     {
         ArgumentNullException.ThrowIfNull(mergeTo);
@@ -54,9 +54,18 @@ public partial class TableCellWrapper
                 {
                     throw new NotSupportedException("The cells to merge cut through a cell that is already merged.");
                 }
-                if (cell.TableCellProperties?.VerticalMerge != null || cell.TableCellProperties?.HorizontalMerge != null)
+                if (cell.TableCellProperties?.HorizontalMerge != null)
                 {
-                    throw new NotSupportedException("Merging cells that are already vertically merged is not supported.");
+                    throw new NotSupportedException("Merging cells that use the older horizontal merge is not supported.");
+                }
+                if (cell.TableCellProperties?.VerticalMerge != null)
+                {
+                    //A vertical merge can be absorbed only when all of it is inside the rectangle.
+                    GetVerticalExtent(rows, i, start, out int top, out int bottom);
+                    if (top < firstRow || bottom > lastRow)
+                    {
+                        throw new NotSupportedException("The cells to merge cut through a cell that is already merged vertically.");
+                    }
                 }
                 cells.Add(cell);
                 covered += end - start + 1;
@@ -190,12 +199,12 @@ public partial class TableCellWrapper
         }
     }
 
-    private static int Span(TableCell cell)
+    internal static int Span(TableCell cell)
     {
         return cell.TableCellProperties?.GridSpan?.Val?.Value ?? 1;
     }
 
-    private static int GetGridStart(TableCell cell)
+    internal static int GetGridStart(TableCell cell)
     {
         TableRow row = (TableRow)cell.Parent;
         int start = row.TableRowProperties?.GetFirstChild<GridBefore>()?.Val?.Value ?? 0;
@@ -206,7 +215,31 @@ public partial class TableCellWrapper
         return start;
     }
 
-    private static TableCell CellAtGridColumn(TableRow row, int gridColumn)
+    /// <summary>
+    /// The first and last row of the vertical merge that the cell in row <paramref name="row"/> at the grid column <paramref name="gridColumn"/>
+    /// belongs to (the same row twice when it is not merged).
+    /// </summary>
+    private static void GetVerticalExtent(List<TableRow> rows, int row, int gridColumn, out int top, out int bottom)
+    {
+        top = row;
+        while (top > 0 && IsContinuation(CellAtGridColumn(rows[top], gridColumn)))
+        {
+            top--;
+        }
+        bottom = row;
+        while (bottom + 1 < rows.Count && IsContinuation(CellAtGridColumn(rows[bottom + 1], gridColumn)))
+        {
+            bottom++;
+        }
+    }
+
+    private static bool IsContinuation(TableCell cell)
+    {
+        VerticalMerge merge = cell?.TableCellProperties?.VerticalMerge;
+        return merge != null && (merge.Val == null || !merge.Val.HasValue || merge.Val.Value == MergedCellValues.Continue);
+    }
+
+    internal static TableCell CellAtGridColumn(TableRow row, int gridColumn)
     {
         foreach (TableCell cell in row.Elements<TableCell>())
         {

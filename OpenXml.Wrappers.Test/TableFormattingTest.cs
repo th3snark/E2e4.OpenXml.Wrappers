@@ -189,12 +189,31 @@ public class TableFormattingTest
     }
 
     [Fact]
-    public void ColumnDeleteRejectsMergedCells()
+    public void ColumnDeleteNarrowsACellThatSpansTheColumn()
     {
-        Table table = CreateTable(1, 3);
-        table.Descendants<TableCell>().First().TableCellProperties = new TableCellProperties(new GridSpan() { Val = 2 });
+        Table table = CreateTable(2, 3);
+        TableCell spanning = table.Descendants<TableCell>().First();
+        spanning.TableCellProperties = new TableCellProperties(new GridSpan() { Val = 2 });
+        spanning.NextSibling<TableCell>().Remove();
 
-        Assert.Throws<NotSupportedException>(() => new TableWrapper(table).Columns[2].Delete());
-        Assert.Equal(3, table.Descendants<GridColumn>().Count());
+        new TableWrapper(table).Columns[1].Delete();
+
+        Assert.Equal(2, table.Descendants<GridColumn>().Count());
+        Assert.Equal(1, spanning.TableCellProperties.GridSpan.Val.Value);
+        Assert.Equal(2, table.Elements<TableRow>().First().Elements<TableCell>().Count());
+        Assert.Equal(2, table.Elements<TableRow>().Last().Elements<TableCell>().Count());
+    }
+
+    [Fact]
+    public void ColumnDeletePassesTheStartOfAVerticalMergeToTheNextRow()
+    {
+        Table table = CreateTable(2, 2);
+        new TableWrapper(table).Cell(0, 0).MergeDown();
+
+        new TableWrapper(table).Columns[0].Delete();
+
+        Assert.Single(table.Elements<TableRow>().First().Elements<TableCell>());
+        Assert.Single(table.Elements<TableRow>().Last().Elements<TableCell>());
+        Assert.Null(table.Elements<TableRow>().Last().Elements<TableCell>().Single().TableCellProperties?.VerticalMerge);
     }
 }

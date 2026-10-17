@@ -37,28 +37,54 @@ public class TableColumnWrapper : System.IEquatable<TableColumnWrapper>
     }
 
     /// <summary>
-    /// Deletes the column and the cell at its position in every row. Deleting the only column deletes the table.
+    /// Deletes the column and, in every row, the cell in that column. A cell that spans several columns loses one column of its span
+    /// instead, and when the cell removed was the top of a vertical merge the next cell down takes its place. Deleting the only column
+    /// deletes the table.
     /// </summary>
-    /// <exception cref="NotSupportedException">The table has merged cells, so cells do not line up with the grid.</exception>
+    /// <exception cref="NotSupportedException">The table uses the older horizontal merge (<c>hMerge</c>).</exception>
     public void Delete()
     {
         Table table = _gridColumn.Ancestors<Table>().First();
-        List<TableCell> cells = table.Elements<TableRow>().SelectMany(r => r.Elements<TableCell>()).ToList();
-        if (cells.Any(c => c.TableCellProperties?.GridSpan?.Val?.Value > 1 || c.TableCellProperties?.HorizontalMerge != null))
+        if (table.Descendants<HorizontalMerge>().Any())
         {
-            throw new NotSupportedException("Deleting a column of a table with horizontally merged cells is not supported.");
+            throw new NotSupportedException("Deleting a column of a table with horizontally merged cells of the older kind is not supported.");
         }
 
-        if (table.GetFirstChild<TableGrid>().Elements<GridColumn>().Count() == 1)
+        List<GridColumn> grid = table.GetFirstChild<TableGrid>().Elements<GridColumn>().ToList();
+        if (grid.Count == 1)
         {
             table.Remove();
             return;
         }
 
         int index = Index;
-        foreach (TableRow tableRow in table.Elements<TableRow>())
+        List<TableRow> rows = table.Elements<TableRow>().ToList();
+        for (int r = 0; r < rows.Count; r++)
         {
-            tableRow.Elements<TableCell>().ElementAtOrDefault(index)?.Remove();
+            TableCell cell = TableCellWrapper.CellAtGridColumn(rows[r], index);
+            if (cell == null)
+            {
+                continue;
+            }
+            int span = TableCellWrapper.Span(cell);
+            if (span > 1)
+            {
+                cell.TableCellProperties.GridSpan = new GridSpan() { Val = span - 1 };
+                TableCellWrapper wrapper = new TableCellWrapper(cell);
+                wrapper.CellWidth = Math.Max(0, wrapper.CellWidth - Width);
+                continue;
+            }
+
+            //The cell below a vertical merge that starts here becomes the start of what is left of it.
+            if (cell.TableCellProperties?.VerticalMerge != null && cell.TableCellProperties.VerticalMerge.Val?.Value == MergedCellValues.Restart && r + 1 < rows.Count)
+            {
+                TableCell below = TableCellWrapper.CellAtGridColumn(rows[r + 1], index);
+                if (below?.TableCellProperties?.VerticalMerge != null && below.TableCellProperties.VerticalMerge.Val?.Value != MergedCellValues.Restart)
+                {
+                    below.TableCellProperties.VerticalMerge = new VerticalMerge() { Val = MergedCellValues.Restart };
+                }
+            }
+            cell.Remove();
         }
         _gridColumn.Remove();
     }
@@ -68,22 +94,32 @@ public class TableColumnWrapper : System.IEquatable<TableColumnWrapper>
         get { return _gridColumn.Width == null ? 0 : Convert.ToInt32(_gridColumn.Width.Value, CultureInfo.InvariantCulture); }
         set
         {
-            string width = value.ToString(CultureInfo.InvariantCulture);
-            _gridColumn.Width = width;
-            int index = _gridColumn.ElementsBefore().Where(e => e is GridColumn).Count();
+            _gridColumn.Width = value.ToString(CultureInfo.InvariantCulture);
             Table table = _gridColumn.Ancestors<Table>().First();
+            List<GridColumn> grid = table.GetFirstChild<TableGrid>().Elements<GridColumn>().ToList();
+            int index = Index;
             foreach (TableRow tableRow in table.Elements<TableRow>())
             {
-                //Rows with fewer cells than the grid has columns (for example merged or short rows) are skipped.
-                TableCell tableCell = tableRow.Elements<TableCell>().ElementAtOrDefault(index);
+                //The cell in this grid column is as wide as the grid columns it covers; rows that are too short for the grid are skipped.
+                TableCell tableCell = TableCellWrapper.CellAtGridColumn(tableRow, index);
                 if (tableCell != null)
                 {
-                    tableCell.SetWidth(value, TableWidthUnitValues.Dxa);
+                    int start = TableCellWrapper.GetGridStart(tableCell);
+                    int width = 0;
+                    for (int i = start; i < start + TableCellWrapper.Span(tableCell) && i < grid.Count; i++)
+                    {
+                        width += new TableColumnWrapper(grid[i]).WidthOrZero;
+                    }
+                    tableCell.SetWidth(width, TableWidthUnitValues.Dxa);
                 }
             }
         }
     }
 
+    private int WidthOrZero
+    {
+        get { return _gridColumn.Width == null ? 0 : Convert.ToInt32(_gridColumn.Width.Value, CultureInfo.InvariantCulture); }
+    }
     #region Equality
 
     // Two wrappers are equal when they wrap the same underlying element(s), so a new wrapper obtained for the same item compares equal.

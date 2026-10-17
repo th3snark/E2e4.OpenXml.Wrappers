@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Linq;
 
 using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
@@ -278,6 +279,43 @@ public class PageSetupWrapper
             else
             {
                 Properties?.RemoveAllChildren<TitlePage>();
+            }
+        }
+    }
+
+    /// <summary>
+    /// True when odd and even pages have different headers and footers, as <c>PageSetup.OddAndEvenPagesHeaderFooter</c> in Word. This is a
+    /// setting of the whole document, not of the section, and without it the even page headers are not shown.
+    /// </summary>
+    public bool OddAndEvenPagesHeaderFooter
+    {
+        get
+        {
+            EvenAndOddHeaders setting = _section.GetMainDocumentPart()?.DocumentSettingsPart?.Settings?.GetFirstChild<EvenAndOddHeaders>();
+            return setting != null && (setting.Val == null || !setting.Val.HasValue || setting.Val.Value);
+        }
+        set
+        {
+            MainDocumentPart mainDocumentPart = _section.GetMainDocumentPart();
+            if (mainDocumentPart == null)
+            {
+                throw new InvalidOperationException("The section is not part of a document.");
+            }
+            DocumentSettingsPart settingsPart = mainDocumentPart.DocumentSettingsPart;
+            if (!value)
+            {
+                settingsPart?.Settings?.RemoveAllChildren<EvenAndOddHeaders>();
+                return;
+            }
+            if (settingsPart == null)
+            {
+                settingsPart = mainDocumentPart.AddNewPart<DocumentSettingsPart>();
+            }
+            settingsPart.Settings ??= new Settings();
+            if (settingsPart.Settings.GetFirstChild<EvenAndOddHeaders>() == null)
+            {
+                //AddChild puts the element in schema order among the other settings.
+                settingsPart.Settings.AddChild(new EvenAndOddHeaders());
             }
         }
     }

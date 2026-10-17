@@ -138,9 +138,9 @@ document.Paragraphs[3].Range.Delete();
 
 ## Table formatting
 
-These use points like `Font` and `ParagraphFormat`: `Row.Height`, `Row.HeightRule` (`Auto`, `AtLeast`, `Exactly`), `Row.HeadingFormat`, `Row.AllowBreakAcrossPages`, `Cell.VerticalAlignment`, `Cell.BackgroundColor` (six hex digits), `Table.Alignment`, `Table.PreferredWidth` (null unless a fixed width) and `Column.Index`. `Column.Delete` removes the grid column and the cell at its position in every row; it throws `NotSupportedException` for tables with horizontally merged cells.
+These use points like `Font` and `ParagraphFormat`: `Row.Height`, `Row.HeightRule` (`Auto`, `AtLeast`, `Exactly`), `Row.HeadingFormat`, `Row.AllowBreakAcrossPages`, `Cell.VerticalAlignment`, `Cell.BackgroundColor` (six hex digits), `Table.Alignment`, `Table.PreferredWidth` (null unless a fixed width) and `Column.Index`. `Column.Delete` removes the grid column and the cell at its position in every row; a cell that spans the column loses one column of its span instead, and the start of a vertical merge passes to the next row. It throws `NotSupportedException` only for the older `hMerge` kind of merge.
 
-`Table.Borders` and `Cell.Borders` work like Word's: `Borders[BorderPosition.Top]` is a border with `LineStyle`, `LineWidth` (points, 0.25 to 12) and `Color` (hex or "auto"), and `SetOutside` / `SetInside` set several at once. Positions are `Top`, `Left`, `Bottom`, `Right`, `Horizontal` and `Vertical` (the lines between rows and columns), plus the two diagonals for cells only. Setting `LineStyle` to `None` writes an explicit "no border"; `Clear()` removes the direct setting so the table style applies. Only direct formatting is read, so a border that comes from a table style reads as `None`. `Row.Borders` works the same way but is stored on the cells of the row: `Top` and `Bottom` go on every cell, `Left` on the first, `Right` on the last and `Vertical` between the cells; a row has no `Horizontal` or diagonal border. A row border whose cells disagree reads `LineStyle` as `Other`, `LineWidth` as 0 and `Color` as null. `Row.SetTopBorder` and `SetBottomBorder` still work as before.
+`Table.Borders` and `Cell.Borders` work like Word's: `Borders[BorderPosition.Top]` is a border with `LineStyle`, `LineWidth` (points, 0.25 to 12) and `Color` (hex or "auto"), and `SetOutside` / `SetInside` set several at once. Positions are `Top`, `Left`, `Bottom`, `Right`, `Horizontal` and `Vertical` (the lines between rows and columns), plus the two diagonals for cells only. Setting `LineStyle` to `None` writes an explicit "no border"; `Clear()` removes the direct setting so the table style applies. A border with no direct setting reads from the table (a cell takes the table's outside borders on the edges of the table and its inside borders elsewhere) and from the table style and the styles it is based on; conditional formatting of a style (first row and so on) is not read. `Row.Borders` works the same way but is stored on the cells of the row: `Top` and `Bottom` go on every cell, `Left` on the first, `Right` on the last and `Vertical` between the cells; a row has no `Horizontal` or diagonal border. A row border whose cells disagree reads `LineStyle` as `Other`, `LineWidth` as 0 and `Color` as null. `Row.SetTopBorder` and `SetBottomBorder` still work as before.
 
 ## Sections, styles and document properties
 
@@ -152,10 +152,10 @@ These use points like `Font` and `ParagraphFormat`: `Row.Height`, `Row.HeightRul
 
 - `Tables.Add(range, numRows, numColumns)` inserts an empty table with single 0.5 point borders immediately **before** the range (a paragraph, table, cell, bookmark, comment or the whole document) and fills the width between the margins or of the cell. Unlike Word it does not replace the text of the range.
 - `Rows.Add(beforeRow)` inserts an empty row with the cells and formatting of `beforeRow` before it; with `null` it appends.
-- `Cell.Merge(otherCell)` merges the rectangle between two cells (in either order) using `gridSpan` and vertical merges, and moves the text of the merged cells into the first one.
+- `Cell.ColumnIndex` and `Table.Cell(row, column)` count the cells of a row, as Word does, so in a row with merged cells they are not grid columns. `Cell.Merge(otherCell)` merges the rectangle between two cells (in either order) using `gridSpan` and vertical merges, and moves the text of the merged cells into the first one.
 - `Cell.Split(numRows, numColumns)` divides a cell. Splitting into columns divides the grid column, so cells in other rows that span it get wider spans; splitting into rows adds rows and vertically merges the rest of the row.
 
-Merging and splitting throw `NotSupportedException` when they would cut through an existing merge, rather than guess: merging cells that are already vertically merged, splitting a vertically merged cell, splitting a cell with a vertically merged neighbour into rows, or splitting a cell that spans columns into a number that does not divide the span.
+A merge absorbs vertical merges that lie wholly inside the rectangle. Merging and splitting throw `NotSupportedException` when they would cut through an existing merge, rather than guess: merging a rectangle that cuts through a vertical merge, splitting a vertically merged cell, splitting a cell with a vertically merged neighbour into rows, or splitting a cell that spans columns into a number that does not divide the span.
 
 ## Bookmarks and comments
 
@@ -172,7 +172,7 @@ FieldWrapperCollection fields = document.Sections[0].Footers[HeaderFooterIndex.P
 
 Reading `Range` creates an empty header or footer if the section and the sections before it have none; a section without its own shows (and edits) that of the nearest earlier section, as `LinkToPrevious` says. `LinkToPrevious = false` gives the section a copy of what it was showing; `true` removes its own. `Exists` is true only for a header or footer the section has of its own. A header range supports `Text`, `InsertBefore`/`InsertAfter`, `Find`, `Font`, `Fields` and the other paragraph-level features; setting `Text` replaces the content with one plain paragraph per line.
 
-Creating a first-page header does not switch on `DifferentFirstPageHeaderFooter`, and even-page headers only show when the document's odd/even setting is on, which the library does not expose.
+Creating a first-page header does not switch on `DifferentFirstPageHeaderFooter`, and even-page headers only show when the document's odd/even setting is on: `section.PageSetup.OddAndEvenPagesHeaderFooter = true` (a setting of the whole document).
 
 ## Fields
 

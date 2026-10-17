@@ -113,7 +113,7 @@ public class BorderWrapper
     {
         get
         {
-            List<string> colors = _targets.Select(t => t.Borders.Find(t.Position)?.Color?.Value ?? "auto").Distinct().ToList();
+            List<string> colors = _targets.Select(t => t.Borders.FindEffective(t.Position)?.Color?.Value ?? "auto").Distinct().ToList();
             if (colors.Count == 0)
             {
                 return "auto";
@@ -154,7 +154,7 @@ public class BorderWrapper
 
     private static BorderLineStyle GetLineStyle(BordersWrapper borders, BorderPosition position)
     {
-        BorderType border = borders.Find(position);
+        BorderType border = borders.FindEffective(position);
         if (border?.Val == null || !border.Val.HasValue)
         {
             return BorderLineStyle.None;
@@ -165,7 +165,7 @@ public class BorderWrapper
 
     private static double GetLineWidth(BordersWrapper borders, BorderPosition position)
     {
-        BorderType border = borders.Find(position);
+        BorderType border = borders.FindEffective(position);
         return border?.Size == null || !border.Size.HasValue ? 0 : border.Size.Value / 8.0;
     }
 

@@ -44,7 +44,7 @@ public class ParagraphWrapper : System.IEquatable<ParagraphWrapper>
 
     public string Text
     {
-        get { return Range.Text.Trim(new char[] { '\r' }); }
+        get { return Range.Text.TrimEnd('\r', '\a'); }
         set { Range.Text = value; }
     }
 

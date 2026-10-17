@@ -184,6 +184,86 @@ public class BordersWrapper
         return GetContainer(false)?.Elements<BorderType>().FirstOrDefault(e => names.Contains(e.LocalName));
     }
 
+    /// <summary>
+    /// The border that applies: the direct setting if there is one, otherwise what the table gives it, from its own borders or from its
+    /// table style (and the styles that style is based on). A cell takes the outside borders of the table on the edges of the table and the
+    /// inside borders elsewhere. Conditional formatting of the style (first row and so on) is not looked at.
+    /// </summary>
+    internal BorderType FindEffective(BorderPosition position)
+    {
+        BorderType direct = Find(position);
+        if (direct != null)
+        {
+            return direct;
+        }
+
+        if (_owner is Table ownerTable)
+        {
+            return FindInTableStyle(ownerTable, position);
+        }
+        if (_owner is TableCell cell && cell.Ancestors<Table>().FirstOrDefault() is Table table)
+        {
+            BorderPosition? mapped = MapToTable(cell, table, position);
+            if (mapped != null)
+            {
+                return new BordersWrapper(table, true).Find(mapped.Value) ?? FindInTableStyle(table, mapped.Value);
+            }
+        }
+        return null;
+    }
+
+    private static BorderPosition? MapToTable(TableCell cell, Table table, BorderPosition position)
+    {
+        if (position == BorderPosition.DiagonalDown || position == BorderPosition.DiagonalUp || position == BorderPosition.Horizontal || position == BorderPosition.Vertical)
+        {
+            return null;
+        }
+        List<TableRow> rows = table.Elements<TableRow>().ToList();
+        int row = rows.IndexOf((TableRow)cell.Parent);
+        int start = TableCellWrapper.GetGridStart(cell);
+        int columns = table.GetFirstChild<TableGrid>()?.Elements<GridColumn>().Count() ?? 0;
+        bool outside = position switch
+        {
+            BorderPosition.Top => row == 0,
+            BorderPosition.Bottom => row == rows.Count - 1,
+            BorderPosition.Left => start == 0,
+            _ => start + TableCellWrapper.Span(cell) >= columns
+        };
+        if (outside)
+        {
+            return position;
+        }
+        return position == BorderPosition.Top || position == BorderPosition.Bottom ? BorderPosition.Horizontal : BorderPosition.Vertical;
+    }
+
+    private static BorderType FindInTableStyle(Table table, BorderPosition position)
+    {
+        Styles styles = table.Ancestors<Document>().FirstOrDefault()?.MainDocumentPart?.StyleDefinitionsPart?.Styles;
+        if (styles == null)
+        {
+            return null;
+        }
+
+        string styleId = table.GetFirstChild<TableProperties>()?.TableStyle?.Val?.Value;
+        Style style = styleId != null
+            ? styles.Elements<Style>().FirstOrDefault(s => s.StyleId?.Value == styleId)
+            : styles.Elements<Style>().FirstOrDefault(s => s.Type?.Value == StyleValues.Table && s.Default?.Value == true);
+
+        //Follow the chain of based-on styles; the guard stops a cycle in a damaged document.
+        string[] names = GetNames(position);
+        for (int depth = 0; style != null && depth < 20; depth++)
+        {
+            BorderType border = style.StyleTableProperties?.TableBorders?.Elements<BorderType>().FirstOrDefault(e => names.Contains(e.LocalName));
+            if (border != null)
+            {
+                return border;
+            }
+            string basedOn = style.BasedOn?.Val?.Value;
+            style = basedOn == null ? null : styles.Elements<Style>().FirstOrDefault(s => s.StyleId?.Value == basedOn);
+        }
+        return null;
+    }
+
     internal BorderType GetOrAdd(BorderPosition position)
     {
         BorderType border = Find(position);

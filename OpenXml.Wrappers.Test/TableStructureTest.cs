@@ -108,12 +108,39 @@ public class TableStructureTest
     }
 
     [Fact]
-    public void MergeRejectsCellsThatAreAlreadyVerticallyMerged()
+    public void MergeAbsorbsACellThatIsAlreadyVerticallyMerged()
     {
         Table table = CreateTable(3, 1);
         Cell(table, 0, 0).Merge(Cell(table, 1, 0));
 
-        Assert.Throws<NotSupportedException>(() => Cell(table, 0, 0).Merge(Cell(table, 2, 0)));
+        Cell(table, 0, 0).Merge(Cell(table, 2, 0));
+
+        TableRow[] rows = table.Elements<TableRow>().ToArray();
+        Assert.Equal(MergedCellValues.Restart, rows[0].Elements<TableCell>().Single().TableCellProperties.VerticalMerge.Val.Value);
+        Assert.Null(rows[1].Elements<TableCell>().Single().TableCellProperties.VerticalMerge.Val);
+        Assert.Null(rows[2].Elements<TableCell>().Single().TableCellProperties.VerticalMerge.Val);
+    }
+
+    [Fact]
+    public void MergeRejectsARectangleThatCutsThroughAVerticalMerge()
+    {
+        Table table = CreateTable(3, 1);
+        Cell(table, 0, 0).Merge(Cell(table, 1, 0));
+
+        Assert.Throws<NotSupportedException>(() => Cell(table, 1, 0).Merge(Cell(table, 2, 0)));
+    }
+
+    [Fact]
+    public void MergeAbsorbsAVerticalMergeInsideALargerRectangle()
+    {
+        Table table = CreateTable(2, 3);
+        Cell(table, 0, 1).Merge(Cell(table, 1, 1));
+
+        Cell(table, 0, 0).Merge(Cell(table, 1, 2));
+
+        Assert.Equal(2, table.Elements<TableRow>().Count());
+        Assert.All(table.Elements<TableRow>(), row => Assert.Single(row.Elements<TableCell>()));
+        Assert.Equal(3, table.Elements<TableRow>().First().Elements<TableCell>().Single().TableCellProperties.GridSpan.Val.Value);
     }
 
     #endregion
