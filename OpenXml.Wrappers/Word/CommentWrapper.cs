@@ -23,6 +23,14 @@ public class CommentWrapper : System.IEquatable<CommentWrapper>
         get { return new RangeWrapper(_commentRangeStart, _commentRangeEnd); }
     }
 
+    /// <summary>
+    /// A range over the element that contains the start of the comment range (usually its paragraph).
+    /// </summary>
+    public RangeWrapper Parent
+    {
+        get { return new RangeWrapper(_commentRangeStart.Parent); }
+    }
+
     public string Author
     {
         get { return _commentRangeStart.GetComment().Author?.Value; }

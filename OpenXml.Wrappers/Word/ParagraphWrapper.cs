@@ -21,6 +21,14 @@ public class ParagraphWrapper : System.IEquatable<ParagraphWrapper>
         get { return _paragraph; }
     }
 
+    /// <summary>
+    /// A range over the element that contains the paragraph: the table cell or the body.
+    /// </summary>
+    public RangeWrapper Parent
+    {
+        get { return new RangeWrapper(_paragraph.Parent); }
+    }
+
     public RangeWrapper Range
     {
         get { return new RangeWrapper(_paragraph); }

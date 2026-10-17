@@ -16,6 +16,14 @@ public class BookmarkWrapper : System.IEquatable<BookmarkWrapper>
         _bookmarkEnd = bookmarkStart.GetBookmarkEnd();
     }
 
+    /// <summary>
+    /// A range over the element that contains the bookmark (usually its paragraph).
+    /// </summary>
+    public RangeWrapper Parent
+    {
+        get { return new RangeWrapper(_bookmarkStart.Parent); }
+    }
+
     public string Name
     {
         get { return _bookmarkStart.Name.Value; }

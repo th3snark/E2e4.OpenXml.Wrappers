@@ -21,6 +21,14 @@ public class TableColumnWrapper : System.IEquatable<TableColumnWrapper>
     }
 
     /// <summary>
+    /// The table the column belongs to.
+    /// </summary>
+    public TableWrapper Parent
+    {
+        get { return new TableWrapper(_gridColumn.Ancestors<Table>().First()); }
+    }
+
+    /// <summary>
     /// The 0-based position of the column in the table grid.
     /// </summary>
     public int Index

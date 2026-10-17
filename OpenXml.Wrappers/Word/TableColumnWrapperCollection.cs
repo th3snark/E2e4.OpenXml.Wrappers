@@ -17,6 +17,14 @@ public class TableColumnWrapperCollection : IEnumerable<TableColumnWrapper>
         _range = range;
     }
 
+    /// <summary>
+    /// The table the columns belong to.
+    /// </summary>
+    public TableWrapper Parent
+    {
+        get { return new TableWrapper((Table)_range.Start); }
+    }
+
     public TableColumnWrapper this[int index]
     {
         get

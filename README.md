@@ -102,6 +102,10 @@ Merging and splitting throw `NotSupportedException` when they would cut through 
 
 `Paragraph.Next()` / `Previous()` walk the paragraphs of the document in order, through table cells, and return `null` at either end. `Row.Next()` / `Previous()` / `IsFirst` / `IsLast` and `Cell.Next()` / `Previous()` work within a table (a cell's neighbour wraps to the adjacent row). `Range.Duplicate()` returns a new range over the same elements. Integer `Start`/`End`, `Collapse` and `SetRange` are not provided: a range is made of whole elements, so there are no character positions to move.
 
+## Parent
+
+Every wrapper and collection has a `Parent` that answers "what contains me": a cell's is its row, a row's and a column's its table, a table's the table it is nested in (or null), and the table collections' the table. A paragraph's, bookmark's and comment's `Parent` is a `RangeWrapper` over the element that contains it (the table cell or body, or the paragraph), and the paragraph, bookmark and comment collections return the `RangeWrapper` they were taken from.
+
 ## Build and test
 
 ```bash

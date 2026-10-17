@@ -19,6 +19,14 @@ public class CommentWrapperCollection : IEnumerable<CommentWrapper>
         _rangeWrapper = rangeWrapper;
     }
 
+    /// <summary>
+    /// The range the collection was taken from.
+    /// </summary>
+    public RangeWrapper Parent
+    {
+        get { return _rangeWrapper; }
+    }
+
     public CommentWrapper this[int index]
     {
         get
