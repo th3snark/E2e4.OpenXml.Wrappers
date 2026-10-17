@@ -20,6 +20,9 @@ public partial class RangeWrapper
 
         public bool WholeCells { get; private set; }
 
+        /// <summary>The range takes in part of a table and runs on outside it, which Word will not edit.</summary>
+        public bool Partial { get; private set; }
+
         public int FirstEdge { get; private set; }
 
         /// <summary>The content of each cell in the range: the places between the edges.</summary>
@@ -28,7 +31,8 @@ public partial class RangeWrapper
         public static CellCrossing Of(StoryMap map, int start, int end)
         {
             CellCrossing result = new CellCrossing();
-            List<Atom> inRange = map.AtomsIn(start, end).ToList();
+            //Atoms that overlap the range, whole or not: the range need not be on the edges of pieces of text yet.
+            List<Atom> inRange = map.Atoms.Skip(Math.Max(map.IndexAt(start), 0)).TakeWhile(a => a.Start < end).ToList();
             if (inRange.Count == 0)
             {
                 return result;
@@ -39,7 +43,11 @@ public partial class RangeWrapper
             Atom last = inRange[inRange.Count - 1];
             if (table == null || !IsInside(last, table))
             {
-                //A range that starts outside a table, or runs on past it, is not a range within a table.
+                //A range that starts outside a table or runs on past it can only take in the whole of the table.
+                Table lastTable = TableOf(last);
+                bool startsTable = table == null || FirstPositionOf(map, table.Descendants<Paragraph>().First()) == start;
+                bool endsTable = lastTable == null || (last.Kind == AtomKind.RowMark && ReferenceEquals(last.Element, lastTable.Elements<TableRow>().LastOrDefault()));
+                result.Partial = !startsTable || !endsTable;
                 return result;
             }
 
@@ -68,6 +76,11 @@ public partial class RangeWrapper
             result.WholeCells = IsCellEdge(last) && first.Parent is TableCell cell && ReferenceEquals(cell.Elements<Paragraph>().FirstOrDefault(), first)
                 && FirstPositionOf(map, first) == start;
             return result;
+        }
+
+        private static Table TableOf(Atom atom)
+        {
+            return atom.Element is TableRow row ? row.Parent as Table : atom.Element.Ancestors<Table>().FirstOrDefault();
         }
 
         private static bool IsInside(Atom atom, Table table)

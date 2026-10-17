@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
@@ -59,14 +60,14 @@ internal sealed class Atom
     /// element. New runs go next to it.</summary>
     public OpenXmlElement Top
     {
-        get { return Element is SimpleField ? Element : Element.Parent; }
+        get { return Element is SimpleField || Element is Hyperlink || Element is SdtRun ? Element : Element.Parent; }
     }
 
     /// <summary>True for the begin, code and separator, or the end, of a field written as one element (<c>w:fldSimple</c>), which are not in a
     /// run and cannot be split.</summary>
     public bool IsSimpleFieldPart
     {
-        get { return (Kind == AtomKind.FieldCode && Element is SimpleField) || (Kind == AtomKind.FieldMark && !(Element is FieldChar)); }
+        get { return (Kind == AtomKind.FieldCode && (Element is SimpleField || Element is Hyperlink)) || (Kind == AtomKind.FieldMark && !(Element is FieldChar)); }
     }
 
     /// <summary>True for the atoms that take up positions but show no text: fields' begin, separator, end and code, and objects.</summary>
@@ -401,21 +402,35 @@ internal sealed class StoryMap
                     }
                 }
             }
-            else if (child is SimpleField field)
+            else if (child is SimpleField || child is Hyperlink)
             {
-                //As in Word a field has a begin, its code, a separator, its result and an end. This one keeps its code in an attribute, so the
-                //first three are one piece with the field as its element and the end is one piece with the last child of the field as its element
-                //(a field without a result has them all in the first).
-                int codeLength = field.Instruction?.Value?.Length ?? 0;
-                OpenXmlElement last = field.LastChild;
-                yield return new AtomInfo(AtomKind.FieldCode, field, last == null ? codeLength + 3 : codeLength + 2, String.Empty);
-                foreach (AtomInfo info in EnumerateInline(field))
+                //As in Word a field has a begin, its code, a separator, its result and an end. This one keeps its code in an attribute (a
+                //hyperlink is a field whose code Word makes up), so the first three are one piece with the field as its element and the end is
+                //one piece with the last child of the field as its element (a field without a result has them all in the first).
+                int codeLength = child is SimpleField simple ? simple.Instruction?.Value?.Length ?? 0 : HyperlinkCodeLength((Hyperlink)child);
+                OpenXmlElement last = child.LastChild;
+                yield return new AtomInfo(AtomKind.FieldCode, child, last == null ? codeLength + 3 : codeLength + 2, String.Empty);
+                foreach (AtomInfo info in EnumerateInline(child))
                 {
                     yield return info;
                 }
                 if (last != null)
                 {
                     yield return new AtomInfo(AtomKind.FieldMark, last, 1, String.Empty);
+                }
+            }
+            else if (child is SdtRun)
+            {
+                //A content control has a position at each end, as in Word.
+                OpenXmlElement content = child.GetFirstChild<SdtContentRun>();
+                yield return new AtomInfo(AtomKind.FieldMark, child, content == null ? 2 : 1, String.Empty);
+                foreach (AtomInfo info in EnumerateInline(child))
+                {
+                    yield return info;
+                }
+                if (content != null)
+                {
+                    yield return new AtomInfo(AtomKind.FieldMark, content, 1, String.Empty);
                 }
             }
             else if (child is OpenXmlCompositeElement && !(child is Paragraph) && !(child is ParagraphProperties))
@@ -426,6 +441,40 @@ internal sealed class StoryMap
                 }
             }
         }
+    }
+
+    //The text Word makes up for the code of a hyperlink, which it counts: the address or place, the frame, the tip and the switch for a hyperlink.
+    private static int HyperlinkCodeLength(Hyperlink link)
+    {
+        System.Text.StringBuilder code = new System.Text.StringBuilder(" HYPERLINK ");
+        string id = link.Id?.Value;
+        if (!String.IsNullOrEmpty(id))
+        {
+            OpenXmlPart part = (link.GetRoot() as OpenXmlPartRootElement)?.OpenXmlPart;
+            HyperlinkRelationship relationship = part?.HyperlinkRelationships.FirstOrDefault(r => r.Id == id);
+            if (relationship != null)
+            {
+                code.Append('"').Append(relationship.Uri.OriginalString).Append("\" ");
+            }
+        }
+        if (!String.IsNullOrEmpty(link.Anchor?.Value))
+        {
+            code.Append("\\l \"").Append(link.Anchor.Value).Append("\" ");
+        }
+        if (!String.IsNullOrEmpty(link.DocLocation?.Value))
+        {
+            code.Append("\\s \"").Append(link.DocLocation.Value).Append("\" ");
+        }
+        if (!String.IsNullOrEmpty(link.TargetFrame?.Value))
+        {
+            code.Append("\\t \"").Append(link.TargetFrame.Value).Append("\" ");
+        }
+        if (!String.IsNullOrEmpty(link.Tooltip?.Value))
+        {
+            code.Append("\\o \"").Append(link.Tooltip.Value).Append("\" ");
+        }
+        code.Append("\\h");
+        return code.Length;
     }
 
     /// <summary>
@@ -444,6 +493,15 @@ internal sealed class StoryMap
                     return false;
                 }
                 info = new AtomInfo(AtomKind.Text, part, value.Length, value);
+                return true;
+            case DeletedText deleted:
+                //Text deleted while changes were tracked still takes up positions, though it shows no text.
+                int deletedLength = deleted.Text?.Length ?? 0;
+                if (deletedLength == 0)
+                {
+                    return false;
+                }
+                info = new AtomInfo(AtomKind.FieldCode, part, deletedLength, String.Empty);
                 return true;
             case TabChar:
                 info = new AtomInfo(AtomKind.Tab, part, 1, "\t");
@@ -475,6 +533,7 @@ internal sealed class StoryMap
             case FootnoteReferenceMark:
             case EndnoteReferenceMark:
             case AnnotationReferenceMark:
+            case CommentReference:
             case SymbolChar:
                 info = new AtomInfo(AtomKind.Object, part, 1, String.Empty);
                 return true;
@@ -955,7 +1014,7 @@ internal sealed class StoryMap
 
         bool changed = false;
         OpenXmlElement element = atom.Element;
-        if ((atom.Kind == AtomKind.Text || atom.Kind == AtomKind.FieldCode) && position > atom.Start)
+        if ((element is Text || element is FieldCode) && position > atom.Start)
         {
             element = SplitText(element, position - atom.Start);
             changed = true;

@@ -43,6 +43,10 @@ public partial class RangeWrapper
         //Formatting is taken from the text before it goes.
         //As in Word, text replacing a range that crosses the edge of a cell replaces only what is in the first cell.
         CellCrossing crossing = CellCrossing.Of(map, start, end);
+        if (crossing.Partial)
+        {
+            throw new InvalidOperationException("The range cannot be deleted.");
+        }
         if (crossing.Crosses)
         {
             end = crossing.FirstEdge;
@@ -141,6 +145,10 @@ public partial class RangeWrapper
     {
         GetScoped(false, out StoryMap map, out int start, out int end);
         CellCrossing crossing = CellCrossing.Of(map, start, end);
+        if (crossing.Partial)
+        {
+            throw new InvalidOperationException("Cannot edit Range.");
+        }
         if (crossing.Crosses)
         {
             //As in Word, a range across the edge of cells cannot be deleted, unless it is whole cells, which are cleared.
@@ -448,25 +456,8 @@ public partial class RangeWrapper
         Dictionary<Paragraph, int> paragraphStarts = markParagraphs.ToDictionary(p => p, p => FirstPositionOf(map, p));
 
         //The runs that hold the characters, and everything between them.
-        List<Run> charRuns = remaining.Where(a => !a.IsMark && !a.IsSimpleFieldPart).Select(a => (Run)a.Element.Parent).Distinct().ToList();
-
-        //A field written as one element goes whole, with its result, when any of it is in the range.
-        HashSet<SimpleField> simpleFields = new HashSet<SimpleField>();
-        foreach (Atom atom in remaining)
-        {
-            SimpleField simple = SimpleFieldOf(atom);
-            if (simple != null)
-            {
-                simpleFields.Add(simple);
-            }
-        }
-        foreach (SimpleField simple in simpleFields.ToList())
-        {
-            foreach (SimpleField inner in simple.Descendants<SimpleField>())
-            {
-                simpleFields.Add(inner);
-            }
-        }
+        List<Run> charRuns = remaining.Select(a => a.Element.Parent as Run).Where(r => r != null).Distinct().ToList();
+        HashSet<OpenXmlElement> simpleFields = FieldsToRemove(remaining);
         List<OpenXmlElement> toRemove = new List<OpenXmlElement>();
         if (charRuns.Count > 0)
         {
@@ -486,12 +477,12 @@ public partial class RangeWrapper
         int lastGoing = inRange.Count == 0 ? 0 : inRange[inRange.Count - 1].Index;
         foreach (Atom atom in map.Atoms)
         {
-            if (simpleFields.Count > 0 && simpleFields.Contains(SimpleFieldOf(atom)))
+            if (simpleFields.Count > 0 && IsIn(atom, simpleFields))
             {
                 going.Add(atom.Element);
                 lastGoing = Math.Max(lastGoing, atom.Index);
             }
-            else if (!atom.IsMark && !atom.IsSimpleFieldPart && goingRuns.Contains((Run)atom.Element.Parent))
+            else if (atom.Element.Parent is Run atomRun && goingRuns.Contains(atomRun))
             {
                 going.Add(atom.Element);
                 lastGoing = Math.Max(lastGoing, atom.Index);
@@ -545,22 +536,69 @@ public partial class RangeWrapper
         }
     }
 
-    //The field written as one element that an atom belongs to: its begin, code and separator, its end or the text of its result.
-    private static SimpleField SimpleFieldOf(Atom atom)
+    //The element of a field written as one element (a simple field, a hyperlink or a content control) that an atom is the begin or end of.
+    private static OpenXmlElement FieldOf(Atom atom, out bool isBegin)
     {
-        if (atom.Kind == AtomKind.FieldCode && atom.Element is SimpleField field)
+        isBegin = false;
+        if ((atom.Kind == AtomKind.FieldCode && (atom.Element is SimpleField || atom.Element is Hyperlink)) || (atom.Kind == AtomKind.FieldMark && atom.Element is SdtRun))
         {
-            return field;
+            isBegin = true;
+            return atom.Element;
         }
         if (atom.Kind == AtomKind.FieldMark && !(atom.Element is FieldChar))
         {
-            return atom.Element.Parent as SimpleField;
-        }
-        if (atom.Kind == AtomKind.Text || atom.Kind == AtomKind.Tab || atom.Kind == AtomKind.Break)
-        {
-            return atom.Element.Ancestors<SimpleField>().FirstOrDefault();
+            return atom.Element.Parent;
         }
         return null;
+    }
+
+    //The fields written as one element that go with a deleted range. A simple field goes whole when any of it is in the range, as does a
+    //hyperlink when its begin or end is; a content control goes when both its ends are, and its text goes whatever part of it is in the range.
+    private static HashSet<OpenXmlElement> FieldsToRemove(List<Atom> inRange)
+    {
+        HashSet<OpenXmlElement> fields = new HashSet<OpenXmlElement>();
+        HashSet<OpenXmlElement> begun = new HashSet<OpenXmlElement>();
+        HashSet<OpenXmlElement> ended = new HashSet<OpenXmlElement>();
+        foreach (Atom atom in inRange)
+        {
+            OpenXmlElement field = FieldOf(atom, out bool isBegin);
+            if (field is SdtRun)
+            {
+                (isBegin ? begun : ended).Add(field);
+            }
+            else if (field != null)
+            {
+                fields.Add(field);
+            }
+            else if (atom.Kind == AtomKind.Text || atom.Kind == AtomKind.Tab || atom.Kind == AtomKind.Break)
+            {
+                SimpleField simple = atom.Element.Ancestors<SimpleField>().FirstOrDefault();
+                if (simple != null)
+                {
+                    fields.Add(simple);
+                }
+            }
+        }
+        fields.UnionWith(begun.Where(ended.Contains));
+        foreach (OpenXmlElement field in fields.ToList())
+        {
+            foreach (OpenXmlElement inner in field.Descendants().Where(e => e is SimpleField || e is Hyperlink || e is SdtRun))
+            {
+                fields.Add(inner);
+            }
+        }
+        return fields;
+    }
+
+    //Whether an atom is part of one of the fields: the field's begin or end, or what is inside it.
+    private static bool IsIn(Atom atom, HashSet<OpenXmlElement> fields)
+    {
+        OpenXmlElement field = FieldOf(atom, out _);
+        if (field != null)
+        {
+            return fields.Contains(field);
+        }
+        return atom.Element.Ancestors().Any(fields.Contains);
     }
 
     private static bool IsCellEnd(Paragraph paragraph)

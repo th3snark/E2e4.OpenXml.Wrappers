@@ -47,9 +47,11 @@ public class RangeWrapperSpanFixtureTest : IDisposable
             RangeWrapper content = document.Content;
             string text = content.Text;
 
-            //Each position is one character, except that the end of a cell and of a row are written as two characters.
+            //Each position is one character, except that the end of a cell and of a row are written as two characters, and that a comment
+            //reference takes a position but shows no text.
             int doubled = text.Split('\a').Length - 1;
-            Assert.Equal(text.Length - doubled, content.StoryLength);
+            int references = document.WordprocessingDocument.MainDocumentPart.Document.Descendants<DocumentFormat.OpenXml.Wordprocessing.CommentReference>().Count();
+            Assert.Equal(text.Length - doubled + references, content.StoryLength);
             Assert.Equal(content.StoryLength, content.Characters.Count);
             Assert.Equal(text, string.Concat(content.Characters.Select(c => c.Text)));
             Assert.Equal(text, string.Concat(content.Words.Select(w => w.Text)));
