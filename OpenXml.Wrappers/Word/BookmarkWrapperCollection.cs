@@ -67,7 +67,7 @@ public class BookmarkWrapperCollection : IEnumerable<BookmarkWrapper>
     /// moved to the new range.
     /// </summary>
     /// <remarks>
-    /// Supported for the ranges of a paragraph, table cell, bookmark or comment. The name must start with a letter, contain only
+    /// Supported for the ranges of a paragraph, table, table cell, bookmark or comment. A table is bookmarked by markers before and after it. The name must start with a letter, contain only
     /// letters, digits and underscores, and be at most 40 characters long.
     /// </remarks>
     /// <exception cref="ArgumentException">The name is not valid.</exception>
@@ -79,7 +79,7 @@ public class BookmarkWrapperCollection : IEnumerable<BookmarkWrapper>
         {
             throw new ArgumentException("A bookmark name must start with a letter, contain only letters, digits and underscores, and be at most 40 characters long.", nameof(name));
         }
-        if (!(range.Start is Paragraph || range.Start is TableCell || range.Start is BookmarkStart || range.Start is CommentRangeStart))
+        if (!(range.Start is Paragraph || range.Start is TableCell || range.Start is Table || range.Start is BookmarkStart || range.Start is CommentRangeStart))
         {
             throw new NotSupportedException(String.Format(CultureInfo.InvariantCulture, "Adding a bookmark to a range starting with the type {0} is not currently supported.", range.Start.GetType().Name));
         }

@@ -9,6 +9,7 @@
     <Description>A Word-object-model-like API (Range, Paragraphs, Tables, Bookmarks, Comments, Fields, Sections, Styles and more) over the Open XML SDK, so that code for .docx files reads like the Word VBA macros it replaces.</Description>
     <PackageTags>openxml;word;wordprocessingml;docx;office;document;vba</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -21,6 +22,7 @@
 
   <ItemGroup>
     <None Include="..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\assets\icon.png" Pack="true" PackagePath="\" Visible="false" />
   </ItemGroup>
 
 </Project>

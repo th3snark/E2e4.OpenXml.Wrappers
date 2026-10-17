@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img">
+  <title>E2e4.OpenXml.Wrappers</title>
+  <desc>A white page with a folded corner and lines of text, wrapped in curly braces, on a deep teal rounded square</desc>
+  <rect width="128" height="128" rx="24" fill="#0F6E56"/>
+  <path d="M38 22h36l20 20v62a4 4 0 0 1-4 4H38a4 4 0 0 1-4-4V26a4 4 0 0 1 4-4z" fill="#FFFFFF"/>
+  <path d="M74 22v16a4 4 0 0 0 4 4h16z" fill="#9FE1CB"/>
+  <rect x="44" y="52" width="40" height="5" rx="2.5" fill="#0F6E56"/>
+  <rect x="44" y="64" width="40" height="5" rx="2.5" fill="#5DCAA5"/>
+  <rect x="44" y="76" width="30" height="5" rx="2.5" fill="#5DCAA5"/>
+  <rect x="44" y="88" width="36" height="5" rx="2.5" fill="#5DCAA5"/>
+  <path d="M22 40c-6 0-8 3-8 8v8c0 4-2 8-6 8 4 0 6 4 6 8v8c0 5 2 8 8 8" fill="none" stroke="#9FE1CB" stroke-width="4" stroke-linecap="round" transform="translate(4 0)"/>
+  <path d="M106 40c6 0 8 3 8 8v8c0 4 2 8 6 8-4 0-6 4-6 8v8c0 5-2 8-8 8" fill="none" stroke="#9FE1CB" stroke-width="4" stroke-linecap="round" transform="translate(-4 0)"/>
+</svg>

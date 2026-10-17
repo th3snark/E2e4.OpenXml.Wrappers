@@ -120,12 +120,12 @@ public class BookmarkCommentEditingTest : IDisposable
     }
 
     [Fact]
-    public void ABookmarkCannotBeAddedToATable()
+    public void ABookmarkCannotBeAddedToATableRow()
     {
         Table table = new Table(new TableRow(new TableCell(new Paragraph())));
         _body.AppendChild(table);
 
-        Assert.Throws<NotSupportedException>(() => _document.Bookmarks.Add("T", new RangeWrapper(table)));
+        Assert.Throws<NotSupportedException>(() => _document.Bookmarks.Add("T", new RangeWrapper(table.Elements<TableRow>().Single())));
     }
 
     [Fact]

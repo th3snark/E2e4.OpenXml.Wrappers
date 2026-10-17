@@ -19,6 +19,8 @@ dotnet format E2e4.OpenXml.Wrappers.slnx --verify-no-changes
 
 - Tests are **xUnit**. Per-test setup/teardown is the constructor / `IDisposable.Dispose`. Parallelization is disabled in `Properties\xunit.assemblyinfo.cs` because test classes share fixture files on disk (some opened editable).
 - Tests open fixture documents in `OpenXml.Wrappers.Test\TestFiles\` (`Document1.docm`, `Document2.docx`, `Document3.docx`), referenced through constants in `Utils\TestFile.cs` and copied to the output directory by a `CopyToOutputDirectory` item in the test csproj. Tests assert against the specific content of these documents. `Document2.docx` is a minimal synthetic fixture (a 2x3 table holding the `confReportType` and `StudyNumber` bookmarks); do not replace it with a real-world document.
+- `samples\OpenXml.Wrappers.Samples` is a console project of 20 examples (`Examples.All`: 12 Basic, 5 Intermediate, 3 Advanced) that each write a `.docx`; `SampleSupport.cs` has the shared helpers. `OpenXml.Wrappers.Test\SamplesTest.cs` runs every example and validates the output with `OpenXmlValidator`, and asserts the 12/5/3 counts, so add a test-visible entry to `Examples.All` for any new example. Keep them openable in real Word.
+- Licensed MIT (`LICENSE`); the icon is in `assets\` (`icon.png` is packed into the NuGet package). Nothing is published to NuGet or elsewhere until the user says so.
 
 ## Build configuration
 

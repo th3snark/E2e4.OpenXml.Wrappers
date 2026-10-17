@@ -1,6 +1,21 @@
 # E2e4.OpenXml.Wrappers
 
+<img src="assets/icon.png" alt="E2e4.OpenXml.Wrappers icon" width="96" align="right" />
+
 A .NET library that wraps the [Open XML SDK](https://github.com/dotnet/Open-XML-SDK) WordprocessingML types in a Word-object-model-like API: `Range`, `Paragraphs`, `Tables`, `Bookmarks`, `Comments` and friends.
+
+## What it is for
+
+The Open XML SDK gives complete, exact access to a `.docx` file, but it works at the level of the file format: a visible paragraph is a `w:p` holding `w:r` runs holding `w:t` text, a merged cell is a `gridSpan` plus a `vMerge`, and the element order is fixed by the schema. That is the right level for a general tool, and a poor one for the common job of "open this document, change these things, save it".
+
+People who have written Word macros already know a better vocabulary: `ActiveDocument.Tables(1).Cell(2, 3).Range.Text`, `Range.Find.Execute`, `Bookmarks("Total").Range`, `Range.Font.Bold`. This library offers that vocabulary over Open XML, so code (and the people writing it) can work with the document as Word presents it, **without Word installed**, on a server, in a container or in a build pipeline.
+
+- **Familiar names**: `Range`, `Paragraphs`, `Tables`, `Rows`, `Cells`, `Columns`, `Bookmarks`, `Comments`, `Fields`, `Sections`, `PageSetup`, `Styles`, `Headers`/`Footers`, `BuiltInDocumentProperties`.
+- **Safe by construction**: output follows the schema order, so documents open in Word without repair. The sample documents are validated with the SDK's `OpenXmlValidator` in the test suite and have been opened in Word itself.
+- **Not a replacement for the SDK**: every wrapper exposes the element it wraps, so you can drop down to the SDK for anything the library does not cover and carry on.
+- **Honest about the gaps**: where Word's behaviour is not implemented the library throws rather than quietly doing something else (see [Differences from the Word object model](#differences-from-the-word-object-model)).
+
+Typical uses: filling templates and mail merges, generating reports, invoices and agreements from data, find and replace across documents, reviewing documents by adding comments, and porting existing Word VBA to a service.
 
 ## Requirements
 
@@ -24,7 +39,52 @@ using (WordprocessingDocumentWrapper document = WordprocessingDocumentWrapper.Op
 }
 ```
 
-`Create` makes a new document (from a path or a stream) with an empty body, and `SaveAs` writes a copy to a new file. Editable documents are also saved when disposed or closed.
+`Create` makes a new document (from a path or a stream) with an empty body, and `SaveAs` writes a copy to a new file. Editable documents are also saved when disposed or closed. New documents are marked as Word 2013+ (`compatibilityMode` 15), so Word does not open them in Compatibility Mode.
+
+## Examples
+
+The [`samples`](samples/OpenXml.Wrappers.Samples) project holds 20 runnable examples. Each one builds a complete `.docx` that opens in Word, and each is checked by the test suite (it is created and validated against the Open XML schema). Run them all with:
+
+```bash
+dotnet run --project samples/OpenXml.Wrappers.Samples [output folder]
+```
+
+The documents are written to `output` (or the folder you give). The code in each file is commented to be read as a tutorial; [`SampleSupport.cs`](samples/OpenXml.Wrappers.Samples/SampleSupport.cs) holds the small helpers they share (styles for a new document, a table builder).
+
+**Basic: one object each**
+
+| Example | Shows |
+| --- | --- |
+| [Range](samples/OpenXml.Wrappers.Samples/Basic/RangeExample.cs) | Insert, find and replace, format and delete |
+| [Paragraph](samples/OpenXml.Wrappers.Samples/Basic/ParagraphExample.cs) | Adding, formatting and moving between paragraphs |
+| [Table](samples/OpenXml.Wrappers.Samples/Basic/TableExample.cs) | Adding, filling, sizing, aligning and bordering a table and its columns |
+| [Row](samples/OpenXml.Wrappers.Samples/Basic/RowExample.cs) | Height, repeating header rows, inserting rows, row borders |
+| [Cell](samples/OpenXml.Wrappers.Samples/Basic/CellExample.cs) | Merge, split, shading, alignment, borders |
+| [Bookmark](samples/OpenXml.Wrappers.Samples/Basic/BookmarkExample.cs) | Naming a place and reading or replacing it later |
+| [Comment](samples/OpenXml.Wrappers.Samples/Basic/CommentExample.cs) | Adding, changing and deleting comments |
+| [Section](samples/OpenXml.Wrappers.Samples/Basic/SectionExample.cs) | Page size, orientation and margins; a landscape section |
+| [Style](samples/OpenXml.Wrappers.Samples/Basic/StyleExample.cs) | Listing, adding, formatting and applying styles |
+| [Field](samples/OpenXml.Wrappers.Samples/Basic/FieldExample.cs) | Adding fields and reading their code and result |
+| [Header and footer](samples/OpenXml.Wrappers.Samples/Basic/HeaderFooterExample.cs) | Text, page numbers, a different first page |
+| [Properties](samples/OpenXml.Wrappers.Samples/Basic/PropertiesExample.cs) | Built-in and custom document properties |
+
+**Intermediate: several objects together**
+
+| Example | Shows |
+| --- | --- |
+| [Letter](samples/OpenXml.Wrappers.Samples/Intermediate/LetterExample.cs) | A mail merge from a template: placeholders, bookmarks, find and replace, properties |
+| [Invoice](samples/OpenXml.Wrappers.Samples/Intermediate/InvoiceExample.cs) | Address and line-item tables, totals worked out from data, merged cells, shading |
+| [Minutes](samples/OpenXml.Wrappers.Samples/Intermediate/MinutesExample.cs) | Headings, an action table, a bookmarked decision with a cross reference, comments, page-number footer |
+| [Report](samples/OpenXml.Wrappers.Samples/Intermediate/ReportExample.cs) | Cover page, table of contents, "Page x of y", a landscape appendix |
+| [Editing](samples/OpenXml.Wrappers.Samples/Intermediate/EditingExample.cs) | Open an existing document, replace text, fix a table, add comments, remove stale content |
+
+**Advanced: medium-sized documents**
+
+| Example | Shows |
+| --- | --- |
+| [Quarterly report](samples/OpenXml.Wrappers.Samples/Advanced/QuarterlyReportExample.cs) | Title page, contents, headings, data tables, comments, fields, headers and footers, a landscape section, properties |
+| [Catalogue](samples/OpenXml.Wrappers.Samples/Advanced/CatalogueExample.cs) | Generated from a list of products: a section per category with its own header, nested tables, a bookmark per product, an index table |
+| [Agreement](samples/OpenXml.Wrappers.Samples/Advanced/AgreementExample.cs) | A template with placeholders, numbered clauses (`SEQ`) and cross references (`REF`), merged-cell schedule, signature block, reviewer comments |
 
 ## Differences from the Word object model
 
@@ -70,6 +130,7 @@ document.Paragraphs[3].Range.Delete();
 | `Font` | `Bold`, `Italic`, `Underline`, `Strikethrough`, `Size`, `Name` and `Color`. Applies to whole runs, so it cannot format part of a run. |
 | `ParagraphFormat` | `Alignment`, indents, `SpaceBefore`, `SpaceAfter`, `LineSpacing`, `LineSpacingRule`, `KeepWithNext`, `KeepTogether`, `PageBreakBefore` and `WidowControl`, in points. Also available as `Paragraph.Format`. |
 | `Style` | A paragraph or character style by name. `Table.Style` sets a table style. |
+| `InsertParagraphAfter`, `InsertParagraphBefore` | Add an empty paragraph next to a paragraph, table, bookmark, comment, table cell, the document or a header/footer, and return it. |
 
 `Font` and `ParagraphFormat` properties are `null` when the range has mixed values, and setting one to `null` removes the direct formatting. They only see direct formatting, not values inherited from styles.
 
@@ -96,7 +157,7 @@ Merging and splitting throw `NotSupportedException` when they would cut through 
 
 ## Bookmarks and comments
 
-`Bookmarks.Add(name, range)` bookmarks a paragraph, table cell, bookmark or comment range (an existing bookmark of the same name is moved), and `Bookmarks.Exists(name)` and `Bookmarks["name"]` ignore case. Names follow Word's rules: a letter first, then letters, digits and underscores, at most 40 characters. `Comment.Text` can be set (it replaces the body of the comment), `Comment.Date` is UTC, and `Comment.Delete()` removes the comment together with its range markers and reference.
+`Bookmarks.Add(name, range)` bookmarks a paragraph, table, table cell, bookmark or comment range (an existing bookmark of the same name is moved), and `Bookmarks.Exists(name)` and `Bookmarks["name"]` ignore case. Names follow Word's rules: a letter first, then letters, digits and underscores, at most 40 characters. `Comment.Text` can be set (it replaces the body of the comment), `Comment.Date` is UTC, and `Comment.Delete()` removes the comment together with its range markers and reference.
 
 ## Headers and footers
 
@@ -140,5 +201,11 @@ dotnet format E2e4.OpenXml.Wrappers.slnx --verify-no-changes
 | `OpenXml.Wrappers/Word` | The wrappers, their collections and the `OpenXmlExtensions` tree-walking helpers |
 | `OpenXml.Wrappers/Helpers` | Unit conversion helpers |
 | `OpenXml.Wrappers.Test` | xUnit tests and the fixture documents in `TestFiles` |
+| `samples/OpenXml.Wrappers.Samples` | The 20 runnable examples |
+| `assets` | The icon (`icon.svg`, and `icon.png` used for the NuGet package) |
 
 See [CLAUDE.md](CLAUDE.md) for architecture notes and conventions.
+
+## License
+
+[MIT](LICENSE). Copyright © 2026 GitHub: th3snark (E2e4).

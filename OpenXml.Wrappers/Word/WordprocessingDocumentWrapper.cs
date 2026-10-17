@@ -165,6 +165,17 @@ public class WordprocessingDocumentWrapper : IDisposable
                  )
               )
            );
+
+        //A document without compatibility settings is opened by Word in Compatibility Mode (as a Word 2007 document), so say that it is a
+        //current one.
+        MainDocumentPart mainDocumentPart = _wordprocessingDocument.MainDocumentPart;
+        if (mainDocumentPart.DocumentSettingsPart == null)
+        {
+            DocumentSettingsPart settingsPart = mainDocumentPart.AddNewPart<DocumentSettingsPart>();
+            settingsPart.Settings = new Settings(
+                new Compatibility(
+                    new CompatibilitySetting() { Name = CompatSettingNameValues.CompatibilityMode, Uri = "http://schemas.microsoft.com/office/word", Val = "15" }));
+        }
     }
 
     public void InitializeCommentsPart()

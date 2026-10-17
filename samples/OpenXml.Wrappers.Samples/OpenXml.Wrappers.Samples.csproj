@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>OpenXml.Wrappers.Samples</RootNamespace>
+    <AssemblyName>OpenXml.Wrappers.Samples</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <Description>Runnable examples for E2e4.OpenXml.Wrappers. Each example writes a .docx file.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\OpenXml.Wrappers\OpenXml.Wrappers.csproj" />
+  </ItemGroup>
+
+</Project>

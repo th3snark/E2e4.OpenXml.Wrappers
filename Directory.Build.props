@@ -17,7 +17,7 @@
     <Authors>E2e4</Authors>
     <Product>E2e4 OpenXml Wrappers</Product>
     <!-- A fixed year: the copyright year of a release should not change just because it was built later. -->
-    <Copyright>Copyright © 2026 E2e4. Licensed under the MIT License.</Copyright>
+    <Copyright>Copyright © 2026 GitHub: th3snark (E2e4). Licensed under the MIT License.</Copyright>
     <NeutralLanguage>en</NeutralLanguage>
     <VersionPrefix>1.0.0</VersionPrefix>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
