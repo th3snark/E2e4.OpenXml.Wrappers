@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using System.Linq;
 
+using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
@@ -94,7 +95,7 @@ public class ParagraphWrapper
 
     public void InsertBreak(BreakValues type)
     {
-        if (type == BreakValues.Page)
+        if (type == BreakValues.Page || type == BreakValues.Column || type == BreakValues.TextWrapping)
         {
             _paragraph.AppendChild(new Run(new Break() { Type = type }));
         }
@@ -168,14 +169,17 @@ public class ParagraphWrapper
         if (firstRun != null)
         {
             RunProperties fromRunProperties = firstRun.RunProperties;
-            foreach (Run toRun in paragraphWrapper.Paragraph.Elements<Run>())
+            if (fromRunProperties != null)
             {
-                RunProperties toRunProperties = toRun.RunProperties;
-                if (toRunProperties != null)
+                foreach (Run toRun in paragraphWrapper.Paragraph.Elements<Run>())
                 {
-                    toRun.RemoveChild(toRunProperties);
+                    RunProperties toRunProperties = toRun.RunProperties;
+                    if (toRunProperties != null)
+                    {
+                        toRun.RemoveChild(toRunProperties);
+                    }
+                    toRun.PrependChild((RunProperties)fromRunProperties.Clone());
                 }
-                toRun.PrependChild((RunProperties)fromRunProperties.Clone());
             }
         }
     }
@@ -226,47 +230,64 @@ public class ParagraphWrapper
 
     public void SetFontBold()
     {
-        ParagraphProperties paragraphProperties = _paragraph.ParagraphProperties;
-        RunProperties paragraphPropertiesRunProperties = paragraphProperties.Elements<RunProperties>().FirstOrDefault();
-        if (paragraphPropertiesRunProperties == null)
-        {
-            paragraphPropertiesRunProperties = new RunProperties();
-            paragraphProperties.AppendChild<RunProperties>(paragraphPropertiesRunProperties);
-        }
-        paragraphPropertiesRunProperties.SetFontBold();
+        SetFontBold(true);
+    }
+
+    public void SetFontBold(bool bold)
+    {
+        GetOrAddParagraphMarkRunProperties().SetFontBold(bold);
 
         foreach (Run run in _paragraph.Elements<Run>())
         {
-            RunProperties runProperties = run.RunProperties;
-            if (runProperties == null)
-            {
-                runProperties = new RunProperties();
-                run.PrependChild<RunProperties>(runProperties);
-            }
-            runProperties.SetFontBold();
+            GetOrAddRunProperties(run).SetFontBold(bold);
         }
     }
 
     public void SetFontColor(string color)
     {
-        ParagraphProperties paragraphProperties = _paragraph.ParagraphProperties;
-        RunProperties paragraphPropertiesRunProperties = paragraphProperties.Elements<RunProperties>().FirstOrDefault();
-        if (paragraphPropertiesRunProperties == null)
-        {
-            paragraphPropertiesRunProperties = new RunProperties();
-            paragraphProperties.AppendChild<RunProperties>(paragraphPropertiesRunProperties);
-        }
-        paragraphPropertiesRunProperties.SetFontColor(color);
+        GetOrAddParagraphMarkRunProperties().SetFontColor(color);
 
         foreach (Run run in _paragraph.Elements<Run>())
         {
-            RunProperties runProperties = run.RunProperties;
-            if (runProperties == null)
-            {
-                runProperties = new RunProperties();
-                run.PrependChild<RunProperties>(runProperties);
-            }
-            runProperties.SetFontColor(color);
+            GetOrAddRunProperties(run).SetFontColor(color);
         }
+    }
+
+    private ParagraphMarkRunProperties GetOrAddParagraphMarkRunProperties()
+    {
+        ParagraphProperties paragraphProperties = _paragraph.ParagraphProperties;
+        if (paragraphProperties == null)
+        {
+            paragraphProperties = new ParagraphProperties();
+            _paragraph.PrependChild(paragraphProperties);
+        }
+
+        ParagraphMarkRunProperties paragraphMarkRunProperties = paragraphProperties.ParagraphMarkRunProperties;
+        if (paragraphMarkRunProperties == null)
+        {
+            //The paragraph mark run properties must come before the section properties and the paragraph properties change.
+            paragraphMarkRunProperties = new ParagraphMarkRunProperties();
+            OpenXmlElement successor = paragraphProperties.ChildElements.FirstOrDefault(e => e is SectionProperties || e is ParagraphPropertiesChange);
+            if (successor != null)
+            {
+                successor.InsertBeforeSelf(paragraphMarkRunProperties);
+            }
+            else
+            {
+                paragraphProperties.AppendChild(paragraphMarkRunProperties);
+            }
+        }
+        return paragraphMarkRunProperties;
+    }
+
+    private static RunProperties GetOrAddRunProperties(Run run)
+    {
+        RunProperties runProperties = run.RunProperties;
+        if (runProperties == null)
+        {
+            runProperties = new RunProperties();
+            run.PrependChild(runProperties);
+        }
+        return runProperties;
     }
 }

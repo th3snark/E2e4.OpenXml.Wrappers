@@ -20,7 +20,8 @@ public class TableWrapperCollection : IEnumerable
     {
         get
         {
-            Table table = _rangeWrapper.Start.ParentAtRelativeNestingLevel<Table>(0);
+            //A table is itself at the nesting level of the collection's parent so its parent table is one level out.
+            Table table = _rangeWrapper.Start.ParentAtRelativeNestingLevel<Table>(_rangeWrapper.Start is Table ? -1 : 0);
             return table != null ? new TableWrapper(table) : null;
         }
     }

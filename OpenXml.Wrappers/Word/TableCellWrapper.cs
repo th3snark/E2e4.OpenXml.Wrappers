@@ -43,8 +43,36 @@ public class TableCellWrapper
 
     public int CellWidth
     {
-        get { return Convert.ToInt32(_tableCell.TableCellProperties.TableCellWidth.Width.Value, CultureInfo.InvariantCulture); }
-        set { _tableCell.TableCellProperties.TableCellWidth.Width.Value = value.ToString(CultureInfo.InvariantCulture); }
+        get
+        {
+            TableCellWidth tableCellWidth = _tableCell.TableCellProperties?.TableCellWidth;
+            return tableCellWidth?.Width == null ? 0 : Convert.ToInt32(tableCellWidth.Width.Value, CultureInfo.InvariantCulture);
+        }
+        set
+        {
+            TableCellProperties tableCellProperties = GetOrAddTableCellProperties();
+            if (tableCellProperties.TableCellWidth == null)
+            {
+                tableCellProperties.TableCellWidth = new TableCellWidth() { Type = TableWidthUnitValues.Dxa };
+            }
+            tableCellProperties.TableCellWidth.Width = value.ToString(CultureInfo.InvariantCulture);
+        }
+    }
+
+    private TableCellProperties GetOrAddTableCellProperties()
+    {
+        return GetOrAddTableCellProperties(_tableCell);
+    }
+
+    private static TableCellProperties GetOrAddTableCellProperties(TableCell tableCell)
+    {
+        TableCellProperties tableCellProperties = tableCell.TableCellProperties;
+        if (tableCellProperties == null)
+        {
+            tableCellProperties = new TableCellProperties();
+            tableCell.PrependChild(tableCellProperties);
+        }
+        return tableCellProperties;
     }
 
     public void MergeDown()
@@ -69,14 +97,15 @@ public class TableCellWrapper
             for (TableRow tableRow = lastTableRow; tableRow != firstTableRow; tableRow = tableRow.PreviousSibling<TableRow>())
             {
                 tableCell = tableRow.Elements<TableCell>().ElementAt(index);
-                tableCell.TableCellProperties.VerticalMerge = new VerticalMerge(); //default val is 'continue'
+                GetOrAddTableCellProperties(tableCell).VerticalMerge = new VerticalMerge(); //default val is 'continue'
             }
 
             //If the first cell in the vertical merge has no vertcal merge setting then set it up with a "restart" vertical merge
             tableCell = firstTableRow.Elements<TableCell>().ElementAt(index);
-            if (tableCell.TableCellProperties.VerticalMerge == null)
+            TableCellProperties firstTableCellProperties = GetOrAddTableCellProperties(tableCell);
+            if (firstTableCellProperties.VerticalMerge == null)
             {
-                tableCell.TableCellProperties.VerticalMerge = new VerticalMerge() { Val = MergedCellValues.Restart };
+                firstTableCellProperties.VerticalMerge = new VerticalMerge() { Val = MergedCellValues.Restart };
             }
         }
     }
@@ -92,14 +121,15 @@ public class TableCellWrapper
             CellWidth += rightCell.CellWidth;
 
             //Add a grid span element if one does not already exist.
-            if (_tableCell.TableCellProperties.GridSpan == null)
+            TableCellProperties tableCellProperties = GetOrAddTableCellProperties();
+            if (tableCellProperties.GridSpan == null)
             {
-                _tableCell.TableCellProperties.GridSpan = new GridSpan();
-                _tableCell.TableCellProperties.GridSpan.Val = 1;
+                tableCellProperties.GridSpan = new GridSpan();
+                tableCellProperties.GridSpan.Val = 1;
             }
 
             //Increase the grid span attribute value by one.
-            _tableCell.TableCellProperties.GridSpan.Val++;
+            tableCellProperties.GridSpan.Val++;
 
             //Remove the table cell to the right.
             nextSiblingRightTableCell.Parent.RemoveChild(nextSiblingRightTableCell);
@@ -119,7 +149,7 @@ public class TableCellWrapper
 
     public void SetShadingFillColor(string rgbColor)
     {
-        TableCellProperties tableCellProperties = _tableCell.TableCellProperties;
+        TableCellProperties tableCellProperties = GetOrAddTableCellProperties();
         Shading shading = tableCellProperties.Elements<Shading>().FirstOrDefault();
         if (shading == null)
         {

@@ -198,12 +198,9 @@ public class RangeWrapper
                     run = new Run(new TabChar());
                     if (sb.Length > 0)
                     {
-                        run.AppendChild<Text>(new Text(sb.ToString()));
+                        run.AppendChild<Text>(new Text(sb.ToString()) { Space = SpaceProcessingModeValues.Preserve });
                     }
-                    if (paragraphMarkRunProperties != null)
-                    {
-                        run.PrependChild<ParagraphMarkRunProperties>((ParagraphMarkRunProperties)paragraphMarkRunProperties.Clone());
-                    }
+                    PrependRunProperties(run, paragraphMarkRunProperties);
                     runList.Insert(0, run);
                     sb.Length = 0;
                     break;
@@ -213,12 +210,9 @@ public class RangeWrapper
                     run = new Run(new Break());
                     if (sb.Length > 0)
                     {
-                        run.AppendChild<Text>(new Text(sb.ToString()));
+                        run.AppendChild<Text>(new Text(sb.ToString()) { Space = SpaceProcessingModeValues.Preserve });
                     }
-                    if (paragraphMarkRunProperties != null)
-                    {
-                        run.PrependChild<ParagraphMarkRunProperties>((ParagraphMarkRunProperties)paragraphMarkRunProperties.Clone());
-                    }
+                    PrependRunProperties(run, paragraphMarkRunProperties);
                     runList.Insert(0, run);
                     sb.Length = 0;
                     break;
@@ -230,15 +224,31 @@ public class RangeWrapper
         }
         if (sb.Length > 0)
         {
-            run = new Run(new Text(sb.ToString()));
-            if (paragraphMarkRunProperties != null)
-            {
-                run.PrependChild<ParagraphMarkRunProperties>((ParagraphMarkRunProperties)paragraphMarkRunProperties.Clone());
-            }
+            run = new Run(new Text(sb.ToString()) { Space = SpaceProcessingModeValues.Preserve });
+            PrependRunProperties(run, paragraphMarkRunProperties);
 
             runList.Insert(0, run);
         }
         return runList;
+    }
+
+    private static void PrependRunProperties(Run run, ParagraphMarkRunProperties paragraphMarkRunProperties)
+    {
+        if (paragraphMarkRunProperties == null)
+        {
+            return;
+        }
+
+        //The run properties of a run are a different type to the paragraph mark run properties. Only the formatting elements
+        //are copied since the tracked change elements are only valid on the paragraph mark.
+        RunProperties runProperties = new RunProperties(
+            paragraphMarkRunProperties.ChildElements
+                .Where(e => !(e is Inserted || e is Deleted || e is MoveFrom || e is MoveTo || e is ParagraphMarkRunPropertiesChange))
+                .Select(e => e.CloneNode(true)));
+        if (runProperties.HasChildren)
+        {
+            run.PrependChild(runProperties);
+        }
     }
 
     private void DeleteAllRunsInList(List<Run> list)
@@ -294,10 +304,15 @@ public class RangeWrapper
 
     private void AppendParagraphText(StringBuilder sb, Paragraph paragraph)
     {
-        foreach (Run run in paragraph.Elements<Run>())
+        //Runs can be nested inside other elements (hyperlinks, content controls, smart tags etc.) but runs that belong to a nested paragraph
+        //(for example in a text box) are not part of this paragraph.
+        foreach (Run run in paragraph.Descendants<Run>().Where(r => r.Ancestors<Paragraph>().First().Equals(paragraph)))
         {
-            AppendRunText(sb, run);
+            AppendRunText(sb, run, false);
         }
+
+        //Every paragraph, including an empty one, ends with an end of paragraph marker.
+        sb.Append('\r');
 
         //If the paragraph is the last one in a table cell then add the end of cell marker.
         if (paragraph.Parent is TableCell && paragraph.Parent.LastChild.Equals(paragraph))
@@ -306,7 +321,7 @@ public class RangeWrapper
         }
     }
 
-    private void AppendRunText(StringBuilder sb, Run run)
+    private void AppendRunText(StringBuilder sb, Run run, bool appendParagraphMarker)
     {
         foreach (OpenXmlElement element in run.Elements())
         {
@@ -318,10 +333,17 @@ public class RangeWrapper
             {
                 sb.Append('\t');
             }
+            else if (element is Break)
+            {
+                //Word represents a page break as a form feed and any other break as a vertical tab.
+                Break lineBreak = (Break)element;
+                sb.Append(lineBreak.Type != null && lineBreak.Type.HasValue && lineBreak.Type.Value == BreakValues.Page ? '\f' : '\v');
+            }
         }
 
-        //If this is the last run with text in the paragraph append an end of paragraph marker.
-        if (run.IsLastWithText() && !(_startOpenXmlElement is BookmarkStart))
+        //If this is the last run with text in the paragraph append an end of paragraph marker. This is only used when a range
+        //(bookmark or comment) is being read since a whole paragraph appends its own marker.
+        if (appendParagraphMarker && run.IsLastWithText() && !(_startOpenXmlElement is BookmarkStart))
         {
             sb.Append('\r');
         }
@@ -331,7 +353,7 @@ public class RangeWrapper
     {
         foreach (Run run in bookmarkStart.GetElements<Run>(bookmarkEnd))
         {
-            AppendRunText(sb, run);
+            AppendRunText(sb, run, true);
         }
     }
 
@@ -339,7 +361,7 @@ public class RangeWrapper
     {
         foreach (Run run in commentRangeStart.GetElements<Run>(commentRangeEnd))
         {
-            AppendRunText(sb, run);
+            AppendRunText(sb, run, true);
         }
     }
 

@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
+using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 
@@ -42,29 +43,36 @@ public class CommentWrapperCollection : IEnumerable
 
     public CommentWrapper Add(RangeWrapper range, string text)
     {
+        ArgumentNullException.ThrowIfNull(range);
+
+        //Check that the range can be anchored before anything is changed so that no orphan comment is left behind.
+        if (!(range.Start is BookmarkStart || range.Start is Paragraph || range.Start is TableCell))
+        {
+            throw new NotSupportedException(String.Format(CultureInfo.InvariantCulture, "Adding a comment to a range starting with the type {0} is not currently supported.", range.Start.GetType().Name));
+        }
+
         MainDocumentPart mainDocumentPart = _rangeWrapper.Start.GetDocument().MainDocumentPart;
 
-        Comments comments = null;
-        if (mainDocumentPart.GetPartsOfType<WordprocessingCommentsPart>().Any())
+        WordprocessingCommentsPart wordprocessingCommentsPart = mainDocumentPart.WordprocessingCommentsPart;
+        if (wordprocessingCommentsPart == null)
         {
-            comments = mainDocumentPart.WordprocessingCommentsPart.Comments;
+            wordprocessingCommentsPart = mainDocumentPart.AddNewPart<WordprocessingCommentsPart>();
         }
-        else
+        Comments comments = wordprocessingCommentsPart.Comments;
+        if (comments == null)
         {
-            WordprocessingCommentsPart wordprocessingCommentsPart = mainDocumentPart.AddNewPart<WordprocessingCommentsPart>();
-            wordprocessingCommentsPart.Comments = new Comments();
-            comments = wordprocessingCommentsPart.Comments;
+            comments = new Comments();
+            wordprocessingCommentsPart.Comments = comments;
         }
 
+        //The id of the new comment is one more than the largest existing id (ids are not necessarily contiguous or ordered).
         int id = 0;
-        if (comments.HasChildren)
+        if (comments.Elements<Comment>().Any())
         {
-            //Calculatethe id of the new comment by finding the id of the last comment and adding one to it.
-            //id = Convert.ToInt32(comments.Descendants<Comment>().Select(e => e.Id.Value).Max()) + 1;
-            id = Convert.ToInt32(((Comment)comments.LastChild).Id, CultureInfo.InvariantCulture) + 1;
+            id = comments.Elements<Comment>().Max(e => Convert.ToInt32(e.Id.Value, CultureInfo.InvariantCulture)) + 1;
         }
 
-        string author = Environment.UserName;
+        string author = String.IsNullOrEmpty(Environment.UserName) ? "Unknown" : Environment.UserName;
         string initials = author.Substring(0, 1);
 
         if (String.IsNullOrEmpty(text))
@@ -72,60 +80,60 @@ public class CommentWrapperCollection : IEnumerable
             text = " ";
         }
 
+        string idText = id.ToString(CultureInfo.InvariantCulture);
         Comment comment = new Comment(
                     new Paragraph(
                        new ParagraphProperties(new ParagraphStyleId() { Val = "CommentText" }),
                        new Run(new RunProperties(new RunStyle() { Val = "CommentReference" }),
                                new AnnotationReferenceMark()),
-                       new Run(new Text(text))))
+                       new Run(new Text(text) { Space = SpaceProcessingModeValues.Preserve })))
         {
-            Id = id.ToString(CultureInfo.InvariantCulture),
+            Id = idText,
             Date = DateTime.UtcNow.Truncate(TimeSpan.TicksPerSecond),
             Author = author,
             Initials = initials
         };
         comments.AppendChild(comment);
 
-        CommentRangeStart commentRangeStart = new CommentRangeStart() { Id = id.ToString(CultureInfo.InvariantCulture) };
-        CommentRangeEnd commentRangeEnd = new CommentRangeEnd() { Id = id.ToString(CultureInfo.InvariantCulture) };
-        CommentReference commentReference = new CommentReference() { Id = id.ToString(CultureInfo.InvariantCulture) };
+        CommentRangeStart commentRangeStart = new CommentRangeStart() { Id = idText };
+        CommentRangeEnd commentRangeEnd = new CommentRangeEnd() { Id = idText };
+        //The comment reference must always be inside a run.
+        Run commentReferenceRun = new Run(new RunProperties(new RunStyle() { Val = "CommentReference" }), new CommentReference() { Id = idText });
 
         if (range.Start is BookmarkStart)
         {
             range.Start.InsertBeforeSelf(commentRangeStart);
             range.End.InsertAfterSelf(commentRangeEnd);
-            commentRangeEnd.InsertAfterSelf(commentReference);
+            commentRangeEnd.InsertAfterSelf(commentReferenceRun);
         }
         else if (range.Start is Paragraph)
         {
-            range.Start.InsertBefore(commentRangeStart, range.Start.Elements<Run>().First());
-            range.End.InsertAfter(commentRangeEnd, range.Start.Elements<Run>().Last());
-            commentRangeEnd.InsertAfterSelf(commentReference);
+            Paragraph paragraph = (Paragraph)range.Start;
+            //If the paragraph has no runs then add a single space run to define the range for the comment.
+            if (!paragraph.Elements<Run>().Any())
+            {
+                paragraph.AppendChild(new Run(new Text(" ") { Space = SpaceProcessingModeValues.Preserve }));
+            }
+            paragraph.Elements<Run>().First().InsertBeforeSelf(commentRangeStart);
+            paragraph.Elements<Run>().Last().InsertAfterSelf(commentRangeEnd);
+            commentRangeEnd.InsertAfterSelf(commentReferenceRun);
         }
-        if (range.Start is TableCell)
+        else
         {
             TableCell tableCell = (TableCell)range.Start;
             Paragraph firstParagraph = tableCell.Elements<Paragraph>().First();
-            Paragraph lastParagraph = tableCell.Elements<Paragraph>().Last();
             //If there are no runs in any of the paragraphs in the table cell then add a new single space run to the first paragraph.
             //This will be the text that defines the range for the comment. This is a quick workaround for now since it is actually
             //possible to add a CommentReference without adding a CommentRangeStart and CommentRangeEnd.
             if (!tableCell.Descendants<Run>().Any())
             {
-                firstParagraph.AppendChild(new Run(new Text(" ")));
+                firstParagraph.AppendChild(new Run(new Text(" ") { Space = SpaceProcessingModeValues.Preserve }));
             }
-            Run firstRun = firstParagraph.Elements<Run>().First();
-            Run lastRun = lastParagraph.Elements<Run>().Last();
+            Run firstRun = tableCell.Descendants<Run>().First();
+            Run lastRun = tableCell.Descendants<Run>().Last();
             firstRun.InsertBeforeSelf(commentRangeStart);
             lastRun.InsertAfterSelf(commentRangeEnd);
-            commentRangeEnd.InsertAfterSelf(
-               new Run(
-                  new RunProperties(
-                     new RunStyle() { Val = "CommentReference" }
-                  ),
-                  commentReference
-               )
-            );
+            commentRangeEnd.InsertAfterSelf(commentReferenceRun);
         }
 
         return new CommentWrapper(commentRangeStart);

@@ -23,14 +23,14 @@ public class CommentWrapper
 
     public string Author
     {
-        get { return _commentRangeStart.GetComment().Author.Value; }
-        set { _commentRangeStart.GetComment().Author.Value = value; }
+        get { return _commentRangeStart.GetComment().Author?.Value; }
+        set { _commentRangeStart.GetComment().Author = value; }
     }
 
     public string Initials
     {
-        get { return _commentRangeStart.GetComment().Initials.Value; }
-        set { _commentRangeStart.GetComment().Initials.Value = value; }
+        get { return _commentRangeStart.GetComment().Initials?.Value; }
+        set { _commentRangeStart.GetComment().Initials = value; }
     }
 
     public string Text

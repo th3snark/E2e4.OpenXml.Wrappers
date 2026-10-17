@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Xunit;
 using OpenXml.Wrappers.Test.Utils;
 using OpenXml.Wrappers.Word;
@@ -79,6 +80,32 @@ public class BookmarkWrapperCollectionTest : System.IDisposable
         Assert.Equal(8, _document1.Bookmarks.Count);
         _document1.Bookmarks.DeleteAll();
         Assert.Equal(0, _document1.Bookmarks.Count);
+    }
+
+    [Fact]
+    public void DeleteAllAlsoRemovesTheEndOfABookmarkThatEndsOutsideTheRange()
+    {
+        Paragraph first = new Paragraph(new BookmarkStart() { Id = "1", Name = "a" }, new Run(new Text("a")));
+        Paragraph second = new Paragraph(new Run(new Text("b")), new BookmarkEnd() { Id = "1" });
+        Body body = new Body(first, second);
+
+        new RangeWrapper(first).Bookmarks.DeleteAll();
+
+        Assert.Empty(body.Descendants<BookmarkStart>());
+        Assert.Empty(body.Descendants<BookmarkEnd>());
+    }
+
+    [Fact]
+    public void DeleteAllLeavesABookmarkWhoseStartIsOutsideTheRange()
+    {
+        Paragraph first = new Paragraph(new BookmarkStart() { Id = "1", Name = "a" }, new Run(new Text("a")));
+        Paragraph second = new Paragraph(new Run(new Text("b")), new BookmarkEnd() { Id = "1" });
+        Body body = new Body(first, second);
+
+        new RangeWrapper(second).Bookmarks.DeleteAll();
+
+        Assert.Single(body.Descendants<BookmarkStart>());
+        Assert.Single(body.Descendants<BookmarkEnd>());
     }
 
     [Fact]

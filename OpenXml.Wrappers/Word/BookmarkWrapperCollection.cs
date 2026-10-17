@@ -53,15 +53,17 @@ public class BookmarkWrapperCollection : IEnumerable
     public void DeleteAll()
     {
         //It is important that the list is fetched since we are deleting items inside the iteration.
+        //Each bookmark is removed as a whole (its start and its matching end) so that no dangling start or end markers are left behind
+        //when the two markers are not both inside the range.
         IList<BookmarkStart> bookmarkStartList = _rangeWrapper.Start.GetElements<BookmarkStart>(_rangeWrapper.End).ToList();
         foreach (BookmarkStart bookmarkStart in bookmarkStartList)
         {
+            BookmarkEnd bookmarkEnd = bookmarkStart.GetRoot().Descendants<BookmarkEnd>().FirstOrDefault(e => e.Id.Value == bookmarkStart.Id.Value);
             bookmarkStart.Parent.RemoveChild(bookmarkStart);
-        }
-        IList<BookmarkEnd> bookmarkEndList = _rangeWrapper.Start.GetElements<BookmarkEnd>(_rangeWrapper.End).ToList();
-        foreach (BookmarkEnd bookmarkEnd in bookmarkEndList)
-        {
-            bookmarkEnd.Parent.RemoveChild(bookmarkEnd);
+            if (bookmarkEnd != null)
+            {
+                bookmarkEnd.Parent.RemoveChild(bookmarkEnd);
+            }
         }
     }
 

@@ -44,8 +44,7 @@ public static class OpenXmlExtensions
 
     public static BookmarkEnd GetBookmarkEnd(this BookmarkStart bookmarkStart)
     {
-        Document document = bookmarkStart.GetDocument();
-        return document.Descendants<BookmarkEnd>().Where(e => e.Id.Value == bookmarkStart.Id.Value).First();
+        return bookmarkStart.GetRoot().Descendants<BookmarkEnd>().Where(e => e.Id.Value == bookmarkStart.Id.Value).First();
     }
 
     public static IEnumerable<OpenXmlElement> GetElements(this BookmarkStart bookmarkStart)
@@ -64,8 +63,7 @@ public static class OpenXmlExtensions
 
     public static CommentRangeEnd GetCommentRangeEnd(this CommentRangeStart commentRangeStart)
     {
-        Document document = commentRangeStart.GetDocument();
-        return document.Descendants<CommentRangeEnd>().Where(e => e.Id.Value == commentRangeStart.Id.Value).First();
+        return commentRangeStart.GetRoot().Descendants<CommentRangeEnd>().Where(e => e.Id.Value == commentRangeStart.Id.Value).First();
     }
 
     public static CommentReference GetCommentReference(this CommentRangeStart commentRangeStart)
@@ -83,6 +81,20 @@ public static class OpenXmlExtensions
     #endregion
 
     #region Document Routines
+
+    /// <summary>
+    /// Returns the root element of the tree containing the element. Unlike <see cref="GetDocument"/> this also works for
+    /// elements in header, footer and comment parts.
+    /// </summary>
+    public static OpenXmlElement GetRoot(this OpenXmlElement openXmlElement)
+    {
+        OpenXmlElement root = openXmlElement;
+        while (root.Parent != null)
+        {
+            root = root.Parent;
+        }
+        return root;
+    }
 
     public static Document GetDocument(this OpenXmlElement openXmlElement)
     {
@@ -127,7 +139,8 @@ public static class OpenXmlExtensions
     {
         if (startOpenXmlElement.Equals(endOpenXmlElement))
         {
-            foreach (T openXmlElement in startOpenXmlElement.Descendants<T>())
+            //A range over a single element contains that element (if it is a T) as well as its descendants.
+            foreach (T openXmlElement in startOpenXmlElement.GetElements<T>())
             {
                 yield return openXmlElement;
             }
@@ -206,13 +219,13 @@ public static class OpenXmlExtensions
 
     public static Columns GetColumns(this SectionProperties sectionProperties)
     {
-        return sectionProperties.Elements<Columns>().First();
+        return sectionProperties.Elements<Columns>().FirstOrDefault();
     }
 
     public static void SetNumAndSpaceColumns(this Columns columns, int num, int space)
     {
         columns.ColumnCount = Convert.ToInt16(num);
-        columns.Space = Convert.ToString(num, CultureInfo.InvariantCulture);
+        columns.Space = Convert.ToString(space, CultureInfo.InvariantCulture);
     }
 
     public static void ConfigureColumns(this SectionProperties sectionProperties, int num, int space)
@@ -220,6 +233,7 @@ public static class OpenXmlExtensions
         Columns columns = sectionProperties.GetColumns();
         if (columns == null)
         {
+            columns = new Columns();
             sectionProperties.AppendChild(columns);
         }
         columns.SetNumAndSpaceColumns(num, space);
@@ -231,9 +245,10 @@ public static class OpenXmlExtensions
 
     public static bool IsLastWithText(this Run run)
     {
-        //If this is the last run with text return true.
-        Text text = run.Parent.Descendants<Text>().LastOrDefault();
-        return text != null ? text.Parent.Equals(run) : false;
+        //If this is the last run in the paragraph holding text (or a tab) return true.
+        OpenXmlElement container = (OpenXmlElement)run.Ancestors<Paragraph>().FirstOrDefault() ?? run.Parent;
+        Run lastRun = container.Descendants<Run>().LastOrDefault(r => r.Elements<Text>().Any() || r.Elements<TabChar>().Any());
+        return lastRun != null && lastRun.Equals(run);
     }
 
     #endregion
@@ -242,23 +257,78 @@ public static class OpenXmlExtensions
 
     public static void SetFontBold(this RunProperties runProperties)
     {
-        Bold bold = runProperties.Elements<Bold>().FirstOrDefault();
-        if (bold == null)
-        {
-            runProperties.AppendChild<Bold>(new Bold());
-        }
+        runProperties.SetFontBold(true);
+    }
+
+    public static void SetFontBold(this RunProperties runProperties, bool bold)
+    {
+        SetBold(runProperties, bold);
     }
 
     public static void SetFontColor(this RunProperties runProperties, string rgbColor)
     {
+        SetColor(runProperties, rgbColor);
+    }
+
+    public static void SetFontBold(this ParagraphMarkRunProperties runProperties, bool bold)
+    {
+        SetBold(runProperties, bold);
+    }
+
+    public static void SetFontColor(this ParagraphMarkRunProperties runProperties, string rgbColor)
+    {
+        SetColor(runProperties, rgbColor);
+    }
+
+    private static void SetBold(OpenXmlCompositeElement runProperties, bool bold)
+    {
+        Bold existing = runProperties.Elements<Bold>().FirstOrDefault();
+        if (existing == null)
+        {
+            if (bold)
+            {
+                //Bold must come after the run style and run fonts but before everything else.
+                runProperties.InsertAfterLast(new Bold(), typeof(RunStyle), typeof(RunFonts));
+            }
+        }
+        else
+        {
+            //Remove the explicit value for 'true' (the default) otherwise state the value explicitly.
+            existing.Val = bold ? null : new OnOffValue(false);
+        }
+    }
+
+    private static void SetColor(OpenXmlCompositeElement runProperties, string rgbColor)
+    {
         Color color = runProperties.Elements<Color>().FirstOrDefault();
         if (color == null)
         {
-            runProperties.AppendChild<Color>(new Color() { Val = rgbColor });
+            runProperties.InsertAfterLast(
+                new Color() { Val = rgbColor },
+                typeof(RunStyle), typeof(RunFonts), typeof(Bold), typeof(BoldComplexScript), typeof(Italic), typeof(ItalicComplexScript),
+                typeof(Caps), typeof(SmallCaps), typeof(Strike), typeof(DoubleStrike), typeof(Outline), typeof(Shadow), typeof(Emboss),
+                typeof(Imprint), typeof(NoProof), typeof(SnapToGrid), typeof(Vanish), typeof(WebHidden));
         }
         else
         {
             color.Val = rgbColor;
+        }
+    }
+
+    /// <summary>
+    /// Inserts the new child after the last existing child whose type is one of the predecessor types, or as the first
+    /// child if there is none. This preserves the schema element order of the property containers.
+    /// </summary>
+    internal static void InsertAfterLast(this OpenXmlCompositeElement parent, OpenXmlElement newChild, params Type[] predecessorTypes)
+    {
+        OpenXmlElement predecessor = parent.ChildElements.LastOrDefault(e => predecessorTypes.Contains(e.GetType()));
+        if (predecessor == null)
+        {
+            parent.PrependChild(newChild);
+        }
+        else
+        {
+            predecessor.InsertAfterSelf(newChild);
         }
     }
 
@@ -291,13 +361,14 @@ public static class OpenXmlExtensions
     public static int GetTableWidth(this Table table)
     {
         int width = 0;
-        TableProperties tableProperties = table.Elements<TableProperties>().First();
+        TableProperties tableProperties = table.Elements<TableProperties>().FirstOrDefault();
+        if (tableProperties != null)
         {
             TableWidth tableWidth = tableProperties.Elements<TableWidth>().FirstOrDefault();
             if (tableWidth != null)
             {
-
-                TableWidthUnitValues widthType = tableWidth.Type.Value;
+                //The schema default for the width type is dxa.
+                TableWidthUnitValues widthType = tableWidth.Type != null && tableWidth.Type.HasValue ? tableWidth.Type.Value : TableWidthUnitValues.Dxa;
                 if (widthType == TableWidthUnitValues.Dxa)
                 {
                     width = Convert.ToInt32(tableWidth.Width.Value, CultureInfo.InvariantCulture);
@@ -305,7 +376,7 @@ public static class OpenXmlExtensions
                 else if (widthType == TableWidthUnitValues.Pct)
                 {
                     //Find the outermost table (just in case this is a nested table).
-                    Table outerTable = table.Ancestors<Table>().FirstOrDefault();
+                    Table outerTable = table.Ancestors<Table>().LastOrDefault();
                     if (outerTable == null)
                     {
                         outerTable = table;
@@ -313,7 +384,13 @@ public static class OpenXmlExtensions
 
                     //Find the next sibling section properties element from the outermost table. This provides the page size and page
                     //margins of the page that the table is on.
-                    SectionProperties sectionProperties = outerTable.NextSibling<SectionProperties>();
+                    //If the table is not the last element in its section then fall back to the body level section properties.
+                    SectionProperties sectionProperties = outerTable.NextSibling<SectionProperties>()
+                        ?? outerTable.Ancestors<Body>().FirstOrDefault()?.Elements<SectionProperties>().LastOrDefault();
+                    if (sectionProperties == null)
+                    {
+                        return 0;
+                    }
                     PageSize pageSize = sectionProperties.Elements<PageSize>().First();
                     PageMargin pageMargin = sectionProperties.Elements<PageMargin>().First();
                     int totalPageMarginWidth = Convert.ToInt32(pageMargin.Left.Value) + Convert.ToInt32(pageMargin.Right.Value);
@@ -324,10 +401,7 @@ public static class OpenXmlExtensions
 
                     width = Convert.ToInt32(pageSize.Width.Value) - totalPageMarginWidth + totalTableCellMarginWidth;
                 }
-                else
-                {
-                    throw new InvalidOperationException("Unhandled table width type");
-                }
+                //Any other width type (auto or nil) has no fixed width, so zero is returned.
             }
         }
         return width;
@@ -511,7 +585,6 @@ public static class OpenXmlExtensions
         int tableGridIndex = 0;
         foreach (TableCell precedingTableCell in tableCell.ElementsBefore().Where(element => element is TableCell))
         {
-            //tableGridIndex += tableCell.GetGridSpan();
             tableGridIndex += precedingTableCell.GetGridSpan();
         }
         return tableGridIndex;
@@ -543,7 +616,7 @@ public static class OpenXmlExtensions
         return index - 1;
     }
 
-    private static void SetWidth(this TableCell tableCell, int width, TableWidthUnitValues unit)
+    internal static void SetWidth(this TableCell tableCell, int width, TableWidthUnitValues unit)
     {
         TableCellProperties tableCellProperties = tableCell.Elements<TableCellProperties>().FirstOrDefault();
         if (tableCellProperties == null)
@@ -780,6 +853,11 @@ public static class OpenXmlExtensions
                 newGridAfter.InsertAfterSelf<WidthAfterTableRow>(newWidthAfterTableRow);
             }
         }
+        else if (newWidthAfterTableRow != null)
+        {
+            //The grid after already existed so attach the new width after it.
+            oldGridAfter.InsertAfterSelf<WidthAfterTableRow>(newWidthAfterTableRow);
+        }
     }
 
     #endregion
@@ -822,11 +900,8 @@ public static class OpenXmlExtensions
     public static void SetText(this Paragraph paragraph, string text)
     {
         paragraph.RemoveAllChildren<Run>();
-        //foreach (Run run in paragraph.Elements<Run>())
-        //{
-        //   run.Parent.RemoveChild(run);
-        //}
 
+        text = text ?? String.Empty;
         StringBuilder sb = new StringBuilder();
         Run run = null;
         foreach (char c in text.ToCharArray().Reverse())
@@ -837,7 +912,7 @@ public static class OpenXmlExtensions
                     run = new Run(new TabChar());
                     if (sb.Length > 0)
                     {
-                        run.AppendChild(new Text(sb.ToString()));
+                        run.AppendChild(new Text(sb.ToString()) { Space = SpaceProcessingModeValues.Preserve });
                         sb.Length = 0;
                     }
                     paragraph.PrependRun(run);
@@ -847,7 +922,7 @@ public static class OpenXmlExtensions
                     run = new Run(new Break());
                     if (sb.Length > 0)
                     {
-                        run.AppendChild(new Text(sb.ToString()));
+                        run.AppendChild(new Text(sb.ToString()) { Space = SpaceProcessingModeValues.Preserve });
                         sb.Length = 0;
                     }
                     paragraph.PrependRun(run);
@@ -861,7 +936,7 @@ public static class OpenXmlExtensions
         }
         if (sb.Length > 0)
         {
-            run = new Run(new Text(sb.ToString()));
+            run = new Run(new Text(sb.ToString()) { Space = SpaceProcessingModeValues.Preserve });
             paragraph.PrependRun(run);
         }
     }
@@ -879,6 +954,7 @@ public static class OpenXmlExtensions
     /// <returns>Truncated DateTime</returns>
     public static DateTime Truncate(this DateTime date, long resolution)
     {
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(resolution, 0L);
         return new DateTime(date.Ticks - (date.Ticks % resolution), date.Kind);
     }
 

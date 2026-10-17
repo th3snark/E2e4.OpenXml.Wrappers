@@ -21,16 +21,21 @@ public class TableColumnWrapper
 
     public int Width
     {
-        get { return Convert.ToInt32(_gridColumn.Width.Value, CultureInfo.InvariantCulture); }
+        get { return _gridColumn.Width == null ? 0 : Convert.ToInt32(_gridColumn.Width.Value, CultureInfo.InvariantCulture); }
         set
         {
-            _gridColumn.Width.Value = value.ToString(CultureInfo.InvariantCulture);
+            string width = value.ToString(CultureInfo.InvariantCulture);
+            _gridColumn.Width = width;
             int index = _gridColumn.ElementsBefore().Where(e => e is GridColumn).Count();
             Table table = _gridColumn.Ancestors<Table>().First();
             foreach (TableRow tableRow in table.Elements<TableRow>())
             {
-                TableCell tableCell = tableRow.Elements<TableCell>().ElementAt<TableCell>(index);
-                tableCell.TableCellProperties.TableCellWidth.Width.Value = value.ToString(CultureInfo.InvariantCulture);
+                //Rows with fewer cells than the grid has columns (for example merged or short rows) are skipped.
+                TableCell tableCell = tableRow.Elements<TableCell>().ElementAtOrDefault(index);
+                if (tableCell != null)
+                {
+                    tableCell.SetWidth(value, TableWidthUnitValues.Dxa);
+                }
             }
         }
     }

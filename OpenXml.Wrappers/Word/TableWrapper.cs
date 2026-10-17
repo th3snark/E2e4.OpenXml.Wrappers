@@ -21,7 +21,7 @@ public class TableWrapper
     {
         get
         {
-            Table table = _table.ParentAtRelativeNestingLevel<Table>(0);
+            Table table = _table.ParentAtRelativeNestingLevel<Table>(-1);
             return table != null ? new TableWrapper(table) : null;
         }
     }

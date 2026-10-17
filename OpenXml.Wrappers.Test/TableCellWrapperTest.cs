@@ -2,6 +2,7 @@ using System;
 using System.Text;
 using System.Collections.Generic;
 using System.Linq;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Xunit;
 using OpenXml.Wrappers.Test.Utils;
 using OpenXml.Wrappers.Word;
@@ -84,6 +85,50 @@ public class TableCellWrapperTest : System.IDisposable
                 }
             }
         }
+    }
+
+    [Fact]
+    public void CellWidthOfACellWithoutPropertiesIsZeroAndCanBeSet()
+    {
+        TableCellWrapper cell = new TableCellWrapper(new TableCell(new Paragraph()));
+        Assert.Equal(0, cell.CellWidth);
+
+        cell.CellWidth = 1234;
+
+        Assert.Equal(1234, cell.CellWidth);
+    }
+
+    [Fact]
+    public void SetShadingFillColorOnACellWithoutPropertiesAddsShading()
+    {
+        TableCell tableCell = new TableCell(new Paragraph());
+        new TableCellWrapper(tableCell).SetShadingFillColor("FF0000");
+
+        Assert.Equal("FF0000", tableCell.TableCellProperties.Shading.Fill.Value);
+    }
+
+    [Fact]
+    public void MergeRightOnCellsWithoutPropertiesMergesTheCells()
+    {
+        TableCell left = new TableCell(new Paragraph());
+        TableCell right = new TableCell(new Paragraph());
+        TableRow row = new TableRow(left, right);
+        new TableCellWrapper(left).MergeRight();
+
+        Assert.Single(row.Elements<TableCell>());
+        Assert.Equal(2, left.TableCellProperties.GridSpan.Val.Value);
+    }
+
+    [Fact]
+    public void MergeDownOnCellsWithoutPropertiesSetsTheVerticalMerge()
+    {
+        TableCell top = new TableCell(new Paragraph());
+        TableCell bottom = new TableCell(new Paragraph());
+        Table table = new Table(new TableRow(top), new TableRow(bottom));
+        new TableCellWrapper(top).MergeDown();
+
+        Assert.Equal(MergedCellValues.Restart, top.TableCellProperties.VerticalMerge.Val.Value);
+        Assert.NotNull(bottom.TableCellProperties.VerticalMerge);
     }
 
     [Fact]
