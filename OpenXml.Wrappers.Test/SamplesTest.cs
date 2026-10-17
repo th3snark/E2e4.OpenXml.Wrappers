@@ -41,9 +41,9 @@ public class SamplesTest : IDisposable
     }
 
     [Fact]
-    public void ThereAreTwelveBasicFiveIntermediateAndThreeAdvancedExamples()
+    public void ThereAreThirteenBasicFiveIntermediateAndThreeAdvancedExamples()
     {
-        Assert.Equal(12, Examples.All.Count(e => e.Category == "Basic"));
+        Assert.Equal(13, Examples.All.Count(e => e.Category == "Basic"));
         Assert.Equal(5, Examples.All.Count(e => e.Category == "Intermediate"));
         Assert.Equal(3, Examples.All.Count(e => e.Category == "Advanced"));
         Assert.Equal(Examples.All.Count, Examples.All.Select(e => e.FileName).Distinct().Count());
