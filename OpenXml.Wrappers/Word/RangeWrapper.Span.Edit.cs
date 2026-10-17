@@ -146,6 +146,16 @@ public partial class RangeWrapper
 
     private int InsertLine(int position, string line, RunProperties formatting)
     {
+        InsertRunsAt(position, paragraph => BuildNewRunListFromText(line, paragraph), formatting);
+        return line.Length;
+    }
+
+    /// <summary>
+    /// Inserts the runs made by <paramref name="build"/> at a position: straight after the character before it when that is in the same
+    /// paragraph, otherwise before the character after it or at the end of the paragraph. The runs take <paramref name="formatting"/> when it is given.
+    /// </summary>
+    internal void InsertRunsAt(int position, Func<Paragraph, List<Run>> build, RunProperties formatting)
+    {
         StoryMap map = StoryMap.Build(_root).EnsureBoundary(position);
         int index = map.IndexAt(position);
         Atom next = index < 0 ? null : map.Atoms[index];
@@ -155,7 +165,7 @@ public partial class RangeWrapper
             throw new InvalidOperationException("Text cannot be inserted here, after the last cell of a table row.");
         }
 
-        List<Run> runs = BuildNewRunListFromText(line, paragraph);
+        List<Run> runs = build(paragraph);
         if (formatting != null)
         {
             foreach (Run run in runs)
@@ -192,14 +202,13 @@ public partial class RangeWrapper
                 paragraph.AppendChild(run);
             }
         }
-        return line.Length;
     }
 
     /// <summary>
     /// Splits the paragraph that holds the position in two, with a paragraph mark at the position. The second paragraph has the same
     /// properties as the first.
     /// </summary>
-    private void SplitParagraphAt(int position)
+    private Paragraph SplitParagraphAt(int position)
     {
         StoryMap map = StoryMap.Build(_root).EnsureBoundary(position);
         int index = map.IndexAt(position);
@@ -245,6 +254,77 @@ public partial class RangeWrapper
             second.AppendChild(element);
         }
         paragraph.InsertAfterSelf(second);
+        return second;
+    }
+
+    #endregion
+
+    #region Markers
+
+    /// <summary>
+    /// Puts a start marker before the first text of the span and an end marker after the last (bookmark and comment markers). A collapsed
+    /// span gets both at its position, and a span with no text, only paragraph marks, covers the content of its first paragraph.
+    /// </summary>
+    internal void PlaceMarkers(OpenXmlElement startMarker, OpenXmlElement endMarker)
+    {
+        GetPositions(out StoryMap map, out int start, out int end);
+        if (end > start)
+        {
+            map = map.EnsureBoundary(end);
+            map = map.EnsureBoundary(start);
+        }
+        else
+        {
+            map = map.EnsureBoundary(start);
+        }
+
+        List<Atom> text = map.Atoms.Where(a => !a.IsMark && a.Start >= start && a.End <= end).ToList();
+        if (text.Count > 0)
+        {
+            text[0].Element.Parent.InsertBeforeSelf(startMarker);
+            text[text.Count - 1].Element.Parent.InsertAfterSelf(endMarker);
+            return;
+        }
+
+        if (end > start)
+        {
+            //Only paragraph marks: the markers go round the content of the first paragraph.
+            Paragraph first = (Paragraph)map.Atoms.First(a => a.Kind == AtomKind.ParagraphMark && a.Start >= start).Element;
+            AddAroundContent(first, startMarker, endMarker);
+            return;
+        }
+
+        //An insertion point: next to the character before it when that is in the same paragraph, otherwise at the start of the paragraph.
+        int index = map.IndexAt(start);
+        Paragraph paragraph = ParagraphAt(map, start);
+        Atom previous = map.Atoms.LastOrDefault(a => !a.IsMark && a.End <= start);
+        if (previous != null && ParagraphOf(previous) == paragraph)
+        {
+            previous.Element.Parent.InsertAfterSelf(endMarker);
+            previous.Element.Parent.InsertAfterSelf(startMarker);
+        }
+        else if (index >= 0 && !map.Atoms[index].IsMark)
+        {
+            map.Atoms[index].Element.Parent.InsertBeforeSelf(endMarker);
+            endMarker.InsertBeforeSelf(startMarker);
+        }
+        else
+        {
+            AddAroundContent(paragraph, startMarker, endMarker);
+        }
+    }
+
+    private static void AddAroundContent(Paragraph paragraph, OpenXmlElement startMarker, OpenXmlElement endMarker)
+    {
+        if (paragraph.ParagraphProperties != null)
+        {
+            paragraph.ParagraphProperties.InsertAfterSelf(startMarker);
+        }
+        else
+        {
+            paragraph.PrependChild(startMarker);
+        }
+        paragraph.AppendChild(endMarker);
     }
 
     #endregion

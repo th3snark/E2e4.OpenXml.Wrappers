@@ -54,6 +54,15 @@ public partial class RangeWrapper
     /// </summary>
     private void InsertRuns(Func<Paragraph, List<Run>> build, bool after)
     {
+        if (_isSpan)
+        {
+            GetPositions(out StoryMap map, out int start, out int end);
+            InsertRunsAt(after ? end : start, build, null);
+            int added = StoryMap.Build(_root).Length - map.Length;
+            MakeSpan(_root, start, end + added);
+            return;
+        }
+
         if (_startOpenXmlElement is Paragraph)
         {
             InsertRunsIntoParagraph((Paragraph)_startOpenXmlElement, build, after);

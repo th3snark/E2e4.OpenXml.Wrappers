@@ -36,6 +36,14 @@ public partial class RangeWrapper
 
     private ParagraphWrapper InsertParagraph(bool after)
     {
+        if (_isSpan)
+        {
+            GetPositions(out _, out int start, out int end);
+            Paragraph split = SplitParagraphAt(after ? end : start);
+            MakeSpan(_root, start, end + 1);
+            return new ParagraphWrapper(split);
+        }
+
         Paragraph paragraph = new Paragraph();
         if (_startOpenXmlElement is Paragraph || _startOpenXmlElement is Table)
         {

@@ -29,6 +29,14 @@ public partial class RangeWrapper
     }
 
     /// <summary>
+    /// An element in the story of the range, for looking things up in the document it belongs to.
+    /// </summary>
+    internal OpenXmlElement AnchorElement
+    {
+        get { return _isSpan ? _root : _startOpenXmlElement; }
+    }
+
+    /// <summary>
     /// True when the range is a span of characters rather than made of elements.
     /// </summary>
     internal bool IsSpan

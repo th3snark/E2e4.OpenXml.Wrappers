@@ -54,7 +54,7 @@ public class CommentWrapperCollection : IEnumerable<CommentWrapper>
         ArgumentNullException.ThrowIfNull(range);
 
         //Check that the range can be anchored before anything is changed so that no orphan comment is left behind.
-        if (!(range.StartElement is BookmarkStart || range.StartElement is Paragraph || range.StartElement is TableCell))
+        if (!range.IsSpan && !(range.StartElement is BookmarkStart || range.StartElement is Paragraph || range.StartElement is TableCell))
         {
             throw new NotSupportedException(String.Format(CultureInfo.InvariantCulture, "Adding a comment to a range starting with the type {0} is not currently supported.", range.StartElement.GetType().Name));
         }
@@ -108,7 +108,12 @@ public class CommentWrapperCollection : IEnumerable<CommentWrapper>
         //The comment reference must always be inside a run.
         Run commentReferenceRun = new Run(new RunProperties(new RunStyle() { Val = "CommentReference" }), new CommentReference() { Id = idText });
 
-        if (range.StartElement is BookmarkStart)
+        if (range.IsSpan)
+        {
+            range.PlaceMarkers(commentRangeStart, commentRangeEnd);
+            commentRangeEnd.InsertAfterSelf(commentReferenceRun);
+        }
+        else if (range.StartElement is BookmarkStart)
         {
             range.StartElement.InsertBeforeSelf(commentRangeStart);
             range.EndElement.InsertAfterSelf(commentRangeEnd);
