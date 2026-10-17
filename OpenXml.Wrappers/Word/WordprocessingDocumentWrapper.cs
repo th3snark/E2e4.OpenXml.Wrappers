@@ -375,6 +375,14 @@ public class WordprocessingDocumentWrapper : IDisposable
         get { return new DocumentPropertiesWrapper(_wordprocessingDocument); }
     }
 
+    /// <summary>
+    /// The custom properties of the document.
+    /// </summary>
+    public CustomDocumentPropertyCollection CustomDocumentProperties
+    {
+        get { return new CustomDocumentPropertyCollection(_wordprocessingDocument); }
+    }
+
     public CommentWrapperCollection Comments
     {
         get { return new CommentWrapperCollection(new RangeWrapper(_wordprocessingDocument.MainDocumentPart.Document)); }
