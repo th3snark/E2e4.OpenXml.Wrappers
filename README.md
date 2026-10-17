@@ -34,10 +34,44 @@ The API follows the shape of the Word object model, but it is C# over Open XML r
 - **Collections are `IEnumerable<T>`**, so `foreach` and LINQ work without casts. Enumeration works on a snapshot taken when it starts, so it is safe to delete items while enumerating. `Count` and the indexers are live: they look at the document each time.
 - **Ranges are made of elements, not character positions.** `Range.Start` and `Range.End` are the Open XML elements that bound the range.
 - **Wrappers compare by the item they wrap.** Two wrappers of the same paragraph, table, bookmark and so on are `==` and have the same hash code, even though each property access creates a new wrapper.
-- **Units are the raw Open XML values**, which means widths and spacing are in twentieths of a point (twips), not points.
+- **Units are mostly the raw Open XML values**, which means the widths and spacing of the older members (`ParagraphWrapper.SpaceBefore`, `CellWidth`, column and table widths) are in twentieths of a point (twips), not points. `Font` and `ParagraphFormat` use points as Word does.
 - **`Range.Text` uses Word's markers**: `\r` ends a paragraph, `\a` ends a table cell, `\r\a` ends a table row, `\v` is a line break and `\f` a page break. Reading text is supported for paragraphs, table cells, rows and tables, bookmarks and comments (not for a whole document range). Setting it is supported for table cells, paragraphs and bookmarks; other types throw `InvalidOperationException`.
 - **Some properties are set-only**, for example `KeepNext` on paragraphs, rows and cells.
 - **Not everything is implemented.** Features that are not supported throw `NotSupportedException`, `NotImplementedException` or `InvalidOperationException` rather than doing nothing, for example `InsertSectionBreak` for any type but `"nextPage"`, or adding a comment to a range other than a bookmark, paragraph or table cell.
+
+## Editing a range
+
+A `RangeWrapper` can be edited much as a Word `Range` can:
+
+```csharp
+RangeWrapper range = document.Bookmarks["Summary"].Range;
+
+range.InsertBefore("Note: ");
+range.InsertAfter(" (draft)");
+
+range.Font.Bold = true;
+range.Font.Size = 11;               // points
+range.Font.Color = "C00000";        // RGB hex
+range.ParagraphFormat.Alignment = ParagraphAlignment.Justify;
+range.ParagraphFormat.SpaceAfter = 6;   // points
+range.Style = "Heading 2";
+
+// Find and replace, in a range, a table or the whole document.
+document.Range.Find.Execute("colour", matchCase: true, replaceWith: "color", replace: ReplaceMode.All);
+
+document.Paragraphs[3].Range.Delete();
+```
+
+| Member | Notes |
+| --- | --- |
+| `InsertBefore`, `InsertAfter` | Inside the markers of a bookmark or comment range. For a paragraph, table cell or the document the text goes in the first or last paragraph, before the paragraph mark (Word puts the text of `InsertAfter` on a whole paragraph in the next paragraph). Not supported for tables and rows. |
+| `Delete` | Removes paragraphs, rows and tables; empties table cells and the document (a cell and the body must keep a paragraph); removes the runs of a bookmark or comment range. Bookmarks and comments anchored in deleted content are removed with it. |
+| `Find` | `Execute` returns whether the text was found. It never changes the range or the document, because a range is made of whole elements and cannot be narrowed to the match. Replace keeps the formatting of the first run of the match. Matches can span runs but not paragraphs. |
+| `Font` | `Bold`, `Italic`, `Underline`, `Strikethrough`, `Size`, `Name` and `Color`. Applies to whole runs, so it cannot format part of a run. |
+| `ParagraphFormat` | `Alignment`, indents, `SpaceBefore`, `SpaceAfter`, `LineSpacing`, `LineSpacingRule`, `KeepWithNext`, `KeepTogether`, `PageBreakBefore` and `WidowControl`, in points. Also available as `Paragraph.Format`. |
+| `Style` | A paragraph or character style by name. `Table.Style` sets a table style. |
+
+`Font` and `ParagraphFormat` properties are `null` when the range has mixed values, and setting one to `null` removes the direct formatting. They only see direct formatting, not values inherited from styles.
 
 ## Build and test
 
