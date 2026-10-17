@@ -10,4 +10,5 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - MIT license, package metadata and icon.
 
 ### Changed
+- `Paragraph.Delete`, `Row.Delete` and `Table.Delete` use `Range.Delete`, so bookmarks and comments anchored in them are removed and a cell, body or table is never left invalid. `InsertSectionBreak` supports all five section types. `Cell.MergeRight`/`MergeDown` respect grid spans, and `Paragraph.KeepNext` has a getter.
 - New documents are created with `compatibilityMode` 15 so Word does not open them in Compatibility Mode.

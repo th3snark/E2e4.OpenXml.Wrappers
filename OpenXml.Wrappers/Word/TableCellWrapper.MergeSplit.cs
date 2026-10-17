@@ -206,6 +206,19 @@ public partial class TableCellWrapper
         return start;
     }
 
+    private static TableCell CellAtGridColumn(TableRow row, int gridColumn)
+    {
+        foreach (TableCell cell in row.Elements<TableCell>())
+        {
+            GetGridRange(cell, out int start, out int end);
+            if (gridColumn >= start && gridColumn <= end)
+            {
+                return cell;
+            }
+        }
+        return null;
+    }
+
     private static void GetGridRange(TableCell cell, out int start, out int end)
     {
         start = GetGridStart(cell);

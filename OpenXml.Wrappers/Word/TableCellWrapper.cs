@@ -109,34 +109,47 @@ public partial class TableCellWrapper : System.IEquatable<TableCellWrapper>
         return tableCellProperties;
     }
 
+    /// <summary>
+    /// Merges this cell with the cell below it (<c>Merge</c> is the Word-style call for any rectangle).
+    /// </summary>
     public void MergeDown()
     {
         TableRow lastTableRow = _tableCell.Parent.NextSibling<TableRow>();
         if (lastTableRow != null)
         {
-            TableCellWrapper lastCell = new TableCellWrapper(lastTableRow.Elements<TableCell>().ElementAt(ColumnIndex));
-            MergeDown(lastCell);
+            TableCell below = CellAtGridColumn(lastTableRow, GetGridStart(_tableCell));
+            if (below != null)
+            {
+                MergeDown(new TableCellWrapper(below));
+            }
         }
     }
 
+    /// <summary>
+    /// Merges this cell down to the row of <paramref name="lastCell"/>, in the grid column of this cell. Unlike <c>Merge</c> this also extends a
+    /// vertical merge that already exists.
+    /// </summary>
     public void MergeDown(TableCellWrapper lastCell)
     {
         TableRow firstTableRow = (TableRow)_tableCell.Parent;
         TableRow lastTableRow = lastCell.Parent.TableRow;
         if (firstTableRow.IsBefore(lastTableRow))
         {
-            int index = ColumnIndex;
+            //Cells are found by grid column, not position, so rows with horizontally merged cells line up.
+            int gridColumn = GetGridStart(_tableCell);
             TableCell tableCell = null;
             //Start at the last row and stop when the first row is reached adding in a new vertcal merge to the appropriate table cell properties.
             for (TableRow tableRow = lastTableRow; tableRow != firstTableRow; tableRow = tableRow.PreviousSibling<TableRow>())
             {
-                tableCell = tableRow.Elements<TableCell>().ElementAt(index);
-                GetOrAddTableCellProperties(tableCell).VerticalMerge = new VerticalMerge(); //default val is 'continue'
+                tableCell = CellAtGridColumn(tableRow, gridColumn);
+                if (tableCell != null)
+                {
+                    GetOrAddTableCellProperties(tableCell).VerticalMerge = new VerticalMerge(); //default val is 'continue'
+                }
             }
 
             //If the first cell in the vertical merge has no vertcal merge setting then set it up with a "restart" vertical merge
-            tableCell = firstTableRow.Elements<TableCell>().ElementAt(index);
-            TableCellProperties firstTableCellProperties = GetOrAddTableCellProperties(tableCell);
+            TableCellProperties firstTableCellProperties = GetOrAddTableCellProperties(_tableCell);
             if (firstTableCellProperties.VerticalMerge == null)
             {
                 firstTableCellProperties.VerticalMerge = new VerticalMerge() { Val = MergedCellValues.Restart };
@@ -144,32 +157,24 @@ public partial class TableCellWrapper : System.IEquatable<TableCellWrapper>
         }
     }
 
+    /// <summary>
+    /// Merges this cell with the cell to its right, adding up the grid spans and moving the text of the right cell into this one.
+    /// </summary>
     public void MergeRight()
     {
         TableCell nextSiblingRightTableCell = _tableCell.NextSibling<TableCell>();
         if (nextSiblingRightTableCell != null)
         {
             TableCellWrapper rightCell = new TableCellWrapper(nextSiblingRightTableCell);
+            int span = Span(_tableCell) + Span(nextSiblingRightTableCell);
+            int width = CellWidth + rightCell.CellWidth;
 
-            //Add the width of the table cell to the right and add it to the with of this table cell.
-            CellWidth += rightCell.CellWidth;
-
-            //Add a grid span element if one does not already exist.
-            TableCellProperties tableCellProperties = GetOrAddTableCellProperties();
-            if (tableCellProperties.GridSpan == null)
-            {
-                tableCellProperties.GridSpan = new GridSpan();
-                tableCellProperties.GridSpan.Val = 1;
-            }
-
-            //Increase the grid span attribute value by one.
-            tableCellProperties.GridSpan.Val++;
-
-            //Remove the table cell to the right.
-            nextSiblingRightTableCell.Parent.RemoveChild(nextSiblingRightTableCell);
+            MoveText(nextSiblingRightTableCell, _tableCell);
+            GetOrAddTableCellProperties().GridSpan = new GridSpan() { Val = span };
+            CellWidth = width;
+            nextSiblingRightTableCell.Remove();
         }
     }
-
     public bool KeepNext
     {
         set

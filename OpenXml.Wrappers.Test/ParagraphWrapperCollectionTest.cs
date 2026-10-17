@@ -79,7 +79,8 @@ public class ParagraphWrapperCollectionTest : System.IDisposable
         }
 
         Assert.Equal(3, visited);
-        Assert.Equal(0, paragraphs.Count);
+        //The last paragraph of a body stays, as in Word, so that the body is never left without one.
+        Assert.Equal(1, paragraphs.Count);
     }
 
     [Fact]

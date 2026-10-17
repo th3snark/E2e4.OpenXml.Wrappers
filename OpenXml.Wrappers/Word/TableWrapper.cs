@@ -177,7 +177,7 @@ public class TableWrapper : System.IEquatable<TableWrapper>
 
     public void Delete()
     {
-        _table.Remove();
+        Range.Delete();
     }
 
     public void AppendRow(TableRowWrapper row)
@@ -192,11 +192,8 @@ public class TableWrapper : System.IEquatable<TableWrapper>
 
     public ParagraphWrapper InsertParagraphAfterSelf()
     {
-        Paragraph paragraph = new Paragraph();
-        _table.InsertAfterSelf(paragraph);
-        return new ParagraphWrapper(paragraph);
+        return Range.InsertParagraphAfter();
     }
-
     public int Width
     {
         get { return Convert.ToInt32(_table.GetTableWidth()); }

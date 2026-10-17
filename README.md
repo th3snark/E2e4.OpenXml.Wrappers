@@ -98,8 +98,8 @@ The API follows the shape of the Word object model, but it is C# over Open XML r
 - **Wrappers compare by the item they wrap.** Two wrappers of the same paragraph, table, bookmark and so on are `==` and have the same hash code, even though each property access creates a new wrapper.
 - **Units are mostly the raw Open XML values**, which means the widths and spacing of the older members (`ParagraphWrapper.SpaceBefore`, `CellWidth`, column and table widths) are in twentieths of a point (twips), not points. `Font` and `ParagraphFormat` use points as Word does.
 - **`Range.Text` uses Word's markers**: `\r` ends a paragraph, `\a` ends a table cell, `\r\a` ends a table row, `\v` is a line break and `\f` a page break. Reading text is supported for paragraphs, table cells, rows and tables, bookmarks and comments (not for a whole document range). Setting it is supported for table cells, paragraphs and bookmarks; other types throw `InvalidOperationException`.
-- **Some properties are set-only**, for example `KeepNext` on paragraphs, rows and cells.
-- **Not everything is implemented.** Features that are not supported throw `NotSupportedException`, `NotImplementedException` or `InvalidOperationException` rather than doing nothing, for example `InsertSectionBreak` for any type but `"nextPage"`, or adding a comment to a range other than a bookmark, paragraph or table cell.
+- **Some properties are set-only**, for example `KeepNext` on rows and cells (on a paragraph it can also be read).
+- **Not everything is implemented.** Features that are not supported throw `NotSupportedException`, `NotImplementedException` or `InvalidOperationException` rather than doing nothing, for example adding a comment to a range other than a bookmark, paragraph or table cell.
 
 ## Editing a range
 
