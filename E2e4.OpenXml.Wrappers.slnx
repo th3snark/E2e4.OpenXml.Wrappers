@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path=".gitattributes" />
+    <File Path=".gitignore" />
+    <File Path="CLAUDE.md" />
+    <File Path="Directory.Build.props" />
+    <File Path="README.md" />
+  </Folder>
+  <Project Path="OpenXml.Wrappers.Test/OpenXml.Wrappers.Test.csproj" Id="9d5f5595-63b0-4be9-ab25-06ea91cfb304" />
+  <Project Path="OpenXml.Wrappers/OpenXml.Wrappers.csproj" Id="53c8fced-aad7-43f7-93c3-b370a52ad3dc" />
+</Solution>

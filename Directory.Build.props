@@ -1,0 +1,22 @@
+<Project>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+    <TreatWarningsAsErrors Condition="'$(CI)' == 'true'">true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Company>E2e4</Company>
+    <Authors>E2e4</Authors>
+    <Product>E2e4 OpenXml Wrappers</Product>
+    <Copyright>Copyright © E2e4 $([System.DateTime]::UtcNow.Year)</Copyright>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+
+</Project>
