@@ -9,7 +9,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
 
-public class RangeWrapper : System.IEquatable<RangeWrapper>
+public partial class RangeWrapper : System.IEquatable<RangeWrapper>
 {
     OpenXmlElement _startOpenXmlElement;
     OpenXmlElement _endOpenXmlElement;
