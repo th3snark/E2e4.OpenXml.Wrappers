@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
@@ -15,6 +16,43 @@ public class TableWrapper : System.IEquatable<TableWrapper>
     public Table Table
     {
         get { return _table; }
+    }
+
+    /// <summary>
+    /// The name of the table style, as <c>Table.Style</c> in Word. Setting null removes the table style. See <see cref="RangeWrapper.Style"/>
+    /// for how names are matched.
+    /// </summary>
+    /// <exception cref="ArgumentException">There is no table style with the name.</exception>
+    /// <exception cref="InvalidOperationException">The document does not have any styles.</exception>
+    public string Style
+    {
+        get
+        {
+            string styleId = _table.GetFirstChild<TableProperties>()?.TableStyle?.Val?.Value;
+            return styleId == null ? StyleHelper.GetDefaultStyleName(_table, StyleValues.Table) : StyleHelper.GetStyleName(_table, styleId);
+        }
+        set
+        {
+            if (value == null)
+            {
+                _table.GetFirstChild<TableProperties>()?.RemoveAllChildren<TableStyle>();
+                return;
+            }
+
+            string styleId = StyleHelper.FindStyleId(_table, value, out StyleValues type);
+            if (type != StyleValues.Table)
+            {
+                throw new ArgumentException(String.Format(CultureInfo.InvariantCulture, "The style '{0}' is not a table style.", value), nameof(value));
+            }
+
+            TableProperties tableProperties = _table.GetFirstChild<TableProperties>();
+            if (tableProperties == null)
+            {
+                tableProperties = new TableProperties();
+                _table.PrependChild(tableProperties);
+            }
+            tableProperties.TableStyle = new TableStyle() { Val = styleId };
+        }
     }
 
     public TableWrapper Parent
