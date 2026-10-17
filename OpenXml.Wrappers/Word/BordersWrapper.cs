@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
@@ -8,11 +9,12 @@ using DocumentFormat.OpenXml.Wordprocessing;
 namespace OpenXml.Wrappers.Word;
 
 /// <summary>
-/// The borders of a table or a table cell, as <c>Borders</c> in Word.
+/// The borders of a table, a table row or a table cell, as <c>Borders</c> in Word.
 /// </summary>
 /// <remarks>
 /// The indexer returns a <see cref="BorderWrapper"/> for a position. <see cref="BorderPosition.Horizontal"/> and
-/// <see cref="BorderPosition.Vertical"/> are the lines between the rows and between the columns. The diagonals only exist for cells.
+/// <see cref="BorderPosition.Vertical"/> are the lines between the rows and between the columns. The diagonals only exist for cells. A row has
+/// no inside horizontal border (it is a single row) and its borders are written to its cells: see <see cref="BorderWrapper"/>.
 /// </remarks>
 public class BordersWrapper
 {
@@ -36,12 +38,49 @@ public class BordersWrapper
             {
                 throw new ArgumentOutOfRangeException(nameof(position));
             }
-            if (_isTable && (position == BorderPosition.DiagonalDown || position == BorderPosition.DiagonalUp))
+            if ((_isTable || _owner is TableRow) && (position == BorderPosition.DiagonalDown || position == BorderPosition.DiagonalUp))
             {
-                throw new NotSupportedException("A table does not have diagonal borders.");
+                throw new NotSupportedException("Only a cell has diagonal borders.");
+            }
+            if (_owner is TableRow row)
+            {
+                if (position == BorderPosition.Horizontal)
+                {
+                    throw new NotSupportedException("A row has no horizontal inside border.");
+                }
+                return new BorderWrapper(GetRowTargets(row, position));
             }
             return new BorderWrapper(this, position);
         }
+    }
+
+    //The borders of a row are those of its cells: top and bottom on all of them, left on the first, right on the last, and the line between
+    //the cells as the right border of one and the left border of the next.
+    private static List<(BordersWrapper Borders, BorderPosition Position)> GetRowTargets(TableRow row, BorderPosition position)
+    {
+        List<TableCell> cells = row.Elements<TableCell>().ToList();
+        List<(BordersWrapper, BorderPosition)> targets = new List<(BordersWrapper, BorderPosition)>();
+        for (int i = 0; i < cells.Count; i++)
+        {
+            BordersWrapper borders = new BordersWrapper(cells[i], false);
+            if (position == BorderPosition.Top || position == BorderPosition.Bottom
+                || (position == BorderPosition.Left && i == 0) || (position == BorderPosition.Right && i == cells.Count - 1))
+            {
+                targets.Add((borders, position));
+            }
+            else if (position == BorderPosition.Vertical)
+            {
+                if (i > 0)
+                {
+                    targets.Add((borders, BorderPosition.Left));
+                }
+                if (i < cells.Count - 1)
+                {
+                    targets.Add((borders, BorderPosition.Right));
+                }
+            }
+        }
+        return targets;
     }
 
     /// <summary>
@@ -57,7 +96,7 @@ public class BordersWrapper
     /// </summary>
     public void SetInside(BorderLineStyle lineStyle, double lineWidth, string color)
     {
-        Set(new[] { BorderPosition.Horizontal, BorderPosition.Vertical }, lineStyle, lineWidth, color);
+        Set(_owner is TableRow ? new[] { BorderPosition.Vertical } : new[] { BorderPosition.Horizontal, BorderPosition.Vertical }, lineStyle, lineWidth, color);
     }
 
     /// <summary>
@@ -65,6 +104,15 @@ public class BordersWrapper
     /// </summary>
     public void Clear()
     {
+        if (_owner is TableRow row)
+        {
+            foreach (TableCell cell in row.Elements<TableCell>())
+            {
+                new BordersWrapper(cell, false).Clear();
+            }
+            return;
+        }
+
         OpenXmlCompositeElement container = GetContainer(false);
         container?.Remove();
     }

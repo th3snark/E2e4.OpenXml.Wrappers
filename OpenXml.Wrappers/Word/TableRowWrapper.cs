@@ -249,6 +249,15 @@ public class TableRowWrapper : System.IEquatable<TableRowWrapper>
         }
     }
 
+    /// <summary>
+    /// The borders of the row, as <c>Row.Borders</c> in Word. They are stored as the borders of the cells of the row. There is no horizontal or
+    /// diagonal border.
+    /// </summary>
+    public BordersWrapper Borders
+    {
+        get { return new BordersWrapper(_tableRow, false); }
+    }
+
     public void SetBottomBorder(bool visible)
     {
         foreach (TableCell tableCell in _tableRow.Elements<TableCell>())

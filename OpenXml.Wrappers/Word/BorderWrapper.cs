@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
@@ -8,24 +9,30 @@ using DocumentFormat.OpenXml.Wordprocessing;
 namespace OpenXml.Wrappers.Word;
 
 /// <summary>
-/// One border of a table or table cell, as <c>Border</c> in Word.
+/// One border of a table, table row or table cell, as <c>Border</c> in Word.
 /// </summary>
 /// <remarks>
-/// Reading a border that has not been set gives <see cref="BorderLineStyle.None"/>, a width of 0 and the colour "auto". A border takes
-/// its real appearance from the table style when it is not set directly.
+/// <para>Reading a border that has not been set gives <see cref="BorderLineStyle.None"/>, a width of 0 and the colour "auto". A border takes
+/// its real appearance from the table style when it is not set directly.</para>
+/// <para>A border of a row is the border of each of the cells it covers, so it can have mixed values: then <see cref="LineStyle"/> reads
+/// <see cref="BorderLineStyle.Other"/>, <see cref="LineWidth"/> reads 0 and <see cref="Color"/> reads null. Setting a value sets it on
+/// all of the cells.</para>
 /// </remarks>
 public class BorderWrapper
 {
     private const double MinimumWidth = 0.25;
     private const double MaximumWidth = 12;
 
-    private readonly BordersWrapper _borders;
-    private readonly BorderPosition _position;
+    private readonly IList<(BordersWrapper Borders, BorderPosition Position)> _targets;
 
     internal BorderWrapper(BordersWrapper borders, BorderPosition position)
+        : this(new[] { (borders, position) })
     {
-        _borders = borders;
-        _position = position;
+    }
+
+    internal BorderWrapper(IList<(BordersWrapper Borders, BorderPosition Position)> targets)
+    {
+        _targets = targets;
     }
 
     /// <summary>
@@ -37,13 +44,12 @@ public class BorderWrapper
     {
         get
         {
-            BorderType border = _borders.Find(_position);
-            if (border?.Val == null || !border.Val.HasValue)
+            List<BorderLineStyle> styles = _targets.Select(t => GetLineStyle(t.Borders, t.Position)).Distinct().ToList();
+            if (styles.Count == 0)
             {
                 return BorderLineStyle.None;
             }
-            BorderValues value = border.Val.Value;
-            return value == BorderValues.Nil || value == BorderValues.None ? BorderLineStyle.None : Map(value);
+            return styles.Count == 1 ? styles[0] : BorderLineStyle.Other;
         }
         set
         {
@@ -51,15 +57,18 @@ public class BorderWrapper
             {
                 throw new ArgumentException("The style Other cannot be set.", nameof(value));
             }
-            bool created = _borders.Find(_position) == null;
-            BorderType border = _borders.GetOrAdd(_position);
-            border.Val = ToValue(value);
-            if (created && value != BorderLineStyle.None)
+            foreach ((BordersWrapper borders, BorderPosition position) in _targets)
             {
-                //The defaults of Word: half a point, automatic colour.
-                border.Size = 4;
-                border.Color = "auto";
-                border.Space = 0;
+                bool created = borders.Find(position) == null;
+                BorderType border = borders.GetOrAdd(position);
+                border.Val = ToValue(value);
+                if (created && value != BorderLineStyle.None)
+                {
+                    //The defaults of Word: half a point, automatic colour.
+                    border.Size = 4;
+                    border.Color = "auto";
+                    border.Space = 0;
+                }
             }
         }
     }
@@ -71,8 +80,8 @@ public class BorderWrapper
     {
         get
         {
-            BorderType border = _borders.Find(_position);
-            return border?.Size == null || !border.Size.HasValue ? 0 : border.Size.Value / 8.0;
+            List<double> widths = _targets.Select(t => GetLineWidth(t.Borders, t.Position)).Distinct().ToList();
+            return widths.Count == 1 ? widths[0] : 0;
         }
         set
         {
@@ -80,16 +89,19 @@ public class BorderWrapper
             {
                 throw new ArgumentOutOfRangeException(nameof(value), String.Format(CultureInfo.InvariantCulture, "The width must be between {0} and {1} points.", MinimumWidth, MaximumWidth));
             }
-            BorderType border = _borders.Find(_position);
-            if (border == null)
+            foreach ((BordersWrapper borders, BorderPosition position) in _targets)
             {
-                //Setting a width on a border without a style gives it the default style, as Word does.
-                border = _borders.GetOrAdd(_position);
-                border.Val = BorderValues.Single;
-                border.Color = "auto";
-                border.Space = 0;
+                BorderType border = borders.Find(position);
+                if (border == null)
+                {
+                    //Setting a width on a border without a style gives it the default style, as Word does.
+                    border = borders.GetOrAdd(position);
+                    border.Val = BorderValues.Single;
+                    border.Color = "auto";
+                    border.Space = 0;
+                }
+                border.Size = (uint)Math.Round(value * 8, MidpointRounding.AwayFromZero);
             }
-            border.Size = (uint)Math.Round(value * 8, MidpointRounding.AwayFromZero);
         }
     }
 
@@ -99,22 +111,33 @@ public class BorderWrapper
     /// <exception cref="ArgumentException">The colour is neither six hex digits nor "auto".</exception>
     public string Color
     {
-        get { return _borders.Find(_position)?.Color?.Value ?? "auto"; }
+        get
+        {
+            List<string> colors = _targets.Select(t => t.Borders.Find(t.Position)?.Color?.Value ?? "auto").Distinct().ToList();
+            if (colors.Count == 0)
+            {
+                return "auto";
+            }
+            return colors.Count == 1 ? colors[0] : null;
+        }
         set
         {
             if (value == null || !(String.Equals(value, "auto", StringComparison.OrdinalIgnoreCase) || (value.Length == 6 && value.All(Uri.IsHexDigit))))
             {
                 throw new ArgumentException("The colour must be six hex digits or \"auto\".", nameof(value));
             }
-            BorderType border = _borders.Find(_position);
-            if (border == null)
+            foreach ((BordersWrapper borders, BorderPosition position) in _targets)
             {
-                border = _borders.GetOrAdd(_position);
-                border.Val = BorderValues.Single;
-                border.Size = 4;
-                border.Space = 0;
+                BorderType border = borders.Find(position);
+                if (border == null)
+                {
+                    border = borders.GetOrAdd(position);
+                    border.Val = BorderValues.Single;
+                    border.Size = 4;
+                    border.Space = 0;
+                }
+                border.Color = value;
             }
-            border.Color = value;
         }
     }
 
@@ -123,7 +146,27 @@ public class BorderWrapper
     /// </summary>
     public void Clear()
     {
-        _borders.Find(_position)?.Remove();
+        foreach ((BordersWrapper borders, BorderPosition position) in _targets)
+        {
+            borders.Find(position)?.Remove();
+        }
+    }
+
+    private static BorderLineStyle GetLineStyle(BordersWrapper borders, BorderPosition position)
+    {
+        BorderType border = borders.Find(position);
+        if (border?.Val == null || !border.Val.HasValue)
+        {
+            return BorderLineStyle.None;
+        }
+        BorderValues value = border.Val.Value;
+        return value == BorderValues.Nil || value == BorderValues.None ? BorderLineStyle.None : Map(value);
+    }
+
+    private static double GetLineWidth(BordersWrapper borders, BorderPosition position)
+    {
+        BorderType border = borders.Find(position);
+        return border?.Size == null || !border.Size.HasValue ? 0 : border.Size.Value / 8.0;
     }
 
     private static BorderLineStyle Map(BorderValues value)
