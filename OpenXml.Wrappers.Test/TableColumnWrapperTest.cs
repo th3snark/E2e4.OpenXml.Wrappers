@@ -30,7 +30,7 @@ public class TableColumnWrapperTest
     {
         Table table = CreateTable();
 
-        Assert.Equal(2000, new TableColumnWrapper(table.Descendants<GridColumn>().Last()).Width);
+        Assert.Equal(100, new TableColumnWrapper(table.Descendants<GridColumn>().Last()).Width);
     }
 
     [Fact]
@@ -39,9 +39,9 @@ public class TableColumnWrapperTest
         Table table = CreateTable();
         TableColumnWrapper column = new TableColumnWrapper(table.Descendants<GridColumn>().Last());
 
-        column.Width = 3000;
+        column.Width = 150;
 
-        Assert.Equal(3000, column.Width);
+        Assert.Equal(150, column.Width);
         TableCell cell = table.Elements<TableRow>().First().Elements<TableCell>().Last();
         Assert.Equal("3000", cell.TableCellProperties.TableCellWidth.Width.Value);
         Assert.Equal(TableWidthUnitValues.Dxa, cell.TableCellProperties.TableCellWidth.Type.Value);
@@ -52,10 +52,10 @@ public class TableColumnWrapperTest
     {
         Table table = CreateTable();
         TableCell cell = table.Elements<TableRow>().First().Elements<TableCell>().First();
-        new TableCellWrapper(cell).CellWidth = 10;
+        new TableCellWrapper(cell).Width = 0.5;
 
-        new TableColumnWrapper(table.Descendants<GridColumn>().First()).Width = 4000;
+        new TableColumnWrapper(table.Descendants<GridColumn>().First()).Width = 200;
 
-        Assert.Equal(4000, new TableCellWrapper(cell).CellWidth);
+        Assert.Equal(200, new TableCellWrapper(cell).Width);
     }
 }

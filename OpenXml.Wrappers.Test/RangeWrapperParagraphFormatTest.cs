@@ -176,12 +176,13 @@ public class RangeWrapperParagraphFormatTest
     }
 
     [Fact]
-    public void ParagraphWrapperSpacingInTwipsAndTheFormatInPointsAgree()
+    public void ParagraphWrapperSpacingAndTheFormatAgree()
     {
         ParagraphWrapper wrapper = new ParagraphWrapper(CreateParagraph());
-        wrapper.SpaceBefore = 240;
+        wrapper.SpaceBefore = 12;
 
         Assert.Equal(12, wrapper.Format.SpaceBefore);
+        Assert.Equal("240", wrapper.Paragraph.ParagraphProperties.SpacingBetweenLines.Before.Value);
     }
 
     [Fact]

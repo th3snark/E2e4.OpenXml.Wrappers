@@ -13,6 +13,23 @@ public static class ConversionHelper
         return (int)Math.Round(((double)width / tableWidth) * 5000.0);
     }
 
+    /// <summary>
+    /// Points (Word's unit, 72 to the inch) as twips, the twentieths of a point that Open XML stores.
+    /// </summary>
+    internal static int PointsToTwips(double points, string parameterName)
+    {
+        if (Double.IsNaN(points) || points < 0 || points > 31680)
+        {
+            throw new ArgumentOutOfRangeException(parameterName, "The value must be between 0 and 31680 points.");
+        }
+        return (int)Math.Round(points * 20, MidpointRounding.AwayFromZero);
+    }
+
+    internal static double TwipsToPoints(int twips)
+    {
+        return twips / 20.0;
+    }
+
     public static int CentimeterToDxa(float cm)
     {
         //2.54 cm is 1 inch.

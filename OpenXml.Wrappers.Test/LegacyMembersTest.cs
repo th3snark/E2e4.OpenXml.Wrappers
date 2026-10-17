@@ -56,11 +56,11 @@ public class LegacyMembersTest
         ParagraphWrapper wrapper = new ParagraphWrapper(paragraph);
 
         Assert.Equal(0, wrapper.SpaceBefore);
-        Assert.Equal(120, wrapper.SpaceAfter);
+        Assert.Equal(6, wrapper.SpaceAfter);
 
-        wrapper.SpaceBefore = 240;
-        Assert.Equal(240, wrapper.SpaceBefore);
-        Assert.Equal(120, wrapper.SpaceAfter);
+        wrapper.SpaceBefore = 12;
+        Assert.Equal(12, wrapper.SpaceBefore);
+        Assert.Equal(6, wrapper.SpaceAfter);
     }
 
     [Fact]

@@ -94,15 +94,27 @@ public class TableCellWrapperTest : System.IDisposable
         }
     }
 
-    [Fact]
-    public void CellWidthOfACellWithoutPropertiesIsZeroAndCanBeSet()
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(double.NaN)]
+    [InlineData(40000)]
+    public void WidthsOutsideTheRangeAreRejected(double points)
     {
         TableCellWrapper cell = new TableCellWrapper(new TableCell(new Paragraph()));
-        Assert.Equal(0, cell.CellWidth);
 
-        cell.CellWidth = 1234;
+        Assert.Throws<System.ArgumentOutOfRangeException>(() => cell.Width = points);
+    }
 
-        Assert.Equal(1234, cell.CellWidth);
+    [Fact]
+    public void WidthOfACellWithoutPropertiesIsZeroAndCanBeSetInPoints()
+    {
+        TableCellWrapper cell = new TableCellWrapper(new TableCell(new Paragraph()));
+        Assert.Equal(0, cell.Width);
+
+        cell.Width = 61.7;
+
+        Assert.Equal(61.7, cell.Width);
+        Assert.Equal("1234", cell.TableCell.TableCellProperties.TableCellWidth.Width.Value);
     }
 
     [Fact]

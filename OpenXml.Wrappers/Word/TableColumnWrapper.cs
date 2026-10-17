@@ -1,4 +1,5 @@
 using System;
+using OpenXml.Wrappers.Helpers;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -71,7 +72,7 @@ public class TableColumnWrapper : System.IEquatable<TableColumnWrapper>
             {
                 cell.TableCellProperties.GridSpan = new GridSpan() { Val = span - 1 };
                 TableCellWrapper wrapper = new TableCellWrapper(cell);
-                wrapper.CellWidth = Math.Max(0, wrapper.CellWidth - Width);
+                wrapper.WidthTwips = Math.Max(0, wrapper.WidthTwips - WidthTwips);
                 continue;
             }
 
@@ -89,9 +90,19 @@ public class TableColumnWrapper : System.IEquatable<TableColumnWrapper>
         _gridColumn.Remove();
     }
 
-    public int Width
+    /// <summary>
+    /// The width of the column in points, 0 when none is set. Setting it also sets the width of the cells in the column.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">The value is negative, not a number or more than 31680 points.</exception>
+    public double Width
     {
-        get { return _gridColumn.Width == null ? 0 : Convert.ToInt32(_gridColumn.Width.Value, CultureInfo.InvariantCulture); }
+        get { return ConversionHelper.TwipsToPoints(WidthOrZero); }
+        set { WidthTwips = ConversionHelper.PointsToTwips(value, nameof(value)); }
+    }
+
+    internal int WidthTwips
+    {
+        get { return WidthOrZero; }
         set
         {
             _gridColumn.Width = value.ToString(CultureInfo.InvariantCulture);

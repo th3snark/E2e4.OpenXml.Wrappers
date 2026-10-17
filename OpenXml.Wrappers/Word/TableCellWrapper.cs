@@ -1,6 +1,7 @@
 using System.Globalization;
 
 using System;
+using OpenXml.Wrappers.Helpers;
 using System.Linq;
 
 using DocumentFormat.OpenXml.Wordprocessing;
@@ -75,7 +76,17 @@ public partial class TableCellWrapper : System.IEquatable<TableCellWrapper>
         return cell == null ? null : new TableCellWrapper(cell);
     }
 
-    public int CellWidth
+    /// <summary>
+    /// The preferred width of the cell in points, 0 when none is set.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">The value is negative, not a number or more than 31680 points.</exception>
+    public double Width
+    {
+        get { return ConversionHelper.TwipsToPoints(WidthTwips); }
+        set { WidthTwips = ConversionHelper.PointsToTwips(value, nameof(value)); }
+    }
+
+    internal int WidthTwips
     {
         get
         {
@@ -167,11 +178,11 @@ public partial class TableCellWrapper : System.IEquatable<TableCellWrapper>
         {
             TableCellWrapper rightCell = new TableCellWrapper(nextSiblingRightTableCell);
             int span = Span(_tableCell) + Span(nextSiblingRightTableCell);
-            int width = CellWidth + rightCell.CellWidth;
+            int width = WidthTwips + rightCell.WidthTwips;
 
             MoveText(nextSiblingRightTableCell, _tableCell);
             GetOrAddTableCellProperties().GridSpan = new GridSpan() { Val = span };
-            CellWidth = width;
+            WidthTwips = width;
             nextSiblingRightTableCell.Remove();
         }
     }

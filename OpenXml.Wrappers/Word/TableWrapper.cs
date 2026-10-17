@@ -1,4 +1,5 @@
 using System;
+using OpenXml.Wrappers.Helpers;
 using System.Globalization;
 using DocumentFormat.OpenXml.Wordprocessing;
 
@@ -194,9 +195,12 @@ public class TableWrapper : System.IEquatable<TableWrapper>
     {
         return Range.InsertParagraphAfter();
     }
-    public int Width
+    /// <summary>
+    /// The width of the table in points, worked out from the fixed or percentage width it has (0 when it has neither).
+    /// </summary>
+    public double Width
     {
-        get { return Convert.ToInt32(_table.GetTableWidth()); }
+        get { return ConversionHelper.TwipsToPoints(Convert.ToInt32(_table.GetTableWidth())); }
     }
 
     #region Equality
