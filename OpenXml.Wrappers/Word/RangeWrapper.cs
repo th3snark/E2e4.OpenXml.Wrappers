@@ -102,6 +102,20 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
                 Table table = (Table)_startOpenXmlElement;
                 AppendTableText(sb, table);
             }
+            else if (_startOpenXmlElement is Header || _startOpenXmlElement is Footer)
+            {
+                foreach (OpenXmlElement block in _startOpenXmlElement.ChildElements)
+                {
+                    if (block is Paragraph)
+                    {
+                        AppendParagraphText(sb, (Paragraph)block);
+                    }
+                    else if (block is Table)
+                    {
+                        AppendTableText(sb, (Table)block);
+                    }
+                }
+            }
             else
             {
                 throw new InvalidOperationException(String.Format(CultureInfo.InvariantCulture, "Getting the Text property is not currently supported for the type {0}", _startOpenXmlElement.GetType().Name));
@@ -153,6 +167,20 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
                 if (oldRunList.Count > 0)
                 {
                     DeleteAllRunsInList(oldRunList);
+                }
+            }
+            else if (_startOpenXmlElement is Header || _startOpenXmlElement is Footer)
+            {
+                //The content is replaced by one paragraph for each line, so the header or footer ends up with plain paragraphs.
+                _startOpenXmlElement.RemoveAllChildren();
+                foreach (string line in text.TrimEnd('\r').Split('\r'))
+                {
+                    Paragraph paragraph = new Paragraph();
+                    foreach (Run run in BuildNewRunListFromText(line, paragraph))
+                    {
+                        paragraph.AppendChild(run);
+                    }
+                    _startOpenXmlElement.AppendChild(paragraph);
                 }
             }
             else

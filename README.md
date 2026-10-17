@@ -98,6 +98,19 @@ Merging and splitting throw `NotSupportedException` when they would cut through 
 
 `Bookmarks.Add(name, range)` bookmarks a paragraph, table cell, bookmark or comment range (an existing bookmark of the same name is moved), and `Bookmarks.Exists(name)` and `Bookmarks["name"]` ignore case. Names follow Word's rules: a letter first, then letters, digits and underscores, at most 40 characters. `Comment.Text` can be set (it replaces the body of the comment), `Comment.Date` is UTC, and `Comment.Delete()` removes the comment together with its range markers and reference.
 
+## Headers and footers
+
+`section.Headers[HeaderFooterIndex.Primary]` (also `FirstPage` and `EvenPages`) and `section.Footers[...]` give a `HeaderFooter` with `Range`, `Exists`, `LinkToPrevious`, `IsHeader`, `Index` and `Parent`. They are indexed by `HeaderFooterIndex` as in Word, not by position, and the collections always hold the three kinds.
+
+```csharp
+document.Sections[0].Headers[HeaderFooterIndex.Primary].Range.Text = "Quarterly report";
+FieldWrapperCollection fields = document.Sections[0].Footers[HeaderFooterIndex.Primary].Range.Fields;
+```
+
+Reading `Range` creates an empty header or footer if the section and the sections before it have none; a section without its own shows (and edits) that of the nearest earlier section, as `LinkToPrevious` says. `LinkToPrevious = false` gives the section a copy of what it was showing; `true` removes its own. `Exists` is true only for a header or footer the section has of its own. A header range supports `Text`, `InsertBefore`/`InsertAfter`, `Find`, `Font`, `Fields` and the other paragraph-level features; setting `Text` replaces the content with one plain paragraph per line.
+
+Creating a first-page header does not switch on `DifferentFirstPageHeaderFooter`, and even-page headers only show when the document's odd/even setting is on, which the library does not expose.
+
 ## Fields
 
 `document.Fields` and `range.Fields` list the fields in document order: complex fields (begin, separate and end characters around a code) and simple fields, including fields nested in the result of another. A field has `Code` (read and set, without the surrounding spaces), `Type` (a `FieldType`, `Other` for kinds not in the enum), `Result` (the stored text, read and set), `Range`, `Parent` and `Delete()`. `Fields.Add(range, FieldType.Page, "\* MERGEFORMAT")` or `Fields.Add(range, "MERGEFIELD Name")` adds a complex field at the end of the range, by the rules of `InsertAfter`, with an empty result and the dirty flag so Word updates it when the document opens.

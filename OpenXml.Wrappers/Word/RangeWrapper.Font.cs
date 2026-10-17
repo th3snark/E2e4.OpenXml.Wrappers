@@ -30,7 +30,8 @@ public partial class RangeWrapper
     internal IList<Paragraph> GetParagraphs()
     {
         if (_startOpenXmlElement is Paragraph || _startOpenXmlElement is TableCell || _startOpenXmlElement is TableRow || _startOpenXmlElement is Table
-            || _startOpenXmlElement is Document || _startOpenXmlElement is Body || _startOpenXmlElement is Comment)
+            || _startOpenXmlElement is Document || _startOpenXmlElement is Body || _startOpenXmlElement is Comment
+            || _startOpenXmlElement is Header || _startOpenXmlElement is Footer)
         {
             return _startOpenXmlElement.GetElements<Paragraph>().ToList();
         }

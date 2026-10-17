@@ -71,6 +71,10 @@ public partial class RangeWrapper
         {
             InsertRunsIntoBody(GetBody(), build, after);
         }
+        else if (_startOpenXmlElement is Header || _startOpenXmlElement is Footer)
+        {
+            InsertRunsIntoBody((OpenXmlCompositeElement)_startOpenXmlElement, build, after);
+        }
         else
         {
             throw new NotSupportedException(String.Format(CultureInfo.InvariantCulture, "Inserting text is not currently supported for a range starting with the type {0}", _startOpenXmlElement.GetType().Name));
@@ -134,7 +138,7 @@ public partial class RangeWrapper
         }
     }
 
-    private void InsertRunsIntoBody(Body body, Func<Paragraph, List<Run>> build, bool after)
+    private void InsertRunsIntoBody(OpenXmlCompositeElement body, Func<Paragraph, List<Run>> build, bool after)
     {
         //The section properties are not content, so they are never the first or last block.
         OpenXmlElement block = after

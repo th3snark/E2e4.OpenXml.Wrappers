@@ -44,6 +44,32 @@ public class SectionWrapper : System.IEquatable<SectionWrapper>
         get { return new PageSetupWrapper(this); }
     }
 
+    /// <summary>
+    /// The headers of the section.
+    /// </summary>
+    public HeaderFooterWrapperCollection Headers
+    {
+        get { return new HeaderFooterWrapperCollection(this, true); }
+    }
+
+    /// <summary>
+    /// The footers of the section.
+    /// </summary>
+    public HeaderFooterWrapperCollection Footers
+    {
+        get { return new HeaderFooterWrapperCollection(this, false); }
+    }
+
+    internal DocumentFormat.OpenXml.Packaging.MainDocumentPart GetMainDocumentPart()
+    {
+        return _body.Ancestors<Document>().FirstOrDefault()?.MainDocumentPart;
+    }
+
+    internal System.Collections.Generic.IList<SectionWrapper> Siblings()
+    {
+        return new SectionWrapperCollection(_body).ToList();
+    }
+
     internal SectionProperties GetSectionProperties(bool create)
     {
         if (_sectionProperties != null)

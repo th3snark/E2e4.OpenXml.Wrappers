@@ -31,3 +31,13 @@ public enum StyleType
     Table = 3,
     List = 4
 }
+
+/// <summary>
+/// Which header or footer of a section, as <c>WdHeaderFooterIndex</c> in Word.
+/// </summary>
+public enum HeaderFooterIndex
+{
+    Primary = 1,
+    FirstPage = 2,
+    EvenPages = 3
+}
