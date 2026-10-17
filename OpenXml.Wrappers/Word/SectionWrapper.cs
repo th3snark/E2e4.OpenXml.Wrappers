@@ -39,6 +39,14 @@ public class SectionWrapper : System.IEquatable<SectionWrapper>
         get { return new SectionWrapperCollection(_body).ToList().IndexOf(this); }
     }
 
+    /// <summary>
+    /// The sections of the document this section is in (<c>Section.Parent</c> in Word).
+    /// </summary>
+    public SectionWrapperCollection Parent
+    {
+        get { return new SectionWrapperCollection(_body); }
+    }
+
     public PageSetupWrapper PageSetup
     {
         get { return new PageSetupWrapper(this); }

@@ -56,6 +56,17 @@ public class DocumentStructureTest : IDisposable
     }
 
     [Fact]
+    public void SectionsAndTheirParentsLeadBackToTheDocument()
+    {
+        SectionWrapper section = _document.Sections[0];
+
+        Assert.Equal(_document.Sections.Count, section.Parent.Count);
+        Assert.Equal(section, section.Parent[0]);
+        Assert.Equal(_document.Content, _document.Sections.Parent);
+        Assert.Equal(section, section.Headers.Parent);
+    }
+
+    [Fact]
     public void SectionBreaksMakeMoreSectionsInOrder()
     {
         Paragraph first = new Paragraph(new ParagraphProperties(new SectionProperties(new PageSize() { Width = 1000, Height = 2000 })));
