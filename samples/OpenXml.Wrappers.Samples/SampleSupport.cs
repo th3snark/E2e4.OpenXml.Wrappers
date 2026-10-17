@@ -141,7 +141,7 @@ internal sealed class DocumentBuilder
 
     private ParagraphWrapper TakeParagraph()
     {
-        ParagraphWrapper paragraph = _spare ?? _document.Range.InsertParagraphAfter();
+        ParagraphWrapper paragraph = _spare ?? _document.Content.InsertParagraphAfter();
         _spare = null;
         return paragraph;
     }

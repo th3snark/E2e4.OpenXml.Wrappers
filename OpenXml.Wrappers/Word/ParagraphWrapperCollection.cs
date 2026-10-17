@@ -44,7 +44,7 @@ public class ParagraphWrapperCollection : IEnumerable<ParagraphWrapper>
 
     private IList<Paragraph> GetElementList()
     {
-        return _range.Start.GetElements<Paragraph>(_range.End).ToList();
+        return _range.IsSpan ? _range.GetTouchedParagraphs() : _range.StartElement.GetElements<Paragraph>(_range.EndElement).ToList();
     }
 
     public ParagraphWrapper Add()

@@ -109,7 +109,7 @@ public class FieldWrapperTest
         field.Result = "yesterday";
 
         Assert.Equal("yesterday", field.Result);
-        Assert.NotNull(field.Range.Start.Descendants<Italic>().SingleOrDefault());
+        Assert.NotNull(field.Range.StartElement.Descendants<Italic>().SingleOrDefault());
     }
 
     [Fact]

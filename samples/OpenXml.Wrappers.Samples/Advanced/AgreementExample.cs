@@ -151,7 +151,7 @@ internal static class AgreementExample
             };
             foreach (KeyValuePair<string, string> pair in values)
             {
-                document.Range.Find.Execute(pair.Key, matchCase: true, replaceWith: pair.Value, replace: ReplaceMode.All);
+                document.Content.Find.Execute(pair.Key, matchCase: true, replaceWith: pair.Value, replace: ReplaceMode.All);
                 footer.Find.Execute(pair.Key, matchCase: true, replaceWith: pair.Value, replace: ReplaceMode.All);
             }
 

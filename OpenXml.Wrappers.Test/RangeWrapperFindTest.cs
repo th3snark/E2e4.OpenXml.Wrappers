@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Wordprocessing;
@@ -76,11 +77,9 @@ public class RangeWrapperFindTest
     [Fact]
     public void FindIsCaseInsensitiveUnlessMatchCaseIsSet()
     {
-        FindWrapper find = new RangeWrapper(CreateParagraph("Hello")).Find;
-
-        Assert.True(find.Execute("hello"));
-        Assert.False(find.Execute("hello", matchCase: true));
-        Assert.True(find.Execute("Hello", matchCase: true));
+        Assert.True(new RangeWrapper(CreateParagraph("Hello")).Find.Execute("hello"));
+        Assert.False(new RangeWrapper(CreateParagraph("Hello")).Find.Execute("hello", matchCase: true));
+        Assert.True(new RangeWrapper(CreateParagraph("Hello")).Find.Execute("Hello", matchCase: true));
     }
 
     [Fact]
@@ -187,11 +186,9 @@ public class RangeWrapperFindTest
     public void FindMatchesTabsAndLineBreaks()
     {
         Paragraph paragraph = new Paragraph(new Run(new Text("a"), new TabChar(), new Text("b"), new Break(), new Text("c")));
-        FindWrapper find = new RangeWrapper(paragraph).Find;
-
-        Assert.True(find.Execute("a\tb"));
-        Assert.True(find.Execute("b\vc"));
-        Assert.False(find.Execute("a b"));
+        Assert.True(new RangeWrapper(paragraph).Find.Execute("a\tb"));
+        Assert.True(new RangeWrapper(paragraph).Find.Execute("b\vc"));
+        Assert.False(new RangeWrapper(paragraph).Find.Execute("a b"));
     }
 
     [Fact]
@@ -214,17 +211,101 @@ public class RangeWrapperFindTest
     }
 
     [Theory]
-    [InlineData("a\tb")]
-    [InlineData("a\nb")]
-    [InlineData("a\rb")]
-    [InlineData("a\vb")]
-    [InlineData("a\fb")]
-    public void ReplacementTextWithControlCharactersIsNotSupported(string replacement)
+    [InlineData("a\tb", typeof(TabChar))]
+    [InlineData("a\nb", typeof(Break))]
+    [InlineData("a\vb", typeof(Break))]
+    [InlineData("a\fb", typeof(Break))]
+    [InlineData("a^tb", typeof(TabChar))]
+    [InlineData("a^lb", typeof(Break))]
+    public void ReplacementTextCanContainTabsAndBreaks(string replacement, Type expected)
     {
         Paragraph paragraph = CreateParagraph("cat");
+        Body body = new Body(paragraph);
 
-        Assert.Throws<NotSupportedException>(() => new RangeWrapper(paragraph).Find.Execute("cat", replaceWith: replacement, replace: ReplaceMode.All));
-        Assert.Equal("cat", TextOf(paragraph));
+        new RangeWrapper(body).Find.Execute("cat", replaceWith: replacement, replace: ReplaceMode.All);
+
+        Assert.Single(paragraph.Descendants(), e => e.GetType() == expected);
+        Assert.Equal("a", paragraph.Descendants<Text>().First().Text);
+        Assert.Equal("b", paragraph.Descendants<Text>().Last().Text);
+    }
+
+    [Theory]
+    [InlineData("a\rb")]
+    [InlineData("a^pb")]
+    public void AParagraphMarkInTheReplacementStartsAParagraph(string replacement)
+    {
+        Body body = new Body(CreateParagraph("x cat y"));
+
+        new RangeWrapper(body).Find.Execute("cat", replaceWith: replacement, replace: ReplaceMode.All);
+
+        Assert.Equal(2, body.Elements<Paragraph>().Count());
+        Assert.Equal("x a\rb y\r", new RangeWrapper(body).Text);
+    }
+
+    [Fact]
+    public void AMatchCanSpanParagraphs()
+    {
+        Body body = new Body(CreateParagraph("ca"), CreateParagraph("t"));
+
+        Assert.True(new RangeWrapper(body).Find.Execute("ca^pt"));
+        Assert.True(new RangeWrapper(body).Find.Execute("ca\rt", replaceWith: "X", replace: ReplaceMode.All));
+        Assert.Equal("X\r", new RangeWrapper(body).Text);
+    }
+
+    [Fact]
+    public void AFoundRangeIsNarrowedToTheMatch()
+    {
+        Paragraph paragraph = CreateParagraph("one two three");
+        RangeWrapper range = new RangeWrapper(paragraph);
+
+        Assert.True(range.Find.Execute("two"));
+
+        Assert.Equal("two", range.Text);
+        Assert.Equal(4, range.Start);
+        Assert.Equal(7, range.End);
+        range.Font.Bold = true;
+        Assert.True(range.Font.Bold);
+        Assert.Equal(3, paragraph.Descendants<Run>().Count());
+    }
+
+    [Fact]
+    public void ExecuteCarriesOnAfterTheLastMatchUntilTheEndOfTheOriginalRange()
+    {
+        Body body = new Body(CreateParagraph("a b a b a"));
+        RangeWrapper range = new RangeWrapper(body);
+        List<int> starts = new List<int>();
+
+        while (range.Find.Execute("a"))
+        {
+            starts.Add(range.Start);
+        }
+
+        Assert.Equal(new[] { 0, 4, 8 }, starts);
+    }
+
+    [Fact]
+    public void ReplaceOneLeavesTheRangeOnTheReplacement()
+    {
+        Body body = new Body(CreateParagraph("a cat sat"));
+        RangeWrapper range = new RangeWrapper(body);
+
+        Assert.True(range.Find.Execute("cat", replaceWith: "kitten", replace: ReplaceMode.One));
+
+        Assert.Equal("kitten", range.Text);
+        Assert.Equal("a kitten sat\r", new RangeWrapper(body).Text);
+    }
+
+    [Fact]
+    public void ReplacingPartOfARunKeepsItsFormattingAndSplitsNothing()
+    {
+        Run run = new Run(new RunProperties(new Italic()), new Text("a cat sat"));
+        Body body = new Body(new Paragraph(run));
+
+        new RangeWrapper(body).Find.Execute("cat", replaceWith: "dog", replace: ReplaceMode.All);
+
+        Assert.Single(body.Descendants<Run>());
+        Assert.Equal("a dog sat", body.Descendants<Text>().Single().Text);
+        Assert.NotNull(run.RunProperties.Italic);
     }
 
     [Fact]
@@ -306,8 +387,8 @@ public class RangeWrapperFindTest
     }
 
     [Fact]
-    public void AFindOnARunRangeIsNotSupported()
+    public void AFindInARunWithNoParagraphFindsNothing()
     {
-        Assert.Throws<NotSupportedException>(() => new RangeWrapper(new Run(new Text("a"))).Find.Execute("a"));
+        Assert.False(new RangeWrapper(new Run(new Text("a"))).Find.Execute("a"));
     }
 }

@@ -118,7 +118,7 @@ range.ParagraphFormat.SpaceAfter = 6;   // points
 range.Style = "Heading 2";
 
 // Find and replace, in a range, a table or the whole document.
-document.Range.Find.Execute("colour", matchCase: true, replaceWith: "color", replace: ReplaceMode.All);
+document.Content.Find.Execute("colour", matchCase: true, replaceWith: "color", replace: ReplaceMode.All);
 
 document.Paragraphs[3].Range.Delete();
 ```

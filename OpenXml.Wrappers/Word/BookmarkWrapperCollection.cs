@@ -32,7 +32,7 @@ public class BookmarkWrapperCollection : IEnumerable<BookmarkWrapper>
         {
             try
             {
-                return new BookmarkWrapper(_rangeWrapper.Start.GetElements<BookmarkStart>(_rangeWrapper.End).ElementAt(index));
+                return new BookmarkWrapper(_rangeWrapper.StartElement.GetElements<BookmarkStart>(_rangeWrapper.EndElement).ElementAt(index));
             }
             catch (ArgumentOutOfRangeException ex)
             {
@@ -45,7 +45,7 @@ public class BookmarkWrapperCollection : IEnumerable<BookmarkWrapper>
     {
         get
         {
-            BookmarkStart bookmarkStart = _rangeWrapper.Start.GetElements<BookmarkStart>(_rangeWrapper.End).Where(e => String.Equals(e.Name?.Value, name, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+            BookmarkStart bookmarkStart = _rangeWrapper.StartElement.GetElements<BookmarkStart>(_rangeWrapper.EndElement).Where(e => String.Equals(e.Name?.Value, name, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
             if (bookmarkStart != null)
             {
                 return new BookmarkWrapper(bookmarkStart);
@@ -59,7 +59,7 @@ public class BookmarkWrapperCollection : IEnumerable<BookmarkWrapper>
     /// </summary>
     public bool Exists(string name)
     {
-        return _rangeWrapper.Start.GetElements<BookmarkStart>(_rangeWrapper.End).Any(e => String.Equals(e.Name?.Value, name, StringComparison.OrdinalIgnoreCase));
+        return _rangeWrapper.StartElement.GetElements<BookmarkStart>(_rangeWrapper.EndElement).Any(e => String.Equals(e.Name?.Value, name, StringComparison.OrdinalIgnoreCase));
     }
 
     /// <summary>
@@ -79,18 +79,18 @@ public class BookmarkWrapperCollection : IEnumerable<BookmarkWrapper>
         {
             throw new ArgumentException("A bookmark name must start with a letter, contain only letters, digits and underscores, and be at most 40 characters long.", nameof(name));
         }
-        if (!(range.Start is Paragraph || range.Start is TableCell || range.Start is Table || range.Start is BookmarkStart || range.Start is CommentRangeStart))
+        if (!(range.StartElement is Paragraph || range.StartElement is TableCell || range.StartElement is Table || range.StartElement is BookmarkStart || range.StartElement is CommentRangeStart))
         {
-            throw new NotSupportedException(String.Format(CultureInfo.InvariantCulture, "Adding a bookmark to a range starting with the type {0} is not currently supported.", range.Start.GetType().Name));
+            throw new NotSupportedException(String.Format(CultureInfo.InvariantCulture, "Adding a bookmark to a range starting with the type {0} is not currently supported.", range.StartElement.GetType().Name));
         }
 
-        if (range.Start is BookmarkStart sameBookmark && String.Equals(sameBookmark.Name?.Value, name, StringComparison.OrdinalIgnoreCase))
+        if (range.StartElement is BookmarkStart sameBookmark && String.Equals(sameBookmark.Name?.Value, name, StringComparison.OrdinalIgnoreCase))
         {
             //The range already is the bookmark.
             return new BookmarkWrapper(sameBookmark);
         }
 
-        OpenXmlElement root = range.Start.GetRoot();
+        OpenXmlElement root = range.StartElement.GetRoot();
         foreach (BookmarkStart existing in root.Descendants<BookmarkStart>().Where(e => String.Equals(e.Name?.Value, name, StringComparison.OrdinalIgnoreCase)).ToList())
         {
             new BookmarkWrapper(existing).Delete();
@@ -105,18 +105,18 @@ public class BookmarkWrapperCollection : IEnumerable<BookmarkWrapper>
         BookmarkStart bookmarkStart = new BookmarkStart() { Id = idText, Name = name };
         BookmarkEnd bookmarkEnd = new BookmarkEnd() { Id = idText };
 
-        if (range.Start is Paragraph paragraph)
+        if (range.StartElement is Paragraph paragraph)
         {
             AddToParagraph(paragraph, bookmarkStart, paragraph, bookmarkEnd);
         }
-        else if (range.Start is TableCell cell)
+        else if (range.StartElement is TableCell cell)
         {
             AddToParagraph(cell.Elements<Paragraph>().First(), bookmarkStart, cell.Elements<Paragraph>().Last(), bookmarkEnd);
         }
         else
         {
-            range.Start.InsertBeforeSelf(bookmarkStart);
-            range.End.InsertAfterSelf(bookmarkEnd);
+            range.StartElement.InsertBeforeSelf(bookmarkStart);
+            range.EndElement.InsertAfterSelf(bookmarkEnd);
         }
         return new BookmarkWrapper(bookmarkStart);
     }
@@ -137,12 +137,12 @@ public class BookmarkWrapperCollection : IEnumerable<BookmarkWrapper>
 
     private IList<BookmarkStart> GetElementList()
     {
-        return _rangeWrapper.Start.GetElements<BookmarkStart>(_rangeWrapper.End).ToList();
+        return _rangeWrapper.StartElement.GetElements<BookmarkStart>(_rangeWrapper.EndElement).ToList();
     }
 
     public int Count
     {
-        get { return _rangeWrapper.Start.GetElements<BookmarkStart>(_rangeWrapper.End).Count(); }
+        get { return _rangeWrapper.StartElement.GetElements<BookmarkStart>(_rangeWrapper.EndElement).Count(); }
     }
 
     public void DeleteAll()
@@ -150,7 +150,7 @@ public class BookmarkWrapperCollection : IEnumerable<BookmarkWrapper>
         //It is important that the list is fetched since we are deleting items inside the iteration.
         //Each bookmark is removed as a whole (its start and its matching end) so that no dangling start or end markers are left behind
         //when the two markers are not both inside the range.
-        IList<BookmarkStart> bookmarkStartList = _rangeWrapper.Start.GetElements<BookmarkStart>(_rangeWrapper.End).ToList();
+        IList<BookmarkStart> bookmarkStartList = _rangeWrapper.StartElement.GetElements<BookmarkStart>(_rangeWrapper.EndElement).ToList();
         foreach (BookmarkStart bookmarkStart in bookmarkStartList)
         {
             BookmarkEnd bookmarkEnd = bookmarkStart.GetRoot().Descendants<BookmarkEnd>().FirstOrDefault(e => e.Id.Value == bookmarkStart.Id.Value);

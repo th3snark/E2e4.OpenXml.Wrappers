@@ -15,7 +15,7 @@ internal static class BookmarkExample
         {
             document.Paragraphs[0].Range.Text = "Dear [customer name],";
             document.Paragraphs.Add().Range.Text = "Your order will arrive on [date].";
-            ParagraphWrapper tableSpot = document.Range.InsertParagraphAfter();
+            ParagraphWrapper tableSpot = document.Content.InsertParagraphAfter();
             TableWrapper table = document.Tables.Add(tableSpot.Range, 1, 2);
             table.Cell(0, 0).Range.Text = "Order number";
             table.Cell(0, 1).Range.Text = "[order]";

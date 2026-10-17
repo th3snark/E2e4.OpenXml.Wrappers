@@ -24,7 +24,11 @@ public partial class RangeWrapper
     /// <exception cref="NotSupportedException">The range is of a type that does not support deleting.</exception>
     public void Delete()
     {
-        if (_startOpenXmlElement is Paragraph)
+        if (_isSpan)
+        {
+            DeleteSpan();
+        }
+        else if (_startOpenXmlElement is Paragraph)
         {
             DeleteParagraph((Paragraph)_startOpenXmlElement);
         }

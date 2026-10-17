@@ -22,7 +22,7 @@ public class TableColumnWrapperCollection : IEnumerable<TableColumnWrapper>
     /// </summary>
     public TableWrapper Parent
     {
-        get { return new TableWrapper((Table)_range.Start); }
+        get { return new TableWrapper((Table)_range.StartElement); }
     }
 
     public TableColumnWrapper this[int index]
@@ -47,12 +47,12 @@ public class TableColumnWrapperCollection : IEnumerable<TableColumnWrapper>
 
     private IList<GridColumn> GetElementList()
     {
-        return _range.Start.Elements<TableGrid>().First().Elements<GridColumn>().ToList();
+        return _range.StartElement.Elements<TableGrid>().First().Elements<GridColumn>().ToList();
     }
 
     public TableColumnWrapper Add()
     {
-        Table table = _range.Start as Table;
+        Table table = _range.StartElement as Table;
         if (table == null)
         {
             throw new InvalidOperationException("Columns can only be added to a collection of the columns of a table.");

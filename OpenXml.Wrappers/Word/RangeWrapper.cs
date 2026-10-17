@@ -25,34 +25,40 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
         _endOpenXmlElement = endOpenXmlElement;
     }
 
-    public OpenXmlElement Start
+    /// <summary>
+    /// The element the range starts at.
+    /// </summary>
+    public OpenXmlElement StartElement
     {
         get { return _startOpenXmlElement; }
     }
 
-    public OpenXmlElement End
+    /// <summary>
+    /// The element the range ends at.
+    /// </summary>
+    public OpenXmlElement EndElement
     {
         get { return _endOpenXmlElement; }
     }
 
     public BookmarkWrapperCollection Bookmarks
     {
-        get { return new BookmarkWrapperCollection(this); }
+        get { return new BookmarkWrapperCollection(ElementRange()); }
     }
 
     public TableWrapperCollection Tables
     {
-        get { return new TableWrapperCollection(this); }
+        get { return new TableWrapperCollection(ElementRange()); }
     }
 
     public TableCellWrapperCollection Cells
     {
-        get { return new TableCellWrapperCollection(this); }
+        get { return new TableCellWrapperCollection(ElementRange()); }
     }
 
     public TableRowWrapperCollection Rows
     {
-        get { return new TableRowWrapperCollection(this); }
+        get { return new TableRowWrapperCollection(ElementRange()); }
     }
 
     public ParagraphWrapperCollection Paragraphs
@@ -62,13 +68,18 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
 
     public CommentWrapperCollection Comments
     {
-        get { return new CommentWrapperCollection(this); }
+        get { return new CommentWrapperCollection(ElementRange()); }
     }
 
     public string Text
     {
         get
         {
+            if (_isSpan)
+            {
+                return GetSpanText();
+            }
+
             StringBuilder sb = new StringBuilder();
             if (_startOpenXmlElement is BookmarkStart)
             {
@@ -102,6 +113,11 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
                 Table table = (Table)_startOpenXmlElement;
                 AppendTableText(sb, table);
             }
+            else if (_startOpenXmlElement is Document || _startOpenXmlElement is Body)
+            {
+                StoryMap map = StoryMap.Build(StoryMap.FindRoot(_startOpenXmlElement));
+                sb.Append(map.GetText(0, map.Length));
+            }
             else if (_startOpenXmlElement is Header || _startOpenXmlElement is Footer)
             {
                 foreach (OpenXmlElement block in _startOpenXmlElement.ChildElements)
@@ -127,7 +143,11 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
         {
             string text = value == null ? String.Empty : value;
 
-            if (_startOpenXmlElement is TableCell)
+            if (_isSpan)
+            {
+                SetSpanText(text);
+            }
+            else if (_startOpenXmlElement is TableCell)
             {
                 //Get the first paragraph in the table cell.
                 Paragraph paragraph = _startOpenXmlElement.Elements<Paragraph>().First();
@@ -168,6 +188,13 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
                 {
                     DeleteAllRunsInList(oldRunList);
                 }
+            }
+            else if (_startOpenXmlElement is Document || _startOpenXmlElement is Body)
+            {
+                //All the content is replaced by the text: it is emptied (leaving the one paragraph that a body needs) and the text typed into it.
+                EmptyBody(GetBody());
+                RangeWrapper whole = new RangeWrapper(StoryMap.FindRoot(_startOpenXmlElement), 0, 0);
+                whole.SetSpanText(text.EndsWith('\r') ? text.Substring(0, text.Length - 1) : text);
             }
             else if (_startOpenXmlElement is Header || _startOpenXmlElement is Footer)
             {
@@ -224,6 +251,17 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
             {
                 case '\t':
                     run = new Run(new TabChar());
+                    if (sb.Length > 0)
+                    {
+                        run.AppendChild<Text>(new Text(sb.ToString()) { Space = SpaceProcessingModeValues.Preserve });
+                    }
+                    PrependRunProperties(run, paragraphMarkRunProperties);
+                    runList.Insert(0, run);
+                    sb.Length = 0;
+                    break;
+
+                case '\f':
+                    run = new Run(new Break() { Type = BreakValues.Page });
                     if (sb.Length > 0)
                     {
                         run.AppendChild<Text>(new Text(sb.ToString()) { Space = SpaceProcessingModeValues.Preserve });
@@ -293,7 +331,7 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
     /// </summary>
     public RangeWrapper Duplicate()
     {
-        return new RangeWrapper(_startOpenXmlElement, _endOpenXmlElement);
+        return _isSpan ? new RangeWrapper(_root, _spanStart, _spanEnd) : new RangeWrapper(_startOpenXmlElement, _endOpenXmlElement);
     }
 
     public ParagraphWrapper FirstParagraph
@@ -422,11 +460,23 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
 
     public bool Equals(RangeWrapper other)
     {
-        return !ReferenceEquals(other, null) && ReferenceEquals(_startOpenXmlElement, other._startOpenXmlElement) && ReferenceEquals(_endOpenXmlElement, other._endOpenXmlElement);
+        if (ReferenceEquals(other, null))
+        {
+            return false;
+        }
+        if (_isSpan || other._isSpan)
+        {
+            return _isSpan && other._isSpan && ReferenceEquals(_root, other._root) && _spanStart == other._spanStart && _spanEnd == other._spanEnd;
+        }
+        return ReferenceEquals(_startOpenXmlElement, other._startOpenXmlElement) && ReferenceEquals(_endOpenXmlElement, other._endOpenXmlElement);
     }
 
     public override int GetHashCode()
     {
+        if (_isSpan)
+        {
+            return System.HashCode.Combine(System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(_root), _spanStart, _spanEnd);
+        }
         return System.HashCode.Combine(System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(_startOpenXmlElement), System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(_endOpenXmlElement));
     }
 

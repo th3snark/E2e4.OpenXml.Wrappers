@@ -73,15 +73,15 @@ public class ParagraphWrapperTest : System.IDisposable
     [Fact]
     public void RangeTextPropertyIsCorrect()
     {
-        Assert.Equal("Test Document\r", _document1.Range.FirstParagraph.Range.Text);
-        Assert.Equal("Test Document", _document1.Range.FirstParagraph.Text);
+        Assert.Equal("Test Document\r", _document1.Content.FirstParagraph.Range.Text);
+        Assert.Equal("Test Document", _document1.Content.FirstParagraph.Text);
     }
 
     [Fact]
     public void RangeFirstParagraphRangeTextPropertyIsCorrect()
     {
-        Assert.Equal("Test Document\r", _document1.Range.FirstParagraph.Range.Text);
-        Assert.Equal("Test Document", _document1.Range.FirstParagraph.Text);
+        Assert.Equal("Test Document\r", _document1.Content.FirstParagraph.Range.Text);
+        Assert.Equal("Test Document", _document1.Content.FirstParagraph.Text);
     }
 
     [Fact]

@@ -14,7 +14,7 @@ internal static class RangeExample
         using (WordprocessingDocumentWrapper document = WordprocessingDocumentWrapper.Create(path, true, false))
         {
             //The whole document. A new document has one empty paragraph, and InsertAfter puts text at the end of the last paragraph.
-            RangeWrapper content = document.Range;
+            RangeWrapper content = document.Content;
             content.InsertAfter("A range is the piece of the document you are working on.");
 
             //InsertParagraphAfter adds a paragraph at the end of the range and returns it.
@@ -22,7 +22,7 @@ internal static class RangeExample
             second.Range.Text = "In British English the word is spelled colour, and the colour of this paragraph is red.";
 
             //Find and replace over a whole range. Execute returns whether the text was found.
-            bool found = document.Range.Find.Execute("colour", matchCase: false, replaceWith: "color", replace: ReplaceMode.All);
+            bool found = document.Content.Find.Execute("colour", matchCase: false, replaceWith: "color", replace: ReplaceMode.All);
 
             //Character formatting of the runs in a range.
             document.Paragraphs[0].Range.Font.Bold = true;

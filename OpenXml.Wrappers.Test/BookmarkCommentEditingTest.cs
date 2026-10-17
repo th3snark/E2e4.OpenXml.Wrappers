@@ -43,7 +43,7 @@ public class BookmarkCommentEditingTest : IDisposable
         Assert.Equal("Greeting", bookmark.Name);
         Assert.Equal(new[] { "pPr", "bookmarkStart", "r", "bookmarkEnd" }, paragraph.ChildElements.Select(e => e.LocalName).ToArray());
         Assert.Equal("hello", bookmark.Range.Text);
-        Assert.Same(paragraph.Elements<BookmarkStart>().Single(), _document.Bookmarks["Greeting"].Range.Start);
+        Assert.Same(paragraph.Elements<BookmarkStart>().Single(), _document.Bookmarks["Greeting"].Range.StartElement);
     }
 
     [Fact]

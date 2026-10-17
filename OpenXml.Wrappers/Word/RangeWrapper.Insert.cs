@@ -39,6 +39,12 @@ public partial class RangeWrapper
             return;
         }
 
+        if (_isSpan)
+        {
+            InsertIntoSpan(text, after);
+            return;
+        }
+
         InsertRuns(paragraph => BuildNewRunListFromText(text, paragraph), after);
     }
 

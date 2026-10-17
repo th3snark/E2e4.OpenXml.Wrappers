@@ -18,7 +18,7 @@ public class TableCellWrapperCollection : IEnumerable<TableCellWrapper>
 
     public TableRowWrapper Parent
     {
-        get { return new TableRowWrapper((TableRow)_range.Start); }
+        get { return new TableRowWrapper((TableRow)_range.StartElement); }
     }
 
     public TableCellWrapper this[int index]
@@ -43,23 +43,23 @@ public class TableCellWrapperCollection : IEnumerable<TableCellWrapper>
 
     public int NestingLevel
     {
-        get { return _range.Start.NestingLevel<TableCell>() + 1; }
+        get { return _range.StartElement.NestingLevel<TableCell>() + 1; }
     }
 
     private IList<TableCell> GetElementList()
     {
         IList<TableCell> list = null;
-        if (_range.Start is BookmarkStart)
+        if (_range.StartElement is BookmarkStart)
         {
             list = new List<TableCell>();
-            foreach (TableCell tableCell in _range.Start.GetElements<TableCell>(_range.End))
+            foreach (TableCell tableCell in _range.StartElement.GetElements<TableCell>(_range.EndElement))
             {
                 list.Add(tableCell);
             }
         }
         else
         {
-            list = _range.Start.DescendantsAtRelativeNestingLevel<TableCell>(1);
+            list = _range.StartElement.DescendantsAtRelativeNestingLevel<TableCell>(1);
         }
         return list;
     }
