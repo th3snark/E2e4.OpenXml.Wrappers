@@ -3,15 +3,24 @@
   <PropertyGroup>
     <RootNamespace>OpenXml.Wrappers</RootNamespace>
     <AssemblyName>OpenXml.Wrappers</AssemblyName>
+    <PackageId>E2e4.OpenXml.Wrappers</PackageId>
     <Title>E2e4 OpenXml Wrappers</Title>
-    <Description>Word-object-model-like wrappers (Range, Paragraphs, Tables, Bookmarks, Comments) over the Open XML SDK WordprocessingML types.</Description>
-    <PackageTags>openxml;word;wordprocessingml;docx</PackageTags>
+    <AssemblyTitle>E2e4 OpenXml Wrappers</AssemblyTitle>
+    <Description>A Word-object-model-like API (Range, Paragraphs, Tables, Bookmarks, Comments, Fields, Sections, Styles and more) over the Open XML SDK, so that code for .docx files reads like the Word VBA macros it replaces.</Description>
+    <PackageTags>openxml;word;wordprocessingml;docx;office;document;vba</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="DocumentFormat.OpenXml" Version="3.5.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 </Project>

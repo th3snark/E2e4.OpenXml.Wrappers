@@ -11,12 +11,27 @@
     <TreatWarningsAsErrors Condition="'$(CI)' == 'true'">true</TreatWarningsAsErrors>
   </PropertyGroup>
 
+  <!-- Assembly and package identity. These become the assembly attributes (company, product, copyright, versions, neutral language). -->
   <PropertyGroup>
     <Company>E2e4</Company>
     <Authors>E2e4</Authors>
     <Product>E2e4 OpenXml Wrappers</Product>
-    <Copyright>Copyright © E2e4 $([System.DateTime]::UtcNow.Year)</Copyright>
-    <Version>1.0.0</Version>
+    <!-- A fixed year: the copyright year of a release should not change just because it was built later. -->
+    <Copyright>Copyright © 2026 E2e4. Licensed under the MIT License.</Copyright>
+    <NeutralLanguage>en</NeutralLanguage>
+    <VersionPrefix>1.0.0</VersionPrefix>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>$(VersionPrefix).0</FileVersion>
+  </PropertyGroup>
+
+  <!-- Repository, license and source link information shared by everything that is packed. -->
+  <PropertyGroup>
+    <RepositoryUrl>https://github.com/th3snark/E2e4.OpenXml.Wrappers</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/th3snark/E2e4.OpenXml.Wrappers</PackageProjectUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
   </PropertyGroup>
 
 </Project>
