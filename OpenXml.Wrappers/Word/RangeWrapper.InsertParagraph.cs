@@ -40,8 +40,7 @@ public partial class RangeWrapper
         {
             GetScoped(false, out StoryMap map, out int start, out int end);
             int position = after ? end : start;
-            Paragraph holder = ParagraphAt(map, position);
-            int local = position - FirstPositionOf(map, holder);
+            Paragraph holder = ParagraphForPosition(map, position, out int local);
             Paragraph split = SplitParagraphAt(holder, local);
             if (after)
             {

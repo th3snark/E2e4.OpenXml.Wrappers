@@ -58,8 +58,7 @@ public partial class RangeWrapper
         {
             GetScoped(false, out StoryMap map, out int start, out int end);
             int position = after ? end : start;
-            Paragraph paragraph = ParagraphAt(map, position);
-            int local = position - FirstPositionOf(map, paragraph);
+            Paragraph paragraph = ParagraphForPosition(map, position, out int local);
             int lengthBefore = StoryMap.Build(paragraph).Length;
             InsertRunsAt(paragraph, local, build, null);
 

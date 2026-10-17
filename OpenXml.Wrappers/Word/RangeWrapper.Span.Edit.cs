@@ -48,21 +48,31 @@ public partial class RangeWrapper
             DeleteSpanContent(map, start, end);
         }
 
-        Paragraph paragraph = ParagraphToInsertInto(_startAnchor);
-        int local = ResolveLocal(StoryMap.Build(paragraph), _startAnchor);
+        Paragraph paragraph = ParagraphToInsertInto(_startAnchor, out int local);
         (Paragraph last, int lastLocal) = InsertSpanText(paragraph, local, newText, formatting);
 
         MakeSpanAnchors(Anchor.At(StoryMap.Build(paragraph), local), Anchor.At(StoryMap.Build(last), lastLocal));
         return newText.Replace("\a", String.Empty, StringComparison.Ordinal).Replace("\r\n", "\r", StringComparison.Ordinal).Length;
     }
 
-    //The paragraph an anchor is in; when the anchor is the end of the story, the last paragraph of it.
-    private Paragraph ParagraphToInsertInto(Anchor anchor)
+    //The paragraph an anchor is in, and the position in it; when the anchor is the end of a table row (where no text can go, as in Word) the
+    //start of the paragraph after the table, and when it is the end of the story the end of the last paragraph of it.
+    private Paragraph ParagraphToInsertInto(Anchor anchor, out int local)
     {
+        local = 0;
         Paragraph paragraph = ParagraphOfAnchor(anchor);
         if (paragraph != null)
         {
+            local = ResolveLocal(StoryMap.Build(paragraph), anchor);
             return paragraph;
+        }
+        if (anchor.Element is TableRow row)
+        {
+            paragraph = ParagraphOfAnchor(StoryMap.AnchorAfter(row, _root));
+            if (paragraph != null)
+            {
+                return paragraph;
+            }
         }
 
         StoryMap story = StoryMap.Build(_root);
@@ -71,7 +81,30 @@ public partial class RangeWrapper
         {
             throw new InvalidOperationException("The story has no paragraph to put text in.");
         }
+        local = story.Length - 1 - FirstPositionOf(story, (Paragraph)lastParagraphMark.Element);
         return (Paragraph)lastParagraphMark.Element;
+    }
+
+    //The paragraph a position is in and the position in it. A position at the end of a table row, where no text can go, is the start of the
+    //paragraph after the table, as in Word.
+    private Paragraph ParagraphForPosition(StoryMap map, int position, out int local)
+    {
+        int index = map.IndexAt(position);
+        if (index >= 0 && map.Atoms[index].Kind == AtomKind.RowMark)
+        {
+            Paragraph after = index + 1 < map.Atoms.Count
+                ? ParagraphOf(map.Atoms[index + 1])
+                : ParagraphOfAnchor(StoryMap.AnchorAfter(map.Atoms[index].Element, _root));
+            if (after != null)
+            {
+                local = 0;
+                return after;
+            }
+        }
+
+        Paragraph paragraph = ParagraphAt(map, position);
+        local = position - FirstPositionOf(map, paragraph);
+        return paragraph;
     }
 
     private void InsertIntoSpan(string text, bool after)
@@ -84,8 +117,7 @@ public partial class RangeWrapper
         GetScoped(false, out StoryMap map, out int start, out int end);
         int position = after ? end : start;
         RunProperties formatting = FindFormatting(map, position, position);
-        Paragraph paragraph = ParagraphAt(map, position);
-        int local = position - FirstPositionOf(map, paragraph);
+        Paragraph paragraph = ParagraphForPosition(map, position, out int local);
         (Paragraph last, int lastLocal) = InsertSpanText(paragraph, local, text, formatting);
 
         //As in Word the range grows to include the text that was added to it.
