@@ -106,6 +106,50 @@ public class DocumentGapsTest : IDisposable
         }
     }
 
+    [Fact]
+    public void BordersFromTheConditionalFormattingOfTheTableStyleAreReadWhenTheLookSwitchesThemOn()
+    {
+        using (WordprocessingDocumentWrapper document = WordprocessingDocumentWrapper.Create(_path, true, false))
+        {
+            StylesPart(document).Styles = new Styles(
+                new Style(
+                    new StyleName() { Val = "Header Grid" },
+                    new TableStyleProperties(
+                        new TableStyleConditionalFormattingTableCellProperties(new TableCellBorders(new BottomBorder() { Val = BorderValues.Double, Size = 6 })))
+                    { Type = TableStyleOverrideValues.FirstRow })
+                { Type = StyleValues.Table, StyleId = "HeaderGrid" });
+
+            TableWrapper table = document.Tables.Add(document.Paragraphs[0].Range, 2, 2);
+            table.Borders.Clear();
+            TableProperties properties = table.Table.GetFirstChild<TableProperties>();
+            properties.TableStyle = new TableStyle() { Val = "HeaderGrid" };
+
+            Assert.Equal(BorderLineStyle.None, table.Cell(0, 0).Borders[BorderPosition.Bottom].LineStyle);
+
+            properties.TableLook = new TableLook() { FirstRow = true };
+            Assert.Equal(BorderLineStyle.DoubleLine, table.Cell(0, 0).Borders[BorderPosition.Bottom].LineStyle);
+            Assert.Equal(BorderLineStyle.None, table.Cell(1, 0).Borders[BorderPosition.Bottom].LineStyle);
+        }
+    }
+
+    [Fact]
+    public void KeepNextOfARowAndACellCanBeRead()
+    {
+        TableCell first = new TableCell(new Paragraph());
+        TableCell second = new TableCell(new Paragraph());
+        TableRow row = new TableRow(first, second);
+        Table table = new Table(row);
+        TableRowWrapper wrapper = new TableRowWrapper(row);
+        Assert.False(wrapper.KeepNext);
+
+        new TableCellWrapper(first).KeepNext = true;
+        Assert.True(new TableCellWrapper(first).KeepNext);
+        Assert.False(wrapper.KeepNext);
+
+        wrapper.KeepNext = true;
+        Assert.True(wrapper.KeepNext);
+    }
+
     private static StyleDefinitionsPart StylesPart(WordprocessingDocumentWrapper document)
     {
         return document.WordprocessingDocument.MainDocumentPart.StyleDefinitionsPart

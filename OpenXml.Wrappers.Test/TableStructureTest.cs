@@ -225,16 +225,48 @@ public class TableStructureTest
     }
 
     [Fact]
-    public void SplitRejectsMergedCellsAndBadCounts()
+    public void SplitRejectsMergedCellsIntoRowsAndBadCounts()
     {
         Table table = CreateTable(3, 2);
         Cell(table, 0, 0).Merge(Cell(table, 1, 0));
 
-        Assert.Throws<NotSupportedException>(() => Cell(table, 0, 0).Split(1, 2));
-        Assert.Throws<NotSupportedException>(() => Cell(table, 0, 1).Split(2, 1));
+        Assert.Throws<NotSupportedException>(() => Cell(table, 0, 0).Split(2, 1));
         Assert.Throws<ArgumentOutOfRangeException>(() => Cell(table, 2, 0).Split(0, 1));
         Cell(table, 2, 0).Split(1, 1);
         Assert.Equal(3, table.Elements<TableRow>().Count());
+    }
+
+    [Fact]
+    public void AVerticallyMergedCellIsSplitIntoColumnsInEveryRowOfTheMerge()
+    {
+        Table table = CreateTable(3, 2);
+        Cell(table, 0, 0).Merge(Cell(table, 1, 0));
+
+        Cell(table, 0, 0).Split(1, 2);
+
+        TableRow[] rows = table.Elements<TableRow>().ToArray();
+        Assert.Equal(3, table.GetFirstChild<TableGrid>().Elements<GridColumn>().Count());
+        Assert.Equal(3, rows[0].Elements<TableCell>().Count());
+        Assert.Equal(3, rows[1].Elements<TableCell>().Count());
+        Assert.Equal(2, rows[2].Elements<TableCell>().Count());
+        Assert.Equal(2, rows[2].Elements<TableCell>().First().TableCellProperties.GridSpan.Val.Value);
+        Assert.All(rows[0].Elements<TableCell>().Take(2), c => Assert.Equal(MergedCellValues.Restart, c.TableCellProperties.VerticalMerge.Val.Value));
+        Assert.All(rows[1].Elements<TableCell>().Take(2), c => Assert.NotNull(c.TableCellProperties.VerticalMerge));
+    }
+
+    [Fact]
+    public void ACellIsSplitIntoRowsNextToACellThatIsAlreadyMergedVertically()
+    {
+        Table table = CreateTable(3, 2);
+        Cell(table, 0, 0).Merge(Cell(table, 1, 0));
+
+        Cell(table, 0, 1).Split(2, 1);
+
+        TableRow[] rows = table.Elements<TableRow>().ToArray();
+        Assert.Equal(4, rows.Length);
+        Assert.Equal(MergedCellValues.Restart, rows[0].Elements<TableCell>().First().TableCellProperties.VerticalMerge.Val.Value);
+        Assert.NotNull(rows[1].Elements<TableCell>().First().TableCellProperties.VerticalMerge);
+        Assert.NotNull(rows[2].Elements<TableCell>().First().TableCellProperties.VerticalMerge);
     }
 
     #endregion

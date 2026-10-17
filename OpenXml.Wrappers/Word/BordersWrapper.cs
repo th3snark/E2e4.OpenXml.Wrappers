@@ -203,6 +203,11 @@ public class BordersWrapper
         }
         if (_owner is TableCell cell && cell.Ancestors<Table>().FirstOrDefault() is Table table)
         {
+            BorderType conditional = FindInConditionalStyle(cell, table, position);
+            if (conditional != null)
+            {
+                return conditional;
+            }
             BorderPosition? mapped = MapToTable(cell, table, position);
             if (mapped != null)
             {
@@ -210,6 +215,80 @@ public class BordersWrapper
             }
         }
         return null;
+    }
+
+    /// <summary>
+    /// The border the conditional formatting of the table style (first and last row and column, as the table's look switches them on) gives
+    /// the cell. The first and last rows win over the first and last columns.
+    /// </summary>
+    private static BorderType FindInConditionalStyle(TableCell cell, Table table, BorderPosition position)
+    {
+        if (position == BorderPosition.Horizontal || position == BorderPosition.Vertical)
+        {
+            return null;
+        }
+        Styles styles = table.Ancestors<Document>().FirstOrDefault()?.MainDocumentPart?.StyleDefinitionsPart?.Styles;
+        string styleId = table.GetFirstChild<TableProperties>()?.TableStyle?.Val?.Value;
+        if (styles == null || styleId == null)
+        {
+            return null;
+        }
+
+        List<TableRow> rows = table.Elements<TableRow>().ToList();
+        int row = rows.IndexOf((TableRow)cell.Parent);
+        int start = TableCellWrapper.GetGridStart(cell);
+        int columns = table.GetFirstChild<TableGrid>()?.Elements<GridColumn>().Count() ?? 0;
+        TableLook look = table.GetFirstChild<TableProperties>()?.TableLook;
+        List<TableStyleOverrideValues> applies = new List<TableStyleOverrideValues>();
+        if (row == 0 && LookFlag(look, look?.FirstRow, 0x0020))
+        {
+            applies.Add(TableStyleOverrideValues.FirstRow);
+        }
+        if (row == rows.Count - 1 && LookFlag(look, look?.LastRow, 0x0040))
+        {
+            applies.Add(TableStyleOverrideValues.LastRow);
+        }
+        if (start == 0 && LookFlag(look, look?.FirstColumn, 0x0080))
+        {
+            applies.Add(TableStyleOverrideValues.FirstColumn);
+        }
+        if (start + TableCellWrapper.Span(cell) >= columns && LookFlag(look, look?.LastColumn, 0x0100))
+        {
+            applies.Add(TableStyleOverrideValues.LastColumn);
+        }
+
+        string[] names = GetNames(position);
+        Style style = styles.Elements<Style>().FirstOrDefault(s => s.StyleId?.Value == styleId);
+        for (int depth = 0; style != null && depth < 20; depth++)
+        {
+            foreach (TableStyleOverrideValues type in applies)
+            {
+                TableStyleProperties conditional = style.Elements<TableStyleProperties>().FirstOrDefault(p => p.Type?.Value == type);
+                BorderType border = conditional?.GetFirstChild<TableStyleConditionalFormattingTableCellProperties>()?.TableCellBorders?
+                    .Elements<BorderType>().FirstOrDefault(e => names.Contains(e.LocalName));
+                if (border != null)
+                {
+                    return border;
+                }
+            }
+            string basedOn = style.BasedOn?.Val?.Value;
+            style = basedOn == null ? null : styles.Elements<Style>().FirstOrDefault(s => s.StyleId?.Value == basedOn);
+        }
+        return null;
+    }
+
+    //The look of a table is a set of switches; older files store them only in the hex value.
+    private static bool LookFlag(TableLook look, DocumentFormat.OpenXml.OnOffValue attribute, int mask)
+    {
+        if (look == null)
+        {
+            return false;
+        }
+        if (attribute != null && attribute.HasValue)
+        {
+            return attribute.Value;
+        }
+        return look.Val != null && look.Val.HasValue && Int32.TryParse(look.Val.Value, System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture, out int bits) && (bits & mask) != 0;
     }
 
     private static BorderPosition? MapToTable(TableCell cell, Table table, BorderPosition position)

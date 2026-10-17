@@ -175,8 +175,16 @@ public partial class TableCellWrapper : System.IEquatable<TableCellWrapper>
             nextSiblingRightTableCell.Remove();
         }
     }
+    /// <summary>
+    /// Whether every paragraph of the cell is kept on the same page as the next one; false when there are none or only some are.
+    /// </summary>
     public bool KeepNext
     {
+        get
+        {
+            List<ParagraphWrapper> paragraphs = Range.Paragraphs.ToList();
+            return paragraphs.Count > 0 && paragraphs.All(p => p.KeepNext);
+        }
         set
         {
             foreach (ParagraphWrapper paragraph in Range.Paragraphs)

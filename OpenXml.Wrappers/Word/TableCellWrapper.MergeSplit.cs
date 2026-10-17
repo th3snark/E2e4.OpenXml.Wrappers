@@ -116,8 +116,8 @@ public partial class TableCellWrapper
     /// text stays in the top left cell. Splitting into columns divides the grid column of the cell, and the other cells of the table that
     /// span it grow to match; splitting into rows adds rows below and vertically merges the other cells of the row with them.
     /// </summary>
-    /// <exception cref="NotSupportedException">The cell, or another cell of its row, is vertically merged, or the cell spans columns and
-    /// the number of columns to split into does not divide the span.</exception>
+    /// <exception cref="NotSupportedException">The cell is merged vertically and is to be split into rows, or the cell spans columns and the number of
+    /// columns to split into does not divide the span, or a cell involved uses the older horizontal merge.</exception>
     public void Split(int numRows, int numColumns)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(numRows, 1);
@@ -129,49 +129,75 @@ public partial class TableCellWrapper
 
         TableRow row = (TableRow)_tableCell.Parent;
         Table table = _tableCell.Ancestors<Table>().First();
-        if (_tableCell.TableCellProperties?.VerticalMerge != null || _tableCell.TableCellProperties?.HorizontalMerge != null)
+        if (_tableCell.TableCellProperties?.HorizontalMerge != null)
         {
-            throw new NotSupportedException("Splitting a cell that is merged is not supported.");
+            throw new NotSupportedException("Splitting a cell that uses the older horizontal merge is not supported.");
+        }
+
+        //A cell that is merged vertically is split in every row of the merge, so that the pieces line up.
+        List<TableCell> group = new List<TableCell>() { _tableCell };
+        if (_tableCell.TableCellProperties?.VerticalMerge != null)
+        {
+            List<TableRow> tableRows = table.Elements<TableRow>().ToList();
+            int gridColumn = GetGridStart(_tableCell);
+            GetVerticalExtent(tableRows, tableRows.IndexOf(row), gridColumn, out int top, out int bottom);
+            group = Enumerable.Range(top, bottom - top + 1).Select(i => CellAtGridColumn(tableRows[i], gridColumn)).ToList();
+            if (numRows > 1)
+            {
+                throw new NotSupportedException("Splitting a vertically merged cell into rows is not supported.");
+            }
         }
         int span = Span(_tableCell);
         if (numColumns > 1 && span > 1 && span % numColumns != 0)
         {
             throw new NotSupportedException("A cell that spans columns can only be split into a number of columns that divides the span.");
         }
-        if (numRows > 1 && row.Elements<TableCell>().Any(c => c != _tableCell && (c.TableCellProperties?.VerticalMerge != null || c.TableCellProperties?.HorizontalMerge != null)))
+        if (numRows > 1 && row.Elements<TableCell>().Any(c => c != _tableCell && c.TableCellProperties?.HorizontalMerge != null))
         {
-            throw new NotSupportedException("Splitting a cell into rows is not supported when another cell in its row is vertically merged.");
+            throw new NotSupportedException("Splitting a cell into rows is not supported when another cell in its row uses the older horizontal merge.");
         }
         List<TableCell> pieces = new List<TableCell>() { _tableCell };
         if (numColumns > 1)
         {
-            int width = CellWidth;
             int pieceSpan = span / numColumns;
             if (span == 1)
             {
-                SplitGridColumn(table, GetGridStart(_tableCell), numColumns, _tableCell);
+                SplitGridColumn(table, GetGridStart(_tableCell), numColumns, group);
                 pieceSpan = 1;
             }
 
-            TableCell previous = _tableCell;
-            for (int i = 0; i < numColumns; i++)
+            foreach (TableCell cell in group)
             {
-                TableCell piece = i == 0 ? _tableCell : CreateLike(_tableCell);
-                if (i > 0)
+                int width = new TableCellWrapper(cell).CellWidth;
+                TableCell previous = cell;
+                for (int i = 0; i < numColumns; i++)
                 {
-                    previous.InsertAfterSelf(piece);
-                    pieces.Add(piece);
+                    TableCell piece = i == 0 ? cell : CreateLike(cell);
+                    if (i > 0)
+                    {
+                        previous.InsertAfterSelf(piece);
+                        if (cell == _tableCell)
+                        {
+                            pieces.Add(piece);
+                        }
+                    }
+                    TableCellProperties properties = GetOrAddTableCellProperties(piece);
+                    properties.GridSpan = pieceSpan > 1 ? new GridSpan() { Val = pieceSpan } : null;
+                    if (i > 0 && cell.TableCellProperties?.VerticalMerge != null)
+                    {
+                        //Every piece keeps the vertical merge of the cell, which CreateLike leaves out.
+                        properties.VerticalMerge = (VerticalMerge)cell.TableCellProperties.VerticalMerge.CloneNode(true);
+                    }
+                    new TableCellWrapper(piece).CellWidth = i == numColumns - 1 ? width - (width / numColumns * (numColumns - 1)) : width / numColumns;
+                    previous = piece;
                 }
-                TableCellProperties properties = GetOrAddTableCellProperties(piece);
-                properties.GridSpan = pieceSpan > 1 ? new GridSpan() { Val = pieceSpan } : null;
-                new TableCellWrapper(piece).CellWidth = i == numColumns - 1 ? width - (width / numColumns * (numColumns - 1)) : width / numColumns;
-                previous = piece;
             }
         }
-
         if (numRows > 1)
         {
-            foreach (TableCell other in row.Elements<TableCell>().Where(c => !pieces.Contains(c)))
+            //The other cells of the row run down through the new rows: those not merged yet start a vertical merge, and those that already
+            //are merged have their merge made longer.
+            foreach (TableCell other in row.Elements<TableCell>().Where(c => !pieces.Contains(c) && c.TableCellProperties?.VerticalMerge == null))
             {
                 GetOrAddTableCellProperties(other).VerticalMerge = new VerticalMerge() { Val = MergedCellValues.Restart };
             }
@@ -294,9 +320,9 @@ public partial class TableCellWrapper
 
     /// <summary>
     /// Divides grid column <paramref name="index"/> into <paramref name="count"/> and widens the other cells that span it. The
-    /// <paramref name="target"/> cell that is being split is the one whose span is not changed.
+    /// <paramref name="targets"/> (the cell being split, or all the cells of its vertical merge) are the ones whose span is not changed.
     /// </summary>
-    private static void SplitGridColumn(Table table, int index, int count, TableCell target)
+    private static void SplitGridColumn(Table table, int index, int count, ICollection<TableCell> targets)
     {
         GridColumn gridColumn = table.GetFirstChild<TableGrid>()?.Elements<GridColumn>().ElementAtOrDefault(index);
         if (gridColumn == null)
@@ -332,7 +358,7 @@ public partial class TableCellWrapper
                 if (index >= position && index < position + span)
                 {
                     //The cell being split gets its new neighbours later; every other cell that spans the column has to grow.
-                    if (cell != target)
+                    if (!targets.Contains(cell))
                     {
                         GetOrAddTableCellProperties(cell).GridSpan = new GridSpan() { Val = span + count - 1 };
                     }

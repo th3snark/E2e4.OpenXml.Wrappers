@@ -12,4 +12,5 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 ### Changed
 - `Paragraph.Delete`, `Row.Delete` and `Table.Delete` use `Range.Delete`, so bookmarks and comments anchored in them are removed and a cell, body or table is never left invalid. `InsertSectionBreak` supports all five section types. `Cell.MergeRight`/`MergeDown` respect grid spans, and `Paragraph.KeepNext` has a getter.
 - `PageSetup.OddAndEvenPagesHeaderFooter`; `Range.Delete` for headers and footers; `Cell.Merge` absorbs vertical merges inside the rectangle; `Column.Delete` and `Column.Width` work with merged cells; borders are read from the table and table style; `Paragraph.Text` no longer ends with the cell marker.
+- `Cell.Split` handles vertically merged cells; borders from the first/last row and column conditional formatting of a table style are read; `KeepNext` of rows and cells can be read.
 - New documents are created with `compatibilityMode` 15 so Word does not open them in Compatibility Mode.
