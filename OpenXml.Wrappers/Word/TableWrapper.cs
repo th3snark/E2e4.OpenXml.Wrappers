@@ -55,6 +55,14 @@ public class TableWrapper : System.IEquatable<TableWrapper>
         }
     }
 
+    /// <summary>
+    /// The borders of the table, as <c>Table.Borders</c> in Word. Diagonal borders are not supported.
+    /// </summary>
+    public BordersWrapper Borders
+    {
+        get { return new BordersWrapper(_table, true); }
+    }
+
     private TableProperties GetOrAddTableProperties()
     {
         TableProperties tableProperties = _table.GetFirstChild<TableProperties>();

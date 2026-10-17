@@ -21,6 +21,40 @@ public enum CellVerticalAlignment
 }
 
 /// <summary>
+/// The border of a table or cell, as <c>WdBorderType</c> in Word.
+/// </summary>
+public enum BorderPosition
+{
+    Top = 0,
+    Left = 1,
+    Bottom = 2,
+    Right = 3,
+    Horizontal = 4,
+    Vertical = 5,
+    DiagonalDown = 6,
+    DiagonalUp = 7
+}
+
+/// <summary>
+/// The line style of a border, as <c>WdLineStyle</c> in Word. <see cref="Other"/> is what is read for styles that have no
+/// member here; it cannot be set.
+/// </summary>
+public enum BorderLineStyle
+{
+    None = 0,
+    SingleLine = 1,
+    Dotted = 2,
+    Dashed = 3,
+    DotDash = 4,
+    DoubleLine = 7,
+    Triple = 8,
+    Wave = 18,
+    Inset = 21,
+    Outset = 22,
+    Other = -1
+}
+
+/// <summary>
 /// The horizontal alignment of a table, as <c>WdRowAlignment</c> in Word.
 /// </summary>
 public enum RowAlignment

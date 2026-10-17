@@ -41,6 +41,14 @@ public class TableCellWrapper : System.IEquatable<TableCellWrapper>
         get { return new RangeWrapper(_tableCell); }
     }
 
+    /// <summary>
+    /// The borders of the cell, as <c>Cell.Borders</c> in Word.
+    /// </summary>
+    public BordersWrapper Borders
+    {
+        get { return new BordersWrapper(_tableCell, false); }
+    }
+
     public int CellWidth
     {
         get
