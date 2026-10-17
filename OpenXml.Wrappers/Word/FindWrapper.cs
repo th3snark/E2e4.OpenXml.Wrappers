@@ -96,15 +96,15 @@ public class FindWrapper
         //Where the search starts and ends. Looking for the same thing again from the match carries on from its end.
         _range.GetScoped(false, out StoryMap scopeMap, out int scopeStart, out int scopeEnd);
         OpenXmlElement story = StoryMap.FindRoot(_range.AnchorElement);
-        Anchor start = _range.IsSpan ? _range.StartAnchor.Clone() : Anchor.At(scopeMap, scopeStart);
-        Anchor end = _range.IsSpan ? _range.EndAnchor.Clone() : Anchor.At(scopeMap, scopeEnd);
+        Anchor start = _range.IsSpan ? _range.StartAnchor : Anchor.At(scopeMap, scopeStart);
+        Anchor end = _range.IsSpan ? _range.EndAnchor : Anchor.At(scopeMap, scopeEnd);
         bool continuing = _lastMatch != null && start.SameAs(_lastMatch.StartAnchor) && end.SameAs(_lastMatch.EndAnchor);
         Anchor from;
         Anchor to;
         if (continuing)
         {
             from = end;
-            to = _limit.StartAnchor.Clone();
+            to = _limit.StartAnchor;
         }
         else
         {

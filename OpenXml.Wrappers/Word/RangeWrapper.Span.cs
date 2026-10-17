@@ -50,30 +50,34 @@ public partial class RangeWrapper
         get { return _isSpan ? _root : _startOpenXmlElement; }
     }
 
-    internal IEnumerable<Anchor> Anchors()
+    //The pieces of text that the ends of the range are on, which is what the registry finds a range by.
+    internal IEnumerable<OpenXmlElement> EndElements()
     {
         if (_isSpan)
         {
-            yield return _startAnchor;
-            yield return _endAnchor;
+            if (_startAnchor.Element != null)
+            {
+                yield return _startAnchor.Element;
+            }
+            if (_endAnchor.Element != null && !ReferenceEquals(_endAnchor.Element, _startAnchor.Element))
+            {
+                yield return _endAnchor.Element;
+            }
         }
     }
 
-    //The two anchors and the neighbours they remember, which a change of the document has to correct as well.
-    internal IEnumerable<Anchor> AllAnchors()
+    internal bool HasEndOn(OpenXmlElement element)
+    {
+        return _isSpan && (ReferenceEquals(_startAnchor.Element, element) || ReferenceEquals(_endAnchor.Element, element));
+    }
+
+    //Changes the ends of the range, as the registry does when text is split, edited or removed.
+    internal void Remap(Func<Anchor, Anchor> change)
     {
         if (_isSpan)
         {
-            yield return _startAnchor;
-            foreach (Anchor neighbour in _startAnchor.Neighbours)
-            {
-                yield return neighbour;
-            }
-            yield return _endAnchor;
-            foreach (Anchor neighbour in _endAnchor.Neighbours)
-            {
-                yield return neighbour;
-            }
+            _startAnchor = change(_startAnchor);
+            _endAnchor = change(_endAnchor);
         }
     }
 
@@ -155,7 +159,6 @@ public partial class RangeWrapper
             throw new ArgumentOutOfRangeException(nameof(end), String.Format(CultureInfo.InvariantCulture, "The range {0} to {1} is not inside the story, which is {2} positions long.", start, end, StoryMap.CountLength(story)));
         }
 
-        bool register = !_isSpan || !ReferenceEquals(_root, story);
         _isSpan = true;
         _root = story;
         _startAnchor = startAnchor;
@@ -164,10 +167,7 @@ public partial class RangeWrapper
         _endOpenXmlElement = null;
         _lastStart = start;
         _lastEnd = end;
-        if (register)
-        {
-            SpanRegistry.Register(story, this);
-        }
+        SpanRegistry.Index(story, this);
     }
 
     /// <summary>
@@ -201,7 +201,7 @@ public partial class RangeWrapper
                 }
                 if (passed)
                 {
-                    end = moved.Clone();
+                    end = moved;
                 }
             }
             MakeSpanAnchors(moved, end);
@@ -230,7 +230,7 @@ public partial class RangeWrapper
                 StoryMap map = StoryMap.Build(oldParagraph);
                 if (ResolveLocal(map, moved) < ResolveLocal(map, start))
                 {
-                    start = moved.Clone();
+                    start = moved;
                 }
             }
             MakeSpanAnchors(start, moved);
@@ -250,7 +250,7 @@ public partial class RangeWrapper
     {
         if (TryShiftLocal(_isSpan ? _endAnchor : EndAnchorOfElements(), unit, count, out Anchor moved, out int units))
         {
-            MakeSpanAnchors(moved, moved.Clone());
+            MakeSpanAnchors(moved, moved);
             return units;
         }
 
@@ -349,17 +349,13 @@ public partial class RangeWrapper
     internal void MakeSpanAnchors(Anchor startAnchor, Anchor endAnchor)
     {
         OpenXmlElement story = _isSpan ? _root : StoryMap.FindRoot(_startOpenXmlElement);
-        bool register = !_isSpan;
         _isSpan = true;
         _root = story;
         _startAnchor = startAnchor;
         _endAnchor = endAnchor;
         _startOpenXmlElement = null;
         _endOpenXmlElement = null;
-        if (register)
-        {
-            SpanRegistry.Register(story, this);
-        }
+        SpanRegistry.Index(story, this);
     }
 
     /// <summary>
@@ -370,9 +366,8 @@ public partial class RangeWrapper
     {
         OpenXmlElement story = StoryMap.FindRoot(map.Root);
         Anchor startAnchor = Anchor.At(map, start);
-        Anchor endAnchor = end == start ? startAnchor.Clone() : Anchor.At(map, end);
+        Anchor endAnchor = end == start ? startAnchor : Anchor.At(map, end);
 
-        bool register = !_isSpan || !ReferenceEquals(_root, story);
         _isSpan = true;
         _root = story;
         _startAnchor = startAnchor;
@@ -384,10 +379,7 @@ public partial class RangeWrapper
             _lastStart = start;
             _lastEnd = end;
         }
-        if (register)
-        {
-            SpanRegistry.Register(story, this);
-        }
+        SpanRegistry.Index(story, this);
     }
 
     /// <summary>
@@ -398,11 +390,11 @@ public partial class RangeWrapper
         RangeWrapper range = new RangeWrapper(story);
         range._isSpan = true;
         range._root = story;
-        range._startAnchor = anchor.Clone();
-        range._endAnchor = anchor.Clone();
+        range._startAnchor = anchor;
+        range._endAnchor = anchor;
         range._startOpenXmlElement = null;
         range._endOpenXmlElement = null;
-        SpanRegistry.Register(story, range);
+        SpanRegistry.Index(story, range);
         return range;
     }
 
@@ -447,10 +439,18 @@ public partial class RangeWrapper
         if (_isSpan)
         {
             map = StoryMap.Build(_root);
+            OpenXmlElement startElement = _startAnchor.Element;
+            OpenXmlElement endElement = _endAnchor.Element;
             start = ResolveStory(map, ref _startAnchor, _lastStart);
             end = Math.Max(start, ResolveStory(map, ref _endAnchor, _lastEnd));
             _lastStart = start;
             _lastEnd = end;
+
+            //If the text an end was on has gone it is on other text now, which the registry has to know.
+            if (!ReferenceEquals(startElement, _startAnchor.Element) || !ReferenceEquals(endElement, _endAnchor.Element))
+            {
+                SpanRegistry.Index(_root, this);
+            }
             return;
         }
 
@@ -519,8 +519,8 @@ public partial class RangeWrapper
         {
             return false;
         }
-        _startAnchor.Refresh(window);
-        _endAnchor.Refresh(window);
+        _startAnchor = _startAnchor.Refreshed(window);
+        _endAnchor = _endAnchor.Refreshed(window);
         map = window;
         return true;
     }
@@ -559,8 +559,8 @@ public partial class RangeWrapper
             {
                 return false;
             }
-            _startAnchor.Refresh(local);
-            _endAnchor.Refresh(local);
+            _startAnchor = _startAnchor.Refreshed(local);
+            _endAnchor = _endAnchor.Refreshed(local);
         }
         else
         {
@@ -613,17 +613,21 @@ public partial class RangeWrapper
         int position = ResolveLocal(map, anchor);
         if (position >= 0)
         {
-            anchor.Refresh(map);
+            anchor = anchor.Refreshed(map);
             return position;
         }
 
+        //The nearest piece of text that is still there, whether before or after: a piece before gives its end, a piece after its start.
         position = -1;
-        foreach (Anchor neighbour in anchor.Neighbours)
+        for (int i = 0; i < Math.Max(anchor.Before.Length, anchor.After.Length) && position < 0; i++)
         {
-            if (map.TryGetAtom(neighbour.Element, out Atom atom))
+            if (i < anchor.Before.Length && map.TryGetAtom(anchor.Before[i].Element, out Atom previous))
             {
-                position = atom.Start + Math.Min(neighbour.Offset, atom.Length);
-                break;
+                position = previous.End;
+            }
+            else if (i < anchor.After.Length && map.TryGetAtom(anchor.After[i].Element, out Atom following))
+            {
+                position = following.Start;
             }
         }
         if (position < 0)

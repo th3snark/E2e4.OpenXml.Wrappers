@@ -10,90 +10,55 @@ namespace OpenXml.Wrappers.Word;
 
 /// <summary>
 /// A place in the text of a story that stays with the text when other things are inserted or removed around it: a character offset in a text
-/// element, or the start of a tab, break, paragraph mark (a <see cref="Paragraph"/>) or end of table row (a <see cref="TableRow"/>), or the
-/// end of the story when <see cref="Element"/> is null.
+/// element, or the start of a tab, break, paragraph mark (a <see cref="Paragraph"/>), end of table row (a <see cref="TableRow"/>) or other
+/// piece of the text, or the end of the story when <see cref="Element"/> is null. An anchor never changes; a range that has to move one
+/// replaces it with another.
 /// </summary>
+/// <remarks>
+/// An anchor also remembers pieces of text near it, before and after (each of the first eight pieces away, then sixteen and thirty-two).
+/// If the text it is on is removed without the library being told, the nearest of those that is still there says where the text was: exactly,
+/// when no more than eight pieces went, and roughly (within the gap to the next one remembered) when more did.
+/// </remarks>
 internal sealed class Anchor
 {
+    //How far away the neighbours are, in pieces of text: close ones for small removals and far ones for large.
+    private static readonly int[] Distances = { 1, 2, 3, 4, 5, 6, 7, 8, 16, 32 };
+
+    private static readonly Anchor[] None = Array.Empty<Anchor>();
+
     public Anchor(OpenXmlElement element, int offset)
+        : this(element, offset, None, None)
+    {
+    }
+
+    private Anchor(OpenXmlElement element, int offset, Anchor[] before, Anchor[] after)
     {
         Element = element;
         Offset = offset;
+        Before = before;
+        After = after;
     }
 
-    private const int NeighbourCount = 3;
+    public OpenXmlElement Element { get; }
 
-    public OpenXmlElement Element { get; set; }
+    /// <summary>The characters into the element. For a neighbour that is before, -1 is the end of the element.</summary>
+    public int Offset { get; }
 
-    public int Offset { get; set; }
+    /// <summary>The ends of the pieces of text before this one, nearest first.</summary>
+    public Anchor[] Before { get; }
 
-    /// <summary>
-    /// The ends of the few text elements before this one, nearest first. If the text this anchor is on is removed without the library being
-    /// told, the nearest of these that is still there says where it was.
-    /// </summary>
-    public Anchor[] Neighbours { get; private set; } = Array.Empty<Anchor>();
-
-    public Anchor Clone()
-    {
-        Anchor copy = new Anchor(Element, Offset);
-        copy.Neighbours = Neighbours.Select(n => new Anchor(n.Element, n.Offset)).ToArray();
-        return copy;
-    }
-
-    public void CopyFrom(Anchor other)
-    {
-        Element = other.Element;
-        Offset = other.Offset;
-        Neighbours = other.Neighbours.Select(n => new Anchor(n.Element, n.Offset)).ToArray();
-    }
-
-    /// <summary>
-    /// Remembers the text before this anchor as it is in the map. The old neighbours are kept to make up the number when the map (of one
-    /// paragraph, say) does not reach back far enough.
-    /// </summary>
-    public void Refresh(StoryMap map)
-    {
-        if (Element == null || !map.TryGetAtom(Element, out Atom atom))
-        {
-            return;
-        }
-
-        List<Anchor> fresh = NeighboursBefore(map, atom.Index);
-        foreach (Anchor old in Neighbours)
-        {
-            if (fresh.Count >= NeighbourCount)
-            {
-                break;
-            }
-            if (!fresh.Any(f => ReferenceEquals(f.Element, old.Element)))
-            {
-                fresh.Add(old);
-            }
-        }
-        Neighbours = fresh.ToArray();
-    }
-
-    /// <summary>
-    /// Sets the neighbours from the last few pieces of text walked past, the nearest last.
-    /// </summary>
-    internal void SetNeighbours(List<StoryMap.AtomInfo> before)
-    {
-        Neighbours = before.AsEnumerable().Reverse().Take(NeighbourCount).Select(info => new Anchor(info.Element, info.Length)).ToArray();
-    }
-
-    private static List<Anchor> NeighboursBefore(StoryMap map, int index)
-    {
-        List<Anchor> list = new List<Anchor>(NeighbourCount);
-        for (int i = index - 1; i >= 0 && list.Count < NeighbourCount; i--)
-        {
-            list.Add(new Anchor(map.Atoms[i].Element, map.Atoms[i].Length));
-        }
-        return list;
-    }
+    /// <summary>The starts of the pieces of text after this one, nearest first.</summary>
+    public Anchor[] After { get; }
 
     public bool SameAs(Anchor other)
     {
         return other != null && ReferenceEquals(Element, other.Element) && Offset == other.Offset;
+    }
+
+    /// <summary>The same place on other text, as when text moves to another element.</summary>
+    public Anchor On(OpenXmlElement element, int offset)
+    {
+        return new Anchor(element, offset, Before, After);
     }
 
     /// <summary>
@@ -107,49 +72,215 @@ internal sealed class Anchor
             return map.EndAnchor();
         }
         Atom atom = map.Atoms[index];
-        Anchor anchor = new Anchor(atom.Element, position - atom.Start);
-        anchor.Neighbours = NeighboursBefore(map, index).ToArray();
-        return anchor;
+        return new Anchor(atom.Element, position - atom.Start, Pick(map.ElementsBefore(index, Reach), -1), Pick(map.ElementsAfter(index, Reach), 0));
+    }
+
+    /// <summary>
+    /// This anchor with the neighbours as they are now in the map, if the map has the text it is on, otherwise this anchor as it is.
+    /// Neighbours the map cannot see (those beyond a map of one paragraph) are kept.
+    /// </summary>
+    public Anchor Refreshed(StoryMap map)
+    {
+        if (Element == null || !map.TryGetAtom(Element, out Atom atom))
+        {
+            return this;
+        }
+
+        Anchor[] before = Merge(Pick(map.ElementsBefore(atom.Index, Reach, false), -1), Before);
+        Anchor[] after = Merge(Pick(map.ElementsAfter(atom.Index, Reach, false), 0), After);
+        return Same(before, Before) && Same(after, After) ? this : new Anchor(Element, Offset, before, after);
+    }
+
+    /// <summary>
+    /// This anchor with neighbours from the pieces of text walked past before it (the nearest last) and after it (the nearest first).
+    /// </summary>
+    public Anchor WithNeighbours(IReadOnlyList<StoryMap.AtomInfo> before, IReadOnlyList<StoryMap.AtomInfo> after)
+    {
+        List<Anchor> previous = new List<Anchor>();
+        List<Anchor> next = new List<Anchor>();
+        foreach (int distance in Distances)
+        {
+            if (distance <= before.Count)
+            {
+                previous.Add(new Anchor(before[before.Count - distance].Element, -1));
+            }
+            if (distance <= after.Count)
+            {
+                next.Add(new Anchor(after[distance - 1].Element, 0));
+            }
+        }
+        return new Anchor(Element, Offset, previous.ToArray(), next.ToArray());
+    }
+
+    /// <summary>How many pieces of text are needed beyond an anchor to give all its neighbours.</summary>
+    public static int Reach
+    {
+        get { return Distances[Distances.Length - 1]; }
+    }
+
+    //The neighbours at the distances kept, from the pieces of text on one side nearest first.
+    private static Anchor[] Pick(List<OpenXmlElement> nearestFirst, int offset)
+    {
+        List<Anchor> list = new List<Anchor>();
+        foreach (int distance in Distances)
+        {
+            if (distance <= nearestFirst.Count)
+            {
+                list.Add(new Anchor(nearestFirst[distance - 1], offset));
+            }
+        }
+        return list.ToArray();
+    }
+
+    //The fresh neighbours, then those of the old that are not repeats, up to the number there can be.
+    private static Anchor[] Merge(Anchor[] fresh, Anchor[] old)
+    {
+        if (fresh.Length >= Distances.Length)
+        {
+            return fresh;
+        }
+        List<Anchor> merged = new List<Anchor>(fresh);
+        foreach (Anchor each in old)
+        {
+            if (merged.Count >= Distances.Length)
+            {
+                break;
+            }
+            if (!merged.Any(m => ReferenceEquals(m.Element, each.Element)))
+            {
+                merged.Add(each);
+            }
+        }
+        return merged.ToArray();
+    }
+
+    private static bool Same(Anchor[] first, Anchor[] second)
+    {
+        if (first.Length != second.Length)
+        {
+            return false;
+        }
+        for (int i = 0; i < first.Length; i++)
+        {
+            if (!ReferenceEquals(first[i].Element, second[i].Element) || first[i].Offset != second[i].Offset)
+            {
+                return false;
+            }
+        }
+        return true;
     }
 }
 
 /// <summary>
-/// Remembers the ranges that are spans of characters in each story so that, when the library changes the text they point into, they can be
-/// corrected: a text element that is split in two, text that is replaced in place, a paragraph that is split or joined, and text that is
-/// removed. Ranges are held weakly.
+/// Remembers the ranges that are spans of characters in each story, by the text their ends are on, so that when the library changes that text
+/// they can be corrected: a text element that is split in two, text that is replaced in place, a paragraph that is split or joined, and
+/// text that is removed. Ranges are held weakly. It is safe to use from several threads, though the document itself, like the Open XML SDK,
+/// is not safe to change from several at once.
 /// </summary>
 internal static class SpanRegistry
 {
-    private static readonly ConditionalWeakTable<OpenXmlElement, List<WeakReference<RangeWrapper>>> Stories = new ConditionalWeakTable<OpenXmlElement, List<WeakReference<RangeWrapper>>>();
-
-    public static void Register(OpenXmlElement storyRoot, RangeWrapper range)
+    private sealed class Story
     {
-        List<WeakReference<RangeWrapper>> list = Stories.GetOrCreateValue(storyRoot);
-        lock (list)
+        public readonly object Lock = new object();
+
+        //For each piece of text that a range has an end on, the ranges that have one.
+        public readonly Dictionary<OpenXmlElement, List<WeakReference<RangeWrapper>>> ByElement = new Dictionary<OpenXmlElement, List<WeakReference<RangeWrapper>>>(ReferenceEqualityComparer.Instance);
+
+        public int SinceTidy;
+    }
+
+    private static readonly ConditionalWeakTable<OpenXmlElement, Story> Stories = new ConditionalWeakTable<OpenXmlElement, Story>();
+
+    /// <summary>
+    /// Notes the pieces of text that the ends of a range are on, so that changes to them reach the range. Call it whenever a range gets new
+    /// ends.
+    /// </summary>
+    public static void Index(OpenXmlElement storyRoot, RangeWrapper range)
+    {
+        Story story = Stories.GetOrCreateValue(storyRoot);
+        lock (story.Lock)
+        {
+            foreach (OpenXmlElement element in range.EndElements())
+            {
+                Add(story, element, range);
+            }
+
+            //Ranges that have gone leave their entries behind, so now and then they are cleared out.
+            if (++story.SinceTidy > 5000)
+            {
+                story.SinceTidy = 0;
+                Tidy(story);
+            }
+        }
+    }
+
+    private static void Add(Story story, OpenXmlElement element, RangeWrapper range)
+    {
+        if (!story.ByElement.TryGetValue(element, out List<WeakReference<RangeWrapper>> list))
+        {
+            list = new List<WeakReference<RangeWrapper>>();
+            story.ByElement[element] = list;
+        }
+        if (list.Count == 0 || !list[list.Count - 1].TryGetTarget(out RangeWrapper last) || !ReferenceEquals(last, range))
         {
             list.Add(new WeakReference<RangeWrapper>(range));
         }
     }
 
-    private static List<RangeWrapper> Live(OpenXmlElement element)
+    private static void Tidy(Story story)
     {
-        List<RangeWrapper> live = new List<RangeWrapper>();
-        if (!Stories.TryGetValue(StoryMap.FindRoot(element), out List<WeakReference<RangeWrapper>> list))
+        foreach (OpenXmlElement element in story.ByElement.Keys.ToList())
         {
-            return live;
+            List<WeakReference<RangeWrapper>> list = story.ByElement[element];
+            list.RemoveAll(w => !w.TryGetTarget(out RangeWrapper range) || !range.HasEndOn(element));
+            if (list.Count == 0)
+            {
+                story.ByElement.Remove(element);
+            }
         }
-        lock (list)
+    }
+
+    //The ranges that have an end on the element now, with those that no longer do dropped from the list.
+    private static List<RangeWrapper> RangesOn(Story story, OpenXmlElement element)
+    {
+        List<RangeWrapper> ranges = new List<RangeWrapper>();
+        if (story.ByElement.TryGetValue(element, out List<WeakReference<RangeWrapper>> list))
         {
-            list.RemoveAll(w => !w.TryGetTarget(out _));
+            list.RemoveAll(w => !w.TryGetTarget(out RangeWrapper range) || !range.HasEndOn(element));
+            //A range can be in the list more than once; each is corrected once.
+            HashSet<RangeWrapper> seen = new HashSet<RangeWrapper>(ReferenceEqualityComparer.Instance);
             foreach (WeakReference<RangeWrapper> reference in list)
             {
-                if (reference.TryGetTarget(out RangeWrapper range))
+                if (reference.TryGetTarget(out RangeWrapper range) && seen.Add(range))
                 {
-                    live.Add(range);
+                    ranges.Add(range);
+                }
+            }
+            if (list.Count == 0)
+            {
+                story.ByElement.Remove(element);
+            }
+        }
+        return ranges;
+    }
+
+    private static void Change(OpenXmlElement inStory, OpenXmlElement element, Func<Anchor, Anchor> change)
+    {
+        if (!Stories.TryGetValue(StoryMap.FindRoot(inStory), out Story story))
+        {
+            return;
+        }
+        lock (story.Lock)
+        {
+            foreach (RangeWrapper range in RangesOn(story, element))
+            {
+                range.Remap(change);
+                foreach (OpenXmlElement now in range.EndElements())
+                {
+                    Add(story, now, range);
                 }
             }
         }
-        return live;
     }
 
     /// <summary>
@@ -157,17 +288,7 @@ internal static class SpanRegistry
     /// </summary>
     public static void TextSplit(OpenXmlElement text, OpenXmlElement suffix, int offset)
     {
-        foreach (RangeWrapper range in Live(text))
-        {
-            foreach (Anchor anchor in range.AllAnchors())
-            {
-                if (ReferenceEquals(anchor.Element, text) && anchor.Offset > offset)
-                {
-                    anchor.Element = suffix;
-                    anchor.Offset -= offset;
-                }
-            }
-        }
+        Change(text, text, anchor => ReferenceEquals(anchor.Element, text) && anchor.Offset > offset ? anchor.On(suffix, anchor.Offset - offset) : anchor);
     }
 
     /// <summary>
@@ -175,24 +296,18 @@ internal static class SpanRegistry
     /// </summary>
     public static void TextEdited(Text text, int start, int oldLength, int newLength)
     {
-        foreach (RangeWrapper range in Live(text))
+        Change(text, text, anchor =>
         {
-            foreach (Anchor anchor in range.AllAnchors())
+            if (!ReferenceEquals(anchor.Element, text))
             {
-                if (!ReferenceEquals(anchor.Element, text))
-                {
-                    continue;
-                }
-                if (anchor.Offset >= start + oldLength)
-                {
-                    anchor.Offset += newLength - oldLength;
-                }
-                else if (anchor.Offset > start)
-                {
-                    anchor.Offset = start;
-                }
+                return anchor;
             }
-        }
+            if (anchor.Offset >= start + oldLength)
+            {
+                return anchor.On(text, anchor.Offset + newLength - oldLength);
+            }
+            return anchor.Offset > start ? anchor.On(text, start) : anchor;
+        });
     }
 
     /// <summary>
@@ -200,16 +315,7 @@ internal static class SpanRegistry
     /// </summary>
     public static void ParagraphSplit(Paragraph original, Paragraph second)
     {
-        foreach (RangeWrapper range in Live(original))
-        {
-            foreach (Anchor anchor in range.AllAnchors())
-            {
-                if (ReferenceEquals(anchor.Element, original))
-                {
-                    anchor.Element = second;
-                }
-            }
-        }
+        Change(original, original, anchor => ReferenceEquals(anchor.Element, original) ? anchor.On(second, anchor.Offset) : anchor);
     }
 
     /// <summary>
@@ -217,31 +323,31 @@ internal static class SpanRegistry
     /// </summary>
     public static void ParagraphMerged(Paragraph removed, Paragraph into)
     {
-        foreach (RangeWrapper range in Live(into))
-        {
-            foreach (Anchor anchor in range.AllAnchors())
-            {
-                if (ReferenceEquals(anchor.Element, removed))
-                {
-                    anchor.Element = into;
-                }
-            }
-        }
+        Change(into, removed, anchor => ReferenceEquals(anchor.Element, removed) ? anchor.On(into, anchor.Offset) : anchor);
     }
 
     /// <summary>
-    /// Text is about to be removed. Ranges that point into it are moved to <paramref name="after"/>, the place where it was.
+    /// Text is about to be removed. Ranges that have an end on it are moved to <paramref name="after"/>, the place where it was.
     /// </summary>
     public static void Removing(OpenXmlElement inStory, HashSet<OpenXmlElement> removed, Anchor after)
     {
-        foreach (RangeWrapper range in Live(inStory))
+        if (!Stories.TryGetValue(StoryMap.FindRoot(inStory), out Story story))
         {
-            foreach (Anchor anchor in range.Anchors())
+            return;
+        }
+        lock (story.Lock)
+        {
+            foreach (OpenXmlElement element in removed)
             {
-                if (anchor.Element != null && removed.Contains(anchor.Element))
+                foreach (RangeWrapper range in RangesOn(story, element))
                 {
-                    anchor.CopyFrom(after);
+                    range.Remap(anchor => anchor.Element != null && removed.Contains(anchor.Element) ? after : anchor);
+                    foreach (OpenXmlElement now in range.EndElements())
+                    {
+                        Add(story, now, range);
+                    }
                 }
+                story.ByElement.Remove(element);
             }
         }
     }

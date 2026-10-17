@@ -213,6 +213,75 @@ public class RangeWrapperSpanAnchorTest
 
     #endregion
 
+    [Fact]
+    public void ARangeWhoseTextIsRemovedBehindTheLibrarysBackLandsExactlyWhenLittleWentAndNearWhenMuchDid()
+    {
+        Body body = new Body();
+        for (int i = 0; i < 60; i++)
+        {
+            body.AppendChild(Paragraph("para" + i.ToString(System.Globalization.CultureInfo.InvariantCulture)));
+        }
+        Paragraph[] paragraphs = body.Elements<Paragraph>().ToArray();
+
+        //"para0" to "para9" are six positions with their paragraph marks and the rest are seven. The ranges start in the text of two paragraphs.
+        RangeWrapper small = new RangeWrapper(body);
+        small.SetRange(60, 63);
+        RangeWrapper large = new RangeWrapper(body);
+        large.SetRange(270, 273);
+
+        //Three paragraphs (six pieces of text) go from around the small one and twenty from around the large one.
+        for (int i = 9; i <= 11; i++)
+        {
+            paragraphs[i].Remove();
+        }
+        for (int i = 30; i <= 49; i++)
+        {
+            paragraphs[i].Remove();
+        }
+
+        //Little went, so the range is exactly where the text was: the start of "para9".
+        Assert.Equal(string.Empty, small.Text);
+        Assert.Equal(54, small.Start);
+        Assert.Equal(54, small.End);
+
+        //A lot went, so the range is near where it was, which is the start of the old "para30" (now where "para50" is), 200 positions in:
+        //between the end of the last piece of text remembered before it and the start of the first remembered after it.
+        Assert.Equal(string.Empty, large.Text);
+        Assert.InRange(large.Start, 100, 242);
+        Assert.Equal(large.Start, large.End);
+    }
+
+    [Fact]
+    public void RangesCanBeMadeAndEditedFromSeveralThreadsOnSeveralDocuments()
+    {
+        System.Threading.Tasks.Parallel.For(0, 8, document =>
+        {
+            Body body = new Body(Paragraph("one two three four five six seven eight nine ten"), Paragraph("second paragraph here"));
+            RangeWrapper content = new RangeWrapper(body);
+            for (int i = 0; i < 40; i++)
+            {
+                RangeWrapper word = content.Words[i % 10];
+                word.Font.Bold = true;
+                word.InsertAfter("!");
+                Assert.EndsWith("!", word.Text, StringComparison.Ordinal);
+            }
+            Assert.Equal(40, new RangeWrapper(body).Text.Count(c => c == '!'));
+        });
+    }
+    [Fact]
+    public void RangesCanBeMadeFromSeveralThreadsOnOneDocument()
+    {
+        Body body = new Body(Paragraph("alpha beta gamma delta epsilon zeta eta theta iota kappa"));
+        System.Threading.Tasks.Parallel.For(0, 200, i =>
+        {
+            RangeWrapper range = new RangeWrapper(body);
+            int start = i % 40;
+            range.SetRange(start, start + 5);
+            Assert.Equal(5, range.End - range.Start);
+            Assert.Equal(start, range.Start);
+            Assert.Equal(5, range.Text.Length);
+        });
+    }
     #region Cost
 
     private static Body BigBody(int paragraphs)

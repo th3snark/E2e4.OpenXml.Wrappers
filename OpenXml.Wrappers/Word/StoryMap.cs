@@ -138,7 +138,7 @@ internal sealed class StoryMap
     {
         if (_byElement == null)
         {
-            _byElement = new Dictionary<OpenXmlElement, Atom>(Atoms.Count);
+            _byElement = new Dictionary<OpenXmlElement, Atom>(Atoms.Count, ReferenceEqualityComparer.Instance);
             foreach (Atom each in Atoms)
             {
                 _byElement[each.Element] = each;
@@ -465,42 +465,91 @@ internal sealed class StoryMap
     {
         startAnchor = null;
         endAnchor = null;
+
+        //The neighbours of an anchor need the pieces of text around it, so the walk goes on a little past the places it is looking for.
+        int reach = Anchor.Reach;
         int position = 0;
         List<AtomInfo> before = new List<AtomInfo>();
+        Pending first = null;
+        Pending last = null;
         foreach (AtomInfo info in Enumerate(root))
         {
+            if (first != null && first.After.Count < reach)
+            {
+                first.After.Add(info);
+            }
+            if (last != null && last.After.Count < reach)
+            {
+                last.After.Add(info);
+            }
+
             int atomEnd = position + info.Length;
-            if (startAnchor == null && start < atomEnd)
+            if (first == null && start < atomEnd)
             {
-                startAnchor = new Anchor(info.Element, start - position);
-                startAnchor.SetNeighbours(before);
+                first = new Pending(info.Element, start - position, before);
             }
-            if (endAnchor == null && end < atomEnd)
+            if (last == null && first != null && end < atomEnd)
             {
-                endAnchor = new Anchor(info.Element, end - position);
-                endAnchor.SetNeighbours(before);
-                break;
+                last = new Pending(info.Element, end - position, before);
             }
+
             before.Add(info);
-            if (before.Count > 3)
+            if (before.Count > reach)
             {
                 before.RemoveAt(0);
             }
             position = atomEnd;
+
+            if (first != null && last != null && first.After.Count >= reach && last.After.Count >= reach)
+            {
+                break;
+            }
         }
 
-        //A position at the very end of the story is the end of the story.
-        if (startAnchor == null && start == position)
+        //A position at the very end of the story is the end of the story, which has no neighbours after it.
+        if (first == null && start == position)
         {
-            startAnchor = new Anchor(null, 0);
+            first = new Pending(null, 0, before);
         }
-        if (endAnchor == null && end == position)
+        if (last == null && end == position)
         {
-            endAnchor = new Anchor(null, 0);
+            last = new Pending(null, 0, before);
         }
-        return startAnchor != null && endAnchor != null;
+        if (first == null || last == null)
+        {
+            return false;
+        }
+
+        startAnchor = first.ToAnchor();
+        endAnchor = last.ToAnchor();
+        return true;
     }
 
+    //An anchor that is being found while the story is walked: the text it is on, and the text before and after it as far as the walk has got.
+    private sealed class Pending
+    {
+        public Pending(OpenXmlElement element, int offset, List<AtomInfo> before)
+        {
+            Element = element;
+            Offset = offset;
+            Before = new List<AtomInfo>(before);
+            After = new List<AtomInfo>();
+        }
+
+        public OpenXmlElement Element { get; }
+
+        public int Offset { get; }
+
+        public List<AtomInfo> Before { get; }
+
+        public List<AtomInfo> After { get; }
+
+        public Anchor ToAnchor()
+        {
+            Anchor anchor = new Anchor(Element, Offset);
+            return Element == null ? anchor : anchor.WithNeighbours(Before, After);
+        }
+    }
     #endregion
 
     public static StoryMap Build(OpenXmlElement root)
@@ -533,6 +582,132 @@ internal sealed class StoryMap
             }
         }
         return -1;
+    }
+
+    //How far beyond the part of the story a map covers the neighbours of an anchor are looked for: the nearest few, which are what matter
+    //for small removals.
+    private const int MinimumNeighbours = 8;
+
+    /// <summary>
+    /// The pieces of text before the atom at <paramref name="index"/>, nearest first, up to <paramref name="wanted"/> of them. A map of part of
+    /// the story (a paragraph, say) is extended with the paragraphs before it until there are at least the nearest few.
+    /// </summary>
+    public List<OpenXmlElement> ElementsBefore(int index, int wanted, bool extend = true)
+    {
+        List<OpenXmlElement> list = new List<OpenXmlElement>();
+        for (int i = index - 1; i >= 0 && list.Count < wanted; i--)
+        {
+            list.Add(Atoms[i].Element);
+        }
+        if (extend && list.Count < MinimumNeighbours && index - list.Count <= 0 && !IsStory && Atoms.Count > 0)
+        {
+            OpenXmlElement story = FindRoot(Root);
+            Paragraph paragraph = ParagraphOfFirst();
+            for (int hops = 0; paragraph != null && list.Count < MinimumNeighbours && hops < MinimumNeighbours; hops++)
+            {
+                paragraph = PreviousParagraph(paragraph, story);
+                if (paragraph == null)
+                {
+                    break;
+                }
+                List<AtomInfo> earlier = Enumerate(paragraph).ToList();
+                for (int i = earlier.Count - 1; i >= 0 && list.Count < wanted; i--)
+                {
+                    list.Add(earlier[i].Element);
+                }
+            }
+        }
+        return list;
+    }
+
+    /// <summary>
+    /// The pieces of text after the atom at <paramref name="index"/>, nearest first, up to <paramref name="wanted"/> of them, extended beyond
+    /// a map of part of the story in the same way as <see cref="ElementsBefore"/>.
+    /// </summary>
+    public List<OpenXmlElement> ElementsAfter(int index, int wanted, bool extend = true)
+    {
+        List<OpenXmlElement> list = new List<OpenXmlElement>();
+        for (int i = index + 1; i < Atoms.Count && list.Count < wanted; i++)
+        {
+            list.Add(Atoms[i].Element);
+        }
+        if (extend && list.Count < MinimumNeighbours && index + list.Count >= Atoms.Count - 1 && !IsStory && Atoms.Count > 0)
+        {
+            OpenXmlElement story = FindRoot(Root);
+            Paragraph paragraph = ParagraphOfLast();
+            for (int hops = 0; paragraph != null && list.Count < MinimumNeighbours && hops < MinimumNeighbours; hops++)
+            {
+                paragraph = NextParagraph(paragraph, story);
+                if (paragraph == null)
+                {
+                    break;
+                }
+                foreach (AtomInfo info in Enumerate(paragraph))
+                {
+                    if (list.Count >= wanted)
+                    {
+                        break;
+                    }
+                    list.Add(info.Element);
+                }
+            }
+        }
+        return list;
+    }
+
+    private Paragraph ParagraphOfFirst()
+    {
+        OpenXmlElement element = Atoms[0].Element;
+        return element as Paragraph ?? element.Ancestors<Paragraph>().FirstOrDefault();
+    }
+
+    private Paragraph ParagraphOfLast()
+    {
+        OpenXmlElement element = Atoms[Atoms.Count - 1].Element;
+        return element as Paragraph ?? element.Ancestors<Paragraph>().FirstOrDefault();
+    }
+
+    /// <summary>
+    /// The paragraph before the given one in the document, or null before the first one in the story.
+    /// </summary>
+    public static Paragraph PreviousParagraph(Paragraph paragraph, OpenXmlElement storyRoot)
+    {
+        OpenXmlElement current = paragraph;
+        while (current != null && !ReferenceEquals(current, storyRoot))
+        {
+            for (OpenXmlElement sibling = current.PreviousSibling(); sibling != null; sibling = sibling.PreviousSibling())
+            {
+                Paragraph found = LastParagraphIn(sibling);
+                if (found != null)
+                {
+                    return found;
+                }
+            }
+            current = current.Parent;
+        }
+        return null;
+    }
+
+    //The last paragraph in an element, found from the end without looking at the rest.
+    private static Paragraph LastParagraphIn(OpenXmlElement element)
+    {
+        if (element is Paragraph paragraph)
+        {
+            return paragraph;
+        }
+        if (element is Run || element is SectionProperties || !(element is OpenXmlCompositeElement))
+        {
+            return null;
+        }
+        for (OpenXmlElement child = element.LastChild; child != null; child = child.PreviousSibling())
+        {
+            Paragraph found = LastParagraphIn(child);
+            if (found != null)
+            {
+                return found;
+            }
+        }
+        return null;
     }
 
     /// <summary>

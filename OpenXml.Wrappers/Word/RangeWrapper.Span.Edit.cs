@@ -105,7 +105,7 @@ public partial class RangeWrapper
         DeleteSpanContent(map, start, end);
 
         //The anchors have gone to where the text was.
-        MakeSpanAnchors(_startAnchor, _startAnchor.Clone());
+        MakeSpanAnchors(_startAnchor, _startAnchor);
     }
 
     #region Formatting of new text

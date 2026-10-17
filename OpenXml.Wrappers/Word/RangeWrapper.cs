@@ -339,13 +339,13 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
         RangeWrapper copy = new RangeWrapper(_startOpenXmlElement ?? _root);
         copy._isSpan = true;
         copy._root = _root;
-        copy._startAnchor = _startAnchor.Clone();
-        copy._endAnchor = _endAnchor.Clone();
+        copy._startAnchor = _startAnchor;
+        copy._endAnchor = _endAnchor;
         copy._lastStart = _lastStart;
         copy._lastEnd = _lastEnd;
         copy._startOpenXmlElement = null;
         copy._endOpenXmlElement = null;
-        SpanRegistry.Register(_root, copy);
+        SpanRegistry.Index(_root, copy);
         return copy;
     }
 
