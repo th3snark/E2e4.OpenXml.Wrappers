@@ -11,11 +11,15 @@ namespace OpenXml.Wrappers.Word;
 /// <summary>
 /// Reading, inserting, replacing and deleting the text of a span of characters.
 /// </summary>
+/// <remarks>
+/// Each operation works on a map of the story, or when the span lies inside one paragraph and the operation does not add or remove
+/// paragraph marks, on a map of that paragraph alone. The helpers take the map (the "scope") they work in.
+/// </remarks>
 public partial class RangeWrapper
 {
     private string GetSpanText()
     {
-        GetPositions(out StoryMap map, out int start, out int end);
+        GetScoped(false, out StoryMap map, out int start, out int end);
         return map.GetText(start, end);
     }
 
@@ -33,18 +37,26 @@ public partial class RangeWrapper
     /// </summary>
     internal int ReplaceSpanText(string text)
     {
-        GetPositions(out StoryMap map, out int start, out int end);
+        string newText = text ?? String.Empty;
+        GetScoped(MakesParagraphs(newText), out StoryMap map, out int start, out int end);
 
         //Formatting is taken from the text before it goes.
         RunProperties formatting = FindFormatting(map, start, end);
+        OpenXmlElement scope = map.Root;
         if (end > start)
         {
-            DeleteSpanContent(start, end);
+            DeleteSpanContent(map, start, end);
         }
 
-        int length = InsertSpanText(start, text ?? String.Empty, formatting);
-        MakeSpan(_root, start, start + length);
+        int length = InsertSpanText(scope, start, newText, formatting);
+        MakeSpan(StoryMap.Build(scope), start, start + length);
         return length;
+    }
+
+    //Text with a carriage return starts new paragraphs, which a map of one paragraph cannot hold.
+    private static bool MakesParagraphs(string text)
+    {
+        return text.Contains('\r', StringComparison.Ordinal);
     }
 
     private void InsertIntoSpan(string text, bool after)
@@ -54,50 +66,56 @@ public partial class RangeWrapper
             return;
         }
 
-        GetPositions(out StoryMap map, out int start, out int end);
+        GetScoped(MakesParagraphs(text), out StoryMap map, out int start, out int end);
         int position = after ? end : start;
         RunProperties formatting = FindFormatting(map, position, position);
-        int length = InsertSpanText(position, text, formatting);
+        OpenXmlElement scope = map.Root;
+        int length = InsertSpanText(scope, position, text, formatting);
 
         //As in Word the range grows to include the text that was added to it.
-        MakeSpan(_root, start, end + length);
+        MakeSpan(StoryMap.Build(scope), start, end + length);
     }
 
     private void DeleteSpan()
     {
-        GetPositions(out StoryMap map, out int start, out int end);
-        DeleteSpanContent(start, end);
-        MakeSpan(_root, start, start);
+        GetScoped(false, out StoryMap map, out int start, out int end);
+        OpenXmlElement scope = map.Root;
+        DeleteSpanContent(map, start, end);
+        MakeSpan(StoryMap.Build(scope), start, start);
     }
 
     #region Formatting of new text
 
     /// <summary>
     /// The run properties that new text at a position should have: those of the first character of the span, or if there is none, those of
-    /// the character before the position, or of the one after it.
+    /// the character before the position (in the same paragraph), or of the one after it.
     /// </summary>
     private static RunProperties FindFormatting(StoryMap map, int start, int end)
     {
         Atom atom = null;
+        int index = map.IndexAt(start);
         if (end > start)
         {
-            atom = map.Atoms.FirstOrDefault(a => !a.IsMark && a.End > start && a.Start < end);
-        }
-        if (atom == null)
-        {
-            atom = map.Atoms.LastOrDefault(a => !a.IsMark && a.End <= start);
-            if (atom != null && ParagraphOf(atom) != ParagraphAt(map, start))
+            for (int i = Math.Max(index, 0); i < map.Atoms.Count && map.Atoms[i].Start < end; i++)
             {
-                atom = null;
+                if (!map.Atoms[i].IsMark)
+                {
+                    atom = map.Atoms[i];
+                    break;
+                }
             }
         }
         if (atom == null)
         {
-            int index = map.IndexAt(start);
-            if (index >= 0 && !map.Atoms[index].IsMark)
+            int before = (index < 0 ? map.Atoms.Count : index) - 1;
+            if (before >= 0 && !map.Atoms[before].IsMark && ParagraphOf(map.Atoms[before]) == ParagraphAt(map, start))
             {
-                atom = map.Atoms[index];
+                atom = map.Atoms[before];
             }
+        }
+        if (atom == null && index >= 0 && !map.Atoms[index].IsMark)
+        {
+            atom = map.Atoms[index];
         }
         return atom == null ? null : ((Run)atom.Element.Parent).RunProperties;
     }
@@ -125,28 +143,28 @@ public partial class RangeWrapper
     /// <summary>
     /// Inserts text at a position. A carriage return in the text starts a new paragraph. Returns the number of positions that were added.
     /// </summary>
-    private int InsertSpanText(int position, string text, RunProperties formatting)
+    private int InsertSpanText(OpenXmlElement scope, int position, string text, RunProperties formatting)
     {
         int added = 0;
-        string[] lines = text.Replace("\a", String.Empty).Replace("\r\n", "\r").Split('\r');
+        string[] lines = text.Replace("\a", String.Empty, StringComparison.Ordinal).Replace("\r\n", "\r", StringComparison.Ordinal).Split('\r');
         for (int i = 0; i < lines.Length; i++)
         {
             if (i > 0)
             {
-                SplitParagraphAt(position + added);
+                SplitParagraphAt(scope, position + added);
                 added++;
             }
             if (lines[i].Length > 0)
             {
-                added += InsertLine(position + added, lines[i], formatting);
+                added += InsertLine(scope, position + added, lines[i], formatting);
             }
         }
         return added;
     }
 
-    private int InsertLine(int position, string line, RunProperties formatting)
+    private int InsertLine(OpenXmlElement scope, int position, string line, RunProperties formatting)
     {
-        InsertRunsAt(position, paragraph => BuildNewRunListFromText(line, paragraph), formatting);
+        InsertRunsAt(scope, position, paragraph => BuildNewRunListFromText(line, paragraph), formatting);
         return line.Length;
     }
 
@@ -154,9 +172,9 @@ public partial class RangeWrapper
     /// Inserts the runs made by <paramref name="build"/> at a position: straight after the character before it when that is in the same
     /// paragraph, otherwise before the character after it or at the end of the paragraph. The runs take <paramref name="formatting"/> when it is given.
     /// </summary>
-    internal void InsertRunsAt(int position, Func<Paragraph, List<Run>> build, RunProperties formatting)
+    internal void InsertRunsAt(OpenXmlElement scope, int position, Func<Paragraph, List<Run>> build, RunProperties formatting)
     {
-        StoryMap map = StoryMap.Build(_root).EnsureBoundary(position);
+        StoryMap map = StoryMap.Build(scope).EnsureBoundary(position);
         int index = map.IndexAt(position);
         Atom next = index < 0 ? null : map.Atoms[index];
         Paragraph paragraph = ParagraphAt(map, position);
@@ -177,7 +195,8 @@ public partial class RangeWrapper
 
         //The text goes straight after the character before it when that is in the same paragraph, otherwise before the character after it
         //or at the end of the paragraph.
-        Atom previous = map.Atoms.LastOrDefault(a => !a.IsMark && a.End <= position);
+        int previousIndex = (index < 0 ? map.Atoms.Count : index) - 1;
+        Atom previous = previousIndex >= 0 && !map.Atoms[previousIndex].IsMark ? map.Atoms[previousIndex] : null;
         if (previous != null && ParagraphOf(previous) == paragraph)
         {
             OpenXmlElement anchor = previous.Element.Parent;
@@ -206,11 +225,11 @@ public partial class RangeWrapper
 
     /// <summary>
     /// Splits the paragraph that holds the position in two, with a paragraph mark at the position. The second paragraph has the same
-    /// properties as the first.
+    /// properties as the first. Returns the second paragraph.
     /// </summary>
-    private Paragraph SplitParagraphAt(int position)
+    private Paragraph SplitParagraphAt(OpenXmlElement scope, int position)
     {
-        StoryMap map = StoryMap.Build(_root).EnsureBoundary(position);
+        StoryMap map = StoryMap.Build(scope).EnsureBoundary(position);
         int index = map.IndexAt(position);
         Paragraph paragraph = ParagraphAt(map, position);
         if (paragraph == null || (index >= 0 && map.Atoms[index].Kind == AtomKind.RowMark))
@@ -224,21 +243,16 @@ public partial class RangeWrapper
         if (first != null)
         {
             OpenXmlElement top = first.Element.Parent;
-            while (top.Parent != paragraph)
-            {
-                if (top.Parent == null)
-                {
-                    throw new NotSupportedException("A paragraph cannot be split inside a hyperlink or other element that holds runs.");
-                }
-                top = top.Parent;
-            }
-            if (top != first.Element.Parent)
+            if (top.Parent != paragraph)
             {
                 throw new NotSupportedException("A paragraph cannot be split inside a hyperlink or other element that holds runs.");
             }
             moved.Add(top);
             moved.AddRange(top.ElementsAfter());
         }
+
+        //The mark that ended the paragraph before the split ends the second paragraph afterwards, unless the split is at the very end.
+        bool endMarkMoves = first != null;
 
         Paragraph second = new Paragraph();
         if (paragraph.ParagraphProperties != null)
@@ -254,6 +268,10 @@ public partial class RangeWrapper
             second.AppendChild(element);
         }
         paragraph.InsertAfterSelf(second);
+        if (endMarkMoves)
+        {
+            SpanRegistry.ParagraphSplit(paragraph, second);
+        }
         return second;
     }
 
@@ -267,18 +285,14 @@ public partial class RangeWrapper
     /// </summary>
     internal void PlaceMarkers(OpenXmlElement startMarker, OpenXmlElement endMarker)
     {
-        GetPositions(out StoryMap map, out int start, out int end);
+        GetScoped(false, out StoryMap map, out int start, out int end);
         if (end > start)
         {
             map = map.EnsureBoundary(end);
-            map = map.EnsureBoundary(start);
         }
-        else
-        {
-            map = map.EnsureBoundary(start);
-        }
+        map = map.EnsureBoundary(start);
 
-        List<Atom> text = map.Atoms.Where(a => !a.IsMark && a.Start >= start && a.End <= end).ToList();
+        List<Atom> text = map.AtomsIn(start, end).Where(a => !a.IsMark).ToList();
         if (text.Count > 0)
         {
             text[0].Element.Parent.InsertBeforeSelf(startMarker);
@@ -289,7 +303,7 @@ public partial class RangeWrapper
         if (end > start)
         {
             //Only paragraph marks: the markers go round the content of the first paragraph.
-            Paragraph first = (Paragraph)map.Atoms.First(a => a.Kind == AtomKind.ParagraphMark && a.Start >= start).Element;
+            Paragraph first = (Paragraph)map.AtomsIn(start, end).First(a => a.Kind == AtomKind.ParagraphMark).Element;
             AddAroundContent(first, startMarker, endMarker);
             return;
         }
@@ -297,7 +311,8 @@ public partial class RangeWrapper
         //An insertion point: next to the character before it when that is in the same paragraph, otherwise at the start of the paragraph.
         int index = map.IndexAt(start);
         Paragraph paragraph = ParagraphAt(map, start);
-        Atom previous = map.Atoms.LastOrDefault(a => !a.IsMark && a.End <= start);
+        int previousIndex = (index < 0 ? map.Atoms.Count : index) - 1;
+        Atom previous = previousIndex >= 0 && !map.Atoms[previousIndex].IsMark ? map.Atoms[previousIndex] : null;
         if (previous != null && ParagraphOf(previous) == paragraph)
         {
             previous.Element.Parent.InsertAfterSelf(endMarker);
@@ -332,41 +347,43 @@ public partial class RangeWrapper
     #region Deleting
 
     /// <summary>
-    /// Deletes the characters from <paramref name="start"/> up to <paramref name="end"/>. Whole paragraphs (with their marks) go, as do whole
-    /// table rows and tables; a range that starts part of the way into a paragraph and takes in its paragraph mark joins that paragraph
-    /// to the one after. The end of a table cell cannot be deleted, only the content.
+    /// Deletes the characters from <paramref name="start"/> up to <paramref name="end"/> in the map. Whole paragraphs (with their marks) go,
+    /// as do whole table rows and tables; a range that starts part of the way into a paragraph and takes in its paragraph mark joins that
+    /// paragraph to the one after. The end of a table cell cannot be deleted, only the content. Ranges that pointed into the deleted text
+    /// are moved to the place where it was.
     /// </summary>
-    private void DeleteSpanContent(int start, int end)
+    private static void DeleteSpanContent(StoryMap map, int start, int end)
     {
         if (end <= start)
         {
             return;
         }
 
-        StoryMap map = StoryMap.Build(_root).EnsureBoundary(end);
+        map = map.EnsureBoundary(end);
         map = map.EnsureBoundary(start);
-        List<Atom> inRange = map.Atoms.Where(a => a.Start >= start && a.End <= end).ToList();
+        List<Atom> inRange = map.AtomsIn(start, end).ToList();
 
-        //Tables and rows that are wholly inside the range go.
-        List<OpenXmlElement> blocks = FindCoveredBlocks(map, start, end);
+        //Ranges that point into the text that is going are moved to where it was, before it is removed.
+        SpanRegistry.Removing(map.Root, new HashSet<OpenXmlElement>(inRange.Select(a => a.Element)), Anchor.At(map, end));
+
+        //Tables and rows that are wholly inside the range go. This needs the end of a row in the range.
+        List<OpenXmlElement> blocks = inRange.Any(a => a.Kind == AtomKind.RowMark) ? FindCoveredBlocks(map, start, end) : new List<OpenXmlElement>();
         HashSet<OpenXmlElement> removedBlocks = new HashSet<OpenXmlElement>(blocks);
-        List<Atom> remaining = inRange.Where(a => !a.Element.Ancestors().Any(removedBlocks.Contains) && !removedBlocks.Contains(a.Element)).ToList();
+        List<Atom> remaining = inRange.Where(a => removedBlocks.Count == 0 || (!a.Element.Ancestors().Any(removedBlocks.Contains) && !removedBlocks.Contains(a.Element))).ToList();
 
         //The paragraph marks in the range that end ordinary paragraphs (not table cells).
         List<Paragraph> markParagraphs = remaining
             .Where(a => a.Kind == AtomKind.ParagraphMark && !IsCellEnd((Paragraph)a.Element))
             .Select(a => (Paragraph)a.Element)
             .ToList();
-        Dictionary<Paragraph, int> paragraphStarts = map.Atoms
-            .Where(a => a.Kind == AtomKind.ParagraphMark)
-            .ToDictionary(a => (Paragraph)a.Element, a => FirstPositionOf(map, (Paragraph)a.Element));
+        Dictionary<Paragraph, int> paragraphStarts = markParagraphs.ToDictionary(p => p, p => FirstPositionOf(map, p));
 
         //The runs that hold the characters, and everything between them.
-        List<Run> allRuns = map.Root.Descendants<Run>().ToList();
         List<Run> charRuns = remaining.Where(a => !a.IsMark).Select(a => (Run)a.Element.Parent).Distinct().ToList();
         List<OpenXmlElement> toRemove = new List<OpenXmlElement>();
         if (charRuns.Count > 0)
         {
+            List<Run> allRuns = map.Root.Descendants<Run>().ToList();
             int first = allRuns.IndexOf(charRuns.First());
             int last = allRuns.IndexOf(charRuns.Last());
             HashSet<Run> doomed = new HashSet<Run>(allRuns.Skip(first).Take(last - first + 1));
@@ -410,6 +427,7 @@ public partial class RangeWrapper
                 head.AppendChild(element);
             }
             next.Remove();
+            SpanRegistry.ParagraphMerged(next, head);
         }
     }
 
@@ -421,8 +439,16 @@ public partial class RangeWrapper
     //The position of the first character of a paragraph.
     private static int FirstPositionOf(StoryMap map, Paragraph paragraph)
     {
-        Atom first = map.Atoms.FirstOrDefault(a => ParagraphOf(a) == paragraph);
-        return first == null ? 0 : first.Start;
+        if (!map.TryGetAtom(paragraph, out Atom mark))
+        {
+            return 0;
+        }
+        int index = mark.Index;
+        while (index > 0 && !map.Atoms[index - 1].IsMark && ParagraphOf(map.Atoms[index - 1]) == paragraph)
+        {
+            index--;
+        }
+        return map.Atoms[index].Start;
     }
 
     /// <summary>

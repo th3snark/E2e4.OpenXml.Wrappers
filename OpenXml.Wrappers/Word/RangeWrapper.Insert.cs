@@ -56,10 +56,11 @@ public partial class RangeWrapper
     {
         if (_isSpan)
         {
-            GetPositions(out StoryMap map, out int start, out int end);
-            InsertRunsAt(after ? end : start, build, null);
-            int added = StoryMap.Build(_root).Length - map.Length;
-            MakeSpan(_root, start, end + added);
+            GetScoped(false, out StoryMap map, out int start, out int end);
+            OpenXmlElement scope = map.Root;
+            InsertRunsAt(scope, after ? end : start, build, null);
+            StoryMap changed = StoryMap.Build(scope);
+            MakeSpan(changed, start, end + changed.Length - map.Length);
             return;
         }
 

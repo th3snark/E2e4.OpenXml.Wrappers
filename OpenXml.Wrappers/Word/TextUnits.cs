@@ -193,27 +193,23 @@ public class TextUnitCollection : IEnumerable<RangeWrapper>
         get { return _range; }
     }
 
-    public int Count
-    {
-        get { return GetUnits().Count; }
-    }
-
     public RangeWrapper this[int index]
     {
         get
         {
-            List<(int Start, int End)> units = GetUnits();
+            List<(int Start, int End)> units = GetUnits(out StoryMap map);
             if (index < 0 || index >= units.Count)
             {
                 throw new ArgumentOutOfRangeException(nameof(index), String.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index));
             }
-            return _range.CreateSibling(units[index].Start, units[index].End);
+            return RangeWrapper.FromMap(map, units[index].Start, units[index].End);
         }
     }
 
-    private List<(int Start, int End)> GetUnits()
+    //The units that the range touches, as positions in the map that is returned: the map of the paragraph if the range is inside one.
+    private List<(int Start, int End)> GetUnits(out StoryMap map)
     {
-        _range.GetPositions(out StoryMap map, out int start, out int end);
+        _range.GetScoped(false, out map, out int start, out int end);
         if (_unit == TextUnit.Character)
         {
             List<(int, int)> characters = new List<(int, int)>();
@@ -239,13 +235,19 @@ public class TextUnitCollection : IEnumerable<RangeWrapper>
         return units;
     }
 
+    public int Count
+    {
+        get { return GetUnits(out _).Count; }
+    }
+
     public IEnumerator<RangeWrapper> GetEnumerator()
     {
         //The units are worked out once, for the whole enumeration, so that editing the items does not disturb it.
-        List<(int Start, int End)> units = GetUnits();
-        foreach ((int start, int end) in units)
+        List<(int Start, int End)> units = GetUnits(out StoryMap map);
+        List<RangeWrapper> ranges = units.Select(u => RangeWrapper.FromMap(map, u.Start, u.End)).ToList();
+        foreach (RangeWrapper range in ranges)
         {
-            yield return _range.CreateSibling(start, end);
+            yield return range;
         }
     }
 

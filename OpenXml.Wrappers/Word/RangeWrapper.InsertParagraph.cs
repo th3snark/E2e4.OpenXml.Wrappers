@@ -38,9 +38,9 @@ public partial class RangeWrapper
     {
         if (_isSpan)
         {
-            GetPositions(out _, out int start, out int end);
-            Paragraph split = SplitParagraphAt(after ? end : start);
-            MakeSpan(_root, start, end + 1);
+            GetPositions(out StoryMap map, out int start, out int end);
+            Paragraph split = SplitParagraphAt(map.Root, after ? end : start);
+            MakeSpan(StoryMap.Build(map.Root), start, end + 1);
             return new ParagraphWrapper(split);
         }
 

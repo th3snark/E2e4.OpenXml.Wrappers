@@ -27,6 +27,7 @@ internal sealed class Atom
     /// <summary>The text, tab or break element, the paragraph for a paragraph mark and the table row for a row mark.</summary>
     public OpenXmlElement Element;
 
+    public int Index;
     public int Start;
     public int Length;
 
@@ -68,6 +69,24 @@ internal sealed class StoryMap
 
     public int Length { get; }
 
+    private Dictionary<OpenXmlElement, Atom> _byElement;
+
+    /// <summary>
+    /// The atom for a text, tab or break element, a paragraph (its mark) or a table row (its end), or false if the element is not in this map.
+    /// </summary>
+    public bool TryGetAtom(OpenXmlElement element, out Atom atom)
+    {
+        if (_byElement == null)
+        {
+            _byElement = new Dictionary<OpenXmlElement, Atom>(Atoms.Count);
+            foreach (Atom each in Atoms)
+            {
+                _byElement[each.Element] = each;
+            }
+        }
+        return _byElement.TryGetValue(element, out atom);
+    }
+
     /// <summary>
     /// The element that holds the story an element is in: the body, header, footer or comment (or the top of a detached tree).
     /// </summary>
@@ -92,6 +111,28 @@ internal sealed class StoryMap
             current = current.Parent;
         }
         return element;
+    }
+
+    /// <summary>
+    /// The paragraph after the given one in the document (including paragraphs in table cells), or null after the last one in the story.
+    /// Paragraphs inside runs (text boxes) are not part of the story and are skipped.
+    /// </summary>
+    public static Paragraph NextParagraph(Paragraph paragraph, OpenXmlElement storyRoot)
+    {
+        OpenXmlElement current = paragraph;
+        while (current != null && !ReferenceEquals(current, storyRoot))
+        {
+            for (OpenXmlElement sibling = current.NextSibling(); sibling != null; sibling = sibling.NextSibling())
+            {
+                Paragraph found = sibling as Paragraph ?? (sibling is Run ? null : sibling.Descendants<Paragraph>().FirstOrDefault());
+                if (found != null)
+                {
+                    return found;
+                }
+            }
+            current = current.Parent;
+        }
+        return null;
     }
 
     public static StoryMap Build(OpenXmlElement root)
@@ -124,6 +165,41 @@ internal sealed class StoryMap
             }
         }
         return -1;
+    }
+
+    /// <summary>
+    /// The atoms that lie wholly inside the positions from <paramref name="start"/> up to <paramref name="end"/>, in order.
+    /// </summary>
+    public IEnumerable<Atom> AtomsIn(int start, int end)
+    {
+        int index = start >= Length ? Atoms.Count : IndexAt(start);
+        for (int i = Math.Max(index, 0); i < Atoms.Count && Atoms[i].Start < end; i++)
+        {
+            if (Atoms[i].Start >= start && Atoms[i].End <= end)
+            {
+                yield return Atoms[i];
+            }
+        }
+    }
+
+    /// <summary>
+    /// The anchor for the end of this map: the end of the story if this is the map of the whole story, otherwise the first thing after the
+    /// part of the story that this map covers (the map of one paragraph, for example).
+    /// </summary>
+    public Anchor EndAnchor()
+    {
+        OpenXmlElement story = FindRoot(Root);
+        if (ReferenceEquals(story, Root) || Atoms.Count == 0)
+        {
+            return new Anchor(null, 0);
+        }
+
+        StoryMap whole = Build(story);
+        if (whole.TryGetAtom(Atoms[Atoms.Count - 1].Element, out Atom last) && last.Index + 1 < whole.Atoms.Count)
+        {
+            return new Anchor(whole.Atoms[last.Index + 1].Element, 0);
+        }
+        return new Anchor(null, 0);
     }
 
     /// <summary>
@@ -236,6 +312,7 @@ internal sealed class StoryMap
         text.Space = SpaceProcessingModeValues.Preserve;
         Text second = new Text(value.Substring(offset)) { Space = SpaceProcessingModeValues.Preserve };
         text.InsertAfterSelf(second);
+        SpanRegistry.TextSplit(text, second, offset);
         return second;
     }
 
@@ -292,46 +369,58 @@ internal sealed class StoryMap
 
     private void AddParagraph(Paragraph paragraph)
     {
-        //Runs can be nested inside other elements (hyperlinks, content controls, smart tags etc.) but runs that belong to a nested paragraph
-        //(for example in a text box) are not part of this paragraph.
-        foreach (Run run in paragraph.Descendants<Run>())
-        {
-            if (run.Ancestors<Paragraph>().First() != paragraph)
-            {
-                continue;
-            }
-            foreach (OpenXmlElement child in run.ChildElements)
-            {
-                if (child is Text text)
-                {
-                    string value = text.Text ?? String.Empty;
-                    if (value.Length > 0)
-                    {
-                        Add(AtomKind.Text, child, value.Length, value);
-                    }
-                }
-                else if (child is TabChar)
-                {
-                    Add(AtomKind.Tab, child, 1, "\t");
-                }
-                else if (child is Break lineBreak)
-                {
-                    //Word represents a page break as a form feed and any other break as a vertical tab.
-                    bool page = lineBreak.Type != null && lineBreak.Type.HasValue && lineBreak.Type.Value == BreakValues.Page;
-                    Add(AtomKind.Break, child, 1, page ? "\f" : "\v");
-                }
-            }
-        }
+        //Runs can be nested inside other elements (hyperlinks, content controls, smart tags etc.). Runs are not searched for paragraphs, so
+        //the paragraphs nested in a run (for example in a text box) are not part of this paragraph.
+        AddInline(paragraph);
 
         //Every paragraph, including an empty one, ends with an end of paragraph marker, and the last one in a table cell also ends the cell.
         bool endsCell = paragraph.Parent is TableCell && paragraph.Parent.LastChild == paragraph;
         Add(AtomKind.ParagraphMark, paragraph, 1, endsCell ? "\r\a" : "\r");
     }
 
+    private void AddInline(OpenXmlElement container)
+    {
+        foreach (OpenXmlElement child in container.ChildElements)
+        {
+            if (child is Run run)
+            {
+                AddRun(run);
+            }
+            else if (child is OpenXmlCompositeElement && !(child is Paragraph) && !(child is ParagraphProperties))
+            {
+                AddInline(child);
+            }
+        }
+    }
+
+    private void AddRun(Run run)
+    {
+        foreach (OpenXmlElement child in run.ChildElements)
+        {
+            if (child is Text text)
+            {
+                string value = text.Text ?? String.Empty;
+                if (value.Length > 0)
+                {
+                    Add(AtomKind.Text, child, value.Length, value);
+                }
+            }
+            else if (child is TabChar)
+            {
+                Add(AtomKind.Tab, child, 1, "\t");
+            }
+            else if (child is Break lineBreak)
+            {
+                //Word represents a page break as a form feed and any other break as a vertical tab.
+                bool page = lineBreak.Type != null && lineBreak.Type.HasValue && lineBreak.Type.Value == BreakValues.Page;
+                Add(AtomKind.Break, child, 1, page ? "\f" : "\v");
+            }
+        }
+    }
     private void Add(AtomKind kind, OpenXmlElement element, int length, string text)
     {
         int start = Atoms.Count == 0 ? 0 : Atoms[Atoms.Count - 1].End;
-        Atoms.Add(new Atom() { Kind = kind, Element = element, Start = start, Length = length, Text = text });
+        Atoms.Add(new Atom() { Kind = kind, Element = element, Index = Atoms.Count, Start = start, Length = length, Text = text });
     }
 
     #endregion

@@ -193,7 +193,7 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
             {
                 //All the content is replaced by the text: it is emptied (leaving the one paragraph that a body needs) and the text typed into it.
                 EmptyBody(GetBody());
-                RangeWrapper whole = new RangeWrapper(StoryMap.FindRoot(_startOpenXmlElement), 0, 0);
+                RangeWrapper whole = new RangeWrapper(StoryMap.Build(StoryMap.FindRoot(_startOpenXmlElement)), 0, 0);
                 whole.SetSpanText(text.EndsWith('\r') ? text.Substring(0, text.Length - 1) : text);
             }
             else if (_startOpenXmlElement is Header || _startOpenXmlElement is Footer)
@@ -331,7 +331,22 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
     /// </summary>
     public RangeWrapper Duplicate()
     {
-        return _isSpan ? new RangeWrapper(_root, _spanStart, _spanEnd) : new RangeWrapper(_startOpenXmlElement, _endOpenXmlElement);
+        if (!_isSpan)
+        {
+            return new RangeWrapper(_startOpenXmlElement, _endOpenXmlElement);
+        }
+
+        RangeWrapper copy = new RangeWrapper(_startOpenXmlElement ?? _root);
+        copy._isSpan = true;
+        copy._root = _root;
+        copy._startAnchor = _startAnchor.Clone();
+        copy._endAnchor = _endAnchor.Clone();
+        copy._lastStart = _lastStart;
+        copy._lastEnd = _lastEnd;
+        copy._startOpenXmlElement = null;
+        copy._endOpenXmlElement = null;
+        SpanRegistry.Register(_root, copy);
+        return copy;
     }
 
     public ParagraphWrapper FirstParagraph
@@ -466,7 +481,7 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
         }
         if (_isSpan || other._isSpan)
         {
-            return _isSpan && other._isSpan && ReferenceEquals(_root, other._root) && _spanStart == other._spanStart && _spanEnd == other._spanEnd;
+            return _isSpan && other._isSpan && ReferenceEquals(_root, other._root) && _startAnchor.SameAs(other._startAnchor) && _endAnchor.SameAs(other._endAnchor);
         }
         return ReferenceEquals(_startOpenXmlElement, other._startOpenXmlElement) && ReferenceEquals(_endOpenXmlElement, other._endOpenXmlElement);
     }
@@ -475,7 +490,7 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
     {
         if (_isSpan)
         {
-            return System.HashCode.Combine(System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(_root), _spanStart, _spanEnd);
+            return System.HashCode.Combine(System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(_root), _startAnchor.Element == null ? 0 : System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(_startAnchor.Element), _startAnchor.Offset, _endAnchor.Element == null ? 0 : System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(_endAnchor.Element), _endAnchor.Offset);
         }
         return System.HashCode.Combine(System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(_startOpenXmlElement), System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(_endOpenXmlElement));
     }
