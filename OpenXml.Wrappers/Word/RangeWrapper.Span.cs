@@ -138,6 +138,15 @@ public partial class RangeWrapper
     }
 
     /// <summary>
+    /// Works out the positions of the whole story the range is in once, so that the positions of many ranges can be read at once. See
+    /// <see cref="PositionIndex"/>.
+    /// </summary>
+    public PositionIndex CreatePositionIndex()
+    {
+        return PositionIndex.Create(this);
+    }
+
+    /// <summary>
     /// The number of character positions in the story the range is in.
     /// </summary>
     public int StoryLength

@@ -154,6 +154,14 @@ public class WordprocessingDocumentWrapper : IDisposable
     }
 
     /// <summary>
+    /// The positions of the main text of the document, worked out once so that the positions of many ranges can be read at once.
+    /// </summary>
+    public PositionIndex CreatePositionIndex()
+    {
+        return Content.CreatePositionIndex();
+    }
+
+    /// <summary>
     /// The span of characters from <paramref name="start"/> up to <paramref name="end"/> in the main text of the document, as
     /// <c>Document.Range(Start, End)</c> in Word. See <see cref="RangeWrapper.Start"/> for how positions are counted.
     /// </summary>
