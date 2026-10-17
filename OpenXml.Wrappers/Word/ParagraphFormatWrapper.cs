@@ -58,11 +58,48 @@ public class ParagraphFormatWrapper
     private const double MaximumPoints = 1584;
 
     private readonly RangeWrapper _range;
+    private readonly Style _style;
 
     public ParagraphFormatWrapper(RangeWrapper range)
     {
         ArgumentNullException.ThrowIfNull(range);
         _range = range;
+    }
+
+    //The paragraph format of a style: the paragraph properties of the style itself, without anything it inherits from the style it is based on.
+    internal ParagraphFormatWrapper(Style style)
+    {
+        ArgumentNullException.ThrowIfNull(style);
+        _style = style;
+    }
+
+    //The properties of a style are a different type to those of a paragraph, with the same children. They are edited as a copy of those of
+    //a paragraph and written back.
+    private ParagraphProperties CopyStyleProperties()
+    {
+        ParagraphProperties copy = new ParagraphProperties();
+        if (_style.StyleParagraphProperties != null)
+        {
+            foreach (OpenXmlElement child in _style.StyleParagraphProperties.ChildElements)
+            {
+                copy.AppendChild(child.CloneNode(true));
+            }
+        }
+        return copy;
+    }
+
+    private void StoreStyleProperties(ParagraphProperties copy)
+    {
+        _style.StyleParagraphProperties?.Remove();
+        if (copy.HasChildren)
+        {
+            StyleParagraphProperties properties = new StyleParagraphProperties();
+            foreach (OpenXmlElement child in copy.ChildElements.ToList())
+            {
+                properties.AppendChild(child.CloneNode(true));
+            }
+            _style.StyleParagraphProperties = properties;
+        }
     }
 
     /// <summary>The alignment of the paragraphs.</summary>
@@ -458,6 +495,11 @@ public class ParagraphFormatWrapper
     /// </summary>
     private T GetValue<T>(Func<ParagraphProperties, T> read)
     {
+        if (_style != null)
+        {
+            return read(CopyStyleProperties());
+        }
+
         IList<Paragraph> paragraphs = GetParagraphs();
         if (paragraphs.Count == 0)
         {
@@ -470,6 +512,14 @@ public class ParagraphFormatWrapper
 
     private void Apply(Action<ParagraphProperties> change)
     {
+        if (_style != null)
+        {
+            ParagraphProperties copy = CopyStyleProperties();
+            change(copy);
+            StoreStyleProperties(copy);
+            return;
+        }
+
         foreach (Paragraph paragraph in GetParagraphs())
         {
             ParagraphProperties properties = paragraph.GetOrAddParagraphProperties();

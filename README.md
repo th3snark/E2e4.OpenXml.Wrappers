@@ -82,7 +82,7 @@ These use points like `Font` and `ParagraphFormat`: `Row.Height`, `Row.HeightRul
 ## Sections, styles and document properties
 
 - `document.Sections` lists the sections in order (a document always has at least one). `Section.PageSetup` has `PageWidth`, `PageHeight`, `Orientation` (changing it swaps the size, as Word does), `TopMargin`, `BottomMargin`, `LeftMargin`, `RightMargin`, `Gutter`, `HeaderDistance`, `FooterDistance`, `SectionStart` and `DifferentFirstPageHeaderFooter`, all in points. A section without a setting reads Word's defaults (Letter, 72 point margins) and writes the setting when you set it.
-- `document.Styles` lists the styles (`Name`, `StyleId`, `Type`, `BuiltIn`, `BaseStyle`, `NextParagraphStyle`), looks them up by name or id, and has `Add(name, type)` and `Delete(style)`. Built-in and default styles cannot be deleted; deleting a style removes the references to it. Style formatting is not exposed.
+- `document.Styles` lists the styles (`Name`, `StyleId`, `Type`, `BuiltIn`, `BaseStyle`, `NextParagraphStyle`), looks them up by name or id, and has `Add(name, type)` and `Delete(style)`. Built-in and default styles cannot be deleted; deleting a style removes the references to it. `Style.Font` and `Style.ParagraphFormat` work like the range versions but on the formatting set in the style itself (nothing inherited from the style it is based on is read); setting a value to null removes it.
 - `document.BuiltInDocumentProperties` has `Title`, `Subject`, `Author`, `Keywords`, `Comments`, `Category`, `LastAuthor`, `CreationDate`, `LastSaveTime`, `Company` and `Manager`. Custom properties are not implemented.
 
 ## Table structure

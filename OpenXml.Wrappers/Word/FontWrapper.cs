@@ -25,11 +25,19 @@ public class FontWrapper
     private static readonly Regex ColorPattern = new Regex("^([0-9A-Fa-f]{6}|auto)$", RegexOptions.CultureInvariant);
 
     private readonly RangeWrapper _range;
+    private readonly Style _style;
 
     public FontWrapper(RangeWrapper range)
     {
         ArgumentNullException.ThrowIfNull(range);
         _range = range;
+    }
+
+    //The font of a style: the run properties of the style itself, without anything it inherits from the style it is based on.
+    internal FontWrapper(Style style)
+    {
+        ArgumentNullException.ThrowIfNull(style);
+        _style = style;
     }
 
     /// <summary>Bold text.</summary>
@@ -194,6 +202,11 @@ public class FontWrapper
     /// </summary>
     private T GetValue<T>(Func<OpenXmlCompositeElement, T> read)
     {
+        if (_style != null)
+        {
+            return read(_style.StyleRunProperties);
+        }
+
         IList<OpenXmlCompositeElement> targets = _range.GetRuns().Select(r => (OpenXmlCompositeElement)r.RunProperties).ToList();
         if (targets.Count == 0)
         {
@@ -213,6 +226,22 @@ public class FontWrapper
     /// </summary>
     private void Apply(Action<OpenXmlCompositeElement> change)
     {
+        if (_style != null)
+        {
+            StyleRunProperties styleProperties = _style.StyleRunProperties;
+            if (styleProperties == null)
+            {
+                styleProperties = new StyleRunProperties();
+                _style.StyleRunProperties = styleProperties;
+            }
+            change(styleProperties);
+            if (!styleProperties.HasChildren)
+            {
+                styleProperties.Remove();
+            }
+            return;
+        }
+
         foreach (Run run in _range.GetRuns())
         {
             RunProperties runProperties = run.GetOrAddRunProperties();

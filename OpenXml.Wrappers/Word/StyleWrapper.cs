@@ -84,6 +84,24 @@ public class StyleWrapper : System.IEquatable<StyleWrapper>
         get { return GetName(_style.NextParagraphStyle?.Val?.Value); }
     }
 
+    /// <summary>
+    /// The character formatting set in the style itself, as <c>Style.Font</c> in Word. Formatting inherited from the style it is based on is
+    /// not included. See <see cref="FontWrapper"/> for the rules for values.
+    /// </summary>
+    public FontWrapper Font
+    {
+        get { return new FontWrapper(_style); }
+    }
+
+    /// <summary>
+    /// The paragraph formatting set in the style itself, as <c>Style.ParagraphFormat</c> in Word. Formatting inherited from the style it is
+    /// based on is not included. See <see cref="ParagraphFormatWrapper"/> for the rules for values.
+    /// </summary>
+    public ParagraphFormatWrapper ParagraphFormat
+    {
+        get { return new ParagraphFormatWrapper(_style); }
+    }
+
     private string GetName(string styleId)
     {
         return styleId == null ? null : StyleHelper.GetStyleName(_style, styleId);
