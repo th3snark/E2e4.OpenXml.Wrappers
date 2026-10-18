@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Wordprocessing;
@@ -24,11 +26,31 @@ public enum ReplaceMode
 }
 
 /// <summary>
+/// What a find does when it reaches the end of the range it searches, as <c>WdFindWrap</c> in Word (with the same values).
+/// </summary>
+public enum FindWrap
+{
+    /// <summary>Stop at the end of the range.</summary>
+    Stop = 0,
+
+    /// <summary>Carry on through the rest of the story, wrapping round to the start of it.</summary>
+    Continue = 1,
+
+    /// <summary>Ask the user. This is not supported, because there is no user to ask.</summary>
+    Ask = 2,
+}
+
+/// <summary>
 /// The replacement text of a find, as <c>Find.Replacement</c> in Word.
 /// </summary>
 public class ReplacementWrapper
 {
     public string Text { get; set; }
+
+    /// <summary>Does nothing: the formatting of the replacement cannot be set, so there is none to clear. It is here so that code written for Word runs.</summary>
+    public void ClearFormatting()
+    {
+    }
 }
 
 /// <summary>
@@ -38,12 +60,21 @@ public class ReplacementWrapper
 /// <para>When the text is found the range becomes the span of characters that matched (and for <see cref="ReplaceMode.One"/> the replacement
 /// text), so it can be formatted or read, and the next <c>Execute</c> carries on from the end of it up to the end of the range that the search
 /// started in, as in Word. For <see cref="ReplaceMode.All"/> the range keeps covering the same region, with the replacements in it. A range
-/// that is collapsed is searched to the end of the story.</para>
+/// that is collapsed is searched to the end of the story (or, searching backwards, to the start).</para>
 /// <para>A match can span paragraphs. A replacement takes the formatting of the first character of the match. The text to find and the
 /// replacement can use <c>\t</c> or <c>^t</c> for a tab, <c>\v</c>, <c>\n</c> or <c>^l</c> for a line break, <c>\f</c> or <c>^m</c> for a page break,
-/// <c>\r</c> or <c>^p</c> for a paragraph mark and <c>^^</c> for a caret. A replacement containing a paragraph mark starts a new paragraph.</para>
+/// <c>\r</c> or <c>^p</c> for a paragraph mark, <c>^n</c> for a column break, <c>^s</c> for a no-break space, <c>^+</c> and <c>^=</c> for an em
+/// and en dash, <c>^-</c> for an optional hyphen and <c>^^</c> for a caret. The text to find can use <c>^w</c> for any white space, <c>^#</c>
+/// for a digit, <c>^$</c> for a letter and <c>^?</c> for any character; the replacement can use <c>^&amp;</c> for the text that was found. A
+/// replacement containing a paragraph mark starts a new paragraph.</para>
+/// <para>With <see cref="MatchWildcards"/> the text to find is a Word pattern: <c>?</c> any character, <c>*</c> any string, <c>[abc]</c>,
+/// <c>[a-z]</c> and <c>[!abc]</c> sets, <c>&lt;</c> and <c>&gt;</c> the start and end of a word, <c>@</c> one or more of the previous
+/// character or group, <c>{n}</c>, <c>{n,}</c>, <c>{n,m}</c> and <c>{,m}</c> repeats, <c>(...)</c> groups that the replacement uses as
+/// <c>\1</c> to <c>\9</c> (so can the pattern itself), and <c>\</c> to find a character that has a meaning. Matching the sound or the forms of a
+/// word, and searching for formatting, are not supported.</para>
 /// <para>A search for text that does not include a paragraph mark goes through the paragraphs one at a time from where it starts, so looking
-/// for the next match in a large document costs only as much as the distance to it.</para>
+/// for the next match in a large document costs only as much as the distance to it. A search with <see cref="MatchWildcards"/> looks at the
+/// whole story.</para>
 /// </remarks>
 public class FindWrapper
 {
@@ -55,6 +86,10 @@ public class FindWrapper
     //where the search is to stop. They are ranges so that they follow the text, as the range itself does, when the text is formatted or changed.
     private RangeWrapper _lastMatch;
     private RangeWrapper _limit;
+
+    //What the Execute that is running looks for and replaces with.
+    private Pattern _pattern;
+    private Replacer _replacer;
 
     public FindWrapper(RangeWrapper range)
     {
@@ -74,13 +109,57 @@ public class FindWrapper
     /// <summary>True to match only whole words, that is text not directly preceded or followed by a letter or digit.</summary>
     public bool MatchWholeWord { get; set; }
 
+    /// <summary>True to treat <see cref="Text"/> as a pattern, as described for the class.</summary>
+    public bool MatchWildcards { get; set; }
+
+    /// <summary>True (the default) to search towards the end of the range, false to search back towards the start.</summary>
+    public bool Forward { get; set; } = true;
+
+    /// <summary>What to do at the end of the range: stop, or carry on through the rest of the story.</summary>
+    public FindWrap Wrap { get; set; }
+
+    /// <summary>Matching words that sound alike is not supported: setting this to true throws <see cref="NotSupportedException"/>.</summary>
+    public bool MatchSoundsLike
+    {
+        get { return false; }
+        set { ThrowIfSet(value, nameof(MatchSoundsLike)); }
+    }
+
+    /// <summary>Matching the forms of a word is not supported: setting this to true throws <see cref="NotSupportedException"/>.</summary>
+    public bool MatchAllWordForms
+    {
+        get { return false; }
+        set { ThrowIfSet(value, nameof(MatchAllWordForms)); }
+    }
+
+    /// <summary>Searching for formatting is not supported: setting this to true throws <see cref="NotSupportedException"/>.</summary>
+    public bool Format
+    {
+        get { return false; }
+        set { ThrowIfSet(value, nameof(Format)); }
+    }
+
     /// <summary>True if the last <c>Execute</c> found the text.</summary>
     public bool Found { get; private set; }
+
+    /// <summary>Does nothing: formatting cannot be searched for, so there is none to clear. It is here so that code written for Word runs.</summary>
+    public void ClearFormatting()
+    {
+    }
+
+    private static void ThrowIfSet(bool value, string name)
+    {
+        if (value)
+        {
+            throw new NotSupportedException(String.Format(CultureInfo.InvariantCulture, "Find.{0} is not supported.", name));
+        }
+    }
 
     /// <summary>
     /// Finds, or replaces, the text using the properties of this object.
     /// </summary>
     /// <returns>True if the text was found.</returns>
+    /// <exception cref="ArgumentException">The text is not a valid pattern.</exception>
     public bool Execute(ReplaceMode replace = ReplaceMode.None)
     {
         Found = false;
@@ -88,10 +167,13 @@ public class FindWrapper
         {
             return false;
         }
+        if (Wrap == FindWrap.Ask)
+        {
+            throw new NotSupportedException("FindWrap.Ask is not supported: there is no user to ask.");
+        }
 
-        string find = Unescape(Text);
-        string replacement = Unescape(Replacement.Text ?? String.Empty);
-        StringComparison comparison = MatchCase ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+        _pattern = Pattern.Create(Text, MatchWildcards, MatchCase);
+        _replacer = new Replacer(Replacement.Text ?? String.Empty, MatchWildcards);
 
         //Where the search starts and ends. Looking for the same thing again from the match carries on from its end.
         _range.GetScoped(false, out StoryMap scopeMap, out int scopeStart, out int scopeEnd);
@@ -101,42 +183,111 @@ public class FindWrapper
         bool continuing = _lastMatch != null && start.SameAs(_lastMatch.StartAnchor) && end.SameAs(_lastMatch.EndAnchor);
         Anchor from;
         Anchor to;
-        if (continuing)
+        if (Forward)
         {
-            from = end;
-            to = _limit.StartAnchor;
+            if (continuing)
+            {
+                from = end;
+                to = _limit.StartAnchor;
+            }
+            else
+            {
+                from = start;
+                to = scopeStart == scopeEnd ? new Anchor(null, 0) : end;
+                _limit = RangeWrapper.CreateAt(story, to);
+            }
+        }
+        else if (continuing)
+        {
+            from = _limit.StartAnchor;
+            to = start;
         }
         else
         {
-            from = start;
-            to = scopeStart == scopeEnd ? new Anchor(null, 0) : end;
-            _limit = RangeWrapper.CreateAt(story, to);
+            from = scopeStart == scopeEnd ? GetStoryStart(story) : start;
+            to = end;
+            _limit = RangeWrapper.CreateAt(story, from);
         }
 
-        bool? found = find.Contains('\a', StringComparison.Ordinal)
-            ? null
-            : find.Contains('\r', StringComparison.Ordinal)
-                ? ExecuteAcrossParagraphs(story, scopeMap, scopeStart, scopeEnd, from, to, find, replacement, replace, comparison)
-                : ExecuteByParagraph(story, scopeMap, scopeStart, scopeEnd, from, to, find, replacement, replace, comparison);
-        if (found == null)
+        bool found = Search(story, scopeMap, scopeStart, scopeEnd, from, to, replace);
+        if (!found && Wrap == FindWrap.Continue)
         {
-            found = ExecuteInStory(story, from, to, find, replacement, replace, comparison, scopeMap, scopeStart, scopeEnd);
+            //The rest of the story, and then the part of it before the start; what was searched already has nothing to find.
+            found = Search(story, scopeMap, scopeStart, scopeEnd, GetStoryStart(story), new Anchor(null, 0), replace);
         }
-        Found = found.Value;
+        Found = found;
         return Found;
     }
 
     /// <summary>
-    /// Finds, or replaces, text, setting the properties of this object as Word does.
+    /// Finds, or replaces, text, setting the properties of this object as Word does (a parameter that is left out leaves its property as it is). The parameters are in the order of Word's
+    /// <c>Find.Execute</c>.
     /// </summary>
     /// <returns>True if the text was found.</returns>
-    public bool Execute(string findText, bool matchCase = false, bool matchWholeWord = false, string replaceWith = null, ReplaceMode replace = ReplaceMode.None)
+    /// <exception cref="NotSupportedException"><paramref name="matchSoundsLike"/>, <paramref name="matchAllWordForms"/> or <paramref name="format"/> is true.</exception>
+    public bool Execute(string findText, bool? matchCase = null, bool? matchWholeWord = null, bool? matchWildcards = null, bool? matchSoundsLike = null,
+        bool? matchAllWordForms = null, bool? forward = null, FindWrap? wrap = null, bool? format = null, string replaceWith = null, ReplaceMode replace = ReplaceMode.None)
     {
+        ThrowIfSet(matchSoundsLike == true, nameof(MatchSoundsLike));
+        ThrowIfSet(matchAllWordForms == true, nameof(MatchAllWordForms));
+        ThrowIfSet(format == true, nameof(Format));
+
+        //An argument that is left out leaves the property as it is, as in Word.
         Text = findText;
-        MatchCase = matchCase;
-        MatchWholeWord = matchWholeWord;
-        Replacement.Text = replaceWith;
+        MatchCase = matchCase ?? MatchCase;
+        MatchWholeWord = matchWholeWord ?? MatchWholeWord;
+        MatchWildcards = matchWildcards ?? MatchWildcards;
+        Forward = forward ?? Forward;
+        Wrap = wrap ?? Wrap;
+        if (replaceWith != null)
+        {
+            Replacement.Text = replaceWith;
+        }
         return Execute(replace);
+    }
+
+    private static Anchor GetStoryStart(OpenXmlElement story)
+    {
+        return Anchor.At(StoryMap.Build(story), 0);
+    }
+
+    private bool Search(OpenXmlElement story, StoryMap scopeMap, int scopeStart, int scopeEnd, Anchor from, Anchor to, ReplaceMode replace)
+    {
+        //A pattern can match across paragraphs, so it looks at the whole story. So can text with a cell or row marker.
+        bool? found = _pattern.Regex != null || _pattern.Literal.Contains('\a', StringComparison.Ordinal)
+            ? null
+            : _pattern.Literal.Contains('\r', StringComparison.Ordinal)
+                ? ExecuteAcrossParagraphs(story, scopeMap, scopeStart, scopeEnd, from, to, replace)
+                : ExecuteByParagraph(story, scopeMap, scopeStart, scopeEnd, from, to, replace);
+        if (found == null)
+        {
+            found = ExecuteInStory(story, from, to, replace, scopeMap, scopeStart, scopeEnd);
+        }
+        return found.Value;
+    }
+
+    //Whether every match in the window is needed, to pick the last of them or to replace them all.
+    private bool NeedsAll(ReplaceMode replace)
+    {
+        return replace == ReplaceMode.All || !Forward;
+    }
+
+    private FoundMatch Pick(List<FoundMatch> matches)
+    {
+        return Forward ? matches[0] : matches[matches.Count - 1];
+    }
+
+    //Makes the range the match, or replaces it, according to the mode. The map is the one the match was found in.
+    private void Apply(StoryMap map, Paragraph paragraph, FoundMatch match, ReplaceMode replace)
+    {
+        if (replace == ReplaceMode.None)
+        {
+            Remember(map, match.Start, match.Start + match.Length);
+            return;
+        }
+
+        int length = Replace(map, match.Start, match.Length, _replacer.For(match));
+        Remember(StoryMap.Build(paragraph), match.Start, match.Start + length);
     }
 
     #region By paragraph
@@ -145,7 +296,7 @@ public class FindWrapper
     /// Searches the paragraphs one at a time. Returns null when the window cannot be worked out that way (it ends in a table row, say), in
     /// which case nothing has been changed.
     /// </summary>
-    private bool? ExecuteByParagraph(OpenXmlElement story, StoryMap scopeMap, int scopeStart, int scopeEnd, Anchor from, Anchor to, string find, string replacement, ReplaceMode replace, StringComparison comparison)
+    private bool? ExecuteByParagraph(OpenXmlElement story, StoryMap scopeMap, int scopeStart, int scopeEnd, Anchor from, Anchor to, ReplaceMode replace)
     {
         Paragraph first = ParagraphOf(from);
         Paragraph last = to.Element == null ? null : ParagraphOf(to);
@@ -156,6 +307,10 @@ public class FindWrapper
 
         bool any = false;
         bool madeSpan = _range.IsSpan;
+        bool keepLast = !Forward && replace != ReplaceMode.All;
+        StoryMap bestMap = null;
+        Paragraph bestParagraph = null;
+        FoundMatch best = null;
         for (Paragraph paragraph = first; paragraph != null; paragraph = StoryMap.NextParagraph(paragraph, story))
         {
             StoryMap map = StoryMap.Build(paragraph);
@@ -174,31 +329,34 @@ public class FindWrapper
             windowEnd = Math.Min(windowEnd < 0 ? map.Length - 1 : windowEnd, map.Length - 1);
             if (windowEnd > windowStart)
             {
-                List<(int Start, int Length)> matches = FindMatches(map, find, windowStart, windowEnd, comparison, replace == ReplaceMode.All);
+                List<FoundMatch> matches = FindMatches(map, windowStart, windowEnd, NeedsAll(replace));
                 if (matches.Count > 0)
                 {
                     any = true;
-                    if (replace == ReplaceMode.None)
+                    if (keepLast)
                     {
-                        Remember(map, matches[0].Start, matches[0].Start + matches[0].Length);
+                        //Searching backwards the last match in the window is wanted, so the paragraphs are all looked at.
+                        bestMap = map;
+                        bestParagraph = paragraph;
+                        best = matches[matches.Count - 1];
+                    }
+                    else if (replace != ReplaceMode.All)
+                    {
+                        Apply(map, paragraph, matches[0], replace);
                         return true;
                     }
-                    if (replace == ReplaceMode.One)
+                    else
                     {
-                        int length = Replace(map, matches[0].Start, matches[0].Length, replacement);
-                        Remember(StoryMap.Build(paragraph), matches[0].Start, matches[0].Start + length);
-                        return true;
-                    }
-
-                    //A replace all keeps the range as it was, but as a span, which the replacements then keep up to date.
-                    if (!madeSpan)
-                    {
-                        _range.MakeSpan(scopeMap, scopeStart, scopeEnd);
-                        madeSpan = true;
-                    }
-                    for (int i = matches.Count - 1; i >= 0; i--)
-                    {
-                        Replace(map, matches[i].Start, matches[i].Length, replacement);
+                        //A replace all keeps the range as it was, but as a span, which the replacements then keep up to date.
+                        if (!madeSpan)
+                        {
+                            _range.MakeSpan(scopeMap, scopeStart, scopeEnd);
+                            madeSpan = true;
+                        }
+                        for (int i = matches.Count - 1; i >= 0; i--)
+                        {
+                            Replace(map, matches[i].Start, matches[i].Length, _replacer.For(matches[i]));
+                        }
                     }
                 }
             }
@@ -209,6 +367,12 @@ public class FindWrapper
             }
         }
 
+        if (best != null)
+        {
+            Apply(bestMap, bestParagraph, best, replace);
+            return true;
+        }
+
         _lastMatch = null;
         return any;
     }
@@ -217,9 +381,9 @@ public class FindWrapper
     /// Searches for text that includes paragraph marks. A match starts in one paragraph and runs on into the next few, so each paragraph is
     /// searched together with as many of those after it as the text has marks. Returns null when the window cannot be worked out that way.
     /// </summary>
-    private bool? ExecuteAcrossParagraphs(OpenXmlElement story, StoryMap scopeMap, int scopeStart, int scopeEnd, Anchor from, Anchor to, string find, string replacement, ReplaceMode replace, StringComparison comparison)
+    private bool? ExecuteAcrossParagraphs(OpenXmlElement story, StoryMap scopeMap, int scopeStart, int scopeEnd, Anchor from, Anchor to, ReplaceMode replace)
     {
-        int marks = find.Count(c => c == '\r');
+        int marks = _pattern.Literal.Count(c => c == '\r');
         Paragraph first = ParagraphOf(from);
         Paragraph last = to.Element == null ? null : ParagraphOf(to);
         if (first == null || (to.Element != null && last == null))
@@ -229,6 +393,9 @@ public class FindWrapper
 
         bool any = false;
         bool madeSpan = _range.IsSpan;
+        bool keepLast = !Forward && replace != ReplaceMode.All;
+        StoryMap bestMap = null;
+        FoundMatch best = null;
         Paragraph paragraph = first;
         Anchor startAt = from;
         while (paragraph != null)
@@ -261,36 +428,43 @@ public class FindWrapper
             }
 
             //A match belongs to the paragraph it starts in, so that it is found once.
-            List<(int Start, int Length)> matches = FindMatches(map, find, windowStart, windowEnd, comparison, false, mark.End);
+            List<FoundMatch> matches = FindMatches(map, windowStart, windowEnd, keepLast, mark.End);
             if (matches.Count > 0)
             {
                 any = true;
-                int matchStart = matches[0].Start;
-                int matchLength = matches[0].Length;
-                if (replace == ReplaceMode.None)
+                if (keepLast)
                 {
-                    Remember(map, matchStart, matchStart + matchLength);
-                    return true;
+                    bestMap = map;
+                    best = matches[matches.Count - 1];
                 }
+                else
+                {
+                    FoundMatch match = matches[0];
+                    if (replace == ReplaceMode.None)
+                    {
+                        Remember(map, match.Start, match.Start + match.Length);
+                        return true;
+                    }
 
-                RangeWrapper replaced = RangeWrapper.FromMap(map, matchStart, matchStart + matchLength);
-                replaced.ReplaceSpanText(replacement);
-                if (replace == ReplaceMode.One)
-                {
-                    _range.MakeSpanAnchors(replaced.StartAnchor, replaced.EndAnchor);
-                    _lastMatch = _range.Duplicate();
-                    return true;
-                }
+                    RangeWrapper replaced = RangeWrapper.FromMap(map, match.Start, match.Start + match.Length);
+                    replaced.ReplaceSpanText(_replacer.For(match));
+                    if (replace == ReplaceMode.One)
+                    {
+                        _range.MakeSpanAnchors(replaced.StartAnchor, replaced.EndAnchor);
+                        _lastMatch = _range.Duplicate();
+                        return true;
+                    }
 
-                //A replace all goes on from the end of the replacement, which can be in the middle of a paragraph now.
-                if (!madeSpan)
-                {
-                    _range.MakeSpan(scopeMap, scopeStart, scopeEnd);
-                    madeSpan = true;
+                    //A replace all goes on from the end of the replacement, which can be in the middle of a paragraph now.
+                    if (!madeSpan)
+                    {
+                        _range.MakeSpan(scopeMap, scopeStart, scopeEnd);
+                        madeSpan = true;
+                    }
+                    paragraph = ParagraphOf(replaced.EndAnchor);
+                    startAt = replaced.EndAnchor;
+                    continue;
                 }
-                paragraph = ParagraphOf(replaced.EndAnchor);
-                startAt = replaced.EndAnchor;
-                continue;
             }
 
             if (last != null && paragraph == last)
@@ -299,6 +473,22 @@ public class FindWrapper
             }
             paragraph = StoryMap.NextParagraph(paragraph, story);
             startAt = null;
+        }
+
+        if (best != null)
+        {
+            if (replace == ReplaceMode.None)
+            {
+                Remember(bestMap, best.Start, best.Start + best.Length);
+            }
+            else
+            {
+                RangeWrapper replaced = RangeWrapper.FromMap(bestMap, best.Start, best.Start + best.Length);
+                replaced.ReplaceSpanText(_replacer.For(best));
+                _range.MakeSpanAnchors(replaced.StartAnchor, replaced.EndAnchor);
+                _lastMatch = _range.Duplicate();
+            }
+            return true;
         }
 
         _lastMatch = null;
@@ -319,7 +509,7 @@ public class FindWrapper
     #region By story
 
     //Searches the whole story at once, which a match across paragraphs needs.
-    private bool ExecuteInStory(OpenXmlElement story, Anchor from, Anchor to, string find, string replacement, ReplaceMode replace, StringComparison comparison, StoryMap scopeMap, int scopeStart, int scopeEnd)
+    private bool ExecuteInStory(OpenXmlElement story, Anchor from, Anchor to, ReplaceMode replace, StoryMap scopeMap, int scopeStart, int scopeEnd)
     {
         StoryMap map = StoryMap.Build(story);
         int fromPosition = RangeWrapper.ResolveLocal(map, from);
@@ -327,7 +517,7 @@ public class FindWrapper
         fromPosition = Math.Max(fromPosition, 0);
         toPosition = toPosition < 0 ? map.Length : toPosition;
 
-        List<(int Start, int Length)> matches = FindMatches(map, find, fromPosition, toPosition, comparison, replace == ReplaceMode.All);
+        List<FoundMatch> matches = FindMatches(map, fromPosition, toPosition, NeedsAll(replace));
         if (matches.Count == 0)
         {
             return false;
@@ -335,14 +525,16 @@ public class FindWrapper
 
         if (replace == ReplaceMode.None)
         {
-            Remember(map, matches[0].Start, matches[0].Start + matches[0].Length);
+            FoundMatch match = Pick(matches);
+            Remember(map, match.Start, match.Start + match.Length);
             return true;
         }
 
         if (replace == ReplaceMode.One)
         {
-            int length = Replace(map, matches[0].Start, matches[0].Length, replacement);
-            Remember(StoryMap.Build(story), matches[0].Start, matches[0].Start + length);
+            FoundMatch match = Pick(matches);
+            int length = Replace(map, match.Start, match.Length, _replacer.For(match));
+            Remember(StoryMap.Build(story), match.Start, match.Start + length);
             return true;
         }
 
@@ -354,7 +546,7 @@ public class FindWrapper
         //Replace from the end so that the positions of the matches that are still to be replaced stay valid.
         for (int i = matches.Count - 1; i >= 0; i--)
         {
-            Replace(map, matches[i].Start, matches[i].Length, replacement);
+            Replace(map, matches[i].Start, matches[i].Length, _replacer.For(matches[i]));
         }
         _lastMatch = null;
         return true;
@@ -389,17 +581,9 @@ public class FindWrapper
         _lastMatch = _range.Duplicate();
     }
 
-    //The codes that Word accepts for characters that cannot be typed, and the escapes of C#.
-    private static string Unescape(string text)
-    {
-        return text.Replace("^^", "\u0001", StringComparison.Ordinal).Replace("^p", "\r", StringComparison.Ordinal).Replace("^t", "\t", StringComparison.Ordinal)
-            .Replace("^l", "\v", StringComparison.Ordinal).Replace("^m", "\f", StringComparison.Ordinal).Replace("\u0001", "^", StringComparison.Ordinal)
-            .Replace('\n', '\v');
-    }
-
     //Finds the matches in the positions from windowStart up to windowEnd. Positions that show no text (field codes, pictures) are skipped over,
     //so a match can run across them; each match is given as the position it starts at and the number of positions it takes up.
-    private List<(int Start, int Length)> FindMatches(StoryMap map, string find, int windowStart, int windowEnd, StringComparison comparison, bool all, int maxStart = int.MaxValue)
+    private List<FoundMatch> FindMatches(StoryMap map, int windowStart, int windowEnd, bool all, int maxStart = int.MaxValue)
     {
         char[] characters = map.ToCharacters();
         List<int> positions = null;
@@ -411,7 +595,7 @@ public class FindWrapper
         else
         {
             positions = new List<int>(characters.Length);
-            System.Text.StringBuilder visible = new System.Text.StringBuilder(characters.Length);
+            StringBuilder visible = new StringBuilder(characters.Length);
             for (int i = 0; i < characters.Length; i++)
             {
                 if (characters[i] != '\0')
@@ -426,10 +610,39 @@ public class FindWrapper
         //The window in the characters that show.
         int from = positions == null ? windowStart : FirstIndexAtOrAfter(positions, windowStart);
         int to = positions == null ? windowEnd : FirstIndexAtOrAfter(positions, windowEnd);
-
-        List<(int Start, int Length)> matches = new List<(int, int)>();
-        int position = from;
         int startLimit = positions == null ? maxStart : FirstIndexAtOrAfter(positions, maxStart);
+
+        List<FoundMatch> matches = new List<FoundMatch>();
+        int position = from;
+        if (_pattern.Regex != null)
+        {
+            //The pattern sees the text before the window (for the edges of words) but nothing after it.
+            string capped = to < haystack.Length ? haystack.Substring(0, to) : haystack;
+            while (position <= capped.Length)
+            {
+                Match match = _pattern.Regex.Match(capped, position);
+                if (!match.Success || match.Index >= startLimit)
+                {
+                    break;
+                }
+                if (match.Length == 0 || (MatchWholeWord && !IsWholeWord(haystack, match.Index, match.Length)))
+                {
+                    position = match.Index + 1;
+                    continue;
+                }
+
+                matches.Add(CreateMatch(positions, match.Index, match.Length, match.Value, match.Groups.Cast<Group>().Select(g => g.Value).ToArray()));
+                position = match.Index + match.Length;
+                if (!all)
+                {
+                    break;
+                }
+            }
+            return matches;
+        }
+
+        string find = _pattern.Literal;
+        StringComparison comparison = _pattern.Comparison;
         while (position <= to - find.Length)
         {
             int index = haystack.IndexOf(find, position, to - position, comparison);
@@ -440,9 +653,7 @@ public class FindWrapper
 
             if (!MatchWholeWord || IsWholeWord(haystack, index, find.Length))
             {
-                int start = positions == null ? index : positions[index];
-                int end = positions == null ? index + find.Length : positions[index + find.Length - 1] + 1;
-                matches.Add((start, end - start));
+                matches.Add(CreateMatch(positions, index, find.Length, haystack.Substring(index, find.Length), null));
                 position = index + find.Length;
                 if (!all)
                 {
@@ -457,11 +668,19 @@ public class FindWrapper
         return matches;
     }
 
+    private static FoundMatch CreateMatch(List<int> positions, int index, int length, string text, string[] groups)
+    {
+        int start = positions == null ? index : positions[index];
+        int end = positions == null ? index + length : positions[index + length - 1] + 1;
+        return new FoundMatch(start, end - start, text, groups);
+    }
+
     private static int FirstIndexAtOrAfter(List<int> positions, int position)
     {
         int index = positions.BinarySearch(position);
         return index >= 0 ? index : ~index;
     }
+
     private static bool IsWholeWord(string haystack, int index, int length)
     {
         //Only the edges of the match that are themselves part of a word need a word boundary.
@@ -470,4 +689,283 @@ public class FindWrapper
         bool endOk = !Char.IsLetterOrDigit(haystack[end - 1]) || end == haystack.Length || !Char.IsLetterOrDigit(haystack[end]);
         return startOk && endOk;
     }
+
+    #region Matching and replacing text
+
+    //A match: where it is, the text that matched and, for a pattern, what its groups matched (the first is the whole match).
+    private sealed class FoundMatch
+    {
+        public FoundMatch(int start, int length, string text, string[] groups)
+        {
+            Start = start;
+            Length = length;
+            Text = text;
+            Groups = groups;
+        }
+
+        public int Start { get; }
+
+        public int Length { get; }
+
+        public string Text { get; }
+
+        public string[] Groups { get; }
+    }
+
+    //The text of a ^ code (as in ^p), or null if there is no such code. ^^ is a caret.
+    private static string GetCode(char code)
+    {
+        switch (code)
+        {
+            case 'p':
+                return "\r";
+            case 't':
+                return "\t";
+            case 'l':
+                return "\v";
+            case 'm':
+                return "\f";
+            case 'n':
+                return "\u000e";
+            case 's':
+                return " ";
+            case '+':
+                return "—";
+            case '=':
+                return "–";
+            case '-':
+                return "­";
+            case '^':
+                return "^";
+            default:
+                return null;
+        }
+    }
+
+    //What is looked for: plain text, or a regular expression made from a pattern or from the codes that stand for a kind of character.
+    private sealed class Pattern
+    {
+        public string Literal { get; private set; }
+
+        public Regex Regex { get; private set; }
+
+        public StringComparison Comparison { get; private set; }
+
+        public static Pattern Create(string text, bool wildcards, bool matchCase)
+        {
+            text = text.Replace('\n', '\v');
+            Pattern pattern = new Pattern() { Comparison = matchCase ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase };
+
+            bool kinds = false;
+            for (int i = 0; i + 1 < text.Length; i++)
+            {
+                if (text[i] == '^')
+                {
+                    char code = text[i + 1];
+                    kinds |= code == 'w' || code == '#' || code == '$' || code == '?';
+                    i++;
+                }
+            }
+
+            if (!wildcards && !kinds)
+            {
+                pattern.Literal = Unescape(text);
+                return pattern;
+            }
+
+            try
+            {
+                pattern.Regex = new Regex(ToRegex(text, wildcards), RegexOptions.CultureInvariant | (matchCase ? RegexOptions.None : RegexOptions.IgnoreCase), TimeSpan.FromSeconds(30));
+            }
+            catch (ArgumentException ex)
+            {
+                throw new ArgumentException("The text to find is not a valid pattern: " + ex.Message, nameof(text), ex);
+            }
+            pattern.Literal = text;
+            return pattern;
+        }
+
+        private static string Unescape(string text)
+        {
+            StringBuilder sb = new StringBuilder(text.Length);
+            for (int i = 0; i < text.Length; i++)
+            {
+                string code = text[i] == '^' && i + 1 < text.Length ? GetCode(text[i + 1]) : null;
+                if (code != null)
+                {
+                    sb.Append(code);
+                    i++;
+                }
+                else
+                {
+                    sb.Append(text[i]);
+                }
+            }
+            return sb.ToString();
+        }
+
+        private static string ToRegex(string text, bool wildcards)
+        {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < text.Length; i++)
+            {
+                char c = text[i];
+                if (c == '^' && i + 1 < text.Length)
+                {
+                    char d = text[i + 1];
+                    string code = GetCode(d);
+                    if (code != null)
+                    {
+                        sb.Append(Regex.Escape(code));
+                        i++;
+                        continue;
+                    }
+                    if (d == 'w' || d == '#' || d == '$' || d == '?')
+                    {
+                        sb.Append(d == 'w' ? "[ \\t\\u00A0]+" : d == '#' ? "[0-9]" : d == '$' ? "\\p{L}" : "[\\s\\S]");
+                        i++;
+                        continue;
+                    }
+                }
+
+                if (!wildcards)
+                {
+                    sb.Append(Regex.Escape(c.ToString()));
+                    continue;
+                }
+
+                switch (c)
+                {
+                    case '?':
+                        sb.Append("[\\s\\S]");
+                        break;
+                    case '*':
+                        sb.Append("[\\s\\S]*?");
+                        break;
+                    case '@':
+                        sb.Append('+');
+                        break;
+                    case '<':
+                        sb.Append("\\b(?=\\w)");
+                        break;
+                    case '>':
+                        sb.Append("(?<=\\w)\\b");
+                        break;
+                    case '(':
+                    case ')':
+                        sb.Append(c);
+                        break;
+                    case '[':
+                        int close = text.IndexOf(']', i + 1);
+                        if (close < 0)
+                        {
+                            throw new ArgumentException("A [ has no matching ].");
+                        }
+                        string set = text.Substring(i + 1, close - i - 1);
+                        bool negated = set.Length > 0 && set[0] == '!';
+                        if (negated)
+                        {
+                            set = set.Substring(1);
+                        }
+                        sb.Append(negated ? "[^" : "[").Append(set.Replace("\\", "\\\\", StringComparison.Ordinal).Replace("^", "\\^", StringComparison.Ordinal).Replace("[", "\\[", StringComparison.Ordinal)).Append(']');
+                        i = close;
+                        break;
+                    case '{':
+                        int end = text.IndexOf('}', i + 1);
+                        if (end < 0)
+                        {
+                            throw new ArgumentException("A { has no matching }.");
+                        }
+                        string repeat = text.Substring(i + 1, end - i - 1);
+                        sb.Append('{').Append(repeat.Length > 0 && repeat[0] == ',' ? "0" + repeat : repeat).Append('}');
+                        i = end;
+                        break;
+                    case '\\':
+                        if (i + 1 >= text.Length)
+                        {
+                            throw new ArgumentException("A \\ has nothing after it.");
+                        }
+                        char next = text[i + 1];
+                        sb.Append(next >= '1' && next <= '9' ? "\\" + next : Regex.Escape(next.ToString()));
+                        i++;
+                        break;
+                    default:
+                        sb.Append(Regex.Escape(c.ToString()));
+                        break;
+                }
+            }
+            return sb.ToString();
+        }
+    }
+
+    //Works out the replacement for a match: the codes are turned into the characters they stand for, ^& into the text that was found and,
+    //with patterns, \1 to \9 into the text of the groups.
+    private sealed class Replacer
+    {
+        private readonly string _template;
+        private readonly bool _wildcards;
+        private readonly bool _dynamic;
+        private readonly string _constant;
+
+        public Replacer(string template, bool wildcards)
+        {
+            _template = template;
+            _wildcards = wildcards;
+            _dynamic = template.Contains("^&", StringComparison.Ordinal) || (wildcards && Regex.IsMatch(template, "\\\\[1-9]"));
+            _constant = _dynamic ? null : Expand(null);
+        }
+
+        public string For(FoundMatch match)
+        {
+            return _dynamic ? Expand(match) : _constant;
+        }
+
+        private string Expand(FoundMatch match)
+        {
+            StringBuilder sb = new StringBuilder(_template.Length);
+            for (int i = 0; i < _template.Length; i++)
+            {
+                char c = _template[i];
+                if (c == '^' && i + 1 < _template.Length)
+                {
+                    if (_template[i + 1] == '&')
+                    {
+                        sb.Append(match?.Text);
+                        i++;
+                        continue;
+                    }
+                    string code = GetCode(_template[i + 1]);
+                    if (code != null)
+                    {
+                        sb.Append(code);
+                        i++;
+                        continue;
+                    }
+                }
+                else if (c == '\\' && _wildcards && i + 1 < _template.Length)
+                {
+                    char next = _template[i + 1];
+                    if (next >= '1' && next <= '9')
+                    {
+                        int group = next - '0';
+                        if (match?.Groups != null && group < match.Groups.Length)
+                        {
+                            sb.Append(match.Groups[group]);
+                        }
+                    }
+                    else
+                    {
+                        sb.Append(next);
+                    }
+                    i++;
+                    continue;
+                }
+
+                sb.Append(c == '\n' ? '\v' : c);
+            }
+            return sb.ToString();
+        }
+    }
+
+    #endregion
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
@@ -13,7 +14,8 @@ namespace OpenXml.Wrappers.Word;
 /// </summary>
 /// <remarks>
 /// A section without a header of its own shows that of the nearest section before it ("linked to previous"). <see cref="Range"/> follows
-/// that link when reading, and creates the header when there is none to link to. Turning on <see cref="SectionWrapper.PageSetup"/>'s
+/// that link when reading, and when there is none to link to it gives an empty one to write to that is not saved while it stays empty and
+/// is not <see cref="Exists"/>. Turning on <see cref="SectionWrapper.PageSetup"/>'s
 /// <c>DifferentFirstPageHeaderFooter</c> is up to the caller: creating a first-page header does not switch it on, and the even-page headers
 /// are only shown when the odd and even pages setting of the document is on, which the library does not expose.
 /// </remarks>
@@ -49,11 +51,43 @@ public class HeaderFooterWrapper : System.IEquatable<HeaderFooterWrapper>
     }
 
     /// <summary>
-    /// True when the section has a header or footer of its own of this kind (not when it only shows that of an earlier section).
+    /// True when the section has a header or footer of its own of this kind (not when it only shows that of an earlier section), as
+    /// <c>HeaderFooter.Exists</c> in Word. Setting it to true gives the section an empty header or footer of its own, and false removes it.
     /// </summary>
     public bool Exists
     {
-        get { return GetReference(_section) != null; }
+        get { return GetReference(_section) != null && !IsLatent(); }
+        set
+        {
+            if (value == Exists)
+            {
+                return;
+            }
+            if (value)
+            {
+                if (GetReference(_section) != null)
+                {
+                    //A story that was only read becomes a real header or footer.
+                    Latent.Remove(GetRoot());
+                }
+                else
+                {
+                    Create(null);
+                }
+            }
+            else
+            {
+                RemoveReference();
+            }
+        }
+    }
+
+    /// <summary>
+    /// The page numbers of the header or footer, as <c>HeaderFooter.PageNumbers</c> in Word.
+    /// </summary>
+    public PageNumbersWrapper PageNumbers
+    {
+        get { return new PageNumbersWrapper(this); }
     }
 
     /// <summary>
@@ -63,7 +97,7 @@ public class HeaderFooterWrapper : System.IEquatable<HeaderFooterWrapper>
     /// <exception cref="InvalidOperationException">Set to true for the first section, which has nothing to link to.</exception>
     public bool LinkToPrevious
     {
-        get { return _section.Index > 0 && GetReference(_section) == null; }
+        get { return _section.Index > 0 && (GetReference(_section) == null || IsLatent()); }
         set
         {
             if (value == LinkToPrevious)
@@ -81,6 +115,11 @@ public class HeaderFooterWrapper : System.IEquatable<HeaderFooterWrapper>
             }
             else
             {
+                //A story of its own that was only read is dropped first, so that the copy is of what the section shows.
+                if (GetReference(_section) != null)
+                {
+                    RemoveReference();
+                }
                 HeaderFooterWrapper source = FindEffective();
                 OpenXmlCompositeElement content = source == null ? null : source.GetRoot();
                 Create(content);
@@ -89,16 +128,65 @@ public class HeaderFooterWrapper : System.IEquatable<HeaderFooterWrapper>
     }
 
     /// <summary>
-    /// The content of the header or footer, as <c>HeaderFooter.Range</c> in Word. The header or footer is created if the section and the
-    /// sections before it have none.
+    /// The content of the header or footer, as <c>HeaderFooter.Range</c> in Word. Reading it changes nothing that is saved: when the section
+    /// and the sections before it have no header or footer there is an empty one to read and write, as in Word, where the story is always
+    /// there. It is <see cref="Exists"/> only when something has been written to it, and an empty one is left out when the document is saved.
     /// </summary>
+    /// <remarks>
+    /// A range taken before a save is of the story as it was: if the story was empty it is gone after the save, so take the range again.
+    /// </remarks>
     public RangeWrapper Range
     {
         get
         {
             HeaderFooterWrapper source = FindEffective();
-            OpenXmlCompositeElement root = source == null ? Create(null) : source.GetRoot();
+            OpenXmlCompositeElement root = source == null ? Create(null, true) : source.GetRoot();
             return new RangeWrapper(root);
+        }
+    }
+
+    //Stories that exist only because they were read: they are in the document so that they can be written to, and are removed from it
+    //when they are still empty at a save.
+    private static readonly ConditionalWeakTable<OpenXmlElement, object> Latent = new ConditionalWeakTable<OpenXmlElement, object>();
+
+    private static bool IsEmptyStory(OpenXmlElement root)
+    {
+        return root.ChildElements.Count == 1 && root.FirstChild is Paragraph && !root.Descendants<Run>().Any() && root.InnerText.Length == 0;
+    }
+
+    private bool IsLatent()
+    {
+        return GetReference(_section) != null && Latent.TryGetValue(GetRoot(), out _) && IsEmptyStory(GetRoot());
+    }
+
+    /// <summary>Removes the headers and footers that were only read and are still empty, which Word would not have saved.</summary>
+    internal static void RemoveLatentStories(WordprocessingDocument document)
+    {
+        MainDocumentPart main = document.MainDocumentPart;
+        if (main?.Document == null)
+        {
+            return;
+        }
+
+        foreach (OpenXmlPart part in main.HeaderParts.Cast<OpenXmlPart>().Concat(main.FooterParts).ToList())
+        {
+            OpenXmlElement root = part.RootElement;
+            if (root == null || !Latent.TryGetValue(root, out _))
+            {
+                continue;
+            }
+            if (!IsEmptyStory(root))
+            {
+                Latent.Remove(root);
+                continue;
+            }
+
+            string id = main.GetIdOfPart(part);
+            foreach (HeaderFooterReferenceType reference in main.Document.Descendants<HeaderFooterReferenceType>().Where(r => r.Id != null && r.Id.Value == id).ToList())
+            {
+                reference.Remove();
+            }
+            main.DeletePart(part);
         }
     }
 
@@ -159,7 +247,7 @@ public class HeaderFooterWrapper : System.IEquatable<HeaderFooterWrapper>
     }
 
     //Adds a header or footer part to the section, with a copy of the content or else an empty paragraph, and returns its root.
-    private OpenXmlCompositeElement Create(OpenXmlCompositeElement content)
+    private OpenXmlCompositeElement Create(OpenXmlCompositeElement content, bool latent = false)
     {
         MainDocumentPart main = GetMainDocumentPart();
         SectionProperties properties = _section.GetSectionProperties(true);
@@ -184,6 +272,10 @@ public class HeaderFooterWrapper : System.IEquatable<HeaderFooterWrapper>
             root = part.Footer;
             id = main.GetIdOfPart(part);
             properties.PrependChild(new FooterReference() { Type = GetReferenceType(), Id = id });
+        }
+        if (latent)
+        {
+            Latent.Add(root, new object());
         }
         return root;
     }

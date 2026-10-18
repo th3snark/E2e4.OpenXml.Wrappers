@@ -10,6 +10,9 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
 
+/// <summary>
+/// The comments of a range, as <c>Comments</c> in Word. Replies to a comment are comments too, in the order they are in the document.
+/// </summary>
 public class CommentWrapperCollection : IEnumerable<CommentWrapper>
 {
     private RangeWrapper _rangeWrapper;
@@ -35,9 +38,9 @@ public class CommentWrapperCollection : IEnumerable<CommentWrapper>
             {
                 return new CommentWrapper(GetElementList()[index]);
             }
-            catch (ArgumentOutOfRangeException ex)
+            catch (ArgumentOutOfRangeException)
             {
-                throw new ArgumentOutOfRangeException(String.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index), ex);
+                throw new ArgumentOutOfRangeException(nameof(index), String.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index));
             }
         }
     }
@@ -49,18 +52,75 @@ public class CommentWrapperCollection : IEnumerable<CommentWrapper>
         return _rangeWrapper.StartElement.GetElements<CommentRangeStart>(_rangeWrapper.EndElement).ToList();
     }
 
+    /// <summary>
+    /// Adds a comment on the range and returns it, as <c>Comments.Add</c> in Word. The author is the name of the user, which can be changed
+    /// afterwards.
+    /// </summary>
+    /// <remarks>
+    /// Supported for a span of characters and for the range of a paragraph, table cell, row, table, bookmark or document. The comment spans the
+    /// text of the range; where the range has no text a space is added to anchor it.
+    /// </remarks>
+    /// <exception cref="NotSupportedException">The range is of a type that cannot take a comment.</exception>
     public CommentWrapper Add(RangeWrapper range, string text)
     {
         Guard.ThrowIfNull(range);
 
         //Check that the range can be anchored before anything is changed so that no orphan comment is left behind.
-        if (!range.IsSpan && !(range.StartElement is BookmarkStart || range.StartElement is Paragraph || range.StartElement is TableCell))
+        OpenXmlElement start = range.StartElement;
+        if (!range.IsSpan && !(start is BookmarkStart || start is Paragraph || start is TableCell || start is TableRow || start is Table || start is Document || start is Body))
         {
-            throw new NotSupportedException(String.Format(CultureInfo.InvariantCulture, "Adding a comment to a range starting with the type {0} is not currently supported.", range.StartElement.GetType().Name));
+            throw new NotSupportedException(String.Format(CultureInfo.InvariantCulture, "Adding a comment to a range starting with the type {0} is not currently supported.", start.GetType().Name));
         }
 
-        MainDocumentPart mainDocumentPart = _rangeWrapper.StartElement.GetDocument().MainDocumentPart;
+        MainDocumentPart mainDocumentPart = (start ?? range.AnchorElement).GetDocument().MainDocumentPart;
+        Comment comment = CreateComment(mainDocumentPart, text);
+        string idText = comment.Id.Value;
 
+        CommentRangeStart commentRangeStart = new CommentRangeStart() { Id = idText };
+        CommentRangeEnd commentRangeEnd = new CommentRangeEnd() { Id = idText };
+        //The comment reference must always be inside a run.
+        Run commentReferenceRun = new Run(new RunProperties(new RunStyle() { Val = "CommentReference" }), new CommentReference() { Id = idText });
+
+        if (range.IsSpan)
+        {
+            range.PlaceMarkers(commentRangeStart, commentRangeEnd);
+            commentRangeEnd.InsertAfterSelf(commentReferenceRun);
+        }
+        else if (start is BookmarkStart)
+        {
+            start.InsertBeforeSelf(commentRangeStart);
+            range.EndElement.InsertAfterSelf(commentRangeEnd);
+            commentRangeEnd.InsertAfterSelf(commentReferenceRun);
+        }
+        else
+        {
+            //A paragraph, cell, row, table or the document: the comment spans its first run to its last. If there is no run a single space run
+            //is added to the first paragraph to define the range.
+            OpenXmlElement container = start is Document document ? document.Body : start;
+            if (!container.Descendants<Run>().Any())
+            {
+                Paragraph firstParagraph = container as Paragraph ?? container.Descendants<Paragraph>().FirstOrDefault();
+                if (firstParagraph == null)
+                {
+                    firstParagraph = new Paragraph();
+                    container.AppendChild(firstParagraph);
+                }
+                firstParagraph.AppendChild(new Run(new Text(" ") { Space = SpaceProcessingModeValues.Preserve }));
+            }
+            container.Descendants<Run>().First().InsertBeforeSelf(commentRangeStart);
+            container.Descendants<Run>().Last().InsertAfterSelf(commentRangeEnd);
+            commentRangeEnd.InsertAfterSelf(commentReferenceRun);
+        }
+
+        return new CommentWrapper(commentRangeStart);
+    }
+
+    /// <summary>
+    /// Creates the comment itself (its text, author and date) in the comments part, which is created when the document does not have one.
+    /// The caller places the markers and the reference in the document.
+    /// </summary>
+    internal static Comment CreateComment(MainDocumentPart mainDocumentPart, string text)
+    {
         WordprocessingCommentsPart wordprocessingCommentsPart = mainDocumentPart.WordprocessingCommentsPart;
         if (wordprocessingCommentsPart == null)
         {
@@ -88,7 +148,6 @@ public class CommentWrapperCollection : IEnumerable<CommentWrapper>
             text = " ";
         }
 
-        string idText = id.ToString(CultureInfo.InvariantCulture);
         Comment comment = new Comment(
                     new Paragraph(
                        new ParagraphProperties(new ParagraphStyleId() { Val = "CommentText" }),
@@ -96,60 +155,25 @@ public class CommentWrapperCollection : IEnumerable<CommentWrapper>
                                new AnnotationReferenceMark()),
                        new Run(new Text(text) { Space = SpaceProcessingModeValues.Preserve })))
         {
-            Id = idText,
+            Id = id.ToString(CultureInfo.InvariantCulture),
             Date = DateTime.UtcNow.Truncate(TimeSpan.TicksPerSecond),
             Author = author,
             Initials = initials
         };
         comments.AppendChild(comment);
+        return comment;
+    }
 
-        CommentRangeStart commentRangeStart = new CommentRangeStart() { Id = idText };
-        CommentRangeEnd commentRangeEnd = new CommentRangeEnd() { Id = idText };
-        //The comment reference must always be inside a run.
-        Run commentReferenceRun = new Run(new RunProperties(new RunStyle() { Val = "CommentReference" }), new CommentReference() { Id = idText });
-
-        if (range.IsSpan)
+    /// <summary>
+    /// Deletes every comment of the collection, with its text, range markers and reference.
+    /// </summary>
+    public void DeleteAll()
+    {
+        //The comments are fetched first, since they are deleted inside the iteration.
+        foreach (CommentWrapper comment in this.ToList())
         {
-            range.PlaceMarkers(commentRangeStart, commentRangeEnd);
-            commentRangeEnd.InsertAfterSelf(commentReferenceRun);
+            comment.Delete();
         }
-        else if (range.StartElement is BookmarkStart)
-        {
-            range.StartElement.InsertBeforeSelf(commentRangeStart);
-            range.EndElement.InsertAfterSelf(commentRangeEnd);
-            commentRangeEnd.InsertAfterSelf(commentReferenceRun);
-        }
-        else if (range.StartElement is Paragraph)
-        {
-            Paragraph paragraph = (Paragraph)range.StartElement;
-            //If the paragraph has no runs then add a single space run to define the range for the comment.
-            if (!paragraph.Elements<Run>().Any())
-            {
-                paragraph.AppendChild(new Run(new Text(" ") { Space = SpaceProcessingModeValues.Preserve }));
-            }
-            paragraph.Elements<Run>().First().InsertBeforeSelf(commentRangeStart);
-            paragraph.Elements<Run>().Last().InsertAfterSelf(commentRangeEnd);
-            commentRangeEnd.InsertAfterSelf(commentReferenceRun);
-        }
-        else
-        {
-            TableCell tableCell = (TableCell)range.StartElement;
-            Paragraph firstParagraph = tableCell.Elements<Paragraph>().First();
-            //If there are no runs in any of the paragraphs in the table cell then add a new single space run to the first paragraph.
-            //This will be the text that defines the range for the comment. This is a quick workaround for now since it is actually
-            //possible to add a CommentReference without adding a CommentRangeStart and CommentRangeEnd.
-            if (!tableCell.Descendants<Run>().Any())
-            {
-                firstParagraph.AppendChild(new Run(new Text(" ") { Space = SpaceProcessingModeValues.Preserve }));
-            }
-            Run firstRun = tableCell.Descendants<Run>().First();
-            Run lastRun = tableCell.Descendants<Run>().Last();
-            firstRun.InsertBeforeSelf(commentRangeStart);
-            lastRun.InsertAfterSelf(commentRangeEnd);
-            commentRangeEnd.InsertAfterSelf(commentReferenceRun);
-        }
-
-        return new CommentWrapper(commentRangeStart);
     }
 
     #region IEnumerable Members

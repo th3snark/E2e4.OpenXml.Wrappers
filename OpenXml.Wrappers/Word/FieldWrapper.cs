@@ -12,20 +12,12 @@ namespace OpenXml.Wrappers.Word;
 /// character with the field code between them) and simple fields (<c>fldSimple</c>).
 /// </summary>
 /// <remarks>
-/// Fields are never updated by the library. <see cref="Result"/> is the text stored in the document, which Word shows until the field is
-/// updated.
+/// <see cref="Result"/> is the text stored in the document, which Word shows until the field is updated. <see cref="Update"/> works out the
+/// result of the fields that do not depend on the layout of the pages, such as DATE, SEQ, REF and DOCPROPERTY; Word updates the others (PAGE,
+/// NUMPAGES, TOC and so on) when the document is opened.
 /// </remarks>
-public class FieldWrapper : System.IEquatable<FieldWrapper>
+public partial class FieldWrapper : System.IEquatable<FieldWrapper>
 {
-    private static readonly (string Name, FieldType Type)[] s_names =
-    {
-        ("REF", FieldType.Ref), ("IF", FieldType.If), ("STYLEREF", FieldType.StyleRef), ("SEQ", FieldType.Sequence),
-        ("TOC", FieldType.TableOfContents), ("AUTHOR", FieldType.Author), ("NUMPAGES", FieldType.NumPages),
-        ("FILENAME", FieldType.FileName), ("DATE", FieldType.Date), ("TIME", FieldType.Time), ("PAGE", FieldType.Page),
-        ("PAGEREF", FieldType.PageRef), ("MERGEFIELD", FieldType.MergeField), ("TITLE", FieldType.Title),
-        ("HYPERLINK", FieldType.Hyperlink)
-    };
-
     private readonly SimpleField _simpleField;
     private readonly FieldChar _begin;
 
@@ -44,18 +36,6 @@ public class FieldWrapper : System.IEquatable<FieldWrapper>
             throw new ArgumentException("The element is not the begin character of a field.", nameof(begin));
         }
         _begin = begin;
-    }
-
-    internal static string TypeToCodeName(FieldType type)
-    {
-        foreach ((string name, FieldType fieldType) in s_names)
-        {
-            if (fieldType == type)
-            {
-                return name;
-            }
-        }
-        throw new ArgumentOutOfRangeException(nameof(type));
     }
 
     #region Parsing
@@ -138,9 +118,45 @@ public class FieldWrapper : System.IEquatable<FieldWrapper>
     #endregion
 
     /// <summary>
+    /// The characters of the code (<paramref name="code"/>) or of the result of the field as a range, which is empty when there are none. The range of
+    /// the code of a simple field (<c>w:fldSimple</c>), which keeps its code in an attribute, is empty at the start of the field.
+    /// </summary>
+    internal RangeWrapper GetPartRange(bool code)
+    {
+        OpenXmlElement anchor = _simpleField != null ? (OpenXmlElement)_simpleField : _begin;
+        OpenXmlElement story = StoryMap.FindRoot(anchor);
+        List<Run> runs;
+        OpenXmlElement emptyAfter;
+        if (_simpleField != null)
+        {
+            runs = code ? new List<Run>() : _simpleField.Elements<Run>().ToList();
+            emptyAfter = _simpleField;
+        }
+        else
+        {
+            Parts parts = Parse();
+            runs = code ? parts.Codes.Select(c => (Run)c.Parent).Distinct().ToList() : parts.ResultRuns;
+            emptyAfter = code ? _begin.Parent : parts.Separate?.Parent ?? _begin.Parent;
+        }
+
+        RangeWrapper range = new RangeWrapper(story);
+        if (runs.Count > 0)
+        {
+            range.SetRange(new RangeWrapper(runs[0]).Start, new RangeWrapper(runs[runs.Count - 1]).End);
+        }
+        else
+        {
+            //A simple field has no characters of its own to be after, so its empty code is at its start.
+            int position = _simpleField != null ? new RangeWrapper(_simpleField).Start : new RangeWrapper(emptyAfter).End;
+            range.SetRange(position, position);
+        }
+        return range;
+    }
+
+    /// <summary>
     /// The field code without its surrounding spaces, such as <c>PAGE \* MERGEFORMAT</c>. Setting it replaces the code.
     /// </summary>
-    public string Code
+    internal string CodeText
     {
         get
         {
@@ -187,17 +203,9 @@ public class FieldWrapper : System.IEquatable<FieldWrapper>
     {
         get
         {
-            string code = Code;
+            string code = CodeText;
             int space = code.IndexOf(' ', StringComparison.Ordinal);
-            string name = (space < 0 ? code : code.Substring(0, space)).ToUpperInvariant();
-            foreach ((string known, FieldType type) in s_names)
-            {
-                if (known == name)
-                {
-                    return type;
-                }
-            }
-            return FieldType.Other;
+            return FieldCodes.FromName(space < 0 ? code : code.Substring(0, space));
         }
     }
 
@@ -206,7 +214,7 @@ public class FieldWrapper : System.IEquatable<FieldWrapper>
     /// of its first run.
     /// </summary>
     /// <exception cref="NotSupportedException">The result is not within a single paragraph.</exception>
-    public string Result
+    internal string ResultText
     {
         get
         {
@@ -323,7 +331,7 @@ public class FieldWrapper : System.IEquatable<FieldWrapper>
 
     // Two wrappers are equal when they wrap the same underlying element(s), so a new wrapper obtained for the same item compares equal.
 
-    private OpenXmlElement Key
+    internal OpenXmlElement Key
     {
         get { return _simpleField ?? (OpenXmlElement)_begin; }
     }

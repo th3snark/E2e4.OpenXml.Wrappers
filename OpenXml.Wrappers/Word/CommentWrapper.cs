@@ -7,7 +7,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
 
-public class CommentWrapper : System.IEquatable<CommentWrapper>
+public partial class CommentWrapper : System.IEquatable<CommentWrapper>
 {
     CommentRangeStart _commentRangeStart;
     CommentRangeEnd _commentRangeEnd;
@@ -18,9 +18,26 @@ public class CommentWrapper : System.IEquatable<CommentWrapper>
         _commentRangeEnd = commentRangeStart.GetCommentRangeEnd();
     }
 
-    public RangeWrapper Range
+    /// <summary>
+    /// The range of the document the comment is attached to (Word's <c>Comment.Scope</c>).
+    /// </summary>
+    public RangeWrapper Scope
     {
         get { return new RangeWrapper(_commentRangeStart, _commentRangeEnd); }
+    }
+
+    /// <summary>
+    /// The range over the text of the comment itself (Word's <c>Comment.Range</c>), as opposed to <see cref="Scope"/>.
+    /// </summary>
+    public RangeWrapper Range
+    {
+        get
+        {
+            Comment comment = _commentRangeStart.GetComment();
+            Paragraph first = comment.Elements<Paragraph>().FirstOrDefault();
+            Paragraph last = comment.Elements<Paragraph>().LastOrDefault();
+            return first == null ? new RangeWrapper(comment) : new RangeWrapper(first, last);
+        }
     }
 
     /// <summary>
@@ -37,7 +54,7 @@ public class CommentWrapper : System.IEquatable<CommentWrapper>
         set { _commentRangeStart.GetComment().Author = value; }
     }
 
-    public string Initials
+    public string Initial
     {
         get { return _commentRangeStart.GetComment().Initials?.Value; }
         set { _commentRangeStart.GetComment().Initials = value; }
@@ -60,6 +77,7 @@ public class CommentWrapper : System.IEquatable<CommentWrapper>
                 lines = lines.Take(lines.Length - 1).ToArray();
             }
 
+            string paragraphId = comment.Elements<Paragraph>().LastOrDefault()?.ParagraphId?.Value;
             comment.RemoveAllChildren();
             for (int i = 0; i < lines.Length; i++)
             {
@@ -80,6 +98,12 @@ public class CommentWrapper : System.IEquatable<CommentWrapper>
                     }
                 }
                 comment.AppendChild(paragraph);
+            }
+
+            //The id that threads (replies and done) refer to belongs to the last paragraph, so the new one keeps it.
+            if (paragraphId != null)
+            {
+                comment.Elements<Paragraph>().Last().ParagraphId = paragraphId;
             }
         }
     }
@@ -102,6 +126,13 @@ public class CommentWrapper : System.IEquatable<CommentWrapper>
     /// </summary>
     public void Delete()
     {
+        //The replies go with the comment, as in Word.
+        foreach (CommentWrapper reply in Replies.ToList())
+        {
+            reply.Delete();
+        }
+        RemoveThreadInformation();
+
         Comment comment = _commentRangeStart.GetComment();
         string id = _commentRangeStart.Id.Value;
         OpenXmlElement root = _commentRangeStart.GetRoot();
@@ -120,9 +151,13 @@ public class CommentWrapper : System.IEquatable<CommentWrapper>
         comment.Remove();
     }
 
+    /// <summary>
+    /// The 0-based position of the comment among the comments of the document (<c>Comment.Index</c> in Word, which counts from 1). The id of
+    /// the comment in the file is a different number.
+    /// </summary>
     public int Index
     {
-        get { return Convert.ToInt32(_commentRangeStart.Id.Value, CultureInfo.InvariantCulture); }
+        get { return _commentRangeStart.GetRoot().Descendants<CommentRangeStart>().ToList().IndexOf(_commentRangeStart); }
     }
 
     #region Equality

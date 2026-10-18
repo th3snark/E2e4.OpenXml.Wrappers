@@ -157,7 +157,8 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
             }
             else if (_startOpenXmlElement is Paragraph)
             {
-                SetParagraphRunText((Paragraph)_startOpenXmlElement, text);
+                //The paragraph mark stays, so the one that the text of a paragraph ends with is not part of the new text.
+                SetParagraphRunText((Paragraph)_startOpenXmlElement, text.EndsWith('\r') || text.EndsWith('\a') ? text.Substring(0, text.Length - 1) : text);
             }
             else if (_startOpenXmlElement is BookmarkStart)
             {
@@ -262,6 +263,17 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
 
                 case '\f':
                     run = new Run(new Break() { Type = BreakValues.Page });
+                    if (sb.Length > 0)
+                    {
+                        run.AppendChild<Text>(new Text(sb.ToString()) { Space = SpaceProcessingModeValues.Preserve });
+                    }
+                    PrependRunProperties(run, paragraphMarkRunProperties);
+                    runList.Insert(0, run);
+                    sb.Length = 0;
+                    break;
+
+                case '\u000e':
+                    run = new Run(new Break() { Type = BreakValues.Column });
                     if (sb.Length > 0)
                     {
                         run.AppendChild<Text>(new Text(sb.ToString()) { Space = SpaceProcessingModeValues.Preserve });
@@ -426,7 +438,8 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
             {
                 //Word represents a page break as a form feed and any other break as a vertical tab.
                 Break lineBreak = (Break)element;
-                sb.Append(lineBreak.Type != null && lineBreak.Type.HasValue && lineBreak.Type.Value == BreakValues.Page ? '\f' : '\v');
+                bool isColumn = lineBreak.Type != null && lineBreak.Type.HasValue && lineBreak.Type.Value == BreakValues.Column;
+                sb.Append(lineBreak.Type != null && lineBreak.Type.HasValue && lineBreak.Type.Value == BreakValues.Page ? '\f' : isColumn ? '\u000e' : '\v');
             }
         }
 

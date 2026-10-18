@@ -17,6 +17,7 @@ public enum ParagraphAlignment
     Center = 1,
     Right = 2,
     Justify = 3,
+    Distribute = 4
 }
 
 /// <summary>
@@ -47,9 +48,10 @@ public enum LineSpacingRule
 /// The paragraph formatting of a range, as <c>Range.ParagraphFormat</c> in Word.
 /// </summary>
 /// <remarks>
-/// <para>Each property reads and sets the direct formatting of every paragraph that the range touches, and is null when they differ.
-/// Formatting that comes from styles is not taken into account, so a property that has not been set reads as 0, false or
-/// <see cref="ParagraphAlignment.Left"/>. Setting a property to null removes the direct formatting so that the style applies again.</para>
+/// <para>Each property reads the formatting that applies to every paragraph that the range touches, as Word does (the document defaults, the
+/// table style, the paragraph style and the direct formatting), and is null when they differ. Setting a property sets the direct
+/// formatting; setting it to null removes that so that the style applies again. Use <see cref="Direct"/> to read only the direct formatting.
+/// The conditional formatting of table styles and the indents of numbering levels are not taken into account.</para>
 /// <para>As in Word, measurements are in points. (<see cref="ParagraphWrapper.SpaceBefore"/> and <see cref="ParagraphWrapper.SpaceAfter"/> are
 /// the raw twentieths of a point.)</para>
 /// </remarks>
@@ -59,6 +61,7 @@ public class ParagraphFormatWrapper
 
     private readonly RangeWrapper _range;
     private readonly Style _style;
+    private readonly bool _direct;
 
     public ParagraphFormatWrapper(RangeWrapper range)
     {
@@ -66,11 +69,28 @@ public class ParagraphFormatWrapper
         _range = range;
     }
 
-    //The paragraph format of a style: the paragraph properties of the style itself, without anything it inherits from the style it is based on.
+    //The paragraph format of a style: the paragraph properties of the style with those it inherits from the styles it is based on and the
+    //document defaults.
     internal ParagraphFormatWrapper(Style style)
     {
         Guard.ThrowIfNull(style);
         _style = style;
+    }
+
+    private ParagraphFormatWrapper(RangeWrapper range, Style style, bool direct)
+    {
+        _range = range;
+        _style = style;
+        _direct = direct;
+    }
+
+    /// <summary>
+    /// The same paragraph format, but reading only the formatting that has been set directly on the paragraphs (or in the style itself), not
+    /// what comes from styles. A property that has not been set reads as 0, false or <see cref="ParagraphAlignment.Left"/>.
+    /// </summary>
+    public ParagraphFormatWrapper Direct
+    {
+        get { return _direct ? this : new ParagraphFormatWrapper(_range, _style, true); }
     }
 
     //The properties of a style are a different type to those of a paragraph, with the same children. They are edited as a copy of those of
@@ -118,9 +138,13 @@ public class ParagraphFormatWrapper
                 {
                     return ParagraphAlignment.Right;
                 }
-                if (value == JustificationValues.Both || value == JustificationValues.Distribute)
+                if (value == JustificationValues.Both)
                 {
                     return ParagraphAlignment.Justify;
+                }
+                if (value == JustificationValues.Distribute)
+                {
+                    return ParagraphAlignment.Distribute;
                 }
                 return ParagraphAlignment.Left;
             });
@@ -140,6 +164,7 @@ public class ParagraphFormatWrapper
                     JustificationValues justification = value.Value == ParagraphAlignment.Center ? JustificationValues.Center
                         : value.Value == ParagraphAlignment.Right ? JustificationValues.Right
                         : value.Value == ParagraphAlignment.Justify ? JustificationValues.Both
+                        : value.Value == ParagraphAlignment.Distribute ? JustificationValues.Distribute
                         : JustificationValues.Left;
                     properties.Justification = new Justification() { Val = justification };
                 }
@@ -410,6 +435,158 @@ public class ParagraphFormatWrapper
         set { SetOnOff<WidowControl>(value, flag => new WidowControl() { Val = flag }, properties => properties.WidowControl = null, (properties, element) => properties.WidowControl = element); }
     }
 
+    /// <summary>True to leave out the paragraphs when lines are numbered (<c>ParagraphFormat.LineNumbering</c> suppression in Word).</summary>
+    public bool? NoLineNumber
+    {
+        get { return GetOnOff(properties => properties?.SuppressLineNumbers, e => e.Val); }
+        set { SetOnOff<SuppressLineNumbers>(value, flag => new SuppressLineNumbers() { Val = flag }, properties => properties.SuppressLineNumbers = null, (properties, element) => properties.SuppressLineNumbers = element); }
+    }
+
+    /// <summary>True to swap the left and right indents on facing pages.</summary>
+    public bool? MirrorIndents
+    {
+        get { return GetOnOff(properties => properties?.MirrorIndents, e => e.Val); }
+        set { SetOnOff<MirrorIndents>(value, flag => new MirrorIndents() { Val = flag }, properties => properties.MirrorIndents = null, (properties, element) => properties.MirrorIndents = element); }
+    }
+
+    /// <summary>
+    /// True to hyphenate the paragraphs when the document is set to hyphenate automatically; false switches it off for them. True by default.
+    /// </summary>
+    public bool? Hyphenation
+    {
+        get
+        {
+            return GetValue<bool?>(properties =>
+            {
+                SuppressAutoHyphens suppress = properties?.SuppressAutoHyphens;
+                return suppress == null || (suppress.Val != null && suppress.Val.HasValue && !suppress.Val.Value);
+            });
+        }
+        set
+        {
+            SetOnOff<SuppressAutoHyphens>(value.HasValue ? !value : (bool?)null, flag => new SuppressAutoHyphens() { Val = flag }, properties => properties.SuppressAutoHyphens = null, (properties, element) => properties.SuppressAutoHyphens = element);
+        }
+    }
+
+    /// <summary>True to put the space before the paragraphs automatically, as Word does for web pages (<c>ParagraphFormat.SpaceBeforeAuto</c>).</summary>
+    public bool? SpaceBeforeAuto
+    {
+        get { return GetValue<bool?>(properties => IsOn(properties?.SpacingBetweenLines?.BeforeAutoSpacing)); }
+        set
+        {
+            Apply(properties =>
+            {
+                if (value.HasValue)
+                {
+                    GetOrAddSpacing(properties).BeforeAutoSpacing = value.Value;
+                }
+                else if (properties.SpacingBetweenLines != null)
+                {
+                    properties.SpacingBetweenLines.BeforeAutoSpacing = null;
+                    RemoveIfEmpty(properties.SpacingBetweenLines);
+                }
+            });
+        }
+    }
+
+    /// <summary>True to put the space after the paragraphs automatically (<c>ParagraphFormat.SpaceAfterAuto</c>).</summary>
+    public bool? SpaceAfterAuto
+    {
+        get { return GetValue<bool?>(properties => IsOn(properties?.SpacingBetweenLines?.AfterAutoSpacing)); }
+        set
+        {
+            Apply(properties =>
+            {
+                if (value.HasValue)
+                {
+                    GetOrAddSpacing(properties).AfterAutoSpacing = value.Value;
+                }
+                else if (properties.SpacingBetweenLines != null)
+                {
+                    properties.SpacingBetweenLines.AfterAutoSpacing = null;
+                    RemoveIfEmpty(properties.SpacingBetweenLines);
+                }
+            });
+        }
+    }
+
+    /// <summary>The outline level of the paragraphs, for headings and the outline view.</summary>
+    public ParagraphOutlineLevel? OutlineLevel
+    {
+        get
+        {
+            return GetValue<ParagraphOutlineLevel?>(properties =>
+            {
+                int? level = properties?.OutlineLevel?.Val?.Value;
+                return level.HasValue && level.Value >= 0 && level.Value <= 8 ? (ParagraphOutlineLevel)(level.Value + 1) : ParagraphOutlineLevel.BodyText;
+            });
+        }
+        set
+        {
+            if (value.HasValue && !EnumCompat.IsDefined(value.Value))
+            {
+                throw new ArgumentOutOfRangeException(nameof(value));
+            }
+
+            Apply(properties =>
+            {
+                properties.OutlineLevel = null;
+                if (value.HasValue)
+                {
+                    properties.OutlineLevel = new OutlineLevel() { Val = value.Value == ParagraphOutlineLevel.BodyText ? 9 : (int)value.Value - 1 };
+                }
+            });
+        }
+    }
+
+    /// <summary>The tab stops of the paragraphs, as <c>ParagraphFormat.TabStops</c> in Word.</summary>
+    public TabStopWrapperCollection TabStops
+    {
+        get { return new TabStopWrapperCollection(this); }
+    }
+
+    /// <summary>
+    /// Removes the direct paragraph formatting so that the styles apply (<c>ParagraphFormat.Reset</c> in Word). The style, the section break
+    /// and the formatting of the paragraph mark are kept.
+    /// </summary>
+    public void Reset()
+    {
+        Apply(properties =>
+        {
+            foreach (OpenXmlElement child in properties.ChildElements.Where(e => !(e is ParagraphStyleId || e is SectionProperties || e is ParagraphMarkRunProperties || e is ParagraphPropertiesChange)).ToList())
+            {
+                child.Remove();
+            }
+        });
+    }
+
+    //Whether a tab stop at the position comes from a style or the document defaults rather than being set on the paragraphs.
+    internal bool IsInherited(long twips)
+    {
+        if (_style != null)
+        {
+            ParagraphProperties inherited = new FormattingResolver(_style).ResolveStyleParagraph(_style);
+            return inherited.Tabs != null && inherited.Tabs.Elements<TabStop>().Any(t => t.Position != null && t.Position.HasValue && t.Position.Value == twips && !TabStopWrapper.IsClear(t));
+        }
+
+        IList<Paragraph> paragraphs = GetParagraphs();
+        if (paragraphs.Count == 0)
+        {
+            return false;
+        }
+        FormattingResolver resolver = new FormattingResolver(paragraphs[0]);
+        return paragraphs.Any(p =>
+        {
+            ParagraphProperties inherited = resolver.ResolveParagraph(p, false);
+            return inherited.Tabs != null && inherited.Tabs.Elements<TabStop>().Any(t => t.Position != null && t.Position.HasValue && t.Position.Value == twips && !TabStopWrapper.IsClear(t));
+        });
+    }
+
+    private static bool IsOn(OnOffValue value)
+    {
+        return value != null && value.HasValue && value.Value;
+    }
+
     private bool? GetOnOff<T>(Func<ParagraphProperties, T> find, Func<T, OnOffValue> getValue) where T : OpenXmlElement
     {
         return GetValue<bool?>(properties =>
@@ -493,11 +670,16 @@ public class ParagraphFormatWrapper
     /// <summary>
     /// Reads a value from the paragraph properties of every paragraph the range touches and returns it if they all agree, otherwise null.
     /// </summary>
-    private T GetValue<T>(Func<ParagraphProperties, T> read)
+    internal T GetValue<T>(Func<ParagraphProperties, T> read)
+    {
+        return GetValue(read, EqualityComparer<T>.Default);
+    }
+
+    internal T GetValue<T>(Func<ParagraphProperties, T> read, IEqualityComparer<T> comparer)
     {
         if (_style != null)
         {
-            return read(CopyStyleProperties());
+            return read(_direct ? CopyStyleProperties() : new FormattingResolver(_style).ResolveStyleParagraph(_style));
         }
 
         IList<Paragraph> paragraphs = GetParagraphs();
@@ -506,11 +688,13 @@ public class ParagraphFormatWrapper
             return default(T);
         }
 
-        T first = read(paragraphs[0].ParagraphProperties);
-        return paragraphs.Skip(1).All(p => EqualityComparer<T>.Default.Equals(read(p.ParagraphProperties), first)) ? first : default(T);
+        FormattingResolver resolver = _direct ? null : new FormattingResolver(paragraphs[0]);
+        Func<Paragraph, ParagraphProperties> properties = p => _direct ? p.ParagraphProperties : resolver.ResolveParagraph(p);
+        T first = read(properties(paragraphs[0]));
+        return paragraphs.Skip(1).All(p => comparer.Equals(read(properties(p)), first)) ? first : default(T);
     }
 
-    private void Apply(Action<ParagraphProperties> change)
+    internal void Apply(Action<ParagraphProperties> change)
     {
         if (_style != null)
         {

@@ -167,7 +167,7 @@ internal static class TableLook
             header.Range.Font.Color = "FFFFFF";
             foreach (TableCellWrapper cell in header.Cells)
             {
-                cell.BackgroundColor = "1F3864";
+                cell.Shading.BackgroundPatternColor = "1F3864";
             }
         }
     }

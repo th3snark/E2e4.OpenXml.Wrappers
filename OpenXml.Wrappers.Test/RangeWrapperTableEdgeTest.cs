@@ -52,7 +52,7 @@ public class RangeWrapperTableEdgeTest
         ParagraphWrapper added = Range(body, 6, 6).InsertParagraphAfter();
 
         Assert.Equal(3, body.Elements<Paragraph>().Count() + 0);
-        Assert.Equal("after", new ParagraphWrapper(body.Elements<Paragraph>().Last()).Text);
+        Assert.Equal("after\r", new ParagraphWrapper(body.Elements<Paragraph>().Last()).Text);
         Assert.NotNull(added);
     }
 

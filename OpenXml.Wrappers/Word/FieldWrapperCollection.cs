@@ -68,10 +68,24 @@ public class FieldWrapperCollection : IEnumerable<FieldWrapper>
     /// <param name="range">Where to add the field. The rules are those of <see cref="RangeWrapper.InsertAfter"/>.</param>
     /// <param name="type">The type of field.</param>
     /// <param name="text">The rest of the field code (the arguments and switches), or null.</param>
-    public FieldWrapper Add(RangeWrapper range, FieldType type, string text = null)
+    /// <param name="preserveFormatting">True (as in Word) to add <c>* MERGEFORMAT</c> so that formatting given to the result is kept when the field is updated.</param>
+    public FieldWrapper Add(RangeWrapper range, FieldType type = FieldType.Empty, string text = null, bool preserveFormatting = true)
     {
-        string code = FieldWrapper.TypeToCodeName(type);
-        return Add(range, String.IsNullOrWhiteSpace(text) ? code : code + " " + text.Trim());
+        string code;
+        if (type == FieldType.Empty)
+        {
+            code = text;
+        }
+        else
+        {
+            string name = FieldCodes.ToName(type);
+            code = String.IsNullOrWhiteSpace(text) ? name : name + " " + text.Trim();
+        }
+        if (preserveFormatting && !String.IsNullOrWhiteSpace(code) && !code.Contains("MERGEFORMAT", StringComparison.OrdinalIgnoreCase))
+        {
+            code = code.Trim() + " \\* MERGEFORMAT";
+        }
+        return Add(range, code);
     }
 
     /// <summary>
@@ -95,7 +109,47 @@ public class FieldWrapperCollection : IEnumerable<FieldWrapper>
                 new Run(new Text(String.Empty) { Space = SpaceProcessingModeValues.Preserve }),
                 new Run(new FieldChar() { FieldCharType = FieldCharValues.End })
             });
-        return new FieldWrapper(begin);
+        FieldWrapper field = new FieldWrapper(begin);
+        //As in Word a new field shows its result straight away when that can be worked out; the others are left for Word to update.
+        field.Update();
+        return field;
+    }
+
+    /// <summary>
+    /// Updates the fields, as <c>Fields.Update</c> in Word, and returns 0 if all of them were updated, otherwise the number that could not be
+    /// (Word returns the position of the first). See <see cref="FieldWrapper.Update"/>.
+    /// </summary>
+    public int Update()
+    {
+        return GetElementList().Count(f => !f.Update());
+    }
+
+    /// <summary>Locks every field so that it is not updated (<c>Fields.Lock</c> in Word).</summary>
+    public void Lock()
+    {
+        foreach (FieldWrapper field in GetElementList())
+        {
+            field.Locked = true;
+        }
+    }
+
+    /// <summary>Unlocks every field (<c>Fields.Unlock</c> in Word).</summary>
+    public void Unlock()
+    {
+        foreach (FieldWrapper field in GetElementList())
+        {
+            field.Locked = false;
+        }
+    }
+
+    /// <summary>True if every field is locked, false if none is, and null if some are.</summary>
+    public bool? Locked
+    {
+        get
+        {
+            List<bool> states = GetElementList().Select(f => f.Locked).Distinct().ToList();
+            return states.Count == 1 ? states[0] : states.Count == 0 ? false : (bool?)null;
+        }
     }
 
     #region IEnumerable Members

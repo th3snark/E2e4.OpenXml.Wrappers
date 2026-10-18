@@ -215,8 +215,25 @@ public class DocumentStructureTest : IDisposable
     public void ADocumentWithoutStylesHasNone()
     {
         Assert.Equal(0, _document.Styles.Count);
-        Assert.Null(_document.Styles["Normal"]);
+        Assert.False(_document.Styles.Exists("Normal"));
         Assert.Empty(_document.Styles);
+        Assert.Null(_document.Styles["Custom"]);
+    }
+
+    [Fact]
+    public void ABuiltInStyleIsAddedToTheDocumentWhenItIsAskedFor()
+    {
+        StyleWrapper heading = _document.Styles[BuiltInStyle.Heading1];
+
+        Assert.Equal("Heading 1", heading.Name);
+        Assert.Equal("Heading1", heading.StyleId);
+        Assert.True(heading.BuiltIn);
+        Assert.Equal("Normal", heading.BaseStyle);
+        Assert.True(_document.Styles.Exists("Heading 1"));
+        Assert.True(_document.Styles.Exists("Normal"));
+        Assert.Equal(heading, _document.Styles["heading 1"]);
+        Assert.Equal(2, _document.Styles.Count);
+        Assert.Throws<ArgumentException>(() => _document.Styles.Add("Heading 2", StyleType.Paragraph));
     }
 
     [Fact]
@@ -225,12 +242,12 @@ public class DocumentStructureTest : IDisposable
         AddStyles();
 
         Assert.Equal(3, _document.Styles.Count);
-        Assert.Equal("heading 1", _document.Styles["Heading 1"].Name);
+        Assert.Equal("Heading 1", _document.Styles["Heading 1"].Name);
         Assert.Equal("Heading1", _document.Styles["Heading1"].StyleId);
         Assert.Equal("Strong", _document.Styles[2].Name);
         Assert.True(_document.Styles.Exists("normal"));
         Assert.False(_document.Styles.Exists("nothing"));
-        Assert.Equal(new[] { "Normal", "heading 1", "Strong" }, _document.Styles.Select(s => s.Name).ToArray());
+        Assert.Equal(new[] { "Normal", "Heading 1", "Strong" }, _document.Styles.Select(s => s.Name).ToArray());
         Assert.Throws<ArgumentOutOfRangeException>(() => _document.Styles[3]);
     }
 
@@ -302,7 +319,7 @@ public class DocumentStructureTest : IDisposable
         Paragraph paragraph = new Paragraph(new ParagraphProperties(new ParagraphStyleId() { Val = "Custom" }), new Run(new RunProperties(new RunStyle() { Val = "Custom" }), new Text("x")));
         _body.InsertAt(paragraph, 0);
 
-        _document.Styles.Delete(custom);
+        custom.Delete();
 
         Assert.False(_document.Styles.Exists("Custom"));
         Assert.Null(child.BaseStyle);
@@ -315,8 +332,8 @@ public class DocumentStructureTest : IDisposable
     {
         AddStyles();
 
-        Assert.Throws<InvalidOperationException>(() => _document.Styles.Delete(_document.Styles["Normal"]));
-        Assert.Throws<InvalidOperationException>(() => _document.Styles.Delete(_document.Styles["heading 1"]));
+        Assert.Throws<InvalidOperationException>(() => _document.Styles["Normal"].Delete());
+        Assert.Throws<InvalidOperationException>(() => _document.Styles["heading 1"].Delete());
         Assert.Equal(3, _document.Styles.Count);
     }
 

@@ -18,7 +18,7 @@ public class TableCellWrapperCollection : IEnumerable<TableCellWrapper>
 
     public TableRowWrapper Parent
     {
-        get { return new TableRowWrapper((TableRow)_range.StartElement); }
+        get { return _range.StartElement is TableRow row ? new TableRowWrapper(row) : null; }
     }
 
     public TableCellWrapper this[int index]
@@ -29,9 +29,9 @@ public class TableCellWrapperCollection : IEnumerable<TableCellWrapper>
             {
                 return new TableCellWrapper(GetElementList()[index]);
             }
-            catch (ArgumentOutOfRangeException ex)
+            catch (ArgumentOutOfRangeException)
             {
-                throw new ArgumentOutOfRangeException(String.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index), ex);
+                throw new ArgumentOutOfRangeException(nameof(index), String.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index));
             }
         }
     }

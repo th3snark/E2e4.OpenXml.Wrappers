@@ -37,7 +37,7 @@ internal static class EditingExample
                 {
                     CommentWrapper comment = document.Comments.Add(paragraph.Range, "Someone needs to finish this before the document goes out.");
                     comment.Author = "Editing example";
-                    comment.Initials = "EE";
+                    comment.Initial = "EE";
                     todos++;
                 }
             }

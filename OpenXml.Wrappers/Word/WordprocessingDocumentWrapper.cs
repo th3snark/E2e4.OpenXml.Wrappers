@@ -8,9 +8,11 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
 
-public class WordprocessingDocumentWrapper : IDisposable
+public partial class WordprocessingDocumentWrapper : IDisposable
 {
     private WordprocessingDocument _wordprocessingDocument;
+    private bool _skipSave;
+    private bool _disposed;
 
     public WordprocessingDocumentWrapper(WordprocessingDocument wordprocessingDocument)
     {
@@ -29,7 +31,8 @@ public class WordprocessingDocumentWrapper : IDisposable
 
     public static WordprocessingDocumentWrapper Open(string path, bool isEditable)
     {
-        WordprocessingDocument wordprocessingDocument = WordprocessingDocument.Open(path, isEditable);
+        WordprocessingDocument wordprocessingDocument = WordprocessingDocument.Open(path, isEditable, new OpenSettings() { AutoSave = false });
+        FieldUpdater.RememberPath(wordprocessingDocument, path);
         return new WordprocessingDocumentWrapper(wordprocessingDocument);
     }
 
@@ -39,7 +42,7 @@ public class WordprocessingDocumentWrapper : IDisposable
     /// </summary>
     public static WordprocessingDocumentWrapper Open(Stream stream, bool isEditable)
     {
-        WordprocessingDocument wordprocessingDocument = WordprocessingDocument.Open(stream, isEditable);
+        WordprocessingDocument wordprocessingDocument = WordprocessingDocument.Open(stream, isEditable, new OpenSettings() { AutoSave = false });
         return new WordprocessingDocumentWrapper(wordprocessingDocument);
     }
 
@@ -50,7 +53,8 @@ public class WordprocessingDocumentWrapper : IDisposable
     public static WordprocessingDocumentWrapper Create(string path, bool addMainDocumentPart, bool addWordprocessingCommentsPart)
     {
         ValidateCreateArguments(addMainDocumentPart, addWordprocessingCommentsPart);
-        WordprocessingDocument wordprocessingDocument = WordprocessingDocument.Create(path, WordprocessingDocumentType.Document);
+        WordprocessingDocument wordprocessingDocument = WordprocessingDocument.Create(path, WordprocessingDocumentType.Document, false);
+        FieldUpdater.RememberPath(wordprocessingDocument, path);
         return InitializeNewDocument(wordprocessingDocument, addMainDocumentPart, addWordprocessingCommentsPart);
     }
 
@@ -60,7 +64,7 @@ public class WordprocessingDocumentWrapper : IDisposable
     public static WordprocessingDocumentWrapper Create(Stream stream, bool addMainDocumentPart, bool addWordprocessingCommentsPart)
     {
         ValidateCreateArguments(addMainDocumentPart, addWordprocessingCommentsPart);
-        WordprocessingDocument wordprocessingDocument = WordprocessingDocument.Create(stream, WordprocessingDocumentType.Document);
+        WordprocessingDocument wordprocessingDocument = WordprocessingDocument.Create(stream, WordprocessingDocumentType.Document, false);
         return InitializeNewDocument(wordprocessingDocument, addMainDocumentPart, addWordprocessingCommentsPart);
     }
 
@@ -87,12 +91,19 @@ public class WordprocessingDocumentWrapper : IDisposable
         return wrapper;
     }
 
+    //Saves the package after the headers and footers that were only read and are still empty have been taken out.
+    private void SaveChanges()
+    {
+        HeaderFooterWrapper.RemoveLatentStories(_wordprocessingDocument);
+        _wordprocessingDocument.Save();
+    }
+
     /// <summary>
     /// Saves any changes made to the document to its file or stream. Documents opened as editable also save when closed or disposed.
     /// </summary>
     public void Save()
     {
-        _wordprocessingDocument.Save();
+        SaveChanges();
     }
 
     /// <summary>
@@ -101,8 +112,8 @@ public class WordprocessingDocumentWrapper : IDisposable
     public WordprocessingDocumentWrapper SaveAs(string path)
     {
         //Flush any changes held in the part trees so that the copy contains them.
-        _wordprocessingDocument.Save();
-        WordprocessingDocument copy = _wordprocessingDocument.Clone(path, true);
+        SaveChanges();
+        WordprocessingDocument copy = _wordprocessingDocument.Clone(path, true, new OpenSettings() { AutoSave = false });
 
         //Clone does not carry over the core properties (title, author and so on), so copy them.
 #pragma warning disable OOXML0001 // Only the name of the experimental interface is used; the properties themselves are not marked.
@@ -123,6 +134,7 @@ public class WordprocessingDocumentWrapper : IDisposable
         to.Created = from.Created;
         to.Modified = from.Modified;
         to.LastPrinted = from.LastPrinted;
+        FieldUpdater.RememberPath(copy, path);
         return new WordprocessingDocumentWrapper(copy);
     }
 
@@ -139,8 +151,14 @@ public class WordprocessingDocumentWrapper : IDisposable
 
     protected virtual void Dispose(bool disposing)
     {
-        if (disposing)
+        if (disposing && !_disposed)
         {
+            _disposed = true;
+            //A document opened by this library does not save itself, so that Close can leave the changes out.
+            if (!_skipSave && !_wordprocessingDocument.AutoSave && _wordprocessingDocument.FileOpenAccess != FileAccess.Read)
+            {
+                SaveChanges();
+            }
             _wordprocessingDocument.Dispose();
         }
     }
@@ -156,7 +174,7 @@ public class WordprocessingDocumentWrapper : IDisposable
     /// <summary>
     /// The positions of the main text of the document, worked out once so that the positions of many ranges can be read at once.
     /// </summary>
-    public PositionIndex CreatePositionIndex()
+    internal PositionIndex CreatePositionIndex()
     {
         return Content.CreatePositionIndex();
     }
@@ -171,6 +189,14 @@ public class WordprocessingDocumentWrapper : IDisposable
         RangeWrapper range = Content;
         range.SetRange(start, end);
         return range;
+    }
+
+    /// <summary>
+    /// The whole main text of the document, as <c>Document.Range</c> without arguments in Word. The same as <see cref="Content"/>.
+    /// </summary>
+    public RangeWrapper Range()
+    {
+        return Content;
     }
 
     public void InitializeMainDocumentPart()
@@ -208,7 +234,10 @@ public class WordprocessingDocumentWrapper : IDisposable
         {
             mainDocumentPart.AddNewPart<WordprocessingCommentsPart>();
         }
-        mainDocumentPart.WordprocessingCommentsPart.Comments = new Comments();
+        if (mainDocumentPart.WordprocessingCommentsPart.Comments == null)
+        {
+            mainDocumentPart.WordprocessingCommentsPart.Comments = new Comments();
+        }
     }
 
     private static void CopyPartData(OpenXmlPart fromPart, OpenXmlPart toPart)
@@ -219,76 +248,53 @@ public class WordprocessingDocumentWrapper : IDisposable
         }
     }
 
+    //Copies a part of the main document part into the target, replacing the part of that kind that the target already has.
+    private static void CopyPart<T>(T fromPart, MainDocumentPart toMainDocumentPart, T existingPart) where T : OpenXmlPart, IFixedContentTypePart
+    {
+        if (fromPart == null)
+        {
+            return;
+        }
+        if (existingPart != null)
+        {
+            toMainDocumentPart.DeletePart(existingPart);
+        }
+        CopyPartData(fromPart, toMainDocumentPart.AddNewPart<T>());
+    }
+
+    /// <summary>
+    /// Copies the theme, font table, styles, numbering, footnotes, endnotes, settings, web settings, headers and footers of this document
+    /// into the other, replacing the ones that it already has.
+    /// </summary>
     public void CopyAllPartsTo(WordprocessingDocumentWrapper wordprocessingDocumentWrapper)
     {
         MainDocumentPart fromMainDocumentPart = _wordprocessingDocument.MainDocumentPart;
         MainDocumentPart toMainDocumentPart = wordprocessingDocumentWrapper.WordprocessingDocument.MainDocumentPart;
 
-        ThemePart fromThemePart = fromMainDocumentPart.ThemePart;
-        if (fromThemePart != null)
-        {
-            ThemePart toThemePart = toMainDocumentPart.AddNewPart<ThemePart>();
-            CopyPartData(fromThemePart, toThemePart);
-        }
+        CopyPart(fromMainDocumentPart.ThemePart, toMainDocumentPart, toMainDocumentPart.ThemePart);
+        CopyPart(fromMainDocumentPart.FontTablePart, toMainDocumentPart, toMainDocumentPart.FontTablePart);
+        CopyPart(fromMainDocumentPart.StyleDefinitionsPart, toMainDocumentPart, toMainDocumentPart.StyleDefinitionsPart);
+        CopyPart(fromMainDocumentPart.NumberingDefinitionsPart, toMainDocumentPart, toMainDocumentPart.NumberingDefinitionsPart);
+        CopyPart(fromMainDocumentPart.FootnotesPart, toMainDocumentPart, toMainDocumentPart.FootnotesPart);
+        CopyPart(fromMainDocumentPart.EndnotesPart, toMainDocumentPart, toMainDocumentPart.EndnotesPart);
+        CopyPart(fromMainDocumentPart.DocumentSettingsPart, toMainDocumentPart, toMainDocumentPart.DocumentSettingsPart);
+        CopyPart(fromMainDocumentPart.WebSettingsPart, toMainDocumentPart, toMainDocumentPart.WebSettingsPart);
 
-        FontTablePart fromFontTablePart = fromMainDocumentPart.FontTablePart;
-        if (fromFontTablePart != null)
+        //Copy the header and footer parts to the target document with the same part id's, replacing the ones it has
+        if (toMainDocumentPart.HeaderParts.Any())
         {
-            FontTablePart toFontTablePart = toMainDocumentPart.AddNewPart<FontTablePart>();
-            CopyPartData(fromFontTablePart, toFontTablePart);
+            toMainDocumentPart.DeleteParts(toMainDocumentPart.HeaderParts.ToList());
         }
-
-        StyleDefinitionsPart fromStyleDefinitionsPart = fromMainDocumentPart.StyleDefinitionsPart;
-        if (fromStyleDefinitionsPart != null)
+        if (toMainDocumentPart.FooterParts.Any())
         {
-            StyleDefinitionsPart toStyleDefinitionsPart = toMainDocumentPart.AddNewPart<StyleDefinitionsPart>();
-            CopyPartData(fromStyleDefinitionsPart, toStyleDefinitionsPart);
+            toMainDocumentPart.DeleteParts(toMainDocumentPart.FooterParts.ToList());
         }
-
-        NumberingDefinitionsPart fromNumberingDefinitionsPart = fromMainDocumentPart.NumberingDefinitionsPart;
-        if (fromNumberingDefinitionsPart != null)
-        {
-            NumberingDefinitionsPart toNumberingDefinitionsPart = toMainDocumentPart.AddNewPart<NumberingDefinitionsPart>();
-            CopyPartData(fromNumberingDefinitionsPart, toNumberingDefinitionsPart);
-        }
-
-        FootnotesPart fromFootnotesPart = fromMainDocumentPart.FootnotesPart;
-        if (fromFootnotesPart != null)
-        {
-            FootnotesPart toFootnotesPart = toMainDocumentPart.AddNewPart<FootnotesPart>();
-            CopyPartData(fromFootnotesPart, toFootnotesPart);
-        }
-
-        EndnotesPart fromEndnotesPart = fromMainDocumentPart.EndnotesPart;
-        if (fromEndnotesPart != null)
-        {
-            EndnotesPart toEndnotesPart = toMainDocumentPart.AddNewPart<EndnotesPart>();
-            CopyPartData(fromEndnotesPart, toEndnotesPart);
-        }
-
-        DocumentSettingsPart fromDocumentSettingsPart = fromMainDocumentPart.DocumentSettingsPart;
-        if (fromDocumentSettingsPart != null)
-        {
-            DocumentSettingsPart toDocumentSettingsPart = toMainDocumentPart.AddNewPart<DocumentSettingsPart>();
-            CopyPartData(fromDocumentSettingsPart, toDocumentSettingsPart);
-        }
-
-        WebSettingsPart fromWebSettingsPart = fromMainDocumentPart.WebSettingsPart;
-        if (fromWebSettingsPart != null)
-        {
-            WebSettingsPart toWebSettingsPart = toMainDocumentPart.AddNewPart<WebSettingsPart>();
-            CopyPartData(fromWebSettingsPart, toWebSettingsPart);
-        }
-
-        //Copy the header parts to the target document with the same part id's
         foreach (HeaderPart fromHeaderPart in fromMainDocumentPart.HeaderParts)
         {
             string fromHeaderPartId = fromMainDocumentPart.GetIdOfPart(fromHeaderPart);
             HeaderPart toHeaderPart = toMainDocumentPart.AddNewPart<HeaderPart>(fromHeaderPartId);
             CopyPartData(fromHeaderPart, toHeaderPart);
         }
-
-        //Copy the footer parts to the target document with the same part id's
         foreach (FooterPart fromFooterPart in fromMainDocumentPart.FooterParts)
         {
             string fromFooterPartId = fromMainDocumentPart.GetIdOfPart(fromFooterPart);
@@ -330,10 +336,18 @@ public class WordprocessingDocumentWrapper : IDisposable
         //If we have a cloned copy then process each header and fix up the section properties header reference id's
         if (cloneOfFromSectionProperties != null)
         {
-            foreach (HeaderReference headerReference in cloneOfFromSectionProperties.Elements<HeaderReference>())
+            //References to parts that the source does not have are dropped.
+            List<HeaderReference> missingHeaders = new List<HeaderReference>();
+            List<FooterReference> missingFooters = new List<FooterReference>();
+            foreach (HeaderReference headerReference in cloneOfFromSectionProperties.Elements<HeaderReference>().ToList())
             {
                 string fromId = headerReference.Id;
                 HeaderPart fromHeaderPart = fromMainDocumentPart.HeaderParts.Where(p => fromMainDocumentPart.GetIdOfPart(p) == fromId).FirstOrDefault();
+                if (fromHeaderPart == null)
+                {
+                    missingHeaders.Add(headerReference);
+                    continue;
+                }
 
                 //Add a new header part to the target document
                 HeaderPart toHeaderPart = toMainDocumentPart.AddNewPart<HeaderPart>();
@@ -347,10 +361,15 @@ public class WordprocessingDocumentWrapper : IDisposable
             }
 
             //If we have a cloned copy then process each footer and fix up the section properties footer reference id's
-            foreach (FooterReference footerReference in cloneOfFromSectionProperties.Elements<FooterReference>())
+            foreach (FooterReference footerReference in cloneOfFromSectionProperties.Elements<FooterReference>().ToList())
             {
                 string fromId = footerReference.Id;
                 FooterPart fromFooterPart = fromMainDocumentPart.FooterParts.Where(p => fromMainDocumentPart.GetIdOfPart(p) == fromId).FirstOrDefault();
+                if (fromFooterPart == null)
+                {
+                    missingFooters.Add(footerReference);
+                    continue;
+                }
 
                 //Add a new footer part to the target document
                 FooterPart toFooterPart = toMainDocumentPart.AddNewPart<FooterPart>();
@@ -361,6 +380,15 @@ public class WordprocessingDocumentWrapper : IDisposable
 
                 //Update the footer reference with the new id
                 footerReference.Id = toId;
+            }
+
+            foreach (HeaderReference missing in missingHeaders)
+            {
+                missing.Remove();
+            }
+            foreach (FooterReference missing in missingFooters)
+            {
+                missing.Remove();
             }
         }
     }

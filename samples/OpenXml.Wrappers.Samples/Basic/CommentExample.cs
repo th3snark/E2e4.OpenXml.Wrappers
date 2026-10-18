@@ -22,12 +22,12 @@ internal static class CommentExample
             //A comment on a paragraph.
             CommentWrapper first = document.Comments.Add(document.Paragraphs[0].Range, "Can we really promise this? Please check with operations.");
             first.Author = "Reviewer";
-            first.Initials = "RV";
+            first.Initial = "RV";
 
             //A comment on a bookmark, with the text and date changed after it was added.
             CommentWrapper second = document.Comments.Add(document.Bookmarks["hours"].Range, "Which hours?");
             second.Author = "Reviewer";
-            second.Initials = "RV";
+            second.Initial = "RV";
             second.Text = "Which hours, and in which time zone?";
             second.Date = new DateTime(2026, 3, 14, 9, 30, 0, DateTimeKind.Utc);
 

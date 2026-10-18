@@ -57,13 +57,13 @@ public class RowBordersTest
         TableRow row = CreateRow(3);
         TableRowWrapper wrapper = new TableRowWrapper(row);
 
-        wrapper.Borders[BorderPosition.Vertical].LineStyle = BorderLineStyle.Dashed;
+        wrapper.Borders[BorderPosition.Vertical].LineStyle = BorderLineStyle.DashLargeGap;
 
         TableCell[] cells = row.Elements<TableCell>().ToArray();
         Assert.Equal(new[] { "right" }, BorderNames(cells[0]));
         Assert.Equal(new[] { "left", "right" }, BorderNames(cells[1]));
         Assert.Equal(new[] { "left" }, BorderNames(cells[2]));
-        Assert.Equal(BorderLineStyle.Dashed, wrapper.Borders[BorderPosition.Vertical].LineStyle);
+        Assert.Equal(BorderLineStyle.DashLargeGap, wrapper.Borders[BorderPosition.Vertical].LineStyle);
     }
 
     [Fact]

@@ -23,7 +23,7 @@ internal static class HeaderFooterExample
                 paragraph.Range.Style = "Heading 1";
                 if (page < 3)
                 {
-                    paragraph.InsertBreak(BreakValues.Page);
+                    paragraph.InsertBreak(BreakType.PageBreak);
                 }
             }
 
@@ -40,9 +40,9 @@ internal static class HeaderFooterExample
             footer.Text = "Page ";
             footer.Style = "Footer";
             footer.ParagraphFormat.Alignment = ParagraphAlignment.Center;
-            footer.Fields.Add(footer, FieldType.Page).Result = "1";
+            footer.Fields.Add(footer, FieldType.Page).Result.Text = "1";
             footer.InsertAfter(" of ");
-            footer.Fields.Add(footer, FieldType.NumPages).Result = "3";
+            footer.Fields.Add(footer, FieldType.NumPages).Result.Text = "3";
 
             //The first page has its own header and footer. This is switched on in the page setup of the section.
             section.PageSetup.DifferentFirstPageHeaderFooter = true;

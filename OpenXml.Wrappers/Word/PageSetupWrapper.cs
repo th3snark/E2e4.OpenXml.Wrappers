@@ -15,7 +15,7 @@ namespace OpenXml.Wrappers.Word;
 /// A section without a setting reads the default of Word: a Letter page (612 x 792 points) with 72 point margins and 36 point header and
 /// footer distances, that starts on a new page. Setting a value writes it into the section properties of the section.
 /// </remarks>
-public class PageSetupWrapper
+public partial class PageSetupWrapper
 {
     private const double MaximumPoints = 1584;
 

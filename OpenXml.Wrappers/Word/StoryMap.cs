@@ -507,9 +507,10 @@ internal sealed class StoryMap
                 info = new AtomInfo(AtomKind.Tab, part, 1, "\t");
                 return true;
             case Break lineBreak:
-                //Word represents a page break as a form feed and any other break as a vertical tab.
+                //Word represents a page break as a form feed, a column break as a shift out character and any other break as a vertical tab.
                 bool page = lineBreak.Type != null && lineBreak.Type.HasValue && lineBreak.Type.Value == BreakValues.Page;
-                info = new AtomInfo(AtomKind.Break, part, 1, page ? "\f" : "\v");
+                bool column = lineBreak.Type != null && lineBreak.Type.HasValue && lineBreak.Type.Value == BreakValues.Column;
+                info = new AtomInfo(AtomKind.Break, part, 1, page ? "\f" : column ? "\u000e" : "\v");
                 return true;
             case CarriageReturn:
                 info = new AtomInfo(AtomKind.Break, part, 1, "\v");

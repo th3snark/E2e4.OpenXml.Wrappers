@@ -7,7 +7,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
 
-public class TableColumnWrapper : System.IEquatable<TableColumnWrapper>
+public partial class TableColumnWrapper : System.IEquatable<TableColumnWrapper>
 {
     GridColumn _gridColumn;
 

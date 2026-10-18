@@ -58,14 +58,14 @@ internal static class QuarterlyReportExample
             builder.Paragraph("Prepared by the finance team for the board of directors").Format.SpaceAfter = 18;
             ParagraphWrapper confidential = builder.Paragraph("Confidential - not for distribution outside the company.");
             confidential.Range.Font.Italic = true;
-            confidential.InsertBreak(BreakValues.Page);
+            confidential.InsertBreak(BreakType.PageBreak);
 
             //Contents.
             builder.Paragraph("Contents", "Heading 1");
             ParagraphWrapper contents = builder.Paragraph(string.Empty);
             FieldWrapper toc = document.Fields.Add(contents.Range, FieldType.TableOfContents, "\\o \"1-2\" \\h \\z \\u");
-            toc.Result = "Update this field to build the table of contents.";
-            contents.InsertBreak(BreakValues.Page);
+            toc.Result.Text = "Update this field to build the table of contents.";
+            contents.InsertBreak(BreakType.PageBreak);
 
             //1. Executive summary. The revenue figure is bookmarked so that other parts of the document can quote it.
             builder.Paragraph("1. Executive summary", "Heading 1");
@@ -104,14 +104,14 @@ internal static class QuarterlyReportExample
             revenue.Rows[totalRow].Range.Font.Bold = true;
             foreach (TableCellWrapper cell in revenue.Rows[totalRow].Cells)
             {
-                cell.BackgroundColor = "D9E2F3";
+                cell.Shading.BackgroundPatternColor = "D9E2F3";
             }
             revenue.Alignment = RowAlignment.Center;
 
             ParagraphWrapper refer = builder.Paragraph("As the summary says: ");
             refer.Format.SpaceBefore = 10;
             FieldWrapper quote = document.Fields.Add(refer.Range, FieldType.Ref, "revenue_total \\h");
-            quote.Result = figure.Range.Text.TrimEnd('\r');
+            quote.Result.Text = figure.Range.Text.TrimEnd('\r');
 
             //3. Operations.
             builder.Paragraph("3. Operations", "Heading 1");
@@ -128,7 +128,7 @@ internal static class QuarterlyReportExample
                 plan.Cell(i + 1, 1).Range.Text = milestones[i].Owner;
                 plan.Cell(i + 1, 2).Range.Text = milestones[i].Due;
                 plan.Cell(i + 1, 3).Range.Text = milestones[i].Status;
-                plan.Cell(i + 1, 3).BackgroundColor = milestones[i].Status == "Late" ? "F8CBAD" : milestones[i].Status == "Done" ? "C6E0B4" : "FFE699";
+                plan.Cell(i + 1, 3).Shading.BackgroundPatternColor = milestones[i].Status == "Late" ? "F8CBAD" : milestones[i].Status == "Done" ? "C6E0B4" : "FFE699";
                 plan.Cell(i + 1, 3).VerticalAlignment = CellVerticalAlignment.Center;
             }
             TableLook.Grid(plan, true);
@@ -148,7 +148,7 @@ internal static class QuarterlyReportExample
                 risk.Cell(i + 1, 0).Range.Text = risks[i].Description;
                 risk.Cell(i + 1, 1).Range.Text = risks[i].Severity;
                 risk.Cell(i + 1, 2).Range.Text = risks[i].Mitigation;
-                risk.Cell(i + 1, 1).BackgroundColor = risks[i].Severity == "High" ? "F8CBAD" : risks[i].Severity == "Medium" ? "FFE699" : "C6E0B4";
+                risk.Cell(i + 1, 1).Shading.BackgroundPatternColor = risks[i].Severity == "High" ? "F8CBAD" : risks[i].Severity == "Medium" ? "FFE699" : "C6E0B4";
                 risk.Rows[i + 1].AllowBreakAcrossPages = false;
             }
             TableLook.Grid(risk, true);
@@ -162,7 +162,7 @@ internal static class QuarterlyReportExample
             ParagraphWrapper endOfMain = builder.Paragraph("Appendix A follows on landscape pages.");
 
             //Appendix A: monthly revenue by region, in a section of its own on landscape pages.
-            endOfMain.InsertSectionBreak("nextPage");
+            endOfMain.InsertSectionBreak(SectionStart.NewPage);
             builder.Paragraph("Appendix A: monthly revenue (thousands)", "Heading 1");
             string[] months = { "July", "August", "September" };
             TableWrapper monthly = builder.Table(1 + regions.Length, 1 + months.Length + 1);
@@ -190,10 +190,10 @@ internal static class QuarterlyReportExample
             //Comments from two reviewers.
             CommentWrapper question = document.Comments.Add(figure.Range, "Does this include the one-off licence income from the West region?");
             question.Author = "Priya Nair";
-            question.Initials = "PN";
+            question.Initial = "PN";
             CommentWrapper delay = document.Comments.Add(document.Paragraphs.First(p => p.Text.StartsWith("Key point", StringComparison.Ordinal)).Range, "Please add the revised date for the customer portal.");
             delay.Author = "Tom Hale";
-            delay.Initials = "TH";
+            delay.Initial = "TH";
 
             //Header and footer. The cover page has neither.
             SectionWrapper first = document.Sections[0];
@@ -210,9 +210,9 @@ internal static class QuarterlyReportExample
             footer.Text = "Page ";
             footer.Style = "Footer";
             footer.ParagraphFormat.Alignment = ParagraphAlignment.Center;
-            document.Fields.Add(footer, FieldType.Page).Result = "2";
+            document.Fields.Add(footer, FieldType.Page).Result.Text = "2";
             footer.InsertAfter(" of ");
-            document.Fields.Add(footer, FieldType.NumPages).Result = "7";
+            document.Fields.Add(footer, FieldType.NumPages).Result.Text = "7";
 
             //Properties: the built-in ones, and some of the company's own.
             DocumentPropertiesWrapper properties = document.BuiltInDocumentProperties;

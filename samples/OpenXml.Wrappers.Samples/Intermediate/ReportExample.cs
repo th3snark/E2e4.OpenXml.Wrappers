@@ -22,14 +22,14 @@ internal static class ReportExample
             builder.Paragraph("Water use report 2025", "Title").Format.SpaceBefore = 160;
             builder.Paragraph("Facilities department, March 2026").Format.SpaceAfter = 24;
             ParagraphWrapper cover = builder.Paragraph("Prepared for the sustainability committee.");
-            cover.InsertBreak(BreakValues.Page);
+            cover.InsertBreak(BreakType.PageBreak);
 
             //A table of contents is a field. Word fills it in (from the headings) when the fields are updated.
             builder.Paragraph("Contents", "Heading 1");
             ParagraphWrapper contents = builder.Paragraph(string.Empty);
             FieldWrapper toc = document.Fields.Add(contents.Range, FieldType.TableOfContents, "\\o \"1-2\" \\h \\z \\u");
-            toc.Result = "Right-click and choose Update Field to build the table of contents.";
-            contents.InsertBreak(BreakValues.Page);
+            toc.Result.Text = "Right-click and choose Update Field to build the table of contents.";
+            contents.InsertBreak(BreakType.PageBreak);
 
             //The body: headings in the styles of the document and some text under each one.
             string[] sections = { "Summary", "Method", "Findings", "Recommendations" };
@@ -43,14 +43,14 @@ internal static class ReportExample
 
             //The appendix has a wide table, so it is on landscape pages in a section of its own.
             ParagraphWrapper endOfBody = builder.Paragraph("This is the end of the main report.");
-            endOfBody.InsertSectionBreak("nextPage");
+            endOfBody.InsertSectionBreak(SectionStart.NewPage);
             builder.Paragraph("Appendix: monthly readings", "Heading 1");
             TableWrapper table = builder.Table(13, 6);
             string[] heading = { "Month", "Building A", "Building B", "Building C", "Total (m3)", "Change on 2024" };
             for (int column = 0; column < heading.Length; column++)
             {
                 table.Cell(0, column).Range.Text = heading[column];
-                table.Cell(0, column).BackgroundColor = "D9E2F3";
+                table.Cell(0, column).Shading.BackgroundPatternColor = "D9E2F3";
             }
             table.Rows[0].Range.Font.Bold = true;
             table.Rows[0].HeadingFormat = true;
@@ -96,9 +96,9 @@ internal static class ReportExample
             footer.Text = "Page ";
             footer.Style = "Footer";
             footer.ParagraphFormat.Alignment = ParagraphAlignment.Center;
-            document.Fields.Add(footer, FieldType.Page).Result = "2";
+            document.Fields.Add(footer, FieldType.Page).Result.Text = "2";
             footer.InsertAfter(" of ");
-            document.Fields.Add(footer, FieldType.NumPages).Result = "6";
+            document.Fields.Add(footer, FieldType.NumPages).Result.Text = "6";
         }
     }
 

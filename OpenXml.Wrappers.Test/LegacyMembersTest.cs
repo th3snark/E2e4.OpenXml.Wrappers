@@ -64,21 +64,21 @@ public class LegacyMembersTest
     }
 
     [Fact]
-    public void KeepNextCanBeReadAndCleared()
+    public void KeepWithNextCanBeReadAndCleared()
     {
         ParagraphWrapper wrapper = new ParagraphWrapper(new Paragraph());
-        Assert.False(wrapper.KeepNext);
+        Assert.False(wrapper.KeepWithNext);
 
-        wrapper.KeepNext = true;
-        Assert.True(wrapper.KeepNext);
+        wrapper.KeepWithNext = true;
+        Assert.True(wrapper.KeepWithNext);
         Assert.True(wrapper.Format.KeepWithNext);
 
-        wrapper.KeepNext = false;
-        Assert.False(wrapper.KeepNext);
+        wrapper.KeepWithNext = false;
+        Assert.False(wrapper.KeepWithNext);
     }
 
     [Fact]
-    public void MergeRightAddsTheSpansAndMovesTheText()
+    public void MergeWithTheNextCellAddsTheSpansAndMovesTheText()
     {
         TableCell left = new TableCell(new Paragraph(new Run(new Text("L"))));
         TableCell middle = new TableCell(new TableCellProperties(new GridSpan() { Val = 2 }), new Paragraph(new Run(new Text("M"))));
@@ -86,37 +86,20 @@ public class LegacyMembersTest
         TableRow row = new TableRow(left, middle, right);
         Table table = new Table(row);
 
-        new TableCellWrapper(left).MergeRight();
+        new TableCellWrapper(left).Merge(new TableCellWrapper(left).Next());
 
         Assert.Equal(2, row.Elements<TableCell>().Count());
         Assert.Equal(3, left.TableCellProperties.GridSpan.Val.Value);
         Assert.Contains("M", new TableCellWrapper(left).Range.Text);
     }
 
-    [Fact]
-    public void MergeDownFindsTheCellByGridColumnWhenAnotherCellSpans()
-    {
-        TableCell topSecond = new TableCell(new Paragraph());
-        TableCell bottomSecond = new TableCell(new Paragraph());
-        TableCell bottomFirst = new TableCell(new TableCellProperties(new GridSpan() { Val = 2 }), new Paragraph());
-        Table table = new Table(
-            new TableRow(new TableCell(new Paragraph()), topSecond, new TableCell(new Paragraph())),
-            new TableRow(bottomFirst, bottomSecond));
-
-        //The second top cell starts at grid column 1, which the two-column cell below covers.
-        new TableCellWrapper(topSecond).MergeDown();
-
-        Assert.NotNull(bottomFirst.TableCellProperties.VerticalMerge);
-        Assert.Null(bottomSecond.TableCellProperties?.VerticalMerge);
-    }
-
     [Theory]
-    [InlineData("nextPage", SectionStart.NewPage)]
-    [InlineData("continuous", SectionStart.Continuous)]
-    [InlineData("evenPage", SectionStart.EvenPage)]
-    [InlineData("oddPage", SectionStart.OddPage)]
-    [InlineData("nextColumn", SectionStart.NewColumn)]
-    public void InsertSectionBreakSetsHowTheNextSectionStarts(string type, SectionStart expected)
+    [InlineData(SectionStart.NewPage)]
+    [InlineData(SectionStart.Continuous)]
+    [InlineData(SectionStart.EvenPage)]
+    [InlineData(SectionStart.OddPage)]
+    [InlineData(SectionStart.NewColumn)]
+    public void InsertSectionBreakSetsHowTheNextSectionStarts(SectionStart expected)
     {
         string path = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N") + ".docx");
         try
@@ -124,7 +107,7 @@ public class LegacyMembersTest
             using (WordprocessingDocumentWrapper document = WordprocessingDocumentWrapper.Create(path, true, false))
             {
                 document.Paragraphs[0].Range.Text = "one";
-                document.Paragraphs[0].InsertSectionBreak(type);
+                document.Paragraphs[0].InsertSectionBreak(expected);
 
                 Assert.Equal(2, document.Sections.Count);
                 Assert.Equal(expected, document.Sections[1].PageSetup.SectionStart);
@@ -144,7 +127,7 @@ public class LegacyMembersTest
         {
             using (WordprocessingDocumentWrapper document = WordprocessingDocumentWrapper.Create(path, true, false))
             {
-                Assert.Throws<ArgumentException>(() => document.Paragraphs[0].InsertSectionBreak("sideways"));
+                Assert.Throws<ArgumentOutOfRangeException>(() => document.Paragraphs[0].InsertSectionBreak((SectionStart)99));
             }
         }
         finally

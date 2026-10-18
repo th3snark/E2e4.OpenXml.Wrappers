@@ -65,7 +65,7 @@ internal static class LetterExample
             TableWrapper details = builder.Table(1, 2);
             details.Cell(0, 0).Range.Text = "Your account number";
             details.Cell(0, 1).Range.Text = "{{account}}";
-            details.Cell(0, 0).BackgroundColor = "D9E2F3";
+            details.Cell(0, 0).Shading.BackgroundPatternColor = "D9E2F3";
             details.Borders.SetOutside(BorderLineStyle.SingleLine, 0.75, "808080");
             details.Borders.SetInside(BorderLineStyle.SingleLine, 0.5, "808080");
             template.Bookmarks.Add("account_number", details.Cell(0, 1).Range);

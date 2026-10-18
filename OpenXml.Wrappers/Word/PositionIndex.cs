@@ -15,7 +15,7 @@ namespace OpenXml.Wrappers.Word;
 /// <para>An index is a snapshot: it describes the story as it was when it was built. Build a new one (or call <see cref="Refresh"/>) after
 /// text has been added or removed, or the positions it gives will be wrong. The ranges themselves are not affected, they follow their text.</para>
 /// </remarks>
-public sealed class PositionIndex
+internal sealed class PositionIndex
 {
     private readonly OpenXmlElement _story;
     private StoryMap _map;

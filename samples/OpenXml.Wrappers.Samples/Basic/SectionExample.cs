@@ -16,7 +16,7 @@ internal static class SectionExample
             document.Paragraphs[0].Range.Text = "This page is portrait, A4, with 2 cm margins.";
 
             //A section break after the first paragraph starts a new page. The paragraph that holds the break ends the first section.
-            document.Paragraphs[0].InsertSectionBreak("nextPage");
+            document.Paragraphs[0].InsertSectionBreak(SectionStart.NewPage);
             document.Paragraphs.Add().Range.Text = "This page is in a second section, in landscape, with narrower margins.";
 
             //Sections are listed in order, and are 0-based like every other collection. Sizes are in points.

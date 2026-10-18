@@ -12,7 +12,7 @@ using OpenXml.Wrappers.Helpers;
 
 namespace OpenXml.Wrappers.Word;
 
-public static class OpenXmlExtensions
+internal static class OpenXmlExtensions
 {
     #region NestingLevel Routines
 

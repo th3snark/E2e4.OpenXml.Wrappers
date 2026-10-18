@@ -118,33 +118,34 @@ public class TableCellWrapperTest : System.IDisposable
     }
 
     [Fact]
-    public void BackgroundColorOnACellWithoutPropertiesAddsShading()
+    public void ShadingColorOnACellWithoutPropertiesAddsShading()
     {
         TableCell tableCell = new TableCell(new Paragraph());
-        new TableCellWrapper(tableCell).BackgroundColor = "FF0000";
+        new TableCellWrapper(tableCell).Shading.BackgroundPatternColor = "FF0000";
 
         Assert.Equal("FF0000", tableCell.TableCellProperties.Shading.Fill.Value);
     }
 
     [Fact]
-    public void MergeRightOnCellsWithoutPropertiesMergesTheCells()
+    public void MergeWithTheNextCellOnCellsWithoutPropertiesMergesTheCells()
     {
         TableCell left = new TableCell(new Paragraph());
         TableCell right = new TableCell(new Paragraph());
         TableRow row = new TableRow(left, right);
-        new TableCellWrapper(left).MergeRight();
+        Assert.NotNull(new Table(row));
+        new TableCellWrapper(left).Merge(new TableCellWrapper(right));
 
         Assert.Single(row.Elements<TableCell>());
         Assert.Equal(2, left.TableCellProperties.GridSpan.Val.Value);
     }
 
     [Fact]
-    public void MergeDownOnCellsWithoutPropertiesSetsTheVerticalMerge()
+    public void MergeWithTheCellBelowOnCellsWithoutPropertiesSetsTheVerticalMerge()
     {
         TableCell top = new TableCell(new Paragraph());
         TableCell bottom = new TableCell(new Paragraph());
         Table table = new Table(new TableRow(top), new TableRow(bottom));
-        new TableCellWrapper(top).MergeDown();
+        new TableCellWrapper(top).Merge(new TableCellWrapper(bottom));
 
         Assert.Equal(MergedCellValues.Restart, top.TableCellProperties.VerticalMerge.Val.Value);
         Assert.NotNull(bottom.TableCellProperties.VerticalMerge);

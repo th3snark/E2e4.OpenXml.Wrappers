@@ -121,127 +121,21 @@ public partial class TableCellWrapper : System.IEquatable<TableCellWrapper>
     }
 
     /// <summary>
-    /// Merges this cell with the cell below it (<c>Merge</c> is the Word-style call for any rectangle).
-    /// </summary>
-    public void MergeDown()
-    {
-        TableRow lastTableRow = _tableCell.Parent.NextSibling<TableRow>();
-        if (lastTableRow != null)
-        {
-            TableCell below = CellAtGridColumn(lastTableRow, GetGridStart(_tableCell));
-            if (below != null)
-            {
-                MergeDown(new TableCellWrapper(below));
-            }
-        }
-    }
-
-    /// <summary>
-    /// Merges this cell down to the row of <paramref name="lastCell"/>, in the grid column of this cell. Unlike <c>Merge</c> this also extends a
-    /// vertical merge that already exists.
-    /// </summary>
-    public void MergeDown(TableCellWrapper lastCell)
-    {
-        TableRow firstTableRow = (TableRow)_tableCell.Parent;
-        TableRow lastTableRow = lastCell.Parent.TableRow;
-        if (firstTableRow.IsBefore(lastTableRow))
-        {
-            //Cells are found by grid column, not position, so rows with horizontally merged cells line up.
-            int gridColumn = GetGridStart(_tableCell);
-            TableCell tableCell = null;
-            //Start at the last row and stop when the first row is reached adding in a new vertcal merge to the appropriate table cell properties.
-            for (TableRow tableRow = lastTableRow; tableRow != firstTableRow; tableRow = tableRow.PreviousSibling<TableRow>())
-            {
-                tableCell = CellAtGridColumn(tableRow, gridColumn);
-                if (tableCell != null)
-                {
-                    GetOrAddTableCellProperties(tableCell).VerticalMerge = new VerticalMerge(); //default val is 'continue'
-                }
-            }
-
-            //If the first cell in the vertical merge has no vertcal merge setting then set it up with a "restart" vertical merge
-            TableCellProperties firstTableCellProperties = GetOrAddTableCellProperties(_tableCell);
-            if (firstTableCellProperties.VerticalMerge == null)
-            {
-                firstTableCellProperties.VerticalMerge = new VerticalMerge() { Val = MergedCellValues.Restart };
-            }
-        }
-    }
-
-    /// <summary>
-    /// Merges this cell with the cell to its right, adding up the grid spans and moving the text of the right cell into this one.
-    /// </summary>
-    public void MergeRight()
-    {
-        TableCell nextSiblingRightTableCell = _tableCell.NextSibling<TableCell>();
-        if (nextSiblingRightTableCell != null)
-        {
-            TableCellWrapper rightCell = new TableCellWrapper(nextSiblingRightTableCell);
-            int span = Span(_tableCell) + Span(nextSiblingRightTableCell);
-            int width = WidthTwips + rightCell.WidthTwips;
-
-            MoveText(nextSiblingRightTableCell, _tableCell);
-            GetOrAddTableCellProperties().GridSpan = new GridSpan() { Val = span };
-            WidthTwips = width;
-            nextSiblingRightTableCell.Remove();
-        }
-    }
-    /// <summary>
     /// Whether every paragraph of the cell is kept on the same page as the next one; false when there are none or only some are.
     /// </summary>
-    public bool KeepNext
+    public bool KeepWithNext
     {
         get
         {
             List<ParagraphWrapper> paragraphs = Range.Paragraphs.ToList();
-            return paragraphs.Count > 0 && paragraphs.All(p => p.KeepNext);
+            return paragraphs.Count > 0 && paragraphs.All(p => p.KeepWithNext == true);
         }
         set
         {
             foreach (ParagraphWrapper paragraph in Range.Paragraphs)
             {
-                paragraph.KeepNext = value;
+                paragraph.KeepWithNext = value;
             }
-        }
-    }
-
-    private void SetShadingFillColor(string rgbColor)
-    {
-        TableCellProperties tableCellProperties = GetOrAddTableCellProperties();
-        Shading shading = tableCellProperties.Shading;
-        if (shading == null)
-        {
-            //The typed property puts the element in schema order.
-            shading = new Shading();
-            tableCellProperties.Shading = shading;
-        }
-        shading.Val = ShadingPatternValues.Clear;
-        shading.Color = "auto";
-        shading.Fill = rgbColor;
-    }
-
-    /// <summary>
-    /// The background colour of the cell as six hex digits, or null when it has no fill. Setting null removes the shading.
-    /// </summary>
-    public string BackgroundColor
-    {
-        get
-        {
-            string fill = _tableCell.TableCellProperties?.Shading?.Fill?.Value;
-            return fill == null || String.Equals(fill, "auto", StringComparison.OrdinalIgnoreCase) ? null : fill;
-        }
-        set
-        {
-            if (value == null)
-            {
-                _tableCell.TableCellProperties?.RemoveAllChildren<Shading>();
-                return;
-            }
-            if (value.Length != 6 || !value.All(Uri.IsHexDigit))
-            {
-                throw new ArgumentException("The colour must be six hex digits.", nameof(value));
-            }
-            SetShadingFillColor(value);
         }
     }
 

@@ -49,16 +49,16 @@ internal static class AgreementExample
 
             //A cross reference: a REF field to the bookmark of the heading of the fees clause.
             FieldWrapper reference = document.Fields.Add(termination.Range, FieldType.Ref, "clause_fees \\h");
-            reference.Result = "3. Fees and payment";
+            reference.Result.Text = "3. Fees and payment";
             termination.Range.InsertAfter(", up to the date on which this agreement ends.");
 
             //Comments from the reviewers.
             CommentWrapper legal = document.Comments.Add(fees.Range, "Legal: check the interest rate against the late payment rules.");
             legal.Author = "Legal team";
-            legal.Initials = "LT";
+            legal.Initial = "LT";
             CommentWrapper sales = document.Comments.Add(services.Range, "Sales: the customer asked for a service level to be added here.");
             sales.Author = "Sales";
-            sales.Initials = "SA";
+            sales.Initial = "SA";
 
             //Signature block: two columns, a line to sign on above each name.
             builder.Paragraph("Signed by the parties", "Heading 1");
@@ -78,7 +78,7 @@ internal static class AgreementExample
 
             //The schedule goes in a section of its own.
             ParagraphWrapper end = builder.Paragraph(string.Empty);
-            end.InsertSectionBreak("nextPage");
+            end.InsertSectionBreak(SectionStart.NewPage);
             builder.Paragraph("Schedule: Services and Fees", "Heading 1");
             TableWrapper schedule = builder.Table(5, 4);
             schedule.Cell(0, 0).Range.Text = "Services and Fees";
@@ -100,12 +100,12 @@ internal static class AgreementExample
             //The first row is one cell across the table, made by merging the four cells.
             schedule.Cell(0, 0).Merge(schedule.Cell(0, 3));
             schedule.Cell(0, 0).Range.ParagraphFormat.Alignment = ParagraphAlignment.Center;
-            schedule.Cell(0, 0).BackgroundColor = "1F3864";
+            schedule.Cell(0, 0).Shading.BackgroundPatternColor = "1F3864";
             schedule.Rows[0].Range.Font.Bold = true;
             schedule.Rows[0].Range.Font.Color = "FFFFFF";
             for (int column = 0; column < 4; column++)
             {
-                schedule.Cell(1, column).BackgroundColor = "D9E2F3";
+                schedule.Cell(1, column).Shading.BackgroundPatternColor = "D9E2F3";
             }
             schedule.Rows[1].Range.Font.Bold = true;
             schedule.Borders.SetOutside(BorderLineStyle.SingleLine, 1, "1F3864");
@@ -128,9 +128,9 @@ internal static class AgreementExample
             footer.Text = "Agreement {{reference}} - page ";
             footer.Style = "Footer";
             footer.ParagraphFormat.Alignment = ParagraphAlignment.Center;
-            document.Fields.Add(footer, FieldType.Page).Result = "1";
+            document.Fields.Add(footer, FieldType.Page).Result.Text = "1";
             footer.InsertAfter(" of ");
-            document.Fields.Add(footer, FieldType.NumPages).Result = "3";
+            document.Fields.Add(footer, FieldType.NumPages).Result.Text = "3";
 
             //Fill in the placeholders: the same Find that was used to look for text replaces it in every part of the document. The
             //header and footer are separate ranges, so they are replaced too.
@@ -169,7 +169,7 @@ internal static class AgreementExample
     {
         ParagraphWrapper heading = builder.Paragraph(string.Empty, "Heading 2");
         FieldWrapper numberField = document.Fields.Add(heading.Range, FieldType.Sequence, "clause \\* ARABIC");
-        numberField.Result = number.ToString(CultureInfo.InvariantCulture);
+        numberField.Result.Text = number.ToString(CultureInfo.InvariantCulture);
         heading.Range.InsertAfter(". " + title);
         string name = "clause_" + title.Split(' ')[0].ToLowerInvariant();
         document.Bookmarks.Add(name, heading.Range);

@@ -102,25 +102,26 @@ public class TableFormattingTest
         TableCell cell = CreateTable(1, 1).Descendants<TableCell>().Single();
         TableCellWrapper wrapper = new TableCellWrapper(cell);
         wrapper.VerticalAlignment = CellVerticalAlignment.Center;
-        wrapper.BackgroundColor = "FFCC00";
+        wrapper.Shading.BackgroundPatternColor = "FFCC00";
         wrapper.Width = 100;
 
         Assert.Equal(new[] { "tcW", "shd", "vAlign" }, cell.TableCellProperties.ChildElements.Select(e => e.LocalName).ToArray());
     }
 
     [Fact]
-    public void CellBackgroundColorRoundTripsAndValidates()
+    public void CellShadingColorRoundTripsAndValidates()
     {
         TableCell cell = CreateTable(1, 1).Descendants<TableCell>().Single();
         TableCellWrapper wrapper = new TableCellWrapper(cell);
-        Assert.Null(wrapper.BackgroundColor);
+        Assert.Equal(WordColor.Automatic, wrapper.Shading.BackgroundPatternColor);
 
-        wrapper.BackgroundColor = "ffcc00";
-        Assert.Equal("ffcc00", wrapper.BackgroundColor);
-        Assert.Throws<ArgumentException>(() => wrapper.BackgroundColor = "red");
+        wrapper.Shading.BackgroundPatternColor = "ffcc00";
+        Assert.Equal(new WordColor("FFCC00"), wrapper.Shading.BackgroundPatternColor);
+        Assert.Equal("FFCC00", cell.TableCellProperties.Shading.Fill.Value);
+        Assert.Throws<ArgumentException>(() => wrapper.Shading.BackgroundPatternColor = "red");
 
-        wrapper.BackgroundColor = null;
-        Assert.Null(wrapper.BackgroundColor);
+        wrapper.Shading.Clear();
+        Assert.Equal(WordColor.Automatic, wrapper.Shading.BackgroundPatternColor);
         Assert.Null(cell.TableCellProperties.Shading);
     }
 
@@ -145,17 +146,22 @@ public class TableFormattingTest
     {
         Table table = CreateTable(1, 1);
         TableWrapper wrapper = new TableWrapper(table);
-        Assert.Null(wrapper.PreferredWidth);
+        Assert.Equal(0, wrapper.PreferredWidth);
+        Assert.Equal(PreferredWidthType.Auto, wrapper.PreferredWidthType);
 
         wrapper.PreferredWidth = 468;
+        Assert.Equal(PreferredWidthType.Points, wrapper.PreferredWidthType);
         Assert.Equal(468, wrapper.PreferredWidth);
         Assert.Equal("9360", table.GetFirstChild<TableProperties>().TableWidth.Width.Value);
 
-        table.GetFirstChild<TableProperties>().TableWidth.Type = TableWidthUnitValues.Pct;
-        Assert.Null(wrapper.PreferredWidth);
+        wrapper.PreferredWidthType = PreferredWidthType.Percent;
+        Assert.Equal(PreferredWidthType.Percent, wrapper.PreferredWidthType);
+        wrapper.PreferredWidth = 50;
+        Assert.Equal(50, wrapper.PreferredWidth);
+        Assert.Equal("2500", table.GetFirstChild<TableProperties>().TableWidth.Width.Value);
 
-        wrapper.PreferredWidth = null;
-        Assert.Null(table.GetFirstChild<TableProperties>().TableWidth);
+        wrapper.PreferredWidthType = PreferredWidthType.Auto;
+        Assert.Equal(0, wrapper.PreferredWidth);
         Assert.Throws<ArgumentOutOfRangeException>(() => wrapper.PreferredWidth = -1);
     }
 
@@ -208,7 +214,7 @@ public class TableFormattingTest
     public void ColumnDeletePassesTheStartOfAVerticalMergeToTheNextRow()
     {
         Table table = CreateTable(2, 2);
-        new TableWrapper(table).Cell(0, 0).MergeDown();
+        new TableWrapper(table).Cell(0, 0).Merge(new TableWrapper(table).Cell(1, 0));
 
         new TableWrapper(table).Columns[0].Delete();
 

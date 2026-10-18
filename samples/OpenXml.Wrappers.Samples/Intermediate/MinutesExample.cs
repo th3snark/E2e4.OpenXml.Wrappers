@@ -26,7 +26,7 @@ internal static class MinutesExample
             {
                 details.Cell(row, 0).Range.Text = facts[row, 0];
                 details.Cell(row, 0).Range.Font.Bold = true;
-                details.Cell(row, 0).BackgroundColor = "D9E2F3";
+                details.Cell(row, 0).Shading.BackgroundPatternColor = "D9E2F3";
                 details.Cell(row, 1).Range.Text = facts[row, 1];
             }
             details.Columns[0].Width = 1500;
@@ -48,7 +48,7 @@ internal static class MinutesExample
 
             //REF is the field behind Insert, Cross-reference. Its result is the text of the bookmark. Word refreshes it when it updates fields.
             FieldWrapper cross = document.Fields.Add(reference.Range, FieldType.Ref, "decision_pilot \\h");
-            cross.Result = decision.Range.Text.TrimEnd('\r');
+            cross.Result.Text = decision.Range.Text.TrimEnd('\r');
 
             string[][] actions =
             {
@@ -69,7 +69,7 @@ internal static class MinutesExample
             table.Rows[0].HeadingFormat = true;
             for (int column = 0; column < 3; column++)
             {
-                table.Cell(0, column).BackgroundColor = "D9E2F3";
+                table.Cell(0, column).Shading.BackgroundPatternColor = "D9E2F3";
             }
             table.Borders.SetOutside(BorderLineStyle.SingleLine, 0.75, "808080");
             table.Borders.SetInside(BorderLineStyle.SingleLine, 0.5, "BFBFBF");
@@ -79,16 +79,16 @@ internal static class MinutesExample
             //Review comments, from two people. Comments can be added to a paragraph or a bookmark.
             CommentWrapper question = document.Comments.Add(progress.Range, "Is 28 March still realistic after the security review?");
             question.Author = "Ana Silva";
-            question.Initials = "AS";
+            question.Initial = "AS";
             CommentWrapper note = document.Comments.Add(document.Bookmarks["decision_pilot"].Range, "Please add the names of the pilot customers.");
             note.Author = "Ben Okafor";
-            note.Initials = "BO";
+            note.Initial = "BO";
 
             //A footer with the page number.
             RangeWrapper footer = document.Sections[0].Footers[HeaderFooterIndex.Primary].Range;
             footer.Text = "Project board minutes - page ";
             footer.Style = "Footer";
-            document.Fields.Add(footer, FieldType.Page).Result = "1";
+            document.Fields.Add(footer, FieldType.Page).Result.Text = "1";
         }
     }
 }

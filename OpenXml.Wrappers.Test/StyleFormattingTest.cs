@@ -33,8 +33,8 @@ public class StyleFormattingTest : IDisposable
         StyleWrapper style = _document.Styles.Add("Note", StyleType.Paragraph);
 
         Assert.False(style.Font.Bold);
-        Assert.Null(style.Font.Size);
-        Assert.Null(style.Font.Name);
+        Assert.Null(style.Font.Direct.Size);
+        Assert.Null(style.Font.Direct.Name);
         Assert.Equal(ParagraphAlignment.Left, style.ParagraphFormat.Alignment);
         Assert.Equal(0, style.ParagraphFormat.SpaceAfter);
         Assert.Null(style.Style.StyleRunProperties);
@@ -123,7 +123,8 @@ public class StyleFormattingTest : IDisposable
         normal.Font.Size = 11;
 
         Assert.Equal(11, normal.Font.Size);
-        Assert.Null(note.Font.Size);
+        Assert.Null(note.Font.Direct.Size);
+        Assert.Equal(11, note.Font.Size);
     }
 
     [Fact]

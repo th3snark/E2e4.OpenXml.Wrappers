@@ -59,7 +59,7 @@ public class DocumentGapsTest : IDisposable
             header.Delete();
 
             Assert.Single(header.Paragraphs);
-            Assert.Equal(string.Empty, header.Paragraphs[0].Text);
+            Assert.Equal("\r", header.Paragraphs[0].Text);
         }
     }
 
@@ -69,7 +69,7 @@ public class DocumentGapsTest : IDisposable
         TableCell cell = new TableCell(new Paragraph(new Run(new Text("only"))));
         Table table = new Table(new TableRow(cell));
 
-        Assert.Equal("only", new ParagraphWrapper(cell.Elements<Paragraph>().Single()).Text);
+        Assert.Equal("only\r\a", new ParagraphWrapper(cell.Elements<Paragraph>().Single()).Text);
     }
 
     [Fact]
@@ -97,7 +97,7 @@ public class DocumentGapsTest : IDisposable
             Assert.Equal(BorderLineStyle.SingleLine, table.Borders[BorderPosition.Top].LineStyle);
             Assert.Equal(1.5, table.Borders[BorderPosition.Top].LineWidth);
             Assert.Equal("FF0000", table.Cell(0, 1).Borders[BorderPosition.Top].Color);
-            Assert.Equal(BorderLineStyle.Dashed, table.Cell(0, 0).Borders[BorderPosition.Bottom].LineStyle);
+            Assert.Equal(BorderLineStyle.DashLargeGap, table.Cell(0, 0).Borders[BorderPosition.Bottom].LineStyle);
             Assert.Equal(BorderLineStyle.None, table.Cell(1, 0).Borders[BorderPosition.Bottom].LineStyle);
 
             //A direct setting wins over the style.
@@ -133,21 +133,21 @@ public class DocumentGapsTest : IDisposable
     }
 
     [Fact]
-    public void KeepNextOfARowAndACellCanBeRead()
+    public void KeepWithNextOfARowAndACellCanBeRead()
     {
         TableCell first = new TableCell(new Paragraph());
         TableCell second = new TableCell(new Paragraph());
         TableRow row = new TableRow(first, second);
         Table table = new Table(row);
         TableRowWrapper wrapper = new TableRowWrapper(row);
-        Assert.False(wrapper.KeepNext);
+        Assert.False(wrapper.KeepWithNext);
 
-        new TableCellWrapper(first).KeepNext = true;
-        Assert.True(new TableCellWrapper(first).KeepNext);
-        Assert.False(wrapper.KeepNext);
+        new TableCellWrapper(first).KeepWithNext = true;
+        Assert.True(new TableCellWrapper(first).KeepWithNext);
+        Assert.False(wrapper.KeepWithNext);
 
-        wrapper.KeepNext = true;
-        Assert.True(wrapper.KeepNext);
+        wrapper.KeepWithNext = true;
+        Assert.True(wrapper.KeepWithNext);
     }
 
     private static StyleDefinitionsPart StylesPart(WordprocessingDocumentWrapper document)

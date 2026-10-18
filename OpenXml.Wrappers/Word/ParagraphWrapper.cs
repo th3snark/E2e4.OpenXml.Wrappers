@@ -42,57 +42,126 @@ public class ParagraphWrapper : System.IEquatable<ParagraphWrapper>
         get { return Range.ParagraphFormat; }
     }
 
+    /// <summary>
+    /// The text of the paragraph, ending with its paragraph mark as a carriage return, as <c>Paragraph.Range.Text</c> in Word (for a paragraph
+    /// in a table cell the last one ends with the end-of-cell mark <c>\a</c>). Setting it keeps the paragraph mark: one at the end of the
+    /// new text is ignored, so that <c>paragraph.Text = paragraph.Text</c> changes nothing.
+    /// </summary>
     public string Text
     {
-        get { return Range.Text.TrimEnd('\r', '\a'); }
+        get { return Range.Text; }
         set { Range.Text = value; }
     }
 
-    /// <summary>
-    /// The space before the paragraph in points, 0 when none is set. The same as <see cref="Format"/>.<c>SpaceBefore</c>.
-    /// </summary>
-    public double SpaceBefore
+    /// <summary>The alignment of the paragraph; null when it cannot be read as one value. The same as <see cref="Format"/>.<c>Alignment</c>.</summary>
+    public ParagraphAlignment? Alignment
     {
-        get { return Format.SpaceBefore ?? 0; }
+        get { return Format.Alignment; }
+        set { Format.Alignment = value; }
+    }
+
+    /// <summary>The distance in points between the left margin and the left edge of the paragraph. The same as <see cref="Format"/>.<c>LeftIndent</c>.</summary>
+    public double? LeftIndent
+    {
+        get { return Format.LeftIndent; }
+        set { Format.LeftIndent = value; }
+    }
+
+    /// <summary>The distance in points between the right margin and the right edge of the paragraph. The same as <see cref="Format"/>.<c>RightIndent</c>.</summary>
+    public double? RightIndent
+    {
+        get { return Format.RightIndent; }
+        set { Format.RightIndent = value; }
+    }
+
+    /// <summary>The indent of the first line in points (negative for a hanging indent). The same as <see cref="Format"/>.<c>FirstLineIndent</c>.</summary>
+    public double? FirstLineIndent
+    {
+        get { return Format.FirstLineIndent; }
+        set { Format.FirstLineIndent = value; }
+    }
+
+    /// <summary>The line spacing in points. The same as <see cref="Format"/>.<c>LineSpacing</c>.</summary>
+    public double? LineSpacing
+    {
+        get { return Format.LineSpacing; }
+        set { Format.LineSpacing = value; }
+    }
+
+    /// <summary>The rule for the line spacing. The same as <see cref="Format"/>.<c>LineSpacingRule</c>.</summary>
+    public LineSpacingRule? LineSpacingRule
+    {
+        get { return Format.LineSpacingRule; }
+        set { Format.LineSpacingRule = value; }
+    }
+
+    /// <summary>Whether all the lines of the paragraph are kept on the same page. The same as <see cref="Format"/>.<c>KeepTogether</c>.</summary>
+    public bool? KeepTogether
+    {
+        get { return Format.KeepTogether; }
+        set { Format.KeepTogether = value; }
+    }
+
+    /// <summary>Whether the paragraph starts a new page. The same as <see cref="Format"/>.<c>PageBreakBefore</c>.</summary>
+    public bool? PageBreakBefore
+    {
+        get { return Format.PageBreakBefore; }
+        set { Format.PageBreakBefore = value; }
+    }
+
+    /// <summary>Whether the first and last lines are kept from being alone on a page. The same as <see cref="Format"/>.<c>WidowControl</c>.</summary>
+    public bool? WidowControl
+    {
+        get { return Format.WidowControl; }
+        set { Format.WidowControl = value; }
+    }
+
+    /// <summary>The name of the paragraph style. The same as <see cref="RangeWrapper.Style"/> of <see cref="Range"/>.</summary>
+    public string Style
+    {
+        get { return Range.Style; }
+        set { Range.Style = value; }
+    }
+
+    /// <summary>The style of the paragraph as an object. The same as <see cref="RangeWrapper.StyleObject"/> of <see cref="Range"/>.</summary>
+    public StyleWrapper StyleObject
+    {
+        get { return Range.StyleObject; }
+        set { Range.StyleObject = value; }
+    }
+
+    /// <summary>
+    /// The space before the paragraph in points. The same as <see cref="Format"/>.<c>SpaceBefore</c>.
+    /// </summary>
+    public double? SpaceBefore
+    {
+        get { return Format.SpaceBefore; }
         set { Format.SpaceBefore = value; }
     }
 
     /// <summary>
-    /// The space after the paragraph in points, 0 when none is set. The same as <see cref="Format"/>.<c>SpaceAfter</c>.
+    /// The space after the paragraph in points. The same as <see cref="Format"/>.<c>SpaceAfter</c>.
     /// </summary>
-    public double SpaceAfter
+    public double? SpaceAfter
     {
-        get { return Format.SpaceAfter ?? 0; }
+        get { return Format.SpaceAfter; }
         set { Format.SpaceAfter = value; }
     }
 
-    private SpacingBetweenLines GetOrAddSpacing()
-    {
-        //The typed properties put the elements in schema order.
-        if (_paragraph.ParagraphProperties == null)
-        {
-            _paragraph.ParagraphProperties = new ParagraphProperties();
-        }
-        if (_paragraph.ParagraphProperties.SpacingBetweenLines == null)
-        {
-            _paragraph.ParagraphProperties.SpacingBetweenLines = new SpacingBetweenLines();
-        }
-        return _paragraph.ParagraphProperties.SpacingBetweenLines;
-    }
     /// <summary>
-    /// The paragraph after this one in the document, including paragraphs in table cells, or null for the last paragraph (<c>Paragraph.Next</c> in Word).
+    /// The paragraph <paramref name="count"/> after this one in the document, including paragraphs in table cells, or null if there is none (<c>Paragraph.Next</c> in Word).
     /// </summary>
-    public ParagraphWrapper Next()
+    public ParagraphWrapper Next(int count = 1)
     {
-        return GetNeighbour(1);
+        return GetNeighbour(count);
     }
 
     /// <summary>
-    /// The paragraph before this one in the document, or null for the first paragraph (<c>Paragraph.Previous</c> in Word).
+    /// The paragraph <paramref name="count"/> before this one in the document, or null if there is none (<c>Paragraph.Previous</c> in Word).
     /// </summary>
-    public ParagraphWrapper Previous()
+    public ParagraphWrapper Previous(int count = 1)
     {
-        return GetNeighbour(-1);
+        return GetNeighbour(-count);
     }
 
     private ParagraphWrapper GetNeighbour(int offset)
@@ -107,16 +176,33 @@ public class ParagraphWrapper : System.IEquatable<ParagraphWrapper>
         Range.Delete();
     }
 
-    public void InsertBreak(BreakValues type)
+    /// <summary>
+    /// Adds a page, column or line break at the end of the paragraph. (<see cref="RangeWrapper.InsertBreak"/> is Word's way to insert a break at
+    /// a place in the text; this is the same break at the end of the paragraph.)
+    /// </summary>
+    /// <exception cref="ArgumentException">The type is not <see cref="BreakType.PageBreak"/>, <see cref="BreakType.ColumnBreak"/>,
+    /// <see cref="BreakType.LineBreak"/> or <see cref="BreakType.TextWrappingBreak"/>. Use <see cref="InsertSectionBreak"/> for section breaks.</exception>
+    public void InsertBreak(BreakType type)
     {
-        if (type == BreakValues.Page || type == BreakValues.Column || type == BreakValues.TextWrapping)
+        BreakValues? kind = null;
+        if (type == BreakType.PageBreak)
         {
-            _paragraph.AppendChild(new Run(new Break() { Type = type }));
+            kind = BreakValues.Page;
         }
-        else
+        else if (type == BreakType.ColumnBreak)
         {
-            throw new ArgumentException(String.Format(CultureInfo.InvariantCulture, "The break type '{0}' is not a recognised type.", type), nameof(type));
+            kind = BreakValues.Column;
         }
+        else if (type == BreakType.LineBreak || type == BreakType.TextWrappingBreak)
+        {
+            kind = BreakValues.TextWrapping;
+        }
+
+        if (!kind.HasValue)
+        {
+            throw new ArgumentException(String.Format(CultureInfo.InvariantCulture, "The break type '{0}' is not supported here.", type), nameof(type));
+        }
+        _paragraph.AppendChild(new Run(new Break() { Type = kind.Value }));
     }
 
     public void DeleteBreaks()
@@ -128,33 +214,28 @@ public class ParagraphWrapper : System.IEquatable<ParagraphWrapper>
     }
 
     /// <summary>
-    /// Ends a section with this paragraph. <paramref name="type"/> says how the section that follows starts: "nextPage", "continuous",
-    /// "evenPage", "oddPage" or "nextColumn". Returns the properties of the section that ends here, which are a copy of the final section's.
+    /// Ends a section with this paragraph, so that the paragraph is the last one of the section. <paramref name="start"/> says how the section
+    /// that follows starts. (<see cref="RangeWrapper.InsertBreak"/> is Word's way to insert a section break, at a place in the text; this is
+    /// the same break with the paragraph as its place.)
     /// </summary>
-    public SectionProperties InsertSectionBreak(string type)
+    /// <exception cref="ArgumentOutOfRangeException">The start is not a section start.</exception>
+    public void InsertSectionBreak(SectionStart start = SectionStart.NewPage)
     {
-        SectionMarkValues markType;
-        switch (type)
+        if (!EnumCompat.IsDefined(start))
         {
-            case "nextPage":
-                markType = SectionMarkValues.NextPage;
-                break;
-            case "continuous":
-                markType = SectionMarkValues.Continuous;
-                break;
-            case "evenPage":
-                markType = SectionMarkValues.EvenPage;
-                break;
-            case "oddPage":
-                markType = SectionMarkValues.OddPage;
-                break;
-            case "nextColumn":
-                markType = SectionMarkValues.NextColumn;
-                break;
-            default:
-                throw new ArgumentException(String.Format(CultureInfo.InvariantCulture, "The section break type '{0}' is not a recognised type.", type), nameof(type));
+            throw new ArgumentOutOfRangeException(nameof(start));
         }
 
+        EndSection(start == SectionStart.Continuous ? SectionMarkValues.Continuous
+            : start == SectionStart.EvenPage ? SectionMarkValues.EvenPage
+            : start == SectionStart.OddPage ? SectionMarkValues.OddPage
+            : start == SectionStart.NewColumn ? SectionMarkValues.NextColumn
+            : SectionMarkValues.NextPage);
+    }
+
+    //Ends a section with this paragraph and returns the properties of the section that ends here, which are a copy of the final section's.
+    internal SectionProperties EndSection(SectionMarkValues markType)
+    {
         //Add a new paragraph properties if one does not exist.
         ParagraphProperties paragraphProperties = _paragraph.ParagraphProperties;
         if (paragraphProperties == null)
@@ -232,11 +313,12 @@ public class ParagraphWrapper : System.IEquatable<ParagraphWrapper>
     /// <summary>
     /// Whether the paragraph is kept on the same page as the next one; the same as <c>Format.KeepWithNext</c>.
     /// </summary>
-    public bool KeepNext
+    public bool? KeepWithNext
     {
-        get { return Format.KeepWithNext == true; }
-        set { Format.KeepWithNext = value ? true : null; }
+        get { return Format.KeepWithNext; }
+        set { Format.KeepWithNext = value; }
     }
+
     #region Equality
 
     // Two wrappers are equal when they wrap the same underlying element(s), so a new wrapper obtained for the same item compares equal.

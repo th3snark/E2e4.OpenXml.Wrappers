@@ -74,14 +74,14 @@ public class ParagraphWrapperTest : System.IDisposable
     public void RangeTextPropertyIsCorrect()
     {
         Assert.Equal("Test Document\r", _document1.Content.FirstParagraph.Range.Text);
-        Assert.Equal("Test Document", _document1.Content.FirstParagraph.Text);
+        Assert.Equal("Test Document\r", _document1.Content.FirstParagraph.Text);
     }
 
     [Fact]
     public void RangeFirstParagraphRangeTextPropertyIsCorrect()
     {
         Assert.Equal("Test Document\r", _document1.Content.FirstParagraph.Range.Text);
-        Assert.Equal("Test Document", _document1.Content.FirstParagraph.Text);
+        Assert.Equal("Test Document\r", _document1.Content.FirstParagraph.Text);
     }
 
     [Fact]
@@ -155,11 +155,20 @@ public class ParagraphWrapperTest : System.IDisposable
     [InlineData("Page")]
     public void InsertBreakAcceptsAllBreakTypes(string name)
     {
-        BreakValues type = name == "Column" ? BreakValues.Column : name == "Page" ? BreakValues.Page : BreakValues.TextWrapping;
+        BreakType type = name == "Column" ? BreakType.ColumnBreak : name == "Page" ? BreakType.PageBreak : BreakType.TextWrappingBreak;
+        BreakValues expected = name == "Column" ? BreakValues.Column : name == "Page" ? BreakValues.Page : BreakValues.TextWrapping;
         Paragraph paragraph = new Paragraph();
         new ParagraphWrapper(paragraph).InsertBreak(type);
 
-        Assert.Equal(type, paragraph.Descendants<Break>().Single().Type.Value);
+        Assert.Equal(expected, paragraph.Descendants<Break>().Single().Type.Value);
+    }
+
+    [Theory]
+    [InlineData(BreakType.SectionBreakNextPage)]
+    [InlineData((BreakType)99)]
+    public void InsertBreakRejectsSectionBreaksAndUnknownTypes(BreakType type)
+    {
+        Assert.Throws<ArgumentException>(() => new ParagraphWrapper(new Paragraph()).InsertBreak(type));
     }
 
     [Fact]
@@ -196,7 +205,7 @@ public class ParagraphWrapperTest : System.IDisposable
     public void EmptyParagraphRangeTextIsTheParagraphMarker()
     {
         Assert.Equal("\r", new ParagraphWrapper(new Paragraph()).Range.Text);
-        Assert.Equal(String.Empty, new ParagraphWrapper(new Paragraph()).Text);
+        Assert.Equal("\r", new ParagraphWrapper(new Paragraph()).Text);
     }
 
     [Fact]
@@ -231,7 +240,7 @@ public class ParagraphWrapperTest : System.IDisposable
         ParagraphWrapper wrapper = new ParagraphWrapper(new Paragraph(new Run(new Text("a"))));
 
         Assert.Equal(1, wrapper.Range.Paragraphs.Count);
-        Assert.Equal("a", wrapper.Range.FirstParagraph.Text);
+        Assert.Equal("a\r", wrapper.Range.FirstParagraph.Text);
     }
 
     [Fact]
@@ -244,5 +253,54 @@ public class ParagraphWrapperTest : System.IDisposable
         Assert.NotNull(run.RunProperties);
         Assert.Empty(run.Elements<ParagraphMarkRunProperties>());
         Assert.Single(run.RunProperties.Elements<Bold>());
+    }
+
+    [Fact]
+    public void TextEndsWithTheParagraphMark()
+    {
+        Assert.Equal("a\r", new ParagraphWrapper(new Paragraph(new Run(new Text("a")))).Text);
+    }
+
+    [Fact]
+    public void SettingTextKeepsTheParagraphMarkSoTheTextCanBeSetBackUnchanged()
+    {
+        Paragraph paragraph = new Paragraph(new Run(new Text("a")));
+        ParagraphWrapper wrapper = new ParagraphWrapper(paragraph);
+
+        wrapper.Text = wrapper.Text;
+        Assert.Equal("a\r", wrapper.Text);
+
+        wrapper.Text = "b\r";
+        Assert.Equal("b\r", wrapper.Text);
+        Assert.Single(paragraph.Elements<Run>());
+    }
+
+    [Fact]
+    public void FormatPropertiesAreNullableLikeParagraphFormat()
+    {
+        Paragraph paragraph = new Paragraph();
+        ParagraphWrapper wrapper = new ParagraphWrapper(paragraph);
+
+        wrapper.Alignment = ParagraphAlignment.Center;
+        wrapper.LeftIndent = 18;
+        wrapper.KeepWithNext = true;
+        wrapper.SpaceAfter = 6;
+
+        Assert.Equal(ParagraphAlignment.Center, wrapper.Alignment);
+        Assert.Equal(18, wrapper.LeftIndent);
+        Assert.Equal(true, wrapper.KeepWithNext);
+        Assert.Equal(6, wrapper.SpaceAfter);
+        Assert.Equal(wrapper.Format.LeftIndent, wrapper.LeftIndent);
+
+        //Null removes the direct setting, as for ParagraphFormat.
+        wrapper.Alignment = null;
+        wrapper.LeftIndent = null;
+        wrapper.KeepWithNext = null;
+        wrapper.SpaceAfter = null;
+
+        Assert.Null(paragraph.ParagraphProperties?.Justification);
+        Assert.Null(paragraph.ParagraphProperties?.Indentation);
+        Assert.Null(paragraph.ParagraphProperties?.KeepNext);
+        Assert.Null(paragraph.ParagraphProperties?.SpacingBetweenLines);
     }
 }

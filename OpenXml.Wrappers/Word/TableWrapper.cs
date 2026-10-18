@@ -5,7 +5,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
 
-public class TableWrapper : System.IEquatable<TableWrapper>
+public partial class TableWrapper : System.IEquatable<TableWrapper>
 {
     Table _table;
 
@@ -17,6 +17,16 @@ public class TableWrapper : System.IEquatable<TableWrapper>
     public Table Table
     {
         get { return _table; }
+    }
+
+    /// <summary>
+    /// The table style as an object, as <c>Table.Style</c> returns it in Word (null when the document does not define it). Setting it applies
+    /// the style as <see cref="Style"/> does, and null removes the table style.
+    /// </summary>
+    public StyleWrapper StyleObject
+    {
+        get { return StyleHelper.GetStyleObject(_table, Style); }
+        set { Style = value?.Name; }
     }
 
     /// <summary>
@@ -103,40 +113,6 @@ public class TableWrapper : System.IEquatable<TableWrapper>
         }
     }
 
-    /// <summary>
-    /// The preferred width of the table in points, or null when it is not a fixed width (automatic or a percentage). Setting null
-    /// removes the preferred width.
-    /// </summary>
-    public double? PreferredWidth
-    {
-        get
-        {
-            TableWidth width = _table.GetFirstChild<TableProperties>()?.TableWidth;
-            if (width?.Type == null || !width.Type.HasValue || width.Type.Value != TableWidthUnitValues.Dxa || width.Width == null)
-            {
-                return null;
-            }
-            return Double.TryParse(width.Width.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out double twips) ? twips / 20.0 : null;
-        }
-        set
-        {
-            if (value == null)
-            {
-                _table.GetFirstChild<TableProperties>()?.RemoveAllChildren<TableWidth>();
-                return;
-            }
-            if (Double.IsNaN(value.Value) || value.Value < 0 || value.Value > 1584)
-            {
-                throw new ArgumentOutOfRangeException(nameof(value), "The width must be between 0 and 1584 points.");
-            }
-            GetOrAddTableProperties().TableWidth = new TableWidth()
-            {
-                Width = Math.Round(value.Value * 20, MidpointRounding.AwayFromZero).ToString(CultureInfo.InvariantCulture),
-                Type = TableWidthUnitValues.Dxa
-            };
-        }
-    }
-
     public TableWrapper Parent
     {
         get
@@ -191,10 +167,6 @@ public class TableWrapper : System.IEquatable<TableWrapper>
         _table.MergeTable(reportTable.Table);
     }
 
-    public ParagraphWrapper InsertParagraphAfterSelf()
-    {
-        return Range.InsertParagraphAfter();
-    }
     /// <summary>
     /// The width of the table in points, worked out from the fixed or percentage width it has (0 when it has neither).
     /// </summary>

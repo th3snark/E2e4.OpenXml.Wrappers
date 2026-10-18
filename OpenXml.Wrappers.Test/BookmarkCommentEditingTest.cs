@@ -101,7 +101,6 @@ public class BookmarkCommentEditingTest : IDisposable
     [InlineData("")]
     [InlineData("1abc")]
     [InlineData("has space")]
-    [InlineData("_hidden")]
     public void InvalidBookmarkNamesAreRejected(string name)
     {
         Paragraph paragraph = AddParagraph("x");

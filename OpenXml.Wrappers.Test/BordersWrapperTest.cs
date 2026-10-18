@@ -24,7 +24,7 @@ public class BordersWrapperTest
         BorderWrapper border = new TableWrapper(CreateTable()).Borders[BorderPosition.Top];
 
         Assert.Equal(BorderLineStyle.None, border.LineStyle);
-        Assert.Equal(0, border.LineWidth);
+        Assert.Equal(LineWidth.None, border.LineWidth);
         Assert.Equal("auto", border.Color);
     }
 
@@ -73,7 +73,7 @@ public class BordersWrapperTest
         Assert.Equal("C00000", border.Color);
         Assert.Equal(BorderLineStyle.SingleLine, border.LineStyle);
         Assert.Throws<ArgumentException>(() => border.Color = "red");
-        Assert.Throws<ArgumentException>(() => border.Color = null);
+        Assert.Throws<ArgumentNullException>(() => border.Color = null);
         border.Color = "auto";
         Assert.Equal("auto", border.Color);
     }
@@ -126,7 +126,7 @@ public class BordersWrapperTest
         Assert.Throws<ArgumentException>(() => border.LineStyle = BorderLineStyle.Other);
 
         border.LineStyle = BorderLineStyle.SingleLine;
-        table.GetFirstChild<TableProperties>().TableBorders.TopBorder.Val = BorderValues.ThickThinLargeGap;
+        table.GetFirstChild<TableProperties>().TableBorders.TopBorder.Val = BorderValues.Thick;
         Assert.Equal(BorderLineStyle.Other, border.LineStyle);
     }
 
@@ -170,12 +170,12 @@ public class BordersWrapperTest
         BordersWrapper borders = new TableCellWrapper(cell).Borders;
         borders[BorderPosition.DiagonalUp].LineStyle = BorderLineStyle.SingleLine;
         borders[BorderPosition.DiagonalDown].LineStyle = BorderLineStyle.SingleLine;
-        borders[BorderPosition.Top].LineStyle = BorderLineStyle.Dashed;
+        borders[BorderPosition.Top].LineStyle = BorderLineStyle.DashLargeGap;
 
         TableCellBorders cellBorders = cell.TableCellProperties.TableCellBorders;
         Assert.Equal(new[] { "top", "tl2br", "tr2bl" }, cellBorders.ChildElements.Select(e => e.LocalName).ToArray());
         Assert.Equal(new[] { "tcW", "tcBorders", "vAlign" }, cell.TableCellProperties.ChildElements.Select(e => e.LocalName).ToArray());
-        Assert.Equal(BorderLineStyle.Dashed, borders[BorderPosition.Top].LineStyle);
+        Assert.Equal(BorderLineStyle.DashLargeGap, borders[BorderPosition.Top].LineStyle);
     }
 
     [Fact]
