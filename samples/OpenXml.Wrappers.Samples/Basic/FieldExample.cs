@@ -6,8 +6,9 @@ namespace OpenXml.Wrappers.Samples.Basic;
 /// Fields: adding them, reading the code and the result, and deleting them.
 /// </summary>
 /// <remarks>
-/// The library never calculates a field. It writes the code and a result that you give it; a field added with <c>Fields.Add</c> is also
-/// marked so that Word updates it when it opens the document.
+/// <c>Fields.Add</c> works out the result at once for the fields that do not depend on the layout of the pages (dates, document properties,
+/// and so on). The others (<c>PAGE</c>, <c>NUMPAGES</c>) are marked so that Word updates them when it opens the document, and the example
+/// gives them a stand-in result to show until it does.
 /// </remarks>
 internal static class FieldExample
 {
@@ -19,8 +20,8 @@ internal static class FieldExample
             RangeWrapper line = document.Paragraphs[0].Range;
 
             //Add puts the field at the end of the range. The type names the code and the text is the rest of it.
-            FieldWrapper date = document.Fields.Add(line, FieldType.Date, "\\@ \"d MMMM yyyy\"");
-            date.Result.Text = DateTime.Today.ToString("d MMMM yyyy", System.Globalization.CultureInfo.InvariantCulture);
+            //A date does not depend on the layout, so the result is there already.
+            document.Fields.Add(line, FieldType.Date, "\\@ \"d MMMM yyyy\"");
 
             //A second paragraph with two fields in it, and text between them.
             ParagraphWrapper pages = document.Paragraphs.Add();
@@ -31,15 +32,16 @@ internal static class FieldExample
             FieldWrapper count = document.Fields.Add(pages.Range, FieldType.NumPages);
             count.Result.Text = "1";
 
-            //Any other field is added from its code.
+            //Any other field is added from its code. TITLE shows the Title property of the document, so set that first: a TITLE field is
+            //empty when Word updates it (F9) in a document without a title.
+            document.BuiltInDocumentProperties.Title = "Fields";
             ParagraphWrapper custom = document.Paragraphs.Add();
             custom.Range.Text = "Title of this document: ";
-            FieldWrapper title = document.Fields.Add(custom.Range, "TITLE");
-            title.Result.Text = "Fields";
+            document.Fields.Add(custom.Range, "TITLE");
 
             //Fields can be read back, in document order, with the kind of field worked out from the code.
             ParagraphWrapper summary = document.Paragraphs.Add();
-            summary.Range.Text = "Fields in this document: " + string.Join("; ", document.Fields.Select(f => f.Type + " (" + f.Code.Text + ")"));
+            summary.Range.Text = "Fields in this document (listed here as plain text, not as fields): " + string.Join("; ", document.Fields.Select(f => f.Type + " (" + f.Code.Text + ")"));
 
             //A field that is not wanted is deleted with its result.
             FieldWrapper unwanted = document.Fields.Add(document.Paragraphs.Add().Range, FieldType.Author);
