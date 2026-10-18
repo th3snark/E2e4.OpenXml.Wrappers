@@ -174,7 +174,7 @@ public partial class WordprocessingDocumentWrapper : IDisposable
     /// <summary>
     /// The positions of the main text of the document, worked out once so that the positions of many ranges can be read at once.
     /// </summary>
-    public PositionIndex CreatePositionIndex()
+    internal PositionIndex CreatePositionIndex()
     {
         return Content.CreatePositionIndex();
     }

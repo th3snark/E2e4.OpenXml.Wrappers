@@ -23,7 +23,7 @@ The existing objects are already well covered. `Range` navigation, `Find`, `Font
 | C4 | **There is no `Application`, `Documents`, `ActiveDocument` or `Selection`.** Nearly every macro starts at one of them. | The "familiar to VBA authors" goal breaks in the first line of most macros. | See section 6. A light `Application`/`Documents` facade is cheap. `Selection` needs a design decision. |
 | C5 | **`Document.Range(start, end)` needs both arguments.** In Word both are optional, and `Range()` is the whole story. | Small, but `doc.Range()` is common. | Make both optional. |
 | C6 | **The API uses `Wrapper` suffixes** (`RangeWrapper`, `CommentWrapper`). Word's names are `Range`, `Comment`. | Only matters for readability and ported snippets. | Document `using Range = OpenXml.Wrappers.Word.RangeWrapper;` aliases in the README. Low cost, no code change. |
-| C7 | **Tracked changes are not honoured.** `TrackRevisions` only sets the setting. Edits made through the library are not recorded as revisions. | With the flag on in Word, the same macro produces revisions. Here it silently produces plain edits. | At minimum, document that. Better: when `TrackRevisions` is true, write `w:ins`/`w:del` for text insert and delete. See the Revisions entry in section 5. |
+| C7 | **Tracked changes are not honoured (decided: `TrackRevisions = true` throws until they are).** `TrackRevisions` only sets the setting. Edits made through the library are not recorded as revisions. | With the flag on in Word, the same macro produces revisions. Here it silently produces plain edits. | At minimum, document that. Better: when `TrackRevisions` is true, write `w:ins`/`w:del` for text insert and delete. See the Revisions entry in section 5. |
 
 ## 3. Gaps on objects that exist
 
@@ -143,7 +143,7 @@ Kept on purpose, because one or two other members cannot do the same thing:
 * `Row.ClearText`, `Paragraph.DeleteBreaks`, `Paragraph.CopyPropertiesTo`.
 * `Paragraph.InsertSectionBreak`: it ends the section with the paragraph. `Sections.Add(range)` and `Range.InsertBreak` insert a new paragraph for the break.
 
-Still public and not Word's: `ConversionHelper` (`ToPct`, `CentimeterToDxa`, in Open XML's own units).
+`ConversionHelper` and `PositionIndex` (with the two `CreatePositionIndex` methods) are internal too. Still public but not Word's: `FieldPartWrapper` (stands in for the `Range` that `Field.Code`/`Result` are in Word), `LineWidth`, `WordColor`, `ColorHelper`, `NamedColor`, `ColorIndex` and `BorderLineWidth` (Word's constants and `RGB`, in C# form).
 
 ## 5. Limitations of the library as it stands
 
@@ -153,7 +153,7 @@ Still public and not Word's: `ConversionHelper` (`ToPct`, `CentimeterToDxa`, in 
 
 **Behavioural limits of objects that do exist.**
 
-* Track changes: edits are not recorded as revisions even when `TrackRevisions` is true. Tracked-deleted text is counted in positions but is not exposed as `Revisions`.
+* Track changes: edits are never recorded as revisions, so `TrackRevisions = true` throws (reading it and setting it to false work). Tracked-deleted text is counted in positions but is not exposed as `Revisions`.
 * `Find` cannot search or replace by formatting and has no sounds-like or word-forms matching.
 * Legacy `hMerge` tables are rejected by merge, split and column delete. `Cell.Delete` supports `ShiftCells.Left` only and not on vertically merged cells.
 * `Range.Text` can be set for cells, paragraphs, bookmarks, headers and footers, the document and spans, but not for rows and tables.

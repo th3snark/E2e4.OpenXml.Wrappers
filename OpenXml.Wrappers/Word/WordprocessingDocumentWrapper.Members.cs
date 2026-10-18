@@ -248,7 +248,12 @@ public partial class WordprocessingDocumentWrapper
         return part?.Settings;
     }
 
-    /// <summary>True if changes are tracked as revisions, as <c>Document.TrackRevisions</c> in Word.</summary>
+    /// <summary>
+    /// True if changes are tracked as revisions, as <c>Document.TrackRevisions</c> in Word. Reading it works for any document. Turning it on is
+    /// not supported yet, because edits made through this library are not recorded as revisions (tracked insertions and deletions), so a
+    /// document that says it tracks changes would be edited without tracking: the setter throws instead. Turning it off is allowed.
+    /// </summary>
+    /// <exception cref="NotSupportedException">Setting it to true when it is off.</exception>
     public bool TrackRevisions
     {
         get
@@ -262,9 +267,9 @@ public partial class WordprocessingDocumentWrapper
             {
                 GetSettings(false)?.RemoveAllChildren<TrackRevisions>();
             }
-            else if (GetSettings(true).GetFirstChild<TrackRevisions>() == null)
+            else if (!TrackRevisions)
             {
-                GetSettings(true).AddChild(new TrackRevisions());
+                throw new NotSupportedException("Tracking changes is not supported yet: edits made through the library are not recorded as revisions.");
             }
         }
     }

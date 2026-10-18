@@ -410,11 +410,27 @@ public class DocumentWordMembersTest : IDisposable
     }
 
     [Fact]
+    public void ADocumentThatAlreadyTracksChangesReadsTrueAndCanHaveItSwitchedOff()
+    {
+        MainDocumentPart mainDocumentPart = _document.WordprocessingDocument.MainDocumentPart;
+        DocumentSettingsPart settingsPart = mainDocumentPart.DocumentSettingsPart ?? mainDocumentPart.AddNewPart<DocumentSettingsPart>();
+        settingsPart.Settings = new Settings(new TrackRevisions());
+
+        Assert.True(_document.TrackRevisions);
+        _document.TrackRevisions = true;
+        Assert.True(_document.TrackRevisions);
+
+        _document.TrackRevisions = false;
+        Assert.False(_document.TrackRevisions);
+        Assert.Null(settingsPart.Settings.GetFirstChild<TrackRevisions>());
+    }
+    [Fact]
     public void TrackRevisionsAndCompatibilityModeAreSettings()
     {
         Assert.False(_document.TrackRevisions);
-        _document.TrackRevisions = true;
-        Assert.True(_document.TrackRevisions);
+        //Turning tracking on is not supported while the library does not record revisions, and it leaves the document as it was.
+        Assert.Throws<NotSupportedException>(() => _document.TrackRevisions = true);
+        Assert.False(_document.TrackRevisions);
         _document.TrackRevisions = false;
         Assert.False(_document.TrackRevisions);
 
