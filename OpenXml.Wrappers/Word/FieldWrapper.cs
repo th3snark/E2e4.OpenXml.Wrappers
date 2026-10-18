@@ -31,14 +31,14 @@ public class FieldWrapper : System.IEquatable<FieldWrapper>
 
     public FieldWrapper(SimpleField simpleField)
     {
-        ArgumentNullException.ThrowIfNull(simpleField);
+        Guard.ThrowIfNull(simpleField);
         _simpleField = simpleField;
     }
 
     /// <param name="begin">The begin character of a complex field.</param>
     public FieldWrapper(FieldChar begin)
     {
-        ArgumentNullException.ThrowIfNull(begin);
+        Guard.ThrowIfNull(begin);
         if (!(begin.Parent is Run) || begin.FieldCharType == null || !begin.FieldCharType.HasValue || begin.FieldCharType.Value != FieldCharValues.Begin)
         {
             throw new ArgumentException("The element is not the begin character of a field.", nameof(begin));
@@ -152,7 +152,7 @@ public class FieldWrapper : System.IEquatable<FieldWrapper>
         }
         set
         {
-            ArgumentNullException.ThrowIfNull(value);
+            Guard.ThrowIfNull(value);
             string code = " " + value.Trim() + " ";
             if (_simpleField != null)
             {

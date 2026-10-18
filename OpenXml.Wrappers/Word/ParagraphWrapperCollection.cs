@@ -28,7 +28,7 @@ public class ParagraphWrapperCollection : IEnumerable<ParagraphWrapper>
         {
             try
             {
-                ArgumentOutOfRangeException.ThrowIfNegative(index);
+                Guard.ThrowIfNegative(index);
                 return new ParagraphWrapper(GetElements().Skip(index).First());
             }
             catch (InvalidOperationException ex)

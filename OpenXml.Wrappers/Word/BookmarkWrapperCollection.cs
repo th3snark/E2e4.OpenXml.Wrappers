@@ -74,7 +74,7 @@ public class BookmarkWrapperCollection : IEnumerable<BookmarkWrapper>
     /// <exception cref="NotSupportedException">The range is of a type that cannot be bookmarked.</exception>
     public BookmarkWrapper Add(string name, RangeWrapper range)
     {
-        ArgumentNullException.ThrowIfNull(range);
+        Guard.ThrowIfNull(range);
         if (String.IsNullOrEmpty(name) || name.Length > 40 || !Char.IsLetter(name[0]) || !name.All(c => Char.IsLetterOrDigit(c) || c == '_'))
         {
             throw new ArgumentException("A bookmark name must start with a letter, contain only letters, digits and underscores, and be at most 40 characters long.", nameof(name));

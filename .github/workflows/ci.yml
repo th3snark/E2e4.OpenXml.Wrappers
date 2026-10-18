@@ -23,6 +23,7 @@ jobs:
       - uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
+          dotnet-version: 8.0.x
 
       # CI=true is set by GitHub Actions, so warnings are errors (see Directory.Build.props).
       - name: Restore
@@ -62,6 +63,7 @@ jobs:
       - uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
+          dotnet-version: 8.0.x
       - name: Check for vulnerable or deprecated packages
         shell: bash
         run: |

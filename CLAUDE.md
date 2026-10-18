@@ -8,7 +8,7 @@ A C# library (`OpenXml.Wrappers`, namespace `OpenXml.Wrappers.Word`) that wraps 
 
 ## Build & test
 
-Targets **.NET 10** with `DocumentFormat.OpenXml` 3.x; the `dotnet` CLI is all that is needed:
+The library targets `net10.0`, `net8.0` and `netstandard2.0` (`Compat.cs` and `Polyfills.cs` hold the few newer BCL members the code uses, for `netstandard2.0`; use `Guard.ThrowIfNull` and friends rather than `ArgumentNullException.ThrowIfNull`, and avoid `Span`, `Index`/`Range` and `HashCode`-style APIs that `netstandard2.0` lacks without extra packages: `DocumentFormat.OpenXml` must stay the only dependency). The tests and samples target `net10.0`, `net8.0` and `net48`, so `net48` runs the `netstandard2.0` build (Windows only; CI runs on Windows). It builds with the .NET 10 SDK and needs the .NET 8 runtime and `DocumentFormat.OpenXml` 3.x; the `dotnet` CLI is all that is needed:
 
 ```bash
 dotnet build E2e4.OpenXml.Wrappers.slnx
@@ -24,7 +24,7 @@ dotnet format E2e4.OpenXml.Wrappers.slnx --verify-no-changes
 
 ## Build configuration
 
-- Shared settings (target framework, `LangVersion`, `ImplicitUsings`, `AnalysisLevel`, version/company/product metadata) live in `Directory.Build.props`. There are no `AssemblyInfo.cs` files; assembly attributes come from csproj properties.
+- Shared settings (target framework, `LangVersion`, `ImplicitUsings`, `AnalysisLevel`, version/company/product metadata) live in `Directory.Build.props` (the target frameworks are in each project file). There are no `AssemblyInfo.cs` files; assembly attributes come from csproj properties.
 - `.editorconfig` is authoritative for formatting (4-space indent, CRLF, UTF-8 without BOM, file-scoped namespaces) and analyzer severities. `.gitattributes` stores text as LF in the repo and checks source/project files out as CRLF.
 - `AnalysisLevel` is `latest-recommended`: the build must stay at zero warnings, and under `CI=true` warnings are errors.
 - `Nullable` is deliberately **disabled**: the code predates nullable annotations and enabling it yields ~250 warnings.

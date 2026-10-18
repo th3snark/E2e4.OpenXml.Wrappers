@@ -173,7 +173,7 @@ public class TableFormattingTest
         new TableWrapper(table).Columns[1].Delete();
 
         Assert.Equal(2, table.GetFirstChild<TableGrid>().Elements<GridColumn>().Count());
-        Assert.All(table.Elements<TableRow>(), r => Assert.Equal(new[] { 0, 2 }, r.Elements<TableCell>().Select(c => Int32.Parse(c.InnerText.AsSpan(2), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture)).ToArray()));
+        Assert.All(table.Elements<TableRow>(), r => Assert.Equal(new[] { 0, 2 }, r.Elements<TableCell>().Select(c => Convert.ToInt32(c.InnerText.Substring(2), System.Globalization.CultureInfo.InvariantCulture)).ToArray()));
     }
 
     [Fact]

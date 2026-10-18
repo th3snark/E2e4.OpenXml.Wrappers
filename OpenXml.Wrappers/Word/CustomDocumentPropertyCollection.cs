@@ -22,7 +22,7 @@ public class CustomDocumentPropertyCollection : IEnumerable<CustomDocumentProper
 
     public CustomDocumentPropertyCollection(WordprocessingDocument document)
     {
-        ArgumentNullException.ThrowIfNull(document);
+        Guard.ThrowIfNull(document);
         _document = document;
     }
 

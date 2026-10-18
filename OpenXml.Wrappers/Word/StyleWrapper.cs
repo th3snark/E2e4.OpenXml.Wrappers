@@ -18,7 +18,7 @@ public class StyleWrapper : System.IEquatable<StyleWrapper>
 
     public StyleWrapper(Style style)
     {
-        ArgumentNullException.ThrowIfNull(style);
+        Guard.ThrowIfNull(style);
         _style = style;
     }
 

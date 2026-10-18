@@ -18,7 +18,7 @@ public class StyleWrapperCollection : IEnumerable<StyleWrapper>
 
     public StyleWrapperCollection(MainDocumentPart mainDocumentPart)
     {
-        ArgumentNullException.ThrowIfNull(mainDocumentPart);
+        Guard.ThrowIfNull(mainDocumentPart);
         _mainDocumentPart = mainDocumentPart;
     }
 
@@ -74,7 +74,7 @@ public class StyleWrapperCollection : IEnumerable<StyleWrapper>
         {
             throw new ArgumentException("A style needs a name.", nameof(name));
         }
-        if (!Enum.IsDefined(type))
+        if (!EnumCompat.IsDefined(type))
         {
             throw new ArgumentOutOfRangeException(nameof(type));
         }
@@ -123,7 +123,7 @@ public class StyleWrapperCollection : IEnumerable<StyleWrapper>
     /// <exception cref="InvalidOperationException">The style is built in, or is the default style of its type.</exception>
     public void Delete(StyleWrapper style)
     {
-        ArgumentNullException.ThrowIfNull(style);
+        Guard.ThrowIfNull(style);
         if (style.Style.Parent == null || style.Style.GetRoot() != _mainDocumentPart.StyleDefinitionsPart?.Styles)
         {
             throw new ArgumentException("The style is not a style of this document.", nameof(style));

@@ -34,7 +34,7 @@ public class BordersWrapper
     {
         get
         {
-            if (!Enum.IsDefined(position))
+            if (!EnumCompat.IsDefined(position))
             {
                 throw new ArgumentOutOfRangeException(nameof(position));
             }

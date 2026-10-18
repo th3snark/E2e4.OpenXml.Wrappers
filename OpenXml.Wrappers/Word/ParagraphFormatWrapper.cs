@@ -62,14 +62,14 @@ public class ParagraphFormatWrapper
 
     public ParagraphFormatWrapper(RangeWrapper range)
     {
-        ArgumentNullException.ThrowIfNull(range);
+        Guard.ThrowIfNull(range);
         _range = range;
     }
 
     //The paragraph format of a style: the paragraph properties of the style itself, without anything it inherits from the style it is based on.
     internal ParagraphFormatWrapper(Style style)
     {
-        ArgumentNullException.ThrowIfNull(style);
+        Guard.ThrowIfNull(style);
         _style = style;
     }
 
@@ -127,7 +127,7 @@ public class ParagraphFormatWrapper
         }
         set
         {
-            if (value.HasValue && !Enum.IsDefined(value.Value))
+            if (value.HasValue && !EnumCompat.IsDefined(value.Value))
             {
                 throw new ArgumentOutOfRangeException(nameof(value));
             }
@@ -349,7 +349,7 @@ public class ParagraphFormatWrapper
         }
         set
         {
-            if (value.HasValue && !Enum.IsDefined(value.Value))
+            if (value.HasValue && !EnumCompat.IsDefined(value.Value))
             {
                 throw new ArgumentOutOfRangeException(nameof(value));
             }

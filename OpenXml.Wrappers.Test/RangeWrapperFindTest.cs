@@ -362,7 +362,7 @@ public class RangeWrapperFindTest
         new RangeWrapper(table).Find.Execute("cat", replaceWith: "dog", replace: ReplaceMode.All);
 
         Assert.DoesNotContain("cat", new RangeWrapper(table).Text);
-        Assert.Equal(3, new RangeWrapper(table).Text.Split("dog").Length - 1);
+        Assert.Equal(3, new RangeWrapper(table).Text.Split(new[] { "dog" }, StringSplitOptions.None).Length - 1);
     }
 
     [Fact]

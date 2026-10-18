@@ -22,7 +22,7 @@ permissions:
 jobs:
   publish:
     name: Build, test and push
-    runs-on: ubuntu-24.04
+    runs-on: windows-latest
     # The environment waits for the owner's approval before the job (and so the nuget.org login) runs.
     environment: nuget
     steps:
@@ -31,6 +31,7 @@ jobs:
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
         with:
           global-json-file: global.json
+          dotnet-version: 8.0.x
 
       - name: Restore
         if: ${{ !inputs.dry_run }}

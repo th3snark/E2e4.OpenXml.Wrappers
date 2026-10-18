@@ -29,14 +29,14 @@ public class FontWrapper
 
     public FontWrapper(RangeWrapper range)
     {
-        ArgumentNullException.ThrowIfNull(range);
+        Guard.ThrowIfNull(range);
         _range = range;
     }
 
     //The font of a style: the run properties of the style itself, without anything it inherits from the style it is based on.
     internal FontWrapper(Style style)
     {
-        ArgumentNullException.ThrowIfNull(style);
+        Guard.ThrowIfNull(style);
         _style = style;
     }
 

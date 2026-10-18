@@ -5,6 +5,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 ## [1.0.0-preview.1] - 2026-10-17
 
 ### Added
+- Builds for `net10.0`, `net8.0` and `netstandard2.0` (so .NET Framework 4.6.1 and later and every .NET version are supported), with `DocumentFormat.OpenXml` as the only dependency. The tests run on `net10.0`, `net8.0` and `net48`.
 - `Section.Parent` (the sections of the document) and `Sections.Parent` (the range of the document), so every collection and wrapper has a `Parent`.
 - Word-object-model API over Open XML: ranges (insert, delete, find and replace, font, paragraph format, style, `InsertParagraphAfter`/`Before`), paragraphs, tables, rows, cells (merge, split, borders), columns, bookmarks (including tables), comments, fields, sections and page setup, headers and footers, styles, built-in and custom document properties, navigation and `Parent`.
 - 21 runnable examples in `samples/OpenXml.Wrappers.Samples`, validated by the test suite.

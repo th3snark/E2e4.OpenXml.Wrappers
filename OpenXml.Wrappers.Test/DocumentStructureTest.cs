@@ -169,7 +169,7 @@ public class DocumentStructureTest : IDisposable
     public void SectionStartAndDifferentFirstPageRoundTrip()
     {
         PageSetupWrapper setup = _document.Sections[0].PageSetup;
-        foreach (SectionStart start in Enum.GetValues<SectionStart>())
+        foreach (SectionStart start in EnumCompat.GetValues<SectionStart>())
         {
             setup.SectionStart = start;
             Assert.Equal(start, setup.SectionStart);

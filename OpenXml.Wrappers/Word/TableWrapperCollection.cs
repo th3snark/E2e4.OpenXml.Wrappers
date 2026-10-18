@@ -76,9 +76,9 @@ public class TableWrapperCollection : IEnumerable<TableWrapper>
     /// <exception cref="NotSupportedException">The range is of a type that cannot take a table.</exception>
     public TableWrapper Add(RangeWrapper range, int numRows, int numColumns)
     {
-        ArgumentNullException.ThrowIfNull(range);
-        ArgumentOutOfRangeException.ThrowIfLessThan(numRows, 1);
-        ArgumentOutOfRangeException.ThrowIfLessThan(numColumns, 1);
+        Guard.ThrowIfNull(range);
+        Guard.ThrowIfLessThan(numRows, 1);
+        Guard.ThrowIfLessThan(numColumns, 1);
 
         OpenXmlElement anchor = range.StartElement;
         if (anchor is BookmarkStart || anchor is CommentRangeStart)

@@ -51,7 +51,7 @@ public class CommentWrapperCollection : IEnumerable<CommentWrapper>
 
     public CommentWrapper Add(RangeWrapper range, string text)
     {
-        ArgumentNullException.ThrowIfNull(range);
+        Guard.ThrowIfNull(range);
 
         //Check that the range can be anchored before anything is changed so that no orphan comment is left behind.
         if (!range.IsSpan && !(range.StartElement is BookmarkStart || range.StartElement is Paragraph || range.StartElement is TableCell))

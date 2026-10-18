@@ -47,7 +47,7 @@ public class ReplacementWrapper
 /// </remarks>
 public class FindWrapper
 {
-    private static readonly System.Buffers.SearchValues<char> ControlCharacters = System.Buffers.SearchValues.Create("\t\n\r\v\f");
+    private static readonly char[] ControlCharacters = new char[] { '\t', '\n', '\r', '\v', '\f' };
 
     private readonly RangeWrapper _range;
 
@@ -58,7 +58,7 @@ public class FindWrapper
 
     public FindWrapper(RangeWrapper range)
     {
-        ArgumentNullException.ThrowIfNull(range);
+        Guard.ThrowIfNull(range);
         _range = range;
     }
 
@@ -368,13 +368,13 @@ public class FindWrapper
     {
         int index = map.IndexAt(start);
         if (index >= 0 && map.Atoms[index].Kind == AtomKind.Text && start + length <= map.Atoms[index].End
-            && replacement.AsSpan().IndexOfAny(ControlCharacters) < 0 && replacement.Length > 0)
+            && replacement.IndexOfAny(ControlCharacters) < 0 && replacement.Length > 0)
         {
             Atom atom = map.Atoms[index];
             Text text = (Text)atom.Element;
             string current = text.Text ?? String.Empty;
             int offset = start - atom.Start;
-            text.Text = String.Concat(current.AsSpan(0, offset), replacement, current.AsSpan(offset + length));
+            text.Text = String.Concat(current.Substring(0, offset), replacement, current.Substring(offset + length));
             text.Space = SpaceProcessingModeValues.Preserve;
             SpanRegistry.TextEdited(text, offset, length, replacement.Length);
             return replacement.Length;

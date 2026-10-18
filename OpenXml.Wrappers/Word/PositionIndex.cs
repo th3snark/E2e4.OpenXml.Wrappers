@@ -31,7 +31,7 @@ public sealed class PositionIndex
     /// </summary>
     public static PositionIndex Create(RangeWrapper range)
     {
-        ArgumentNullException.ThrowIfNull(range);
+        Guard.ThrowIfNull(range);
         return new PositionIndex(StoryMap.FindRoot(range.AnchorElement));
     }
 
@@ -75,7 +75,7 @@ public sealed class PositionIndex
     /// <exception cref="ArgumentException">The range is not in the story of the index.</exception>
     public (int Start, int End) PositionsOf(RangeWrapper range)
     {
-        ArgumentNullException.ThrowIfNull(range);
+        Guard.ThrowIfNull(range);
         if (!ReferenceEquals(StoryMap.FindRoot(range.AnchorElement), _story))
         {
             throw new ArgumentException("The range is not in the story that the index is of.", nameof(range));

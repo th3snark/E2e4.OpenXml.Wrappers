@@ -947,7 +947,7 @@ public static class OpenXmlExtensions
         text = text ?? String.Empty;
         StringBuilder sb = new StringBuilder();
         Run run = null;
-        foreach (char c in text.ToCharArray().Reverse())
+        foreach (char c in text.AsEnumerable().Reverse())
         {
             switch (c)
             {
@@ -998,7 +998,7 @@ public static class OpenXmlExtensions
     /// <returns>Truncated DateTime</returns>
     public static DateTime Truncate(this DateTime date, long resolution)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(resolution, 0L);
+        Guard.ThrowIfLessThanOrEqual(resolution, 0L);
         return new DateTime(date.Ticks - (date.Ticks % resolution), date.Kind);
     }
 

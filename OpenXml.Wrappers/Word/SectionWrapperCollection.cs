@@ -17,7 +17,7 @@ public class SectionWrapperCollection : IEnumerable<SectionWrapper>
 
     public SectionWrapperCollection(Body body)
     {
-        ArgumentNullException.ThrowIfNull(body);
+        Guard.ThrowIfNull(body);
         _body = body;
     }
 

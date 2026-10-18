@@ -1,10 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <TargetFrameworks>net10.0;net8.0;net48</TargetFrameworks>
     <RootNamespace>OpenXml.Wrappers.Test</RootNamespace>
     <AssemblyName>OpenXml.Wrappers.Test</AssemblyName>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
   </PropertyGroup>
 
   <ItemGroup>
@@ -26,6 +29,10 @@
     <None Update="TestFiles\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\build\IsExternalInit.cs" Link="IsExternalInit.cs" Condition="'$(TargetFramework)' == 'net48'" />
   </ItemGroup>
 
 </Project>

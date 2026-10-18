@@ -55,9 +55,9 @@ public class CommentWrapper : System.IEquatable<CommentWrapper>
             Comment comment = _commentRangeStart.GetComment();
             string[] lines = (value ?? String.Empty).Replace("\r\n", "\r", StringComparison.Ordinal).Replace('\n', '\r').Split('\r');
             //A single trailing paragraph mark ends the last paragraph rather than starting an empty one.
-            if (lines.Length > 1 && lines[^1].Length == 0)
+            if (lines.Length > 1 && lines[lines.Length - 1].Length == 0)
             {
-                lines = lines[..^1];
+                lines = lines.Take(lines.Length - 1).ToArray();
             }
 
             comment.RemoveAllChildren();

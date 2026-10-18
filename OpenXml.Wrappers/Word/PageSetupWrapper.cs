@@ -114,7 +114,7 @@ public class PageSetupWrapper
         }
         set
         {
-            if (!Enum.IsDefined(value))
+            if (!EnumCompat.IsDefined(value))
             {
                 throw new ArgumentOutOfRangeException(nameof(value));
             }
@@ -244,7 +244,7 @@ public class PageSetupWrapper
         }
         set
         {
-            if (!Enum.IsDefined(value))
+            if (!EnumCompat.IsDefined(value))
             {
                 throw new ArgumentOutOfRangeException(nameof(value));
             }

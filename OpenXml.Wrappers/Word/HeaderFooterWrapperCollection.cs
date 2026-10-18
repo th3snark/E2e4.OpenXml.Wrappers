@@ -31,7 +31,7 @@ public class HeaderFooterWrapperCollection : IEnumerable<HeaderFooterWrapper>
     {
         get
         {
-            if (!Enum.IsDefined(index))
+            if (!EnumCompat.IsDefined(index))
             {
                 throw new ArgumentOutOfRangeException(nameof(index));
             }

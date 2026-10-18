@@ -171,7 +171,7 @@ public class BorderWrapper
 
     private static BorderLineStyle Map(BorderValues value)
     {
-        foreach (BorderLineStyle style in Enum.GetValues<BorderLineStyle>())
+        foreach (BorderLineStyle style in EnumCompat.GetValues<BorderLineStyle>())
         {
             if (style != BorderLineStyle.None && style != BorderLineStyle.Other && ToValue(style) == value)
             {

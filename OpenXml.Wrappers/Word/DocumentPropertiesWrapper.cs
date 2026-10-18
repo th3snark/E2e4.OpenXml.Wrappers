@@ -17,7 +17,7 @@ public class DocumentPropertiesWrapper
 
     public DocumentPropertiesWrapper(WordprocessingDocument document)
     {
-        ArgumentNullException.ThrowIfNull(document);
+        Guard.ThrowIfNull(document);
         _document = document;
     }
 

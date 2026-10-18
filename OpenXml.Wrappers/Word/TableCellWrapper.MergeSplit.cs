@@ -18,7 +18,7 @@ public partial class TableCellWrapper
     /// <exception cref="NotSupportedException">The rectangle cuts through a cell that is merged horizontally, or contains older horizontal merges (<c>hMerge</c>).</exception>
     public void Merge(TableCellWrapper mergeTo)
     {
-        ArgumentNullException.ThrowIfNull(mergeTo);
+        Guard.ThrowIfNull(mergeTo);
         Table table = _tableCell.Ancestors<Table>().FirstOrDefault();
         if (table == null || mergeTo._tableCell.Ancestors<Table>().FirstOrDefault() != table)
         {
@@ -134,8 +134,8 @@ public partial class TableCellWrapper
     /// columns to split into does not divide the span, or a cell involved uses the older horizontal merge.</exception>
     public void Split(int numRows, int numColumns)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(numRows, 1);
-        ArgumentOutOfRangeException.ThrowIfLessThan(numColumns, 1);
+        Guard.ThrowIfLessThan(numRows, 1);
+        Guard.ThrowIfLessThan(numColumns, 1);
         if (numRows == 1 && numColumns == 1)
         {
             return;

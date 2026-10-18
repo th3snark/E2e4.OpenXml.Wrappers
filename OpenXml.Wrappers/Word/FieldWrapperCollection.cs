@@ -18,7 +18,7 @@ public class FieldWrapperCollection : IEnumerable<FieldWrapper>
 
     public FieldWrapperCollection(RangeWrapper range)
     {
-        ArgumentNullException.ThrowIfNull(range);
+        Guard.ThrowIfNull(range);
         _range = range;
     }
 
@@ -79,7 +79,7 @@ public class FieldWrapperCollection : IEnumerable<FieldWrapper>
     /// </summary>
     public FieldWrapper Add(RangeWrapper range, string code)
     {
-        ArgumentNullException.ThrowIfNull(range);
+        Guard.ThrowIfNull(range);
         if (String.IsNullOrWhiteSpace(code))
         {
             throw new ArgumentException("A field needs a code.", nameof(code));

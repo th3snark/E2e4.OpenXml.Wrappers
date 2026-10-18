@@ -21,7 +21,7 @@ Typical uses: filling templates and mail merges, generating reports, invoices an
 
 ## Requirements
 
-- .NET 10 SDK
+- Any platform that DocumentFormat.OpenXml supports and that .NET Standard 2.0 covers: .NET 10, .NET 8 and later, .NET Core, and .NET Framework 4.6.1 and later (the package has builds for `net10.0`, `net8.0` and `netstandard2.0`). Building this repository needs the .NET 10 SDK, and running all its tests needs the .NET 8 runtime and, on Windows, .NET Framework 4.8.
 - `DocumentFormat.OpenXml` 3.x (restored automatically)
 
 ## Usage
