@@ -74,14 +74,14 @@ public class ParagraphWrapperTest : System.IDisposable
     public void RangeTextPropertyIsCorrect()
     {
         Assert.Equal("Test Document\r", _document1.Content.FirstParagraph.Range.Text);
-        Assert.Equal("Test Document", _document1.Content.FirstParagraph.Text);
+        Assert.Equal("Test Document\r", _document1.Content.FirstParagraph.Text);
     }
 
     [Fact]
     public void RangeFirstParagraphRangeTextPropertyIsCorrect()
     {
         Assert.Equal("Test Document\r", _document1.Content.FirstParagraph.Range.Text);
-        Assert.Equal("Test Document", _document1.Content.FirstParagraph.Text);
+        Assert.Equal("Test Document\r", _document1.Content.FirstParagraph.Text);
     }
 
     [Fact]
@@ -196,7 +196,7 @@ public class ParagraphWrapperTest : System.IDisposable
     public void EmptyParagraphRangeTextIsTheParagraphMarker()
     {
         Assert.Equal("\r", new ParagraphWrapper(new Paragraph()).Range.Text);
-        Assert.Equal(String.Empty, new ParagraphWrapper(new Paragraph()).Text);
+        Assert.Equal("\r", new ParagraphWrapper(new Paragraph()).Text);
     }
 
     [Fact]
@@ -231,7 +231,7 @@ public class ParagraphWrapperTest : System.IDisposable
         ParagraphWrapper wrapper = new ParagraphWrapper(new Paragraph(new Run(new Text("a"))));
 
         Assert.Equal(1, wrapper.Range.Paragraphs.Count);
-        Assert.Equal("a", wrapper.Range.FirstParagraph.Text);
+        Assert.Equal("a\r", wrapper.Range.FirstParagraph.Text);
     }
 
     [Fact]
@@ -244,5 +244,25 @@ public class ParagraphWrapperTest : System.IDisposable
         Assert.NotNull(run.RunProperties);
         Assert.Empty(run.Elements<ParagraphMarkRunProperties>());
         Assert.Single(run.RunProperties.Elements<Bold>());
+    }
+
+    [Fact]
+    public void TextEndsWithTheParagraphMark()
+    {
+        Assert.Equal("a\r", new ParagraphWrapper(new Paragraph(new Run(new Text("a")))).Text);
+    }
+
+    [Fact]
+    public void SettingTextKeepsTheParagraphMarkSoTheTextCanBeSetBackUnchanged()
+    {
+        Paragraph paragraph = new Paragraph(new Run(new Text("a")));
+        ParagraphWrapper wrapper = new ParagraphWrapper(paragraph);
+
+        wrapper.Text = wrapper.Text;
+        Assert.Equal("a\r", wrapper.Text);
+
+        wrapper.Text = "b\r";
+        Assert.Equal("b\r", wrapper.Text);
+        Assert.Single(paragraph.Elements<Run>());
     }
 }

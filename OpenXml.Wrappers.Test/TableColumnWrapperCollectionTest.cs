@@ -78,4 +78,23 @@ public class TableColumnWrapperCollectionTest
 
         Assert.Throws<InvalidOperationException>(() => new TableWrapper(table).Columns.Add());
     }
+
+    [Fact]
+    public void ATableWithoutAGridHasNoColumns()
+    {
+        TableWrapper table = new TableWrapper(new Table(new TableRow(new TableCell(new Paragraph()))));
+
+        Assert.Equal(0, table.Columns.Count);
+        Assert.Empty(table.Columns);
+        Assert.Throws<ArgumentOutOfRangeException>(() => table.Columns[0]);
+        Assert.Throws<InvalidOperationException>(() => table.Columns.Add());
+    }
+
+    [Fact]
+    public void ParentIsNullWhenTheCollectionIsNotTheColumnsOfATable()
+    {
+        Assert.Null(new TableColumnWrapperCollection(new RangeWrapper(new Paragraph())).Parent);
+        Assert.Null(new TableRowWrapperCollection(new RangeWrapper(new Paragraph())).Parent);
+        Assert.Null(new TableCellWrapperCollection(new RangeWrapper(new Paragraph())).Parent);
+    }
 }

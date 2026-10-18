@@ -43,12 +43,13 @@ public class ParagraphWrapper : System.IEquatable<ParagraphWrapper>
     }
 
     /// <summary>
-    /// The text of the paragraph without its paragraph mark. (Word has no <c>Paragraph.Text</c>; <c>Range.Text</c> of the paragraph includes the
-    /// mark as a carriage return.)
+    /// The text of the paragraph, ending with its paragraph mark as a carriage return, as <c>Paragraph.Range.Text</c> in Word (for a paragraph
+    /// in a table cell the last one ends with the end-of-cell mark <c>\a</c>). Setting it keeps the paragraph mark: one at the end of the
+    /// new text is ignored, so that <c>paragraph.Text = paragraph.Text</c> changes nothing.
     /// </summary>
     public string Text
     {
-        get { return Range.Text.TrimEnd('\r', '\a'); }
+        get { return Range.Text; }
         set { Range.Text = value; }
     }
 
@@ -189,33 +190,28 @@ public class ParagraphWrapper : System.IEquatable<ParagraphWrapper>
     }
 
     /// <summary>
-    /// Ends a section with this paragraph. <paramref name="type"/> says how the section that follows starts: "nextPage", "continuous",
-    /// "evenPage", "oddPage" or "nextColumn". Returns the properties of the section that ends here, which are a copy of the final section's.
+    /// Ends a section with this paragraph, so that the paragraph is the last one of the section. <paramref name="start"/> says how the section
+    /// that follows starts. (<see cref="RangeWrapper.InsertBreak"/> is Word's way to insert a section break, at a place in the text; this is
+    /// the same break with the paragraph as its place.)
     /// </summary>
-    public SectionProperties InsertSectionBreak(string type)
+    /// <exception cref="ArgumentOutOfRangeException">The start is not a section start.</exception>
+    public void InsertSectionBreak(SectionStart start = SectionStart.NewPage)
     {
-        SectionMarkValues markType;
-        switch (type)
+        if (!EnumCompat.IsDefined(start))
         {
-            case "nextPage":
-                markType = SectionMarkValues.NextPage;
-                break;
-            case "continuous":
-                markType = SectionMarkValues.Continuous;
-                break;
-            case "evenPage":
-                markType = SectionMarkValues.EvenPage;
-                break;
-            case "oddPage":
-                markType = SectionMarkValues.OddPage;
-                break;
-            case "nextColumn":
-                markType = SectionMarkValues.NextColumn;
-                break;
-            default:
-                throw new ArgumentException(String.Format(CultureInfo.InvariantCulture, "The section break type '{0}' is not a recognised type.", type), nameof(type));
+            throw new ArgumentOutOfRangeException(nameof(start));
         }
 
+        EndSection(start == SectionStart.Continuous ? SectionMarkValues.Continuous
+            : start == SectionStart.EvenPage ? SectionMarkValues.EvenPage
+            : start == SectionStart.OddPage ? SectionMarkValues.OddPage
+            : start == SectionStart.NewColumn ? SectionMarkValues.NextColumn
+            : SectionMarkValues.NextPage);
+    }
+
+    //Ends a section with this paragraph and returns the properties of the section that ends here, which are a copy of the final section's.
+    internal SectionProperties EndSection(SectionMarkValues markType)
+    {
         //Add a new paragraph properties if one does not exist.
         ParagraphProperties paragraphProperties = _paragraph.ParagraphProperties;
         if (paragraphProperties == null)

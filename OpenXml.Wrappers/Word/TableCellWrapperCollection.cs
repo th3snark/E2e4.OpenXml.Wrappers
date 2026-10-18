@@ -18,7 +18,7 @@ public class TableCellWrapperCollection : IEnumerable<TableCellWrapper>
 
     public TableRowWrapper Parent
     {
-        get { return new TableRowWrapper((TableRow)_range.StartElement); }
+        get { return _range.StartElement is TableRow row ? new TableRowWrapper(row) : null; }
     }
 
     public TableCellWrapper this[int index]

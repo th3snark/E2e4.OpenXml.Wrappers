@@ -27,12 +27,12 @@ public class RangeWrapperFindOptionsTest
 
         Assert.True(range.Find.Execute("cat"));
         Assert.Equal("cat", range.Text);
-        Assert.Equal("three cat", range.Paragraphs[0].Text);
+        Assert.Equal("three cat\r", range.Paragraphs[0].Text);
 
         Assert.True(range.Find.Execute("cat"));
-        Assert.Equal("two cat", range.Paragraphs[0].Text);
+        Assert.Equal("two cat\r", range.Paragraphs[0].Text);
         Assert.True(range.Find.Execute("cat"));
-        Assert.Equal("one cat", range.Paragraphs[0].Text);
+        Assert.Equal("one cat\r", range.Paragraphs[0].Text);
         Assert.False(range.Find.Execute("cat"));
     }
 

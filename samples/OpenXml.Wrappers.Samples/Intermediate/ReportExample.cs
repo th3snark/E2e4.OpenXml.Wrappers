@@ -43,7 +43,7 @@ internal static class ReportExample
 
             //The appendix has a wide table, so it is on landscape pages in a section of its own.
             ParagraphWrapper endOfBody = builder.Paragraph("This is the end of the main report.");
-            endOfBody.InsertSectionBreak("nextPage");
+            endOfBody.InsertSectionBreak(SectionStart.NewPage);
             builder.Paragraph("Appendix: monthly readings", "Heading 1");
             TableWrapper table = builder.Table(13, 6);
             string[] heading = { "Month", "Building A", "Building B", "Building C", "Total (m3)", "Change on 2024" };

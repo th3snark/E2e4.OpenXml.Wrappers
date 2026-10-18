@@ -623,7 +623,7 @@ public class PageNumbersWrapper
         }
 
         RangeWrapper range = _headerFooter.Range;
-        ParagraphWrapper paragraph = range.Paragraphs.Count == 1 && String.IsNullOrEmpty(range.Paragraphs[0].Text) ? range.Paragraphs[0] : range.InsertParagraphAfter();
+        ParagraphWrapper paragraph = range.Paragraphs.Count == 1 && range.Paragraphs[0].Text == "\r" ? range.Paragraphs[0] : range.InsertParagraphAfter();
         paragraph.Alignment = alignment == PageNumberAlignment.Left ? ParagraphAlignment.Left : alignment == PageNumberAlignment.Center ? ParagraphAlignment.Center : ParagraphAlignment.Right;
         FieldWrapper field = range.Fields.Add(paragraph.Range, FieldType.Page);
 

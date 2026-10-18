@@ -44,7 +44,7 @@ public class TableWordMembersTest : IDisposable
         TableWrapper table = _document.Tables.Add(_document.Paragraphs[0].Range, 2, 2);
 
         Assert.Same(table.Table, _document.WordprocessingDocument.MainDocumentPart.Document.Body.FirstChild);
-        Assert.Equal("", _document.Paragraphs.Last.Text);
+        Assert.Equal("\r", _document.Paragraphs.Last.Text);
         Assert.DoesNotContain("Hello", _document.Content.Text);
         AssertValid();
     }

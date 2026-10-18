@@ -17,7 +17,7 @@ public class RangeWrapperFindTest
 
     private static string TextOf(Paragraph paragraph)
     {
-        return new ParagraphWrapper(paragraph).Text;
+        return new ParagraphWrapper(paragraph).Text.TrimEnd('\r');
     }
 
     [Fact]

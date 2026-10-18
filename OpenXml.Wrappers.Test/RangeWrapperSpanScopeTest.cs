@@ -144,7 +144,7 @@ public class RangeWrapperSpanScopeTest
 
         ParagraphWrapper second = hello.InsertParagraphAfter();
 
-        Assert.Equal(" world", second.Text);
+        Assert.Equal(" world\r", second.Text);
         Assert.Equal("Hello\r", hello.Text);
         Assert.Equal("Hello\r world\r", StoryText(body));
     }
@@ -192,7 +192,7 @@ public class RangeWrapperSpanScopeTest
         range.Delete();
 
         Assert.Single(cell.Elements<Paragraph>());
-        Assert.Equal("onthree", new ParagraphWrapper(cell.Elements<Paragraph>().Single()).Text);
+        Assert.Equal("onthree\r\a", new ParagraphWrapper(cell.Elements<Paragraph>().Single()).Text);
     }
 
     #endregion
@@ -228,7 +228,7 @@ public class RangeWrapperSpanScopeTest
 
         watch.Stop();
         Assert.True(watch.Elapsed < TimeSpan.FromSeconds(3), "Took " + watch.Elapsed);
-        Assert.Equal("befter", new ParagraphWrapper(body.Elements<Paragraph>().ElementAt(3001)).Text);
+        Assert.Equal("befter\r", new ParagraphWrapper(body.Elements<Paragraph>().ElementAt(3001)).Text);
         Assert.Empty(body.Descendants<Table>());
         Assert.Equal(6001, body.Elements<Paragraph>().Count());
     }

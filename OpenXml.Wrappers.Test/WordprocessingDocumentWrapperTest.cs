@@ -104,7 +104,7 @@ public class WordprocessingDocumentWrapperTest : System.IDisposable
 
             using (WordprocessingDocumentWrapper reopened = WordprocessingDocumentWrapper.Open(path))
             {
-                Assert.Equal("saved text", reopened.Paragraphs[0].Text);
+                Assert.Equal("saved text\r", reopened.Paragraphs[0].Text);
             }
         }
         finally
@@ -125,7 +125,7 @@ public class WordprocessingDocumentWrapperTest : System.IDisposable
                 document.Save();
                 document.Paragraphs[0].Text = "second";
 
-                Assert.Equal("second", document.Paragraphs[0].Text);
+                Assert.Equal("second\r", document.Paragraphs[0].Text);
             }
         }
         finally
@@ -146,7 +146,7 @@ public class WordprocessingDocumentWrapperTest : System.IDisposable
                 document.Paragraphs[0].Text = "copied text";
                 using (WordprocessingDocumentWrapper copy = document.SaveAs(copyPath))
                 {
-                    Assert.Equal("copied text", copy.Paragraphs[0].Text);
+                    Assert.Equal("copied text\r", copy.Paragraphs[0].Text);
                 }
 
                 document.Paragraphs[0].Text = "original only";
@@ -154,7 +154,7 @@ public class WordprocessingDocumentWrapperTest : System.IDisposable
 
             using (WordprocessingDocumentWrapper reopened = WordprocessingDocumentWrapper.Open(copyPath))
             {
-                Assert.Equal("copied text", reopened.Paragraphs[0].Text);
+                Assert.Equal("copied text\r", reopened.Paragraphs[0].Text);
             }
         }
         finally
@@ -176,7 +176,7 @@ public class WordprocessingDocumentWrapperTest : System.IDisposable
 
             using (WordprocessingDocumentWrapper reopened = WordprocessingDocumentWrapper.Open(stream, false))
             {
-                Assert.Equal("in a stream", reopened.Paragraphs[0].Text);
+                Assert.Equal("in a stream\r", reopened.Paragraphs[0].Text);
             }
         }
     }
@@ -197,14 +197,14 @@ public class WordprocessingDocumentWrapperTest : System.IDisposable
     public void LastParagraphPropertyIsCorrect()
     {
         Assert.Equal("Last Line\r", _document1.Content.LastParagraph.Range.Text);
-        Assert.Equal("Last Line", _document1.Content.LastParagraph.Text);
+        Assert.Equal("Last Line\r", _document1.Content.LastParagraph.Text);
     }
 
     [Fact]
     public void FirstParagraphPropertyIsCorrect()
     {
         Assert.Equal("Test Document\r", _document1.Content.FirstParagraph.Range.Text);
-        Assert.Equal("Test Document", _document1.Content.FirstParagraph.Text);
+        Assert.Equal("Test Document\r", _document1.Content.FirstParagraph.Text);
     }
 
     [Fact]
@@ -231,5 +231,27 @@ public class WordprocessingDocumentWrapperTest : System.IDisposable
         _document2.CopyLayoutTo(reportWordprocessingDocumentWrapper);
 
         reportWordprocessingDocumentWrapper.Close();
+    }
+
+    [Fact]
+    public void InitializeCommentsPartKeepsTheCommentsThatAreThere()
+    {
+        string path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), Guid.NewGuid().ToString("N") + ".docx");
+        try
+        {
+            using (WordprocessingDocumentWrapper document = WordprocessingDocumentWrapper.Create(path, true, true))
+            {
+                document.Paragraphs[0].Range.Text = "text";
+                document.Comments.Add(document.Paragraphs[0].Range, "note");
+
+                document.InitializeCommentsPart();
+
+                Assert.Equal(1, document.Comments.Count);
+            }
+        }
+        finally
+        {
+            System.IO.File.Delete(path);
+        }
     }
 }

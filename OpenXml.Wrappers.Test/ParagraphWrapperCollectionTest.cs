@@ -29,7 +29,7 @@ public class ParagraphWrapperCollectionTest : System.IDisposable
         IEnumerable<ParagraphWrapper> paragraphs = _document1.Paragraphs;
 
         Assert.Equal(_document1.Paragraphs.Count, paragraphs.Count());
-        Assert.Equal("Test Document", paragraphs.Select(p => p.Text).First());
+        Assert.Equal("Test Document\r", paragraphs.Select(p => p.Text).First());
     }
 
     [Fact]

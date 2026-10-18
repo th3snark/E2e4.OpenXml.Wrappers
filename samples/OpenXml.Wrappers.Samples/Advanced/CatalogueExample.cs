@@ -50,7 +50,7 @@ internal static class CatalogueExample
                 }
 
                 //Each category, and then the index, is a section of its own.
-                builder.Paragraph(string.Empty).InsertSectionBreak("nextPage");
+                builder.Paragraph(string.Empty).InsertSectionBreak(SectionStart.NewPage);
             }
 
             //Index of all products.

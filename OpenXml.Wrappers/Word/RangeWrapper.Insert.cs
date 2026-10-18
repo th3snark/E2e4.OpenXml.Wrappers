@@ -22,9 +22,10 @@ public partial class RangeWrapper
     }
 
     /// <summary>
-    /// Inserts text at the end of the range. For a paragraph (and for a table cell or the document) the text is added at the end of the
-    /// last paragraph, before its paragraph mark. In Word the text of a whole-paragraph range goes after the paragraph mark, which is at
-    /// the start of the next paragraph. See <see cref="InsertBefore"/> for the other rules.
+    /// Inserts text at the end of the range. For a paragraph the text goes after the paragraph mark, so it appears at the start of the next
+    /// paragraph (or of the first paragraph of a table that follows), as in Word; the last paragraph of a body, header, footer or table cell
+    /// has nothing after it, so there the text goes before its mark. For a table cell or the document the text is added at the end of the
+    /// last paragraph, before its paragraph mark. See <see cref="InsertBefore"/> for the other rules.
     /// </summary>
     /// <exception cref="NotSupportedException">The range is of a type that does not support inserting text, such as a table or table row.</exception>
     public void InsertAfter(string text)
@@ -77,7 +78,19 @@ public partial class RangeWrapper
 
         if (_startOpenXmlElement is Paragraph)
         {
-            InsertRunsIntoParagraph((Paragraph)_startOpenXmlElement, build, after);
+            Paragraph paragraph = (Paragraph)_startOpenXmlElement;
+            if (after)
+            {
+                //The text goes after the paragraph mark, which is at the start of the next paragraph. The last paragraph of a story has
+                //nothing after its mark, so there the text goes before it, as in Word.
+                Paragraph next = NextParagraphInStory(paragraph);
+                if (next != null)
+                {
+                    InsertRunsIntoParagraph(next, build, false);
+                    return;
+                }
+            }
+            InsertRunsIntoParagraph(paragraph, build, after);
         }
         else if (_startOpenXmlElement is TableCell)
         {
@@ -106,6 +119,18 @@ public partial class RangeWrapper
         {
             throw new NotSupportedException(String.Format(CultureInfo.InvariantCulture, "Inserting text is not currently supported for a range starting with the type {0}", _startOpenXmlElement.GetType().Name));
         }
+    }
+
+    //The paragraph that follows the paragraph mark of a paragraph that is directly in a body, header, footer or table cell: the next paragraph,
+    //or the first of the table that follows. Null at the end of the container (the paragraph mark of a cell is the end-of-cell mark).
+    private static Paragraph NextParagraphInStory(Paragraph paragraph)
+    {
+        OpenXmlElement sibling = paragraph.NextSibling();
+        while (sibling != null && !(sibling is Paragraph || sibling is Table))
+        {
+            sibling = sibling.NextSibling();
+        }
+        return sibling is Table table ? table.Descendants<Paragraph>().FirstOrDefault() : sibling as Paragraph;
     }
 
     private Body GetBody()

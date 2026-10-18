@@ -111,12 +111,12 @@ public class LegacyMembersTest
     }
 
     [Theory]
-    [InlineData("nextPage", SectionStart.NewPage)]
-    [InlineData("continuous", SectionStart.Continuous)]
-    [InlineData("evenPage", SectionStart.EvenPage)]
-    [InlineData("oddPage", SectionStart.OddPage)]
-    [InlineData("nextColumn", SectionStart.NewColumn)]
-    public void InsertSectionBreakSetsHowTheNextSectionStarts(string type, SectionStart expected)
+    [InlineData(SectionStart.NewPage)]
+    [InlineData(SectionStart.Continuous)]
+    [InlineData(SectionStart.EvenPage)]
+    [InlineData(SectionStart.OddPage)]
+    [InlineData(SectionStart.NewColumn)]
+    public void InsertSectionBreakSetsHowTheNextSectionStarts(SectionStart expected)
     {
         string path = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N") + ".docx");
         try
@@ -124,7 +124,7 @@ public class LegacyMembersTest
             using (WordprocessingDocumentWrapper document = WordprocessingDocumentWrapper.Create(path, true, false))
             {
                 document.Paragraphs[0].Range.Text = "one";
-                document.Paragraphs[0].InsertSectionBreak(type);
+                document.Paragraphs[0].InsertSectionBreak(expected);
 
                 Assert.Equal(2, document.Sections.Count);
                 Assert.Equal(expected, document.Sections[1].PageSetup.SectionStart);
@@ -144,7 +144,7 @@ public class LegacyMembersTest
         {
             using (WordprocessingDocumentWrapper document = WordprocessingDocumentWrapper.Create(path, true, false))
             {
-                Assert.Throws<ArgumentException>(() => document.Paragraphs[0].InsertSectionBreak("sideways"));
+                Assert.Throws<ArgumentOutOfRangeException>(() => document.Paragraphs[0].InsertSectionBreak((SectionStart)99));
             }
         }
         finally

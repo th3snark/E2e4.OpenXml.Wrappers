@@ -157,7 +157,8 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
             }
             else if (_startOpenXmlElement is Paragraph)
             {
-                SetParagraphRunText((Paragraph)_startOpenXmlElement, text);
+                //The paragraph mark stays, so the one that the text of a paragraph ends with is not part of the new text.
+                SetParagraphRunText((Paragraph)_startOpenXmlElement, text.EndsWith('\r') || text.EndsWith('\a') ? text.Substring(0, text.Length - 1) : text);
             }
             else if (_startOpenXmlElement is BookmarkStart)
             {

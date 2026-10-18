@@ -107,7 +107,7 @@ public class DocumentWordMembersTest : IDisposable
 
         header.Exists = true;
         Assert.True(header.Exists);
-        Assert.Equal("", header.Range.Paragraphs[0].Text);
+        Assert.Equal("\r", header.Range.Paragraphs[0].Text);
         header.Range.Text = "Top";
 
         header.Exists = false;

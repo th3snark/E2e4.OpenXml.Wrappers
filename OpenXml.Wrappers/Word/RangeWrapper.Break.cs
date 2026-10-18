@@ -42,15 +42,16 @@ public partial class RangeWrapper
             return;
         }
 
-        string sectionType = type == BreakType.SectionBreakContinuous ? "continuous"
-            : type == BreakType.SectionBreakEvenPage ? "evenPage"
-            : type == BreakType.SectionBreakOddPage ? "oddPage"
-            : "nextPage";
+        SectionMarkValues sectionType = type == BreakType.SectionBreakContinuous ? SectionMarkValues.Continuous
+            : type == BreakType.SectionBreakEvenPage ? SectionMarkValues.EvenPage
+            : type == BreakType.SectionBreakOddPage ? SectionMarkValues.OddPage
+            : SectionMarkValues.NextPage;
         ParagraphWrapper inserted = InsertParagraphBefore();
         //For a span the new paragraph is the second half of the split one; the first half ends the section.
         Paragraph ending = _isSpan && inserted.Paragraph.PreviousSibling<Paragraph>() != null ? inserted.Paragraph.PreviousSibling<Paragraph>() : inserted.Paragraph;
-        new ParagraphWrapper(ending).InsertSectionBreak(sectionType);
+        new ParagraphWrapper(ending).EndSection(sectionType);
     }
+
     /// <summary>
     /// Makes room for a block (a table, say) at the start of a span: the text of a span that is not collapsed is deleted, and the paragraph is
     /// split at that point unless it is already at the start of one. Returns the paragraph that the block goes in front of.

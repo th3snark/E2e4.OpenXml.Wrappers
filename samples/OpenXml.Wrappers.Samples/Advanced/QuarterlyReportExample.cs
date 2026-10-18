@@ -162,7 +162,7 @@ internal static class QuarterlyReportExample
             ParagraphWrapper endOfMain = builder.Paragraph("Appendix A follows on landscape pages.");
 
             //Appendix A: monthly revenue by region, in a section of its own on landscape pages.
-            endOfMain.InsertSectionBreak("nextPage");
+            endOfMain.InsertSectionBreak(SectionStart.NewPage);
             builder.Paragraph("Appendix A: monthly revenue (thousands)", "Heading 1");
             string[] months = { "July", "August", "September" };
             TableWrapper monthly = builder.Table(1 + regions.Length, 1 + months.Length + 1);

@@ -78,7 +78,7 @@ internal static class AgreementExample
 
             //The schedule goes in a section of its own.
             ParagraphWrapper end = builder.Paragraph(string.Empty);
-            end.InsertSectionBreak("nextPage");
+            end.InsertSectionBreak(SectionStart.NewPage);
             builder.Paragraph("Schedule: Services and Fees", "Heading 1");
             TableWrapper schedule = builder.Table(5, 4);
             schedule.Cell(0, 0).Range.Text = "Services and Fees";

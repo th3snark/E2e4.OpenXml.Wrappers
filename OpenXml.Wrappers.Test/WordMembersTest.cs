@@ -49,7 +49,7 @@ public class WordMembersTest : IDisposable
 
         range.InsertBreak(type);
 
-        Assert.Equal("Hello" + character + "world", _document.Paragraphs[0].Text);
+        Assert.Equal("Hello" + character + "world" + "\r", _document.Paragraphs[0].Text);
         Break inserted = _document.Paragraphs[0].Paragraph.Descendants<Break>().Single();
         Assert.Equal(xmlType, inserted.Type?.InnerText);
         AssertValid();
@@ -62,7 +62,7 @@ public class WordMembersTest : IDisposable
 
         range.InsertBreak(BreakType.PageBreak);
 
-        Assert.Equal("Hello\f world", _document.Paragraphs[0].Text);
+        Assert.Equal("Hello\f world\r", _document.Paragraphs[0].Text);
     }
 
     [Fact]
@@ -72,8 +72,8 @@ public class WordMembersTest : IDisposable
 
         Assert.Equal(2, _document.Sections.Count);
         Assert.Equal(2, _document.Paragraphs.Count);
-        Assert.Equal("Hello", _document.Paragraphs[0].Text);
-        Assert.Equal(" world", _document.Paragraphs[1].Text);
+        Assert.Equal("Hello\r", _document.Paragraphs[0].Text);
+        Assert.Equal(" world\r", _document.Paragraphs[1].Text);
         Assert.NotNull(_document.Paragraphs[0].Paragraph.ParagraphProperties.SectionProperties);
         Assert.Equal(SectionStart.Continuous, _document.Sections[1].PageSetup.SectionStart);
         AssertValid();
@@ -85,8 +85,8 @@ public class WordMembersTest : IDisposable
         _document.Paragraphs[0].Range.InsertBreak(BreakType.SectionBreakNextPage);
 
         Assert.Equal(2, _document.Sections.Count);
-        Assert.Equal("", _document.Paragraphs[0].Text);
-        Assert.Equal("Hello world", _document.Paragraphs[1].Text);
+        Assert.Equal("\r", _document.Paragraphs[0].Text);
+        Assert.Equal("Hello world\r", _document.Paragraphs[1].Text);
         AssertValid();
     }
 
@@ -147,10 +147,10 @@ public class WordMembersTest : IDisposable
         _document.Paragraphs.Add().Text = "Second";
         _document.Paragraphs.Add().Text = "Third";
 
-        Assert.Equal("Hello world", _document.Paragraphs.First.Text);
-        Assert.Equal("Third", _document.Paragraphs.Last.Text);
-        Assert.Equal("Third", _document.Paragraphs[0].Next(2).Text);
-        Assert.Equal("Hello world", _document.Paragraphs[2].Previous(2).Text);
+        Assert.Equal("Hello world\r", _document.Paragraphs.First.Text);
+        Assert.Equal("Third\r", _document.Paragraphs.Last.Text);
+        Assert.Equal("Third\r", _document.Paragraphs[0].Next(2).Text);
+        Assert.Equal("Hello world\r", _document.Paragraphs[2].Previous(2).Text);
         Assert.Null(_document.Paragraphs[2].Next());
         Assert.Null(_document.Paragraphs[0].Previous(1));
     }

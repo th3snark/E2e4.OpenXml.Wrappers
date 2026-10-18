@@ -122,7 +122,7 @@ public class RangeWrapperDeleteTest
         Body body = new Body(paragraph);
         new RangeWrapper(start, end).Delete();
 
-        Assert.Equal("xy", new ParagraphWrapper(paragraph).Text);
+        Assert.Equal("xy\r", new ParagraphWrapper(paragraph).Text);
         Assert.Same(start, paragraph.Descendants<BookmarkStart>().Single());
         Assert.Equal(String.Empty, new RangeWrapper(start, end).Text);
     }

@@ -19,7 +19,7 @@ public partial class TableRowWrapperCollection : IEnumerable<TableRowWrapper>
 
     public TableWrapper Parent
     {
-        get { return new TableWrapper((Table)_range.StartElement); }
+        get { return _range.StartElement is Table table ? new TableWrapper(table) : null; }
     }
 
     public TableRowWrapper this[int index]

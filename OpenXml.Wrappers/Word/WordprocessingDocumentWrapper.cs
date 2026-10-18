@@ -219,7 +219,10 @@ public partial class WordprocessingDocumentWrapper : IDisposable
         {
             mainDocumentPart.AddNewPart<WordprocessingCommentsPart>();
         }
-        mainDocumentPart.WordprocessingCommentsPart.Comments = new Comments();
+        if (mainDocumentPart.WordprocessingCommentsPart.Comments == null)
+        {
+            mainDocumentPart.WordprocessingCommentsPart.Comments = new Comments();
+        }
     }
 
     private static void CopyPartData(OpenXmlPart fromPart, OpenXmlPart toPart)

@@ -87,7 +87,7 @@ public class RangeWrapperInsertTest
         range.InsertAfter("z");
 
         Paragraph[] paragraphs = cell.Elements<Paragraph>().ToArray();
-        Assert.Equal("a1", new ParagraphWrapper(paragraphs[0]).Text);
+        Assert.Equal("a1\r", new ParagraphWrapper(paragraphs[0]).Text);
         Assert.Equal("2z", new ParagraphWrapper(paragraphs[1]).Text.TrimEnd(CellEnd));
     }
 
@@ -113,7 +113,7 @@ public class RangeWrapperInsertTest
         range.InsertAfter("]");
 
         Assert.Equal("[b]", range.Text);
-        Assert.Equal("x[b]y", new ParagraphWrapper(paragraph).Text);
+        Assert.Equal("x[b]y\r", new ParagraphWrapper(paragraph).Text);
     }
 
     [Fact]
@@ -164,7 +164,7 @@ public class RangeWrapperInsertTest
         Document document = new Document(new Body(CreateParagraph("a"), last, new SectionProperties()));
         new RangeWrapper(document).InsertAfter("!");
 
-        Assert.Equal("b!", new ParagraphWrapper(last).Text);
+        Assert.Equal("b!\r", new ParagraphWrapper(last).Text);
     }
 
     [Fact]
@@ -174,7 +174,7 @@ public class RangeWrapperInsertTest
         Body body = new Body(first, CreateParagraph("b"));
         new RangeWrapper(body).InsertBefore(">");
 
-        Assert.Equal(">a", new ParagraphWrapper(first).Text);
+        Assert.Equal(">a\r", new ParagraphWrapper(first).Text);
     }
 
     [Fact]
@@ -186,7 +186,7 @@ public class RangeWrapperInsertTest
         new RangeWrapper(document).InsertAfter("end");
 
         Paragraph added = (Paragraph)table.NextSibling();
-        Assert.Equal("end", new ParagraphWrapper(added).Text);
+        Assert.Equal("end\r", new ParagraphWrapper(added).Text);
         Assert.Same(sectionProperties, added.NextSibling());
     }
 
@@ -197,7 +197,7 @@ public class RangeWrapperInsertTest
         Body body = new Body(table, new SectionProperties());
         new RangeWrapper(body).InsertBefore("start");
 
-        Assert.Equal("start", new ParagraphWrapper((Paragraph)body.FirstChild).Text);
+        Assert.Equal("start\r", new ParagraphWrapper((Paragraph)body.FirstChild).Text);
         Assert.Same(table, body.FirstChild.NextSibling());
     }
 
@@ -208,7 +208,7 @@ public class RangeWrapperInsertTest
         Body body = new Body(sectionProperties);
         new RangeWrapper(body).InsertAfter("text");
 
-        Assert.Equal("text", new ParagraphWrapper((Paragraph)body.FirstChild).Text);
+        Assert.Equal("text\r", new ParagraphWrapper((Paragraph)body.FirstChild).Text);
         Assert.Same(sectionProperties, body.LastChild);
     }
 
@@ -225,5 +225,41 @@ public class RangeWrapperInsertTest
 
         Assert.Throws<NotSupportedException>(() => new RangeWrapper(table).InsertAfter("a"));
         Assert.Throws<NotSupportedException>(() => new RangeWrapper(table.Elements<TableRow>().First()).InsertBefore("a"));
+    }
+
+    [Fact]
+    public void InsertAfterAParagraphAddsTheTextAtTheStartOfTheNextParagraph()
+    {
+        Paragraph first = CreateParagraph("a");
+        Paragraph second = CreateParagraph("b");
+        Body body = new Body(first, second);
+        new RangeWrapper(first).InsertAfter("x");
+
+        Assert.Equal("a\r", new ParagraphWrapper(first).Text);
+        Assert.Equal("xb\r", new ParagraphWrapper(second).Text);
+    }
+
+    [Fact]
+    public void InsertAfterTheLastParagraphOfABodyAddsTheTextBeforeItsMark()
+    {
+        Paragraph first = CreateParagraph("a");
+        Paragraph last = CreateParagraph("b");
+        Body body = new Body(first, last, new SectionProperties());
+        new RangeWrapper(last).InsertAfter("x");
+
+        Assert.Equal("a\r", new ParagraphWrapper(first).Text);
+        Assert.Equal("bx\r", new ParagraphWrapper(last).Text);
+    }
+
+    [Fact]
+    public void InsertAfterAParagraphBeforeATableAddsTheTextToTheFirstParagraphOfTheTable()
+    {
+        Paragraph before = CreateParagraph("a");
+        Paragraph inCell = CreateParagraph("b");
+        Body body = new Body(before, new Table(new TableRow(new TableCell(inCell))));
+        new RangeWrapper(before).InsertAfter("x");
+
+        Assert.Equal("a\r", new ParagraphWrapper(before).Text);
+        Assert.Equal("xb\r\a", new ParagraphWrapper(inCell).Text);
     }
 }

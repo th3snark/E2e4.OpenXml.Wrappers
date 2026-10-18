@@ -33,7 +33,7 @@ using (WordprocessingDocumentWrapper document = WordprocessingDocumentWrapper.Op
 {
     foreach (ParagraphWrapper paragraph in document.Paragraphs)
     {
-        Console.WriteLine(paragraph.Text);
+        Console.WriteLine(paragraph.Text.TrimEnd('\r'));
     }
 
     document.Bookmarks["Title"].Range.Text = "Quarterly report";
@@ -140,7 +140,7 @@ document.Paragraphs[3].Range.Delete();
 
 | Member | Notes |
 | --- | --- |
-| `InsertBefore`, `InsertAfter` | Inside the markers of a bookmark or comment range. For a paragraph, table cell or the document the text goes in the first or last paragraph, before the paragraph mark (Word puts the text of `InsertAfter` on a whole paragraph in the next paragraph). Not supported for tables and rows. |
+| `InsertBefore`, `InsertAfter` | Inside the markers of a bookmark or comment range. `InsertBefore` on a paragraph, table cell or the document puts the text in the first paragraph; `InsertAfter` on a table cell or the document puts it before the mark of the last paragraph, and on a paragraph it puts it at the start of the next paragraph, as in Word (the last paragraph of a body, header, footer or cell has none, so there it goes before the mark). Not supported for tables and rows. |
 | `Delete` | Removes paragraphs, rows and tables; empties table cells and the document (a cell and the body must keep a paragraph); removes the runs of a bookmark or comment range. Bookmarks and comments anchored in deleted content are removed with it. |
 | `Find` | `Execute` returns whether the text was found and narrows the range to the match. A replacement keeps the formatting of the first character it replaces. Matches can span runs and paragraphs. `Forward = false` searches backwards, `Wrap = FindWrap.Continue` carries on through the rest of the story, and `MatchWildcards` takes Word's patterns (`?`, `*`, `[a-z]`, `[!x]`, `<`, `>`, `@`, `{n,m}` and groups used as `` in the replacement); `^&` in the replacement is the found text, and `^w`, `^#`, `^$` and `^?` find white space, a digit, a letter or any character. `Execute` takes Word's parameters in Word's order, and one that is left out leaves the property as it is. Matching the sound or forms of a word, and searching for formatting, are not supported (`ClearFormatting()` does nothing so that macros port). See [Character ranges](#character-ranges). |
 | `Font` | `Bold`, `Italic`, `Underline` (an `UnderlineStyle`) and `UnderlineColor`, `StrikeThrough`, `DoubleStrikeThrough`, `Superscript`, `Subscript`, `AllCaps`, `SmallCaps`, `Hidden`, `Emboss`, `Engrave`, `Outline`, `Shadow`, `Spacing`, `Scaling`, `Position`, `Kerning`, `Size`, `Name` and `Color`, and `Reset()`. Applies to the characters of the range, splitting runs where it starts and ends in the middle of one. |
@@ -221,7 +221,7 @@ Creating a first-page header does not switch on `DifferentFirstPageHeaderFooter`
 
 `document.Fields` and `range.Fields` list the fields in document order: complex fields (begin, separate and end characters around a code) and simple fields, including fields nested in the result of another. A field has `Code` (read and set, without the surrounding spaces), `Type` (a `FieldType`, `Other` for kinds not in the enum), `Result` (the stored text, read and set), `Range`, `Parent` and `Delete()`. `Fields.Add(range, FieldType.Page, "\* MERGEFORMAT")` or `Fields.Add(range, "MERGEFIELD Name")` adds a complex field at the end of the range, by the rules of `InsertAfter`, with an empty result and the dirty flag so Word updates it when the document opens.
 
-`Field.Update()` and `Fields.Update()` (which returns how many fields could not be updated) work out the fields that do not depend on the layout of the pages: DATE and TIME (with a `@` picture), CREATEDATE, SAVEDATE, AUTHOR, TITLE, SUBJECT, KEYWORDS, COMMENTS, LASTSAVEDBY, USERNAME, DOCPROPERTY (built-in and custom), DOCVARIABLE, FILENAME (`p` for the path), NUMWORDS, NUMCHARS, SEQ (` , ``, `h`, `* roman` and so on), REF (a bookmark's text), IF and QUOTE, with the `* Upper`, `Lower`, `FirstCap` and `Caps` switches. PAGE, NUMPAGES, PAGEREF, TOC, MERGEFIELD and the rest are left for Word, and `Update()` returns false for them and for a locked field. Setting a result needs the whole result to be inside one paragraph; the result takes the formatting of the first run it replaces.
+`Field.Update()` and `Fields.Update()` (which returns how many fields could not be updated) work out the fields that do not depend on the layout of the pages: DATE and TIME (with a `@` picture), CREATEDATE, SAVEDATE, AUTHOR, TITLE, SUBJECT, KEYWORDS, COMMENTS, LASTSAVEDBY, USERNAME, DOCPROPERTY (built-in and custom), DOCVARIABLE, FILENAME (`p` for the path), NUMWORDS, NUMCHARS, SEQ (`\c`, `\r`, `\h`, `\* roman` and so on), REF (a bookmark's text), IF and QUOTE, with the `* Upper`, `Lower`, `FirstCap` and `Caps` switches. PAGE, NUMPAGES, PAGEREF, TOC, MERGEFIELD and the rest are left for Word, and `Update()` returns false for them and for a locked field. Setting a result needs the whole result to be inside one paragraph; the result takes the formatting of the first run it replaces.
 
 ## Navigation
 

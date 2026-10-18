@@ -425,7 +425,7 @@ public class TableStructureTest
         //As in Word the whole document is replaced by the table.
         Assert.Same(table.Table, body.FirstChild);
         Assert.IsType<Paragraph>(table.Table.NextSibling());
-        Assert.Equal("", new ParagraphWrapper((Paragraph)table.Table.NextSibling()).Text);
+        Assert.Equal("\r", new ParagraphWrapper((Paragraph)table.Table.NextSibling()).Text);
         Assert.Null(paragraph.Parent);
     }
 

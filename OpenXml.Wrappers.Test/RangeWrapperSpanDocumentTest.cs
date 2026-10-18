@@ -132,7 +132,7 @@ public class RangeWrapperSpanDocumentTest : IDisposable
             ParagraphWrapper second = range.InsertParagraphAfter();
 
             Assert.Equal(2, document.Paragraphs.Count);
-            Assert.Equal(" world", second.Text);
+            Assert.Equal(" world\r", second.Text);
             Assert.Equal("Hello\r world\r", document.Content.Text);
             Assert.Equal(1, range.End - range.Start);
             AssertValid(document);

@@ -59,7 +59,7 @@ public class DocumentGapsTest : IDisposable
             header.Delete();
 
             Assert.Single(header.Paragraphs);
-            Assert.Equal(string.Empty, header.Paragraphs[0].Text);
+            Assert.Equal("\r", header.Paragraphs[0].Text);
         }
     }
 
@@ -69,7 +69,7 @@ public class DocumentGapsTest : IDisposable
         TableCell cell = new TableCell(new Paragraph(new Run(new Text("only"))));
         Table table = new Table(new TableRow(cell));
 
-        Assert.Equal("only", new ParagraphWrapper(cell.Elements<Paragraph>().Single()).Text);
+        Assert.Equal("only\r\a", new ParagraphWrapper(cell.Elements<Paragraph>().Single()).Text);
     }
 
     [Fact]

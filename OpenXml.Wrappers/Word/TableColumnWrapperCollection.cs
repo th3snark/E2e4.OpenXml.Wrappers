@@ -18,11 +18,11 @@ public partial class TableColumnWrapperCollection : IEnumerable<TableColumnWrapp
     }
 
     /// <summary>
-    /// The table the columns belong to.
+    /// The table the columns belong to, or null when the collection is not the columns of a table.
     /// </summary>
     public TableWrapper Parent
     {
-        get { return new TableWrapper((Table)_range.StartElement); }
+        get { return _range.StartElement is Table table ? new TableWrapper(table) : null; }
     }
 
     public TableColumnWrapper this[int index]
@@ -47,7 +47,9 @@ public partial class TableColumnWrapperCollection : IEnumerable<TableColumnWrapp
 
     private IList<GridColumn> GetElementList()
     {
-        return _range.StartElement.Elements<TableGrid>().First().Elements<GridColumn>().ToList();
+        //A table without a grid has no columns.
+        TableGrid grid = _range.StartElement.Elements<TableGrid>().FirstOrDefault();
+        return grid == null ? new List<GridColumn>() : grid.Elements<GridColumn>().ToList();
     }
 
     public TableColumnWrapper Add()
@@ -59,8 +61,8 @@ public partial class TableColumnWrapperCollection : IEnumerable<TableColumnWrapp
         }
 
         //Get the table grid of table.
-        TableGrid tableGrid = table.Elements<TableGrid>().First();
-        if (tableGrid.LastChild == null)
+        TableGrid tableGrid = table.Elements<TableGrid>().FirstOrDefault();
+        if (tableGrid == null || tableGrid.LastChild == null)
         {
             throw new InvalidOperationException("A column cannot be added to a table that has no columns to use as a template.");
         }
