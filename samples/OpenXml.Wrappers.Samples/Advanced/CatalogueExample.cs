@@ -38,7 +38,7 @@ internal static class CatalogueExample
             builder.Paragraph("Spring catalogue 2026", "Title").Format.SpaceBefore = 150;
             builder.Paragraph(string.Format(CultureInfo.InvariantCulture, "{0} products in {1} categories", products.Length, categories.Length)).Range.Font.Size = 16;
             ParagraphWrapper cover = builder.Paragraph("Prices include VAT. Valid until 30 June 2026.");
-            cover.InsertBreak(BreakValues.Page);
+            cover.InsertBreak(BreakType.PageBreak);
 
             //One section for each category. The page header of each section is set after all of the content is in place.
             for (int c = 0; c < categories.Length; c++)
@@ -64,7 +64,7 @@ internal static class CatalogueExample
                 index.Cell(i + 1, 0).Range.Text = products[i].Sku;
                 index.Cell(i + 1, 1).Range.Text = products[i].Name;
                 index.Cell(i + 1, 2).Range.Text = products[i].Price.ToString("N2", CultureInfo.InvariantCulture);
-                index.Rows[i + 1].Cells[i % 2 == 0 ? 0 : 1].BackgroundColor = "F2F2F2";
+                index.Rows[i + 1].Cells[i % 2 == 0 ? 0 : 1].Shading.BackgroundPatternColor = "F2F2F2";
             }
             TableLook.Grid(index, true);
             TableLook.AlignRight(index, 2);
@@ -106,7 +106,7 @@ internal static class CatalogueExample
 
         TableCellWrapper left = block.Cell(0, 0);
         left.Range.Text = product.Name + "\n" + product.Price.ToString("C", CultureInfo.GetCultureInfo("en-GB")) + "\n" + product.Sku;
-        left.BackgroundColor = "D9E2F3";
+        left.Shading.BackgroundPatternColor = "D9E2F3";
         left.Range.Font.Bold = true;
         left.VerticalAlignment = CellVerticalAlignment.Center;
 

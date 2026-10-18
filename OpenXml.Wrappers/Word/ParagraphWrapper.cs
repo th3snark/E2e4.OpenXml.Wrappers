@@ -123,6 +123,13 @@ public class ParagraphWrapper : System.IEquatable<ParagraphWrapper>
         set { Range.Style = value; }
     }
 
+    /// <summary>The style of the paragraph as an object. The same as <see cref="RangeWrapper.StyleObject"/> of <see cref="Range"/>.</summary>
+    public StyleWrapper StyleObject
+    {
+        get { return Range.StyleObject; }
+        set { Range.StyleObject = value; }
+    }
+
     /// <summary>
     /// The space before the paragraph in points, 0 when none is set. The same as <see cref="Format"/>.<c>SpaceBefore</c>.
     /// </summary>
@@ -169,16 +176,33 @@ public class ParagraphWrapper : System.IEquatable<ParagraphWrapper>
         Range.Delete();
     }
 
-    public void InsertBreak(BreakValues type)
+    /// <summary>
+    /// Adds a page, column or line break at the end of the paragraph. (<see cref="RangeWrapper.InsertBreak"/> is Word's way to insert a break at
+    /// a place in the text; this is the same break at the end of the paragraph.)
+    /// </summary>
+    /// <exception cref="ArgumentException">The type is not <see cref="BreakType.PageBreak"/>, <see cref="BreakType.ColumnBreak"/>,
+    /// <see cref="BreakType.LineBreak"/> or <see cref="BreakType.TextWrappingBreak"/>. Use <see cref="InsertSectionBreak"/> for section breaks.</exception>
+    public void InsertBreak(BreakType type)
     {
-        if (type == BreakValues.Page || type == BreakValues.Column || type == BreakValues.TextWrapping)
+        BreakValues? kind = null;
+        if (type == BreakType.PageBreak)
         {
-            _paragraph.AppendChild(new Run(new Break() { Type = type }));
+            kind = BreakValues.Page;
         }
-        else
+        else if (type == BreakType.ColumnBreak)
         {
-            throw new ArgumentException(String.Format(CultureInfo.InvariantCulture, "The break type '{0}' is not a recognised type.", type), nameof(type));
+            kind = BreakValues.Column;
         }
+        else if (type == BreakType.LineBreak || type == BreakType.TextWrappingBreak)
+        {
+            kind = BreakValues.TextWrapping;
+        }
+
+        if (!kind.HasValue)
+        {
+            throw new ArgumentException(String.Format(CultureInfo.InvariantCulture, "The break type '{0}' is not supported here.", type), nameof(type));
+        }
+        _paragraph.AppendChild(new Run(new Break() { Type = kind.Value }));
     }
 
     public void DeleteBreaks()

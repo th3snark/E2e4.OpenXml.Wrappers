@@ -22,14 +22,14 @@ internal static class ReportExample
             builder.Paragraph("Water use report 2025", "Title").Format.SpaceBefore = 160;
             builder.Paragraph("Facilities department, March 2026").Format.SpaceAfter = 24;
             ParagraphWrapper cover = builder.Paragraph("Prepared for the sustainability committee.");
-            cover.InsertBreak(BreakValues.Page);
+            cover.InsertBreak(BreakType.PageBreak);
 
             //A table of contents is a field. Word fills it in (from the headings) when the fields are updated.
             builder.Paragraph("Contents", "Heading 1");
             ParagraphWrapper contents = builder.Paragraph(string.Empty);
             FieldWrapper toc = document.Fields.Add(contents.Range, FieldType.TableOfContents, "\\o \"1-2\" \\h \\z \\u");
             toc.Result.Text = "Right-click and choose Update Field to build the table of contents.";
-            contents.InsertBreak(BreakValues.Page);
+            contents.InsertBreak(BreakType.PageBreak);
 
             //The body: headings in the styles of the document and some text under each one.
             string[] sections = { "Summary", "Method", "Findings", "Recommendations" };
@@ -50,7 +50,7 @@ internal static class ReportExample
             for (int column = 0; column < heading.Length; column++)
             {
                 table.Cell(0, column).Range.Text = heading[column];
-                table.Cell(0, column).BackgroundColor = "D9E2F3";
+                table.Cell(0, column).Shading.BackgroundPatternColor = "D9E2F3";
             }
             table.Rows[0].Range.Font.Bold = true;
             table.Rows[0].HeadingFormat = true;

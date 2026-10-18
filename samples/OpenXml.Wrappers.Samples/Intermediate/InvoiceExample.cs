@@ -43,7 +43,7 @@ internal static class InvoiceExample
             for (int column = 0; column < titles.Length; column++)
             {
                 table.Cell(0, column).Range.Text = titles[column];
-                table.Cell(0, column).BackgroundColor = "1F3864";
+                table.Cell(0, column).Shading.BackgroundPatternColor = "1F3864";
             }
             table.Rows[0].Range.Font.Bold = true;
             table.Rows[0].Range.Font.Color = "FFFFFF";
@@ -72,8 +72,8 @@ internal static class InvoiceExample
                 table.Cell(row, 0).Merge(table.Cell(row, 2));
                 table.Rows[row].Range.Font.Bold = i == totals.Length - 1;
             }
-            table.Rows[table.Rows.Count - 1].Cells[0].BackgroundColor = "D9E2F3";
-            table.Rows[table.Rows.Count - 1].Cells[1].BackgroundColor = "D9E2F3";
+            table.Rows[table.Rows.Count - 1].Cells[0].Shading.BackgroundPatternColor = "D9E2F3";
+            table.Rows[table.Rows.Count - 1].Cells[1].Shading.BackgroundPatternColor = "D9E2F3";
 
             //Numbers are right-aligned, and so are the headings above them. After the merge the total rows have two cells: the label and
             //the amount.

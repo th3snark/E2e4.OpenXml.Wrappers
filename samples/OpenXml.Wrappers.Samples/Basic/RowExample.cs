@@ -27,8 +27,8 @@ internal static class RowExample
             header.Range.Font.Bold = true;
             header.Height = 24;
             header.HeightRule = RowHeightRule.AtLeast;
-            header.Cells[0].BackgroundColor = "D9E2F3";
-            header.Cells[1].BackgroundColor = "D9E2F3";
+            header.Cells[0].Shading.BackgroundPatternColor = "D9E2F3";
+            header.Cells[1].Shading.BackgroundPatternColor = "D9E2F3";
 
             //A row that must not be split across two pages, and one with an exact height.
             table.Rows[1].AllowBreakAcrossPages = false;

@@ -276,4 +276,71 @@ public class RangeWrapperStyleTest : IDisposable
 
         Assert.Equal(new[] { "tblStyle", "tblW" }, table.GetFirstChild<TableProperties>().ChildElements.Select(e => e.LocalName).ToArray());
     }
+
+    [Fact]
+    public void StyleObjectReturnsTheStyleAsAnObject()
+    {
+        Paragraph paragraph = AddParagraph();
+        RangeWrapper range = new RangeWrapper(paragraph);
+
+        Assert.Equal(_document.Styles["Normal"], range.StyleObject);
+
+        range.Style = "Heading 1";
+
+        Assert.Equal(_document.Styles["Heading 1"], range.StyleObject);
+        Assert.Equal("Heading 1", range.StyleObject.NameLocal);
+        Assert.Equal(range.StyleObject, new ParagraphWrapper(paragraph).StyleObject);
+    }
+
+    [Fact]
+    public void StyleObjectCanBeSetFromAStyleObjectAndNull()
+    {
+        Paragraph paragraph = AddParagraph();
+        RangeWrapper range = new RangeWrapper(paragraph);
+
+        range.StyleObject = _document.Styles["Heading 1"];
+        Assert.Equal("Heading1", paragraph.ParagraphProperties.ParagraphStyleId.Val.Value);
+
+        range.StyleObject = null;
+        Assert.Null(paragraph.ParagraphProperties.ParagraphStyleId);
+    }
+
+    [Fact]
+    public void StyleObjectIsNullWhereTheStylesDiffer()
+    {
+        Paragraph first = AddParagraph();
+        AddParagraph();
+        new RangeWrapper(first).Style = "Heading 1";
+
+        Assert.Null(new RangeWrapper(_body).StyleObject);
+        Assert.Null(_document.Paragraphs.StyleObject);
+
+        _document.Paragraphs.StyleObject = _document.Styles["Heading 1"];
+
+        Assert.Equal(_document.Styles["Heading 1"], _document.Paragraphs.StyleObject);
+    }
+
+    [Fact]
+    public void StyleObjectOfATableIsItsTableStyle()
+    {
+        Table table = new Table(new TableRow(new TableCell(new Paragraph())));
+        _body.InsertAt(table, 0);
+        TableWrapper wrapper = new TableWrapper(table);
+
+        wrapper.StyleObject = _document.Styles["Table Grid"];
+
+        Assert.Equal("TableGrid", table.GetFirstChild<TableProperties>().TableStyle.Val.Value);
+        Assert.Equal(_document.Styles["Table Grid"], wrapper.StyleObject);
+        Assert.Throws<ArgumentException>(() => wrapper.StyleObject = _document.Styles["Heading 1"]);
+    }
+
+    [Fact]
+    public void BaseAndNextStylesAreAvailableAsObjects()
+    {
+        StyleWrapper added = _document.Styles.Add("My Note", StyleType.Paragraph);
+
+        Assert.Equal(_document.Styles["Normal"], added.BaseStyleObject);
+        Assert.Null(_document.Styles["Normal"].BaseStyleObject);
+        Assert.Null(added.NextParagraphStyleObject);
+    }
 }

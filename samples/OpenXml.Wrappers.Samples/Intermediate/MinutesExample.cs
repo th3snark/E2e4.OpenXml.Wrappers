@@ -26,7 +26,7 @@ internal static class MinutesExample
             {
                 details.Cell(row, 0).Range.Text = facts[row, 0];
                 details.Cell(row, 0).Range.Font.Bold = true;
-                details.Cell(row, 0).BackgroundColor = "D9E2F3";
+                details.Cell(row, 0).Shading.BackgroundPatternColor = "D9E2F3";
                 details.Cell(row, 1).Range.Text = facts[row, 1];
             }
             details.Columns[0].Width = 1500;
@@ -69,7 +69,7 @@ internal static class MinutesExample
             table.Rows[0].HeadingFormat = true;
             for (int column = 0; column < 3; column++)
             {
-                table.Cell(0, column).BackgroundColor = "D9E2F3";
+                table.Cell(0, column).Shading.BackgroundPatternColor = "D9E2F3";
             }
             table.Borders.SetOutside(BorderLineStyle.SingleLine, 0.75, "808080");
             table.Borders.SetInside(BorderLineStyle.SingleLine, 0.5, "BFBFBF");

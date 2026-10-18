@@ -205,46 +205,6 @@ public partial class TableCellWrapper : System.IEquatable<TableCellWrapper>
         }
     }
 
-    private void SetShadingFillColor(string rgbColor)
-    {
-        TableCellProperties tableCellProperties = GetOrAddTableCellProperties();
-        Shading shading = tableCellProperties.Shading;
-        if (shading == null)
-        {
-            //The typed property puts the element in schema order.
-            shading = new Shading();
-            tableCellProperties.Shading = shading;
-        }
-        shading.Val = ShadingPatternValues.Clear;
-        shading.Color = "auto";
-        shading.Fill = rgbColor;
-    }
-
-    /// <summary>
-    /// The background colour of the cell as six hex digits, or null when it has no fill. Setting null removes the shading.
-    /// </summary>
-    public string BackgroundColor
-    {
-        get
-        {
-            string fill = _tableCell.TableCellProperties?.Shading?.Fill?.Value;
-            return fill == null || String.Equals(fill, "auto", StringComparison.OrdinalIgnoreCase) ? null : fill;
-        }
-        set
-        {
-            if (value == null)
-            {
-                _tableCell.TableCellProperties?.RemoveAllChildren<Shading>();
-                return;
-            }
-            if (value.Length != 6 || !value.All(Uri.IsHexDigit))
-            {
-                throw new ArgumentException("The colour must be six hex digits.", nameof(value));
-            }
-            SetShadingFillColor(value);
-        }
-    }
-
     /// <summary>
     /// The vertical alignment of the text in the cell. The default is Top.
     /// </summary>

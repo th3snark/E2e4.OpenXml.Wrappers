@@ -118,6 +118,42 @@ public partial class FieldWrapper : System.IEquatable<FieldWrapper>
     #endregion
 
     /// <summary>
+    /// The characters of the code (<paramref name="code"/>) or of the result of the field as a range, which is empty when there are none. The range of
+    /// the code of a simple field (<c>w:fldSimple</c>), which keeps its code in an attribute, is empty at the start of the field.
+    /// </summary>
+    internal RangeWrapper GetPartRange(bool code)
+    {
+        OpenXmlElement anchor = _simpleField != null ? (OpenXmlElement)_simpleField : _begin;
+        OpenXmlElement story = StoryMap.FindRoot(anchor);
+        List<Run> runs;
+        OpenXmlElement emptyAfter;
+        if (_simpleField != null)
+        {
+            runs = code ? new List<Run>() : _simpleField.Elements<Run>().ToList();
+            emptyAfter = _simpleField;
+        }
+        else
+        {
+            Parts parts = Parse();
+            runs = code ? parts.Codes.Select(c => (Run)c.Parent).Distinct().ToList() : parts.ResultRuns;
+            emptyAfter = code ? _begin.Parent : parts.Separate?.Parent ?? _begin.Parent;
+        }
+
+        RangeWrapper range = new RangeWrapper(story);
+        if (runs.Count > 0)
+        {
+            range.SetRange(new RangeWrapper(runs[0]).Start, new RangeWrapper(runs[runs.Count - 1]).End);
+        }
+        else
+        {
+            //A simple field has no characters of its own to be after, so its empty code is at its start.
+            int position = _simpleField != null ? new RangeWrapper(_simpleField).Start : new RangeWrapper(emptyAfter).End;
+            range.SetRange(position, position);
+        }
+        return range;
+    }
+
+    /// <summary>
     /// The field code without its surrounding spaces, such as <c>PAGE \* MERGEFORMAT</c>. Setting it replaces the code.
     /// </summary>
     internal string CodeText

@@ -191,6 +191,14 @@ public partial class WordprocessingDocumentWrapper : IDisposable
         return range;
     }
 
+    /// <summary>
+    /// The whole main text of the document, as <c>Document.Range</c> without arguments in Word. The same as <see cref="Content"/>.
+    /// </summary>
+    public RangeWrapper Range()
+    {
+        return Content;
+    }
+
     public void InitializeMainDocumentPart()
     {
         //Initialize the main document part

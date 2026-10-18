@@ -83,6 +83,13 @@ public class ParagraphWrapperCollection : IEnumerable<ParagraphWrapper>
         set { _range.Style = value; }
     }
 
+    /// <summary>The style of all the paragraphs as an object (null where they differ). Setting applies it to every one.</summary>
+    public StyleWrapper StyleObject
+    {
+        get { return _range.StyleObject; }
+        set { _range.StyleObject = value; }
+    }
+
     //The paragraphs of the range, produced as they are asked for so that the first few do not need the rest to be looked at.
     private IEnumerable<Paragraph> GetElements()
     {

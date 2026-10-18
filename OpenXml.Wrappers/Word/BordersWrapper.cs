@@ -143,7 +143,7 @@ public class BordersWrapper
     /// <summary>
     /// Sets the style, width and colour of the four outside borders.
     /// </summary>
-    public void SetOutside(BorderLineStyle lineStyle, double lineWidth, string color)
+    public void SetOutside(BorderLineStyle lineStyle, LineWidth lineWidth, WordColor color)
     {
         Set(new[] { BorderPosition.Top, BorderPosition.Left, BorderPosition.Bottom, BorderPosition.Right }, lineStyle, lineWidth, color);
     }
@@ -151,7 +151,7 @@ public class BordersWrapper
     /// <summary>
     /// Sets the style, width and colour of the borders between the rows and between the columns.
     /// </summary>
-    public void SetInside(BorderLineStyle lineStyle, double lineWidth, string color)
+    public void SetInside(BorderLineStyle lineStyle, LineWidth lineWidth, WordColor color)
     {
         Set(InsidePositions, lineStyle, lineWidth, color);
     }
@@ -197,15 +197,15 @@ public class BordersWrapper
         return styles.Count == 1 ? styles[0] : BorderLineStyle.Other;
     }
 
-    private double GetGroupWidth(IEnumerable<BorderPosition> positions)
+    private LineWidth GetGroupWidth(IEnumerable<BorderPosition> positions)
     {
-        List<double> widths = positions.Select(p => this[p].LineWidth).Distinct().ToList();
-        return widths.Count == 1 ? widths[0] : 0;
+        List<LineWidth> widths = positions.Select(p => this[p].LineWidth).Distinct().ToList();
+        return widths.Count == 1 ? widths[0] : default(LineWidth);
     }
 
-    private string GetGroupColor(IEnumerable<BorderPosition> positions)
+    private WordColor? GetGroupColor(IEnumerable<BorderPosition> positions)
     {
-        List<string> colors = positions.Select(p => this[p].Color).Distinct().ToList();
+        List<WordColor?> colors = positions.Select(p => this[p].Color).Distinct().ToList();
         return colors.Count == 1 ? colors[0] : null;
     }
 
@@ -215,7 +215,7 @@ public class BordersWrapper
     public BorderLineStyle OutsideLineStyle
     {
         get { return GetGroupStyle(OutsidePositions); }
-        set { Set(OutsidePositions, value, 0.5, "auto", false); }
+        set { Set(OutsidePositions, value, 0.5, WordColor.Automatic, false); }
     }
 
     /// <summary>
@@ -224,35 +224,35 @@ public class BordersWrapper
     public BorderLineStyle InsideLineStyle
     {
         get { return GetGroupStyle(InsidePositions); }
-        set { Set(InsidePositions, value, 0.5, "auto", false); }
+        set { Set(InsidePositions, value, 0.5, WordColor.Automatic, false); }
     }
 
     /// <summary>The width in points of the outside borders; 0 when they differ or are not set.</summary>
-    public double OutsideLineWidth
+    public LineWidth OutsideLineWidth
     {
         get { return GetGroupWidth(OutsidePositions); }
         set { SetWidth(OutsidePositions, value); }
     }
 
     /// <summary>The width in points of the borders between rows and between columns; 0 when they differ or are not set.</summary>
-    public double InsideLineWidth
+    public LineWidth InsideLineWidth
     {
         get { return GetGroupWidth(InsidePositions); }
         set { SetWidth(InsidePositions, value); }
     }
 
-    /// <summary>The colour of the outside borders (six hex digits or <c>auto</c>); null when they differ.</summary>
-    public string OutsideColor
+    /// <summary>The colour of the outside borders; null when they differ.</summary>
+    public WordColor? OutsideColor
     {
         get { return GetGroupColor(OutsidePositions); }
-        set { SetColor(OutsidePositions, value); }
+        set { SetColor(OutsidePositions, value ?? throw new ArgumentNullException(nameof(value))); }
     }
 
     /// <summary>The colour of the borders between rows and between columns; null when they differ.</summary>
-    public string InsideColor
+    public WordColor? InsideColor
     {
         get { return GetGroupColor(InsidePositions); }
-        set { SetColor(InsidePositions, value); }
+        set { SetColor(InsidePositions, value ?? throw new ArgumentNullException(nameof(value))); }
     }
 
     /// <summary>
@@ -279,7 +279,7 @@ public class BordersWrapper
         }
     }
 
-    private void SetWidth(IEnumerable<BorderPosition> positions, double width)
+    private void SetWidth(IEnumerable<BorderPosition> positions, LineWidth width)
     {
         foreach (BorderPosition position in positions)
         {
@@ -287,7 +287,7 @@ public class BordersWrapper
         }
     }
 
-    private void SetColor(IEnumerable<BorderPosition> positions, string color)
+    private void SetColor(IEnumerable<BorderPosition> positions, WordColor color)
     {
         foreach (BorderPosition position in positions)
         {
@@ -295,7 +295,7 @@ public class BordersWrapper
         }
     }
 
-    private void Set(IEnumerable<BorderPosition> positions, BorderLineStyle lineStyle, double lineWidth, string color, bool setWidthAndColor = true)
+    private void Set(IEnumerable<BorderPosition> positions, BorderLineStyle lineStyle, LineWidth lineWidth, WordColor color, bool setWidthAndColor = true)
     {
         if (lineStyle == BorderLineStyle.Other)
         {

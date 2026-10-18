@@ -104,6 +104,17 @@ public partial class RangeWrapper
     }
 
     /// <summary>
+    /// The style of the range as an object, as <c>Range.Style</c> returns it in Word (null where the range has different styles, or the
+    /// document does not define the style). Setting it applies the style as <see cref="Style"/> does, and null removes the direct style, so
+    /// <c>range.StyleObject = document.Styles["Heading 1"]</c> and <c>= document.Styles[BuiltInStyle.Heading1]</c> work.
+    /// </summary>
+    public StyleWrapper StyleObject
+    {
+        get { return StyleHelper.GetStyleObject(AnchorElement, Style); }
+        set { Style = value?.Name; }
+    }
+
+    /// <summary>
     /// True for the ranges that cover part of a paragraph, whose runs can have a character style.
     /// </summary>
     private bool IsPartialParagraphRange()

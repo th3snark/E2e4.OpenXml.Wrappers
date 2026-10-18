@@ -100,12 +100,12 @@ internal static class AgreementExample
             //The first row is one cell across the table, made by merging the four cells.
             schedule.Cell(0, 0).Merge(schedule.Cell(0, 3));
             schedule.Cell(0, 0).Range.ParagraphFormat.Alignment = ParagraphAlignment.Center;
-            schedule.Cell(0, 0).BackgroundColor = "1F3864";
+            schedule.Cell(0, 0).Shading.BackgroundPatternColor = "1F3864";
             schedule.Rows[0].Range.Font.Bold = true;
             schedule.Rows[0].Range.Font.Color = "FFFFFF";
             for (int column = 0; column < 4; column++)
             {
-                schedule.Cell(1, column).BackgroundColor = "D9E2F3";
+                schedule.Cell(1, column).Shading.BackgroundPatternColor = "D9E2F3";
             }
             schedule.Rows[1].Range.Font.Bold = true;
             schedule.Borders.SetOutside(BorderLineStyle.SingleLine, 1, "1F3864");

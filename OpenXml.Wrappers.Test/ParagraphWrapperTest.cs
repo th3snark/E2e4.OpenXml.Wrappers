@@ -155,11 +155,20 @@ public class ParagraphWrapperTest : System.IDisposable
     [InlineData("Page")]
     public void InsertBreakAcceptsAllBreakTypes(string name)
     {
-        BreakValues type = name == "Column" ? BreakValues.Column : name == "Page" ? BreakValues.Page : BreakValues.TextWrapping;
+        BreakType type = name == "Column" ? BreakType.ColumnBreak : name == "Page" ? BreakType.PageBreak : BreakType.TextWrappingBreak;
+        BreakValues expected = name == "Column" ? BreakValues.Column : name == "Page" ? BreakValues.Page : BreakValues.TextWrapping;
         Paragraph paragraph = new Paragraph();
         new ParagraphWrapper(paragraph).InsertBreak(type);
 
-        Assert.Equal(type, paragraph.Descendants<Break>().Single().Type.Value);
+        Assert.Equal(expected, paragraph.Descendants<Break>().Single().Type.Value);
+    }
+
+    [Theory]
+    [InlineData(BreakType.SectionBreakNextPage)]
+    [InlineData((BreakType)99)]
+    public void InsertBreakRejectsSectionBreaksAndUnknownTypes(BreakType type)
+    {
+        Assert.Throws<ArgumentException>(() => new ParagraphWrapper(new Paragraph()).InsertBreak(type));
     }
 
     [Fact]

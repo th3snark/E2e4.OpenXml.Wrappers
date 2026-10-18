@@ -23,7 +23,7 @@ internal static class HeaderFooterExample
                 paragraph.Range.Style = "Heading 1";
                 if (page < 3)
                 {
-                    paragraph.InsertBreak(BreakValues.Page);
+                    paragraph.InsertBreak(BreakType.PageBreak);
                 }
             }
 

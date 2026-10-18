@@ -12,18 +12,20 @@ using DocumentFormat.OpenXml.Wordprocessing;
 namespace OpenXml.Wrappers.Word;
 
 /// <summary>
-/// The code or result of a field, as the <c>Range</c> that <c>Field.Code</c> and <c>Field.Result</c> are in Word. Only the text of it is
-/// available.
+/// The code or result of a field, as the <c>Range</c> that <c>Field.Code</c> and <c>Field.Result</c> are in Word: it has the <see cref="Text"/>
+/// and a <see cref="Range"/> (a span of the characters of the code or result), and <see cref="Font"/> is the font of that range.
 /// </summary>
 public class FieldPartWrapper
 {
     private readonly Func<string> _get;
     private readonly Action<string> _set;
+    private readonly Func<RangeWrapper> _range;
 
-    internal FieldPartWrapper(Func<string> get, Action<string> set)
+    internal FieldPartWrapper(Func<string> get, Action<string> set, Func<RangeWrapper> range)
     {
         _get = get;
         _set = set;
+        _range = range;
     }
 
     /// <summary>The text. Setting it replaces the code (the result), keeping the formatting of its first run.</summary>
@@ -32,8 +34,22 @@ public class FieldPartWrapper
         get { return _get(); }
         set { _set(value); }
     }
-}
 
+    /// <summary>
+    /// The characters of the code or result as a range, which is empty when there are none. It is a snapshot of the characters there are now:
+    /// after setting <see cref="Text"/> get the range again.
+    /// </summary>
+    public RangeWrapper Range
+    {
+        get { return _range(); }
+    }
+
+    /// <summary>The font of the characters of the code or result (<c>Field.Result.Font</c> in Word).</summary>
+    public FontWrapper Font
+    {
+        get { return Range.Font; }
+    }
+}
 public partial class FieldWrapper
 {
     /// <summary>
@@ -41,7 +57,7 @@ public partial class FieldWrapper
     /// </summary>
     public FieldPartWrapper Code
     {
-        get { return new FieldPartWrapper(() => CodeText, value => CodeText = value); }
+        get { return new FieldPartWrapper(() => CodeText, value => CodeText = value, () => GetPartRange(true)); }
     }
 
     /// <summary>
@@ -50,7 +66,7 @@ public partial class FieldWrapper
     /// <exception cref="NotSupportedException">Setting the text when the result is not within a single paragraph.</exception>
     public FieldPartWrapper Result
     {
-        get { return new FieldPartWrapper(() => ResultText, value => ResultText = value); }
+        get { return new FieldPartWrapper(() => ResultText, value => ResultText = value, () => GetPartRange(false)); }
     }
 
     /// <summary>

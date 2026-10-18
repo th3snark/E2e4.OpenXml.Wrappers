@@ -24,7 +24,6 @@ namespace OpenXml.Wrappers.Word;
 /// </remarks>
 public class FontWrapper
 {
-    private static readonly Regex ColorPattern = new Regex("^([0-9A-Fa-f]{6}|auto)$", RegexOptions.CultureInvariant);
 
     private readonly RangeWrapper _range;
     private readonly Style _style;
@@ -121,26 +120,22 @@ public class FontWrapper
     }
 
     /// <summary>
-    /// The colour of the underline as six hexadecimal digits, or <c>auto</c> (as <c>Font.UnderlineColor</c> in Word). Setting it on text
+    /// The colour of the underline (as <c>Font.UnderlineColor</c> in Word); null when the text differs. Setting it on text
     /// that is not underlined gives a single underline.
     /// </summary>
-    public string UnderlineColor
+    public WordColor? UnderlineColor
     {
         get
         {
-            return GetValue(properties =>
+            return GetValue<WordColor?>(properties =>
             {
                 Underline underline = properties?.Elements<Underline>().FirstOrDefault();
-                return underline?.Color?.Value ?? (_direct ? null : "auto");
+                string stored = underline?.Color?.Value;
+                return stored == null ? (_direct ? (WordColor?)null : WordColor.Automatic) : WordColor.FromStored(stored);
             });
         }
         set
         {
-            if (value != null && !ColorPattern.IsMatch(value))
-            {
-                throw new ArgumentException("The colour must be six hexadecimal digits (such as FF0000) or 'auto'.", nameof(value));
-            }
-
             Apply(properties =>
             {
                 Underline underline = properties.Elements<Underline>().FirstOrDefault();
@@ -153,7 +148,7 @@ public class FontWrapper
                     underline = new Underline() { Val = UnderlineValues.Single };
                     properties.SetRunProperty(underline);
                 }
-                underline.Color = value == null ? null : new DocumentFormat.OpenXml.StringValue(value);
+                underline.Color = value.HasValue ? new DocumentFormat.OpenXml.StringValue(value.Value.Hex) : null;
             });
         }
     }
@@ -515,20 +510,21 @@ public class FontWrapper
     }
 
     /// <summary>
-    /// The colour of the text as a six digit hexadecimal red, green and blue value such as <c>FF0000</c> for red, or <c>auto</c> for the
-    /// automatic colour.
+    /// The colour of the text (<c>Font.Color</c> in Word, which takes <c>RGB</c> values and <c>WdColor</c> constants): assign a six digit
+    /// hexadecimal string such as <c>"FF0000"</c>, a value from <see cref="ColorHelper.RGB"/> or a <see cref="NamedColor"/>. Null when the text
+    /// differs; setting null removes the direct colour.
     /// </summary>
-    public string Color
+    public WordColor? Color
     {
         get
         {
-            return GetValue((properties, resolver) =>
+            return GetValue<WordColor?>((properties, resolver) =>
             {
                 Color color = properties?.Elements<Color>().FirstOrDefault();
                 string value = color?.Val?.Value;
                 if (_direct)
                 {
-                    return value;
+                    return value == null ? (WordColor?)null : WordColor.FromStored(value);
                 }
 
                 if (value == null || String.Equals(value, "auto", StringComparison.OrdinalIgnoreCase))
@@ -536,25 +532,30 @@ public class FontWrapper
                     ThemeColorValues? theme = color?.ThemeColor?.Value;
                     value = theme.HasValue ? resolver.GetThemeColorHex(theme.Value) : null;
                 }
-                return value ?? "auto";
+                return WordColor.FromStored(value);
             });
         }
         set
         {
-            if (value != null && !ColorPattern.IsMatch(value))
-            {
-                throw new ArgumentException("The colour must be six hexadecimal digits (such as FF0000) or 'auto'.", nameof(value));
-            }
-
             Apply(properties =>
             {
                 properties.RemoveRunProperty("color");
-                if (value != null)
+                if (value.HasValue)
                 {
-                    properties.SetRunProperty(new Color() { Val = value });
+                    properties.SetRunProperty(new Color() { Val = value.Value.Hex });
                 }
             });
         }
+    }
+
+    /// <summary>
+    /// The colour of the text as one of the sixteen colours of Word's colour index (<c>Font.ColorIndex</c> in Word), the nearest to the
+    /// colour of the text; null when the text differs. Setting it gives the text that colour, and <see cref="ColorIndex.Auto"/> the automatic colour.
+    /// </summary>
+    public ColorIndex? ColorIndex
+    {
+        get { return Color?.ToColorIndex(); }
+        set { Color = value.HasValue ? WordColor.FromColorIndex(value.Value) : (WordColor?)null; }
     }
 
     private bool? GetOnOff<T>(Func<T, OnOffValue> getValue) where T : OpenXmlElement

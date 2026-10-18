@@ -34,7 +34,7 @@ internal static class CellExample
             table.Cell(0, 0).Range.Text = "Title across four columns";
             table.Cell(0, 0).Range.Font.Bold = true;
             table.Cell(0, 0).Range.Font.Color = "FFFFFF";
-            table.Cell(0, 0).BackgroundColor = "1F3864";
+            table.Cell(0, 0).Shading.BackgroundPatternColor = "1F3864";
 
             table.Cell(2, 0).Range.Text = string.Empty;
             table.Cell(3, 0).Range.Text = string.Empty;
@@ -46,8 +46,8 @@ internal static class CellExample
             table.Cell(1, 1).Split(1, 2);
 
             //Shading, alignment and borders of single cells.
-            table.Cell(2, 1).BackgroundColor = "FFF2CC";
-            table.Cell(2, 2).BackgroundColor = "E2EFDA";
+            table.Cell(2, 1).Shading.BackgroundPatternColor = "FFF2CC";
+            table.Cell(2, 2).Shading.BackgroundPatternColor = "E2EFDA";
             table.Cell(3, 3).VerticalAlignment = CellVerticalAlignment.Bottom;
             table.Cell(3, 3).Borders[BorderPosition.Bottom].LineStyle = BorderLineStyle.DoubleLine;
             table.Cell(3, 3).Borders[BorderPosition.Bottom].Color = "C00000";

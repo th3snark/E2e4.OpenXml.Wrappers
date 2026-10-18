@@ -105,4 +105,13 @@ internal static class StyleHelper
         Style style = GetStyles(context)?.Elements<Style>().FirstOrDefault(s => s.Type != null && s.Type.HasValue && s.Type.Value == type && s.Default != null && s.Default.HasValue && s.Default.Value);
         return style == null ? null : GetName(style);
     }
+
+    /// <summary>
+    /// The style with the name (see <see cref="FindStyle"/>) as an object, or null when the document does not have one.
+    /// </summary>
+    internal static StyleWrapper GetStyleObject(OpenXmlElement context, string name)
+    {
+        Style style = name == null ? null : FindStyle(GetStyles(context), name);
+        return style == null ? null : new StyleWrapper(style);
+    }
 }

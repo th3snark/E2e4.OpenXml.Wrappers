@@ -20,6 +20,16 @@ public partial class TableWrapper : System.IEquatable<TableWrapper>
     }
 
     /// <summary>
+    /// The table style as an object, as <c>Table.Style</c> returns it in Word (null when the document does not define it). Setting it applies
+    /// the style as <see cref="Style"/> does, and null removes the table style.
+    /// </summary>
+    public StyleWrapper StyleObject
+    {
+        get { return StyleHelper.GetStyleObject(_table, Style); }
+        set { Style = value?.Name; }
+    }
+
+    /// <summary>
     /// The name of the table style, as <c>Table.Style</c> in Word. Setting null removes the table style. See <see cref="RangeWrapper.Style"/>
     /// for how names are matched.
     /// </summary>

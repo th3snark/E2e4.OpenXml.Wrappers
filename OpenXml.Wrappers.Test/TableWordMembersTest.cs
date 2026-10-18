@@ -503,7 +503,7 @@ public class TableWordMembersTest : IDisposable
         AssertValid();
 
         borders[BorderPosition.Top].LineWidth = 4;
-        Assert.Equal(0, borders.OutsideLineWidth);
+        Assert.Equal(LineWidth.None, borders.OutsideLineWidth);
         Assert.Throws<ArgumentException>(() => borders.OutsideLineStyle = BorderLineStyle.Other);
     }
 

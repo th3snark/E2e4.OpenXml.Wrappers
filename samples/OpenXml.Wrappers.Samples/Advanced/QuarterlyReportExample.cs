@@ -58,14 +58,14 @@ internal static class QuarterlyReportExample
             builder.Paragraph("Prepared by the finance team for the board of directors").Format.SpaceAfter = 18;
             ParagraphWrapper confidential = builder.Paragraph("Confidential - not for distribution outside the company.");
             confidential.Range.Font.Italic = true;
-            confidential.InsertBreak(BreakValues.Page);
+            confidential.InsertBreak(BreakType.PageBreak);
 
             //Contents.
             builder.Paragraph("Contents", "Heading 1");
             ParagraphWrapper contents = builder.Paragraph(string.Empty);
             FieldWrapper toc = document.Fields.Add(contents.Range, FieldType.TableOfContents, "\\o \"1-2\" \\h \\z \\u");
             toc.Result.Text = "Update this field to build the table of contents.";
-            contents.InsertBreak(BreakValues.Page);
+            contents.InsertBreak(BreakType.PageBreak);
 
             //1. Executive summary. The revenue figure is bookmarked so that other parts of the document can quote it.
             builder.Paragraph("1. Executive summary", "Heading 1");
@@ -104,7 +104,7 @@ internal static class QuarterlyReportExample
             revenue.Rows[totalRow].Range.Font.Bold = true;
             foreach (TableCellWrapper cell in revenue.Rows[totalRow].Cells)
             {
-                cell.BackgroundColor = "D9E2F3";
+                cell.Shading.BackgroundPatternColor = "D9E2F3";
             }
             revenue.Alignment = RowAlignment.Center;
 
@@ -128,7 +128,7 @@ internal static class QuarterlyReportExample
                 plan.Cell(i + 1, 1).Range.Text = milestones[i].Owner;
                 plan.Cell(i + 1, 2).Range.Text = milestones[i].Due;
                 plan.Cell(i + 1, 3).Range.Text = milestones[i].Status;
-                plan.Cell(i + 1, 3).BackgroundColor = milestones[i].Status == "Late" ? "F8CBAD" : milestones[i].Status == "Done" ? "C6E0B4" : "FFE699";
+                plan.Cell(i + 1, 3).Shading.BackgroundPatternColor = milestones[i].Status == "Late" ? "F8CBAD" : milestones[i].Status == "Done" ? "C6E0B4" : "FFE699";
                 plan.Cell(i + 1, 3).VerticalAlignment = CellVerticalAlignment.Center;
             }
             TableLook.Grid(plan, true);
@@ -148,7 +148,7 @@ internal static class QuarterlyReportExample
                 risk.Cell(i + 1, 0).Range.Text = risks[i].Description;
                 risk.Cell(i + 1, 1).Range.Text = risks[i].Severity;
                 risk.Cell(i + 1, 2).Range.Text = risks[i].Mitigation;
-                risk.Cell(i + 1, 1).BackgroundColor = risks[i].Severity == "High" ? "F8CBAD" : risks[i].Severity == "Medium" ? "FFE699" : "C6E0B4";
+                risk.Cell(i + 1, 1).Shading.BackgroundPatternColor = risks[i].Severity == "High" ? "F8CBAD" : risks[i].Severity == "Medium" ? "FFE699" : "C6E0B4";
                 risk.Rows[i + 1].AllowBreakAcrossPages = false;
             }
             TableLook.Grid(risk, true);

@@ -37,6 +37,14 @@ public class StyleWrapper : System.IEquatable<StyleWrapper>
     }
 
     /// <summary>
+    /// The name of the style, as <c>Style.NameLocal</c> in Word. The same as <see cref="Name"/>: the library does not localise style names.
+    /// </summary>
+    public string NameLocal
+    {
+        get { return Name; }
+    }
+
+    /// <summary>
     /// Deletes the style, as <c>Style.Delete</c> in Word. Paragraphs, runs and tables that use it go back to the default style, and styles
     /// based on it lose their base.
     /// </summary>
@@ -137,6 +145,22 @@ public class StyleWrapper : System.IEquatable<StyleWrapper>
     public string NextParagraphStyle
     {
         get { return GetName(_style.NextParagraphStyle?.Val?.Value); }
+    }
+
+    /// <summary>
+    /// The style this style is based on as an object, or null.
+    /// </summary>
+    public StyleWrapper BaseStyleObject
+    {
+        get { return StyleHelper.GetStyleObject(_style, BaseStyle); }
+    }
+
+    /// <summary>
+    /// The style applied to the paragraph after one in this style as an object, or null when it is the same style.
+    /// </summary>
+    public StyleWrapper NextParagraphStyleObject
+    {
+        get { return StyleHelper.GetStyleObject(_style, NextParagraphStyle); }
     }
 
     /// <summary>

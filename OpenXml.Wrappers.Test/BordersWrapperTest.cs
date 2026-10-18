@@ -24,7 +24,7 @@ public class BordersWrapperTest
         BorderWrapper border = new TableWrapper(CreateTable()).Borders[BorderPosition.Top];
 
         Assert.Equal(BorderLineStyle.None, border.LineStyle);
-        Assert.Equal(0, border.LineWidth);
+        Assert.Equal(LineWidth.None, border.LineWidth);
         Assert.Equal("auto", border.Color);
     }
 
@@ -73,7 +73,7 @@ public class BordersWrapperTest
         Assert.Equal("C00000", border.Color);
         Assert.Equal(BorderLineStyle.SingleLine, border.LineStyle);
         Assert.Throws<ArgumentException>(() => border.Color = "red");
-        Assert.Throws<ArgumentException>(() => border.Color = null);
+        Assert.Throws<ArgumentNullException>(() => border.Color = null);
         border.Color = "auto";
         Assert.Equal("auto", border.Color);
     }

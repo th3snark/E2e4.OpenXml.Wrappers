@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Wordprocessing;
@@ -57,14 +56,12 @@ public enum ShadingTexture
 /// The shading of a table, row, column or cell, as <c>Shading</c> in Word.
 /// </summary>
 /// <remarks>
-/// A property is null when the cells it covers are shaded differently. Colours are six hexadecimal digits or <c>auto</c>, as for
+/// A property is null when the cells it covers are shaded differently. Colours are <see cref="WordColor"/> values, as for
 /// <see cref="FontWrapper.Color"/>. With the texture <see cref="ShadingTexture.None"/> the background colour fills the area; with a
 /// pattern the foreground colour is the colour of the pattern.
 /// </remarks>
 public class ShadingWrapper
 {
-    private static readonly Regex ColorPattern = new Regex("^([0-9A-Fa-f]{6}|auto)$", RegexOptions.CultureInvariant);
-
     //The pairs of texture and shading pattern.
     private static readonly List<KeyValuePair<ShadingTexture, ShadingPatternValues>> Patterns = new List<KeyValuePair<ShadingTexture, ShadingPatternValues>>
     {
@@ -140,26 +137,32 @@ public class ShadingWrapper
         }
     }
 
-    /// <summary>The colour of the area: six hexadecimal digits, or <c>auto</c> for none (<c>Shading.BackgroundPatternColor</c> in Word).</summary>
-    public string BackgroundPatternColor
+    /// <summary>The colour of the area; automatic for none (<c>Shading.BackgroundPatternColor</c> in Word). Null when the cells differ.</summary>
+    public WordColor? BackgroundPatternColor
     {
-        get { return Read(s => s.Fill?.Value ?? "auto", "auto"); }
-        set
-        {
-            CheckColor(value);
-            Write(s => s.Fill = value ?? "auto");
-        }
+        get { return Read<WordColor?>(s => WordColor.FromStored(s.Fill?.Value), WordColor.Automatic); }
+        set { Write(s => s.Fill = (value ?? WordColor.Automatic).Hex); }
     }
 
-    /// <summary>The colour of the pattern: six hexadecimal digits, or <c>auto</c> (<c>Shading.ForegroundPatternColor</c> in Word).</summary>
-    public string ForegroundPatternColor
+    /// <summary>The colour of the pattern; automatic for none (<c>Shading.ForegroundPatternColor</c> in Word). Null when the cells differ.</summary>
+    public WordColor? ForegroundPatternColor
     {
-        get { return Read(s => s.Color?.Value ?? "auto", "auto"); }
-        set
-        {
-            CheckColor(value);
-            Write(s => s.Color = value ?? "auto");
-        }
+        get { return Read<WordColor?>(s => WordColor.FromStored(s.Color?.Value), WordColor.Automatic); }
+        set { Write(s => s.Color = (value ?? WordColor.Automatic).Hex); }
+    }
+
+    /// <summary>The background colour as one of the colours of Word's colour index (<c>Shading.BackgroundPatternColorIndex</c> in Word).</summary>
+    public ColorIndex? BackgroundPatternColorIndex
+    {
+        get { return BackgroundPatternColor?.ToColorIndex(); }
+        set { BackgroundPatternColor = value.HasValue ? WordColor.FromColorIndex(value.Value) : (WordColor?)null; }
+    }
+
+    /// <summary>The colour of the pattern as one of the colours of Word's colour index (<c>Shading.ForegroundPatternColorIndex</c> in Word).</summary>
+    public ColorIndex? ForegroundPatternColorIndex
+    {
+        get { return ForegroundPatternColor?.ToColorIndex(); }
+        set { ForegroundPatternColor = value.HasValue ? WordColor.FromColorIndex(value.Value) : (WordColor?)null; }
     }
 
     /// <summary>The pattern of the shading (<c>Shading.Texture</c> in Word).</summary>
@@ -182,14 +185,6 @@ public class ShadingWrapper
         foreach (Shading shading in _access(false).Where(s => s != null))
         {
             shading.Remove();
-        }
-    }
-
-    private static void CheckColor(string value)
-    {
-        if (value != null && !ColorPattern.IsMatch(value))
-        {
-            throw new ArgumentException("The colour must be six hexadecimal digits (such as FF0000) or 'auto'.", nameof(value));
         }
     }
 

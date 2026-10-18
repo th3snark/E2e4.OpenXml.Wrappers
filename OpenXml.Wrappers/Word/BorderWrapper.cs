@@ -20,8 +20,6 @@ namespace OpenXml.Wrappers.Word;
 /// </remarks>
 public class BorderWrapper
 {
-    private const double MinimumWidth = 0.25;
-    private const double MaximumWidth = 12;
 
     private readonly IList<(BordersWrapper Borders, BorderPosition Position)> _targets;
 
@@ -74,20 +72,21 @@ public class BorderWrapper
     }
 
     /// <summary>
-    /// The width of the line in points, from 0.25 to 12 (rounded to eighths of a point). A border that has not been set has a width of 0.
+    /// The width of the line (<c>Border.LineWidth</c> in Word): a number of points from 0.25 to 12 (rounded to eighths of a point) or a
+    /// <see cref="BorderLineWidth"/>. A border that has not been set, or borders that differ, read as a width of 0.
     /// </summary>
-    public double LineWidth
+    public LineWidth LineWidth
     {
         get
         {
-            List<double> widths = _targets.Select(t => GetLineWidth(t.Borders, t.Position)).Distinct().ToList();
-            return widths.Count == 1 ? widths[0] : 0;
+            List<LineWidth> widths = _targets.Select(t => GetLineWidth(t.Borders, t.Position)).Distinct().ToList();
+            return widths.Count == 1 ? widths[0] : default(LineWidth);
         }
         set
         {
-            if (Double.IsNaN(value) || value < MinimumWidth || value > MaximumWidth)
+            if (value.Points == 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(value), String.Format(CultureInfo.InvariantCulture, "The width must be between {0} and {1} points.", MinimumWidth, MaximumWidth));
+                throw new ArgumentOutOfRangeException(nameof(value), "The width must be at least 0.25 points.");
             }
             foreach ((BordersWrapper borders, BorderPosition position) in _targets)
             {
@@ -100,32 +99,33 @@ public class BorderWrapper
                     border.Color = "auto";
                     border.Space = borders.DefaultSpace;
                 }
-                border.Size = (uint)Math.Round(value * 8, MidpointRounding.AwayFromZero);
+                border.Size = value.EighthPoints;
             }
         }
     }
 
     /// <summary>
-    /// The colour as six hex digits, or "auto".
+    /// The colour (<c>Border.Color</c> in Word, which takes <c>RGB</c> values and <c>WdColor</c> constants); null when the borders differ.
     /// </summary>
-    /// <exception cref="ArgumentException">The colour is neither six hex digits nor "auto".</exception>
-    public string Color
+    /// <exception cref="ArgumentNullException">The colour is null.</exception>
+    public WordColor? Color
     {
         get
         {
-            List<string> colors = _targets.Select(t => t.Borders.FindEffective(t.Position)?.Color?.Value ?? "auto").Distinct().ToList();
+            List<WordColor> colors = _targets.Select(t => WordColor.FromStored(t.Borders.FindEffective(t.Position)?.Color?.Value)).Distinct().ToList();
             if (colors.Count == 0)
             {
-                return "auto";
+                return WordColor.Automatic;
             }
-            return colors.Count == 1 ? colors[0] : null;
+            return colors.Count == 1 ? colors[0] : (WordColor?)null;
         }
         set
         {
-            if (value == null || !(String.Equals(value, "auto", StringComparison.OrdinalIgnoreCase) || (value.Length == 6 && value.All(Uri.IsHexDigit))))
+            if (!value.HasValue)
             {
-                throw new ArgumentException("The colour must be six hex digits or \"auto\".", nameof(value));
+                throw new ArgumentNullException(nameof(value));
             }
+            string hex = value.Value.Hex;
             foreach ((BordersWrapper borders, BorderPosition position) in _targets)
             {
                 BorderType border = borders.Find(position);
@@ -136,8 +136,25 @@ public class BorderWrapper
                     border.Size = 4;
                     border.Space = borders.DefaultSpace;
                 }
-                border.Color = value;
+                border.Color = hex;
             }
+        }
+    }
+
+    /// <summary>
+    /// The colour as one of the colours of Word's colour index (<c>Border.ColorIndex</c> in Word), the nearest to the colour of the border; null
+    /// when the borders differ.
+    /// </summary>
+    public ColorIndex? ColorIndex
+    {
+        get { return Color?.ToColorIndex(); }
+        set
+        {
+            if (!value.HasValue)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
+            Color = WordColor.FromColorIndex(value.Value);
         }
     }
 
@@ -182,10 +199,10 @@ public class BorderWrapper
         return value == BorderValues.Nil || value == BorderValues.None ? BorderLineStyle.None : Map(value);
     }
 
-    private static double GetLineWidth(BordersWrapper borders, BorderPosition position)
+    private static LineWidth GetLineWidth(BordersWrapper borders, BorderPosition position)
     {
         BorderType border = borders.FindEffective(position);
-        return border?.Size == null || !border.Size.HasValue ? 0 : border.Size.Value / 8.0;
+        return border?.Size == null || !border.Size.HasValue ? default(LineWidth) : LineWidth.FromEighthPoints(border.Size.Value);
     }
 
     private static BorderLineStyle Map(BorderValues value)

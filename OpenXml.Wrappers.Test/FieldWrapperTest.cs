@@ -208,4 +208,58 @@ public class FieldWrapperTest
         Assert.Equal(field, new RangeWrapper(body).Fields[1]);
         Assert.NotEqual(field, new RangeWrapper(body).Fields[0]);
     }
+
+    [Fact]
+    public void ResultRangeCoversTheResultCharacters()
+    {
+        Body body = CreateBody();
+        FieldWrapper page = new RangeWrapper(body).Fields[0];
+
+        RangeWrapper result = page.Result.Range;
+
+        Assert.Equal("3", result.Text);
+        //Like any range, the code range does not show field codes in its Text (Field.Code.Text has them), but it covers their characters.
+        Assert.Equal(" PAGE \\* MERGEFORMAT ".Length, page.Code.Range.End - page.Code.Range.Start);
+    }
+
+    [Fact]
+    public void ResultFontFormatsOnlyTheResult()
+    {
+        Body body = CreateBody();
+        FieldWrapper numPages = new RangeWrapper(body).Fields[1];
+
+        numPages.Result.Font.Italic = true;
+
+        Run resultRun = body.Elements<Paragraph>().First().Elements<Run>().Last(r => r.Elements<Text>().Any(t => t.Text == "9"));
+        Assert.NotNull(resultRun.RunProperties.Italic);
+        Assert.Equal(true, numPages.Result.Font.Italic);
+        Assert.Equal(true, new RangeWrapper(body).Fields[1].Result.Font.Italic);
+        Assert.NotEqual(true, new RangeWrapper(body).Fields[0].Result.Font.Italic);
+        Assert.Equal(true, new RangeWrapper(body).Fields[0].Result.Font.Bold);
+    }
+
+    [Fact]
+    public void ResultOfASimpleFieldIsItsRuns()
+    {
+        Body body = CreateBody();
+        FieldWrapper date = new RangeWrapper(body).Fields[2];
+
+        Assert.Equal("today", date.Result.Range.Text);
+        Assert.Equal(true, date.Result.Font.Italic);
+        Assert.Equal(0, date.Code.Range.End - date.Code.Range.Start);
+    }
+
+    [Fact]
+    public void ResultRangeOfAFieldWithoutResultIsEmpty()
+    {
+        Body body = new Body(new Paragraph(
+            FieldCharRun(FieldCharValues.Begin),
+            new Run(new FieldCode(" PAGE ")),
+            FieldCharRun(FieldCharValues.End)));
+        FieldWrapper field = new RangeWrapper(body).Fields[0];
+
+        RangeWrapper result = field.Result.Range;
+
+        Assert.Equal(result.Start, result.End);
+    }
 }

@@ -102,25 +102,26 @@ public class TableFormattingTest
         TableCell cell = CreateTable(1, 1).Descendants<TableCell>().Single();
         TableCellWrapper wrapper = new TableCellWrapper(cell);
         wrapper.VerticalAlignment = CellVerticalAlignment.Center;
-        wrapper.BackgroundColor = "FFCC00";
+        wrapper.Shading.BackgroundPatternColor = "FFCC00";
         wrapper.Width = 100;
 
         Assert.Equal(new[] { "tcW", "shd", "vAlign" }, cell.TableCellProperties.ChildElements.Select(e => e.LocalName).ToArray());
     }
 
     [Fact]
-    public void CellBackgroundColorRoundTripsAndValidates()
+    public void CellShadingColorRoundTripsAndValidates()
     {
         TableCell cell = CreateTable(1, 1).Descendants<TableCell>().Single();
         TableCellWrapper wrapper = new TableCellWrapper(cell);
-        Assert.Null(wrapper.BackgroundColor);
+        Assert.Equal(WordColor.Automatic, wrapper.Shading.BackgroundPatternColor);
 
-        wrapper.BackgroundColor = "ffcc00";
-        Assert.Equal("ffcc00", wrapper.BackgroundColor);
-        Assert.Throws<ArgumentException>(() => wrapper.BackgroundColor = "red");
+        wrapper.Shading.BackgroundPatternColor = "ffcc00";
+        Assert.Equal(new WordColor("FFCC00"), wrapper.Shading.BackgroundPatternColor);
+        Assert.Equal("FFCC00", cell.TableCellProperties.Shading.Fill.Value);
+        Assert.Throws<ArgumentException>(() => wrapper.Shading.BackgroundPatternColor = "red");
 
-        wrapper.BackgroundColor = null;
-        Assert.Null(wrapper.BackgroundColor);
+        wrapper.Shading.Clear();
+        Assert.Equal(WordColor.Automatic, wrapper.Shading.BackgroundPatternColor);
         Assert.Null(cell.TableCellProperties.Shading);
     }
 
