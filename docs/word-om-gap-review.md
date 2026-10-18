@@ -1,5 +1,7 @@
 # Word object model gap review
 
+
+> **Status (for 1.0.0).** This review was written before the work it proposes. Done since: C1 (colours: `WordColor`, `ColorHelper.RGB`, `NamedColor`, the `ColorIndex` members), C2 (the `StyleObject` members; the `Style` properties stay names by decision), C3 (`LineWidth`, `BorderLineWidth`), C5 (`Document.Range()`), C7 (`TrackRevisions = true` throws until revisions are recorded), `Range.Delete(unit, count)`, nullable `Paragraph` formatting, `Field.Code`/`Result` with `Range` and `Font`, and the clean-up in section 4. Everything else below is still open and is additive, so it can ship in 1.x releases. The README, not this file, describes what the library does today.
 Scope: the public API of `OpenXml.Wrappers.Word` (branch `api-word-fidelity`) against the Word VBA object model, looking first at the objects that already exist, then at the limitations, and last at the objects that are missing.
 
 Method and caveats: this comes from reading the public signatures of every file in `OpenXml.Wrappers\Word`, plus `README.md`, `CHANGELOG.md` and `CLAUDE.md`. I did not run the code or check behaviour, and I compared against the Word object model from memory, not against the current Microsoft reference. Check each item against the docs before building it. Some members I list as missing may sit in a file I only skimmed.
@@ -171,7 +173,7 @@ Kept on purpose, because one or two other members cannot do the same thing:
 
 Phase 1 changes shape and so should come before the first publish. Everything after it is additive.
 
-**Phase 1 — conventions (breaking, do before publish).**
+**Phase 1 — conventions (breaking, done before publish).**
 1. C1 colours: `WdColor`, `RGB()`, int overloads, `ColorIndex`.
 2. C2 style objects: getters return `StyleWrapper`, setters accept name, object or `BuiltInStyle`.
 3. C3 `LineWidth` enum.
