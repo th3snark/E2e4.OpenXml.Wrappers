@@ -187,7 +187,7 @@ public class BordersWrapper
     /// <summary>
     /// The border that applies: the direct setting if there is one, otherwise what the table gives it, from its own borders or from its
     /// table style (and the styles that style is based on). A cell takes the outside borders of the table on the edges of the table and the
-    /// inside borders elsewhere. Conditional formatting of the style (first row and so on) is not looked at.
+    /// inside borders elsewhere. The conditional formatting of the style for the first and last row and column is read; banded rows and columns are not.
     /// </summary>
     internal BorderType FindEffective(BorderPosition position)
     {

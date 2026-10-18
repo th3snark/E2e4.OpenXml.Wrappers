@@ -17,6 +17,7 @@ public enum ParagraphAlignment
     Center = 1,
     Right = 2,
     Justify = 3,
+    Distribute = 4
 }
 
 /// <summary>
@@ -47,9 +48,10 @@ public enum LineSpacingRule
 /// The paragraph formatting of a range, as <c>Range.ParagraphFormat</c> in Word.
 /// </summary>
 /// <remarks>
-/// <para>Each property reads and sets the direct formatting of every paragraph that the range touches, and is null when they differ.
-/// Formatting that comes from styles is not taken into account, so a property that has not been set reads as 0, false or
-/// <see cref="ParagraphAlignment.Left"/>. Setting a property to null removes the direct formatting so that the style applies again.</para>
+/// <para>Each property reads the formatting that applies to every paragraph that the range touches, as Word does (the document defaults, the
+/// table style, the paragraph style and the direct formatting), and is null when they differ. Setting a property sets the direct
+/// formatting; setting it to null removes that so that the style applies again. Use <see cref="Direct"/> to read only the direct formatting.
+/// The conditional formatting of table styles and the indents of numbering levels are not taken into account.</para>
 /// <para>As in Word, measurements are in points. (<see cref="ParagraphWrapper.SpaceBefore"/> and <see cref="ParagraphWrapper.SpaceAfter"/> are
 /// the raw twentieths of a point.)</para>
 /// </remarks>
@@ -59,6 +61,7 @@ public class ParagraphFormatWrapper
 
     private readonly RangeWrapper _range;
     private readonly Style _style;
+    private readonly bool _direct;
 
     public ParagraphFormatWrapper(RangeWrapper range)
     {
@@ -66,11 +69,28 @@ public class ParagraphFormatWrapper
         _range = range;
     }
 
-    //The paragraph format of a style: the paragraph properties of the style itself, without anything it inherits from the style it is based on.
+    //The paragraph format of a style: the paragraph properties of the style with those it inherits from the styles it is based on and the
+    //document defaults.
     internal ParagraphFormatWrapper(Style style)
     {
         Guard.ThrowIfNull(style);
         _style = style;
+    }
+
+    private ParagraphFormatWrapper(RangeWrapper range, Style style, bool direct)
+    {
+        _range = range;
+        _style = style;
+        _direct = direct;
+    }
+
+    /// <summary>
+    /// The same paragraph format, but reading only the formatting that has been set directly on the paragraphs (or in the style itself), not
+    /// what comes from styles. A property that has not been set reads as 0, false or <see cref="ParagraphAlignment.Left"/>.
+    /// </summary>
+    public ParagraphFormatWrapper Direct
+    {
+        get { return _direct ? this : new ParagraphFormatWrapper(_range, _style, true); }
     }
 
     //The properties of a style are a different type to those of a paragraph, with the same children. They are edited as a copy of those of
@@ -118,9 +138,13 @@ public class ParagraphFormatWrapper
                 {
                     return ParagraphAlignment.Right;
                 }
-                if (value == JustificationValues.Both || value == JustificationValues.Distribute)
+                if (value == JustificationValues.Both)
                 {
                     return ParagraphAlignment.Justify;
+                }
+                if (value == JustificationValues.Distribute)
+                {
+                    return ParagraphAlignment.Distribute;
                 }
                 return ParagraphAlignment.Left;
             });
@@ -140,6 +164,7 @@ public class ParagraphFormatWrapper
                     JustificationValues justification = value.Value == ParagraphAlignment.Center ? JustificationValues.Center
                         : value.Value == ParagraphAlignment.Right ? JustificationValues.Right
                         : value.Value == ParagraphAlignment.Justify ? JustificationValues.Both
+                        : value.Value == ParagraphAlignment.Distribute ? JustificationValues.Distribute
                         : JustificationValues.Left;
                     properties.Justification = new Justification() { Val = justification };
                 }
@@ -497,7 +522,7 @@ public class ParagraphFormatWrapper
     {
         if (_style != null)
         {
-            return read(CopyStyleProperties());
+            return read(_direct ? CopyStyleProperties() : new FormattingResolver(_style).ResolveStyleParagraph(_style));
         }
 
         IList<Paragraph> paragraphs = GetParagraphs();
@@ -506,8 +531,10 @@ public class ParagraphFormatWrapper
             return default(T);
         }
 
-        T first = read(paragraphs[0].ParagraphProperties);
-        return paragraphs.Skip(1).All(p => EqualityComparer<T>.Default.Equals(read(p.ParagraphProperties), first)) ? first : default(T);
+        FormattingResolver resolver = _direct ? null : new FormattingResolver(paragraphs[0]);
+        Func<Paragraph, ParagraphProperties> properties = p => _direct ? p.ParagraphProperties : resolver.ResolveParagraph(p);
+        T first = read(properties(paragraphs[0]));
+        return paragraphs.Skip(1).All(p => EqualityComparer<T>.Default.Equals(read(properties(p)), first)) ? first : default(T);
     }
 
     private void Apply(Action<ParagraphProperties> change)

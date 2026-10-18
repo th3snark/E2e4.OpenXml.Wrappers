@@ -42,7 +42,7 @@ internal static class StyleExample
 
             //A style that was added and is not wanted can be deleted; built-in styles cannot.
             StyleWrapper unused = document.Styles.Add("Unused", StyleType.Paragraph);
-            document.Styles.Delete(unused);
+            unused.Delete();
 
             //List the paragraph styles that the document has.
             IEnumerable<string> names = document.Styles.Where(s => s.Type == StyleType.Paragraph).Select(s => s.Name);

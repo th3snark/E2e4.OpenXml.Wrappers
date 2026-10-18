@@ -64,17 +64,17 @@ public class LegacyMembersTest
     }
 
     [Fact]
-    public void KeepNextCanBeReadAndCleared()
+    public void KeepWithNextCanBeReadAndCleared()
     {
         ParagraphWrapper wrapper = new ParagraphWrapper(new Paragraph());
-        Assert.False(wrapper.KeepNext);
+        Assert.False(wrapper.KeepWithNext);
 
-        wrapper.KeepNext = true;
-        Assert.True(wrapper.KeepNext);
+        wrapper.KeepWithNext = true;
+        Assert.True(wrapper.KeepWithNext);
         Assert.True(wrapper.Format.KeepWithNext);
 
-        wrapper.KeepNext = false;
-        Assert.False(wrapper.KeepNext);
+        wrapper.KeepWithNext = false;
+        Assert.False(wrapper.KeepWithNext);
     }
 
     [Fact]

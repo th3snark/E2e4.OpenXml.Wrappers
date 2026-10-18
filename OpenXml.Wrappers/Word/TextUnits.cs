@@ -11,10 +11,10 @@ namespace OpenXml.Wrappers.Word;
 /// </summary>
 public enum TextUnit
 {
-    Character = 0,
-    Word = 1,
-    Sentence = 2,
-    Paragraph = 3
+    Character = 1,
+    Word = 2,
+    Sentence = 3,
+    Paragraph = 4
 }
 
 /// <summary>
@@ -22,8 +22,8 @@ public enum TextUnit
 /// </summary>
 public enum CollapseDirection
 {
-    Start = 0,
-    End = 1
+    End = 0,
+    Start = 1
 }
 
 /// <summary>

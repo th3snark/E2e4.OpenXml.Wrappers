@@ -13,12 +13,14 @@ namespace OpenXml.Wrappers.Word;
 /// The character formatting of a range, as <c>Range.Font</c> in Word.
 /// </summary>
 /// <remarks>
-/// <para>Each property reads and sets the direct formatting of the runs of the range. For a range of whole paragraphs (a paragraph, table cell,
-/// row, table or the document) it also covers the formatting of the paragraph marks. Formatting that comes from styles is not taken into account.</para>
-/// <para>A property is null when the runs of the range do not all have the same value. Boolean properties are false where no formatting
-/// has been set. Setting a property to null removes the direct formatting so that the style applies again.</para>
-/// <para>A range is made of whole elements, so unlike in Word the formatting cannot be applied to part of a run. Use <see cref="RangeWrapper.Find"/>
-/// to change the text you want to format first, or a bookmark that surrounds whole runs.</para>
+/// <para>Each property reads the formatting that applies to the runs of the range, as Word does: the document defaults, the table style, the
+/// paragraph style, the character style and the direct formatting. Setting a property sets the direct formatting. For a range of whole
+/// paragraphs (a paragraph, table cell, row, table or the document) it also covers the formatting of the paragraph marks. Use
+/// <see cref="Direct"/> to read only the direct formatting. The conditional formatting of table styles (such as the first row), numbering and
+/// the tints and shades of theme colours are not taken into account.</para>
+/// <para>A property is null when the runs of the range do not all have the same value. Setting a property to null removes the direct
+/// formatting so that the style applies again. The characters of a range that starts or ends in the middle of a run are formatted by
+/// splitting the run.</para>
 /// </remarks>
 public class FontWrapper
 {
@@ -26,6 +28,7 @@ public class FontWrapper
 
     private readonly RangeWrapper _range;
     private readonly Style _style;
+    private readonly bool _direct;
 
     public FontWrapper(RangeWrapper range)
     {
@@ -33,11 +36,27 @@ public class FontWrapper
         _range = range;
     }
 
-    //The font of a style: the run properties of the style itself, without anything it inherits from the style it is based on.
+    //The font of a style: the run properties of the style with those it inherits from the styles it is based on and the document defaults.
     internal FontWrapper(Style style)
     {
         Guard.ThrowIfNull(style);
         _style = style;
+    }
+
+    private FontWrapper(RangeWrapper range, Style style, bool direct)
+    {
+        _range = range;
+        _style = style;
+        _direct = direct;
+    }
+
+    /// <summary>
+    /// The same font, but reading only the formatting that has been set directly on the runs (or in the style itself), not what comes from
+    /// styles. A property that has not been set reads as null, except for the on and off properties such as <see cref="Bold"/>, which read false.
+    /// </summary>
+    public FontWrapper Direct
+    {
+        get { return _direct ? this : new FontWrapper(_range, _style, true); }
     }
 
     /// <summary>Bold text.</summary>
@@ -55,7 +74,7 @@ public class FontWrapper
     }
 
     /// <summary>Struck through text.</summary>
-    public bool? Strikethrough
+    public bool? StrikeThrough
     {
         get { return GetOnOff<Strike>(e => e.Val); }
         set { SetOnOff("strike", null, value, flag => new Strike() { Val = flag }, null); }
@@ -93,7 +112,12 @@ public class FontWrapper
             return GetValue<double?>(properties =>
             {
                 FontSize fontSize = properties?.Elements<FontSize>().FirstOrDefault();
-                return fontSize?.Val == null ? (double?)null : Convert.ToDouble(fontSize.Val.Value, CultureInfo.InvariantCulture) / 2;
+                if (fontSize?.Val == null)
+                {
+                    //Word uses 10 points when nothing says otherwise.
+                    return _direct ? (double?)null : 10;
+                }
+                return Convert.ToDouble(fontSize.Val.Value, CultureInfo.InvariantCulture) / 2;
             });
         }
         set
@@ -121,7 +145,26 @@ public class FontWrapper
     /// <summary>The name of the font.</summary>
     public string Name
     {
-        get { return GetValue(properties => properties?.Elements<RunFonts>().FirstOrDefault()?.Ascii?.Value); }
+        get
+        {
+            return GetValue((properties, resolver) =>
+            {
+                RunFonts fonts = properties?.Elements<RunFonts>().FirstOrDefault();
+                if (_direct)
+                {
+                    return fonts?.Ascii?.Value;
+                }
+
+                string themeName = null;
+                ThemeFontValues? theme = fonts?.AsciiTheme?.Value;
+                if (theme.HasValue)
+                {
+                    themeName = resolver.GetThemeFontName(theme.Value);
+                }
+                //Word uses Times New Roman when nothing says otherwise.
+                return themeName ?? fonts?.Ascii?.Value ?? "Times New Roman";
+            });
+        }
         set
         {
             Apply(properties =>
@@ -141,7 +184,25 @@ public class FontWrapper
     /// </summary>
     public string Color
     {
-        get { return GetValue(properties => properties?.Elements<Color>().FirstOrDefault()?.Val?.Value); }
+        get
+        {
+            return GetValue((properties, resolver) =>
+            {
+                Color color = properties?.Elements<Color>().FirstOrDefault();
+                string value = color?.Val?.Value;
+                if (_direct)
+                {
+                    return value;
+                }
+
+                if (value == null || String.Equals(value, "auto", StringComparison.OrdinalIgnoreCase))
+                {
+                    ThemeColorValues? theme = color?.ThemeColor?.Value;
+                    value = theme.HasValue ? resolver.GetThemeColorHex(theme.Value) : null;
+                }
+                return value ?? "auto";
+            });
+        }
         set
         {
             if (value != null && !ColorPattern.IsMatch(value))
@@ -202,23 +263,36 @@ public class FontWrapper
     /// </summary>
     private T GetValue<T>(Func<OpenXmlCompositeElement, T> read)
     {
+        return GetValue((properties, resolver) => read(properties));
+    }
+
+    private T GetValue<T>(Func<OpenXmlCompositeElement, FormattingResolver, T> read)
+    {
         if (_style != null)
         {
-            return read(_style.StyleRunProperties);
+            if (_direct)
+            {
+                return read(_style.StyleRunProperties, null);
+            }
+
+            FormattingResolver styleResolver = new FormattingResolver(_style);
+            return read(styleResolver.ResolveStyleRun(_style), styleResolver);
         }
 
-        IList<OpenXmlCompositeElement> targets = _range.GetRuns().Select(r => (OpenXmlCompositeElement)r.RunProperties).ToList();
-        if (targets.Count == 0)
-        {
-            targets = _range.GetParagraphs().Select(p => (OpenXmlCompositeElement)p.ParagraphProperties?.ParagraphMarkRunProperties).ToList();
-        }
-        if (targets.Count == 0)
+        IList<Run> runs = _range.GetRuns().ToList();
+        IList<Paragraph> marks = runs.Count == 0 ? _range.GetParagraphs().ToList() : new List<Paragraph>();
+        if (runs.Count == 0 && marks.Count == 0)
         {
             return default(T);
         }
 
-        T first = read(targets[0]);
-        return targets.Skip(1).All(t => EqualityComparer<T>.Default.Equals(read(t), first)) ? first : default(T);
+        FormattingResolver resolver = _direct ? null : new FormattingResolver(runs.Count > 0 ? (OpenXmlElement)runs[0] : marks[0]);
+        IList<OpenXmlCompositeElement> targets = runs.Count > 0
+            ? runs.Select(r => _direct ? (OpenXmlCompositeElement)r.RunProperties : resolver.ResolveRun(r)).ToList()
+            : marks.Select(p => _direct ? (OpenXmlCompositeElement)p.ParagraphProperties?.ParagraphMarkRunProperties : resolver.ResolveParagraphMark(p)).ToList();
+
+        T first = read(targets[0], resolver);
+        return targets.Skip(1).All(t => EqualityComparer<T>.Default.Equals(read(t, resolver), first)) ? first : default(T);
     }
 
     /// <summary>

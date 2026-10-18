@@ -62,7 +62,8 @@ public class BookmarkWrapperCollectionTest : System.IDisposable
     public void IntIndexerReturnsCorrectExceptionForMissingBookmark()
     {
         ArgumentOutOfRangeException ex = Assert.Throws<ArgumentOutOfRangeException>(() => _document1.Bookmarks[23]);
-        Assert.Equal("The requested member of the collection '23' does not exist.", ex.Message);
+        Assert.Equal("index", ex.ParamName);
+        Assert.StartsWith("The requested member of the collection '23' does not exist.", ex.Message, StringComparison.Ordinal);
     }
 
     [Fact]

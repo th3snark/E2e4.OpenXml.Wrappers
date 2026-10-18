@@ -34,9 +34,9 @@ public class BookmarkWrapperCollection : IEnumerable<BookmarkWrapper>
             {
                 return new BookmarkWrapper(_rangeWrapper.StartElement.GetElements<BookmarkStart>(_rangeWrapper.EndElement).ElementAt(index));
             }
-            catch (ArgumentOutOfRangeException ex)
+            catch (ArgumentOutOfRangeException)
             {
-                throw new ArgumentOutOfRangeException(String.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index), ex);
+                throw new ArgumentOutOfRangeException(nameof(index), String.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index));
             }
         }
     }

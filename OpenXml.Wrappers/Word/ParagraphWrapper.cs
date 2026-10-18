@@ -42,6 +42,10 @@ public class ParagraphWrapper : System.IEquatable<ParagraphWrapper>
         get { return Range.ParagraphFormat; }
     }
 
+    /// <summary>
+    /// The text of the paragraph without its paragraph mark. (Word has no <c>Paragraph.Text</c>; <c>Range.Text</c> of the paragraph includes the
+    /// mark as a carriage return.)
+    /// </summary>
     public string Text
     {
         get { return Range.Text.TrimEnd('\r', '\a'); }
@@ -66,19 +70,6 @@ public class ParagraphWrapper : System.IEquatable<ParagraphWrapper>
         set { Format.SpaceAfter = value; }
     }
 
-    private SpacingBetweenLines GetOrAddSpacing()
-    {
-        //The typed properties put the elements in schema order.
-        if (_paragraph.ParagraphProperties == null)
-        {
-            _paragraph.ParagraphProperties = new ParagraphProperties();
-        }
-        if (_paragraph.ParagraphProperties.SpacingBetweenLines == null)
-        {
-            _paragraph.ParagraphProperties.SpacingBetweenLines = new SpacingBetweenLines();
-        }
-        return _paragraph.ParagraphProperties.SpacingBetweenLines;
-    }
     /// <summary>
     /// The paragraph after this one in the document, including paragraphs in table cells, or null for the last paragraph (<c>Paragraph.Next</c> in Word).
     /// </summary>
@@ -232,7 +223,7 @@ public class ParagraphWrapper : System.IEquatable<ParagraphWrapper>
     /// <summary>
     /// Whether the paragraph is kept on the same page as the next one; the same as <c>Format.KeepWithNext</c>.
     /// </summary>
-    public bool KeepNext
+    public bool KeepWithNext
     {
         get { return Format.KeepWithNext == true; }
         set { Format.KeepWithNext = value ? true : null; }

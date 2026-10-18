@@ -55,10 +55,10 @@ internal static class AgreementExample
             //Comments from the reviewers.
             CommentWrapper legal = document.Comments.Add(fees.Range, "Legal: check the interest rate against the late payment rules.");
             legal.Author = "Legal team";
-            legal.Initials = "LT";
+            legal.Initial = "LT";
             CommentWrapper sales = document.Comments.Add(services.Range, "Sales: the customer asked for a service level to be added here.");
             sales.Author = "Sales";
-            sales.Initials = "SA";
+            sales.Initial = "SA";
 
             //Signature block: two columns, a line to sign on above each name.
             builder.Paragraph("Signed by the parties", "Heading 1");

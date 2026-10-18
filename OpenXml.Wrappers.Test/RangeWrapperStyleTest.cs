@@ -52,14 +52,14 @@ public class RangeWrapperStyleTest : IDisposable
     }
 
     [Fact]
-    public void SettingAParagraphStyleByNameIgnoresCaseAndReadsBackTheStoredName()
+    public void SettingAParagraphStyleByNameIgnoresCaseAndReadsBackTheNameWordShows()
     {
         Paragraph paragraph = AddParagraph();
         RangeWrapper range = new RangeWrapper(paragraph);
         range.Style = "Heading 1";
 
         Assert.Equal("Heading1", paragraph.ParagraphProperties.ParagraphStyleId.Val.Value);
-        Assert.Equal("heading 1", range.Style);
+        Assert.Equal("Heading 1", range.Style);
     }
 
     [Fact]
@@ -127,7 +127,7 @@ public class RangeWrapperStyleTest : IDisposable
         Assert.Null(new RangeWrapper(_body).Style);
 
         new RangeWrapper(second).Style = "Heading 1";
-        Assert.Equal("heading 1", new RangeWrapper(_body).Style);
+        Assert.Equal("Heading 1", new RangeWrapper(_body).Style);
     }
 
     [Fact]

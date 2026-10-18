@@ -2,6 +2,18 @@
 
 All notable changes are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+- Word names (breaking, before the first release): `Font.Strikethrough` is `StrikeThrough`, `KeepNext` of paragraphs, rows and cells is `KeepWithNext`, `Comment.Initials` is `Initial`, and `Comment.Range` is now the text of the comment while the commented range is `Comment.Scope`, as in Word. `Styles.Delete(style)` is `Style.Delete()`. `StyleWrapper.Name` is the name Word shows ("Heading 1").
+- The values of `TextUnit`, `CollapseDirection`, `BorderPosition` and `DocumentPropertyType` are those of Word's `WdUnits`, `WdCollapseDirection`, `WdBorderType` and `MsoDocProperties`; `ParagraphAlignment` has `Distribute`.
+- `Font` and `ParagraphFormat` read the effective formatting, as in Word (document defaults, table, paragraph and character styles, direct formatting), including for `Style.Font` and `Style.ParagraphFormat`; `.Direct` reads only the direct formatting. Unset size, name and colour read as Word's defaults (10 points, Times New Roman, auto).
+- `CopyAllPartsTo` replaces the parts the target already has, and `CopyLayoutTo` drops header and footer references the source does not have. The collection indexers of bookmarks and comments report the index in their out of range message.
+
+### Added
+- The built-in styles: `Styles["Heading 1"]` and `Styles[BuiltInStyle.Heading1]` (the `BuiltInStyle` enum has the values of `WdBuiltinStyle`) find the style even when the document has not used it yet, and applying one by name adds its definition to the document.
+- `Font.Direct` and `ParagraphFormat.Direct`.
+
 ## [1.0.0-preview.1] - 2026-10-17
 
 ### Added

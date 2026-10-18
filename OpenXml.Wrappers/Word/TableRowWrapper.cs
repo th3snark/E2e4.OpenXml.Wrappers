@@ -215,18 +215,18 @@ public class TableRowWrapper : System.IEquatable<TableRowWrapper>
     /// <summary>
     /// Whether every cell of the row keeps its paragraphs with the next one; false when there are no cells or only some do.
     /// </summary>
-    public bool KeepNext
+    public bool KeepWithNext
     {
         get
         {
             List<TableCellWrapper> cells = Cells.ToList();
-            return cells.Count > 0 && cells.All(c => c.KeepNext);
+            return cells.Count > 0 && cells.All(c => c.KeepWithNext);
         }
         set
         {
             foreach (TableCellWrapper cell in Cells)
             {
-                cell.KeepNext = value;
+                cell.KeepWithNext = value;
             }
         }
     }

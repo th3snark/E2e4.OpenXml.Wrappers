@@ -83,7 +83,7 @@ public class RangeWrapperSpanDocumentTest : IDisposable
             CommentWrapper comment = document.Comments.Add(document.Range(0, 5), "Greeting");
 
             Assert.Equal("Greeting", comment.Text.TrimEnd('\r'));
-            Assert.Equal("Hello", comment.Range.Text);
+            Assert.Equal("Hello", comment.Scope.Text);
             AssertValid(document);
         }
     }
@@ -117,7 +117,7 @@ public class RangeWrapperSpanDocumentTest : IDisposable
             document.Range(14, 14).Style = "Heading 1";
 
             Assert.Equal("Strong", document.Range(6, 11).Style);
-            Assert.Equal("heading 1", document.Paragraphs[1].Range.Style);
+            Assert.Equal("Heading 1", document.Paragraphs[1].Range.Style);
             AssertValid(document);
         }
     }

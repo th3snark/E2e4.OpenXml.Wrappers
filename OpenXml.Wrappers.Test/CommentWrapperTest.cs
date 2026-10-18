@@ -64,22 +64,22 @@ public class CommentWrapperTest : System.IDisposable
     }
 
     [Fact]
-    public void InitialsPropertyIsCorrect()
+    public void InitialPropertyIsCorrect()
     {
-        Assert.Equal("n", _document3.Comments[0].Initials);
-        Assert.Equal("n", _document3.Comments[1].Initials);
-        Assert.Equal("n", _document3.Comments[2].Initials);
-        Assert.Equal("n", _document3.Comments[3].Initials);
-        Assert.Equal("n", _document3.Comments[4].Initials);
+        Assert.Equal("n", _document3.Comments[0].Initial);
+        Assert.Equal("n", _document3.Comments[1].Initial);
+        Assert.Equal("n", _document3.Comments[2].Initial);
+        Assert.Equal("n", _document3.Comments[3].Initial);
+        Assert.Equal("n", _document3.Comments[4].Initial);
     }
 
     [Fact]
     public void RangeTextPropertyIsCorrect()
     {
-        Assert.Equal("text", _document3.Comments[0].Range.Text);
-        Assert.Equal("Another paragraph with a comment\r", _document3.Comments[1].Range.Text);
-        Assert.Equal("Line 2\rLine 3\rLin", _document3.Comments[2].Range.Text);
-        Assert.Equal("R2C2\r", _document3.Comments[3].Range.Text);
-        Assert.Equal("R3C1\rR3C2\r", _document3.Comments[4].Range.Text);
+        Assert.Equal("text", _document3.Comments[0].Scope.Text);
+        Assert.Equal("Another paragraph with a comment\r", _document3.Comments[1].Scope.Text);
+        Assert.Equal("Line 2\rLine 3\rLin", _document3.Comments[2].Scope.Text);
+        Assert.Equal("R2C2\r", _document3.Comments[3].Scope.Text);
+        Assert.Equal("R3C1\rR3C2\r", _document3.Comments[4].Scope.Text);
     }
 }

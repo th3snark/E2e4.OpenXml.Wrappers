@@ -190,10 +190,10 @@ internal static class QuarterlyReportExample
             //Comments from two reviewers.
             CommentWrapper question = document.Comments.Add(figure.Range, "Does this include the one-off licence income from the West region?");
             question.Author = "Priya Nair";
-            question.Initials = "PN";
+            question.Initial = "PN";
             CommentWrapper delay = document.Comments.Add(document.Paragraphs.First(p => p.Text.StartsWith("Key point", StringComparison.Ordinal)).Range, "Please add the revised date for the customer portal.");
             delay.Author = "Tom Hale";
-            delay.Initials = "TH";
+            delay.Initial = "TH";
 
             //Header and footer. The cover page has neither.
             SectionWrapper first = document.Sections[0];

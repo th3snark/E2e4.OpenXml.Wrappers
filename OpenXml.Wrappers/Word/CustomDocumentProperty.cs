@@ -12,11 +12,11 @@ namespace OpenXml.Wrappers.Word;
 /// </summary>
 public enum DocumentPropertyType
 {
-    Boolean = 0,
-    Date = 1,
-    FloatingPoint = 2,
-    Number = 3,
-    Text = 4
+    Number = 1,
+    Boolean = 2,
+    Date = 3,
+    Text = 4,
+    FloatingPoint = 5
 }
 
 /// <summary>

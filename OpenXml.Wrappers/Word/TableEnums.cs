@@ -25,14 +25,14 @@ public enum CellVerticalAlignment
 /// </summary>
 public enum BorderPosition
 {
-    Top = 0,
-    Left = 1,
-    Bottom = 2,
-    Right = 3,
-    Horizontal = 4,
-    Vertical = 5,
-    DiagonalDown = 6,
-    DiagonalUp = 7
+    Top = -1,
+    Left = -2,
+    Bottom = -3,
+    Right = -4,
+    Horizontal = -5,
+    Vertical = -6,
+    DiagonalDown = -7,
+    DiagonalUp = -8
 }
 
 /// <summary>

@@ -77,16 +77,16 @@ public class RangeWrapperFontTest
     }
 
     [Fact]
-    public void ItalicStrikethroughAndUnderlineCanBeSetAndRead()
+    public void ItalicStrikeThroughAndUnderlineCanBeSetAndRead()
     {
         Paragraph paragraph = CreateParagraph("a");
         FontWrapper font = new RangeWrapper(paragraph).Font;
         font.Italic = true;
-        font.Strikethrough = true;
+        font.StrikeThrough = true;
         font.Underline = true;
 
         Assert.True(font.Italic);
-        Assert.True(font.Strikethrough);
+        Assert.True(font.StrikeThrough);
         Assert.True(font.Underline);
         Assert.Equal(UnderlineValues.Single, paragraph.Elements<Run>().Single().RunProperties.Underline.Val.Value);
 
@@ -108,7 +108,8 @@ public class RangeWrapperFontTest
     {
         Paragraph paragraph = CreateParagraph("a");
         FontWrapper font = new RangeWrapper(paragraph).Font;
-        Assert.Null(font.Size);
+        Assert.Null(font.Direct.Size);
+        Assert.Equal(10, font.Size);
 
         font.Size = 10.5;
 
@@ -154,7 +155,8 @@ public class RangeWrapperFontTest
         Assert.Equal("Arial", fonts.ComplexScript.Value);
 
         font.Name = null;
-        Assert.Null(font.Name);
+        Assert.Null(font.Direct.Name);
+        Assert.Equal("Times New Roman", font.Name);
     }
 
     [Theory]

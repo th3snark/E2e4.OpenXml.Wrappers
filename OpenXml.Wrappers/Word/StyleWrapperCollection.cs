@@ -41,15 +41,14 @@ public class StyleWrapperCollection : IEnumerable<StyleWrapper>
     }
 
     /// <summary>
-    /// The style with the name (ignoring case) or, failing that, the id; null if there is none.
+    /// The style with the name (ignoring case) or, failing that, the id; null if there is none. As in Word, a built-in style such as "Heading 1" is
+    /// found whether or not the document has used it yet: it is added to the document when it is asked for.
     /// </summary>
     public StyleWrapper this[string name]
     {
         get
         {
-            IList<Style> styles = GetElementList();
-            Style style = styles.FirstOrDefault(s => String.Equals(s.StyleName?.Val?.Value, name, StringComparison.OrdinalIgnoreCase))
-                ?? styles.FirstOrDefault(s => s.StyleId?.Value == name);
+            Style style = BuiltInStyles.GetOrCreate(_mainDocumentPart, name);
             return style == null ? null : new StyleWrapper(style);
         }
     }
@@ -59,9 +58,20 @@ public class StyleWrapperCollection : IEnumerable<StyleWrapper>
         get { return GetElementList().Count; }
     }
 
+    /// <summary>
+    /// Whether the document holds a style with the name or id. Unlike the indexer this does not add a built-in style that the document has not used.
+    /// </summary>
     public bool Exists(string name)
     {
-        return this[name] != null;
+        return StyleHelper.FindStyle(_mainDocumentPart.StyleDefinitionsPart?.Styles, name) != null;
+    }
+
+    /// <summary>
+    /// A built-in style, as <c>Styles(wdStyleHeading1)</c> in Word. It is added to the document if the document does not have it yet.
+    /// </summary>
+    public StyleWrapper this[BuiltInStyle style]
+    {
+        get { return this[BuiltInStyles.GetName(style)]; }
     }
 
     /// <summary>
@@ -81,7 +91,7 @@ public class StyleWrapperCollection : IEnumerable<StyleWrapper>
 
         //The id is the name without the characters that are not allowed in one, as Word makes it.
         string styleId = new string(name.Where(Char.IsLetterOrDigit).ToArray());
-        if (styleId.Length == 0 || Exists(name) || Exists(styleId))
+        if (styleId.Length == 0 || Exists(name) || Exists(styleId) || BuiltInStyles.IsBuiltInName(name) || BuiltInStyles.IsBuiltInName(styleId))
         {
             throw new ArgumentException(String.Format(CultureInfo.InvariantCulture, "A style named '{0}' already exists or cannot be given an id.", name), nameof(name));
         }
@@ -114,59 +124,6 @@ public class StyleWrapperCollection : IEnumerable<StyleWrapper>
         }
         part.Styles.AppendChild(style);
         return new StyleWrapper(style);
-    }
-
-    /// <summary>
-    /// Deletes a style, as <c>Style.Delete</c> in Word. Paragraphs, runs and tables that use it go back to the default style, and styles
-    /// based on it lose their base.
-    /// </summary>
-    /// <exception cref="InvalidOperationException">The style is built in, or is the default style of its type.</exception>
-    public void Delete(StyleWrapper style)
-    {
-        Guard.ThrowIfNull(style);
-        if (style.Style.Parent == null || style.Style.GetRoot() != _mainDocumentPart.StyleDefinitionsPart?.Styles)
-        {
-            throw new ArgumentException("The style is not a style of this document.", nameof(style));
-        }
-        if (style.BuiltIn || (style.Style.Default != null && style.Style.Default.HasValue && style.Style.Default.Value))
-        {
-            throw new InvalidOperationException("Built-in styles and default styles cannot be deleted.");
-        }
-
-        string styleId = style.StyleId;
-        style.Style.Remove();
-
-        foreach (Style other in _mainDocumentPart.StyleDefinitionsPart.Styles.Elements<Style>())
-        {
-            if (other.BasedOn?.Val?.Value == styleId)
-            {
-                other.BasedOn.Remove();
-            }
-            if (other.NextParagraphStyle?.Val?.Value == styleId)
-            {
-                other.NextParagraphStyle.Remove();
-            }
-            if (other.LinkedStyle?.Val?.Value == styleId)
-            {
-                other.LinkedStyle.Remove();
-            }
-        }
-
-        if (_mainDocumentPart.Document != null)
-        {
-            foreach (ParagraphStyleId reference in _mainDocumentPart.Document.Descendants<ParagraphStyleId>().Where(e => e.Val?.Value == styleId).ToList())
-            {
-                reference.Remove();
-            }
-            foreach (RunStyle reference in _mainDocumentPart.Document.Descendants<RunStyle>().Where(e => e.Val?.Value == styleId).ToList())
-            {
-                reference.Remove();
-            }
-            foreach (TableStyle reference in _mainDocumentPart.Document.Descendants<TableStyle>().Where(e => e.Val?.Value == styleId).ToList())
-            {
-                reference.Remove();
-            }
-        }
     }
 
     #region IEnumerable Members

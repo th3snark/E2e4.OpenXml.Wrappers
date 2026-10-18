@@ -79,10 +79,10 @@ internal static class MinutesExample
             //Review comments, from two people. Comments can be added to a paragraph or a bookmark.
             CommentWrapper question = document.Comments.Add(progress.Range, "Is 28 March still realistic after the security review?");
             question.Author = "Ana Silva";
-            question.Initials = "AS";
+            question.Initial = "AS";
             CommentWrapper note = document.Comments.Add(document.Bookmarks["decision_pilot"].Range, "Please add the names of the pilot customers.");
             note.Author = "Ben Okafor";
-            note.Initials = "BO";
+            note.Initial = "BO";
 
             //A footer with the page number.
             RangeWrapper footer = document.Sections[0].Footers[HeaderFooterIndex.Primary].Range;

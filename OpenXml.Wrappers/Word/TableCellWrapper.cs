@@ -189,18 +189,18 @@ public partial class TableCellWrapper : System.IEquatable<TableCellWrapper>
     /// <summary>
     /// Whether every paragraph of the cell is kept on the same page as the next one; false when there are none or only some are.
     /// </summary>
-    public bool KeepNext
+    public bool KeepWithNext
     {
         get
         {
             List<ParagraphWrapper> paragraphs = Range.Paragraphs.ToList();
-            return paragraphs.Count > 0 && paragraphs.All(p => p.KeepNext);
+            return paragraphs.Count > 0 && paragraphs.All(p => p.KeepWithNext);
         }
         set
         {
             foreach (ParagraphWrapper paragraph in Range.Paragraphs)
             {
-                paragraph.KeepNext = value;
+                paragraph.KeepWithNext = value;
             }
         }
     }

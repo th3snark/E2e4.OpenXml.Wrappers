@@ -18,9 +18,26 @@ public class CommentWrapper : System.IEquatable<CommentWrapper>
         _commentRangeEnd = commentRangeStart.GetCommentRangeEnd();
     }
 
-    public RangeWrapper Range
+    /// <summary>
+    /// The range of the document the comment is attached to (Word's <c>Comment.Scope</c>).
+    /// </summary>
+    public RangeWrapper Scope
     {
         get { return new RangeWrapper(_commentRangeStart, _commentRangeEnd); }
+    }
+
+    /// <summary>
+    /// The range over the text of the comment itself (Word's <c>Comment.Range</c>), as opposed to <see cref="Scope"/>.
+    /// </summary>
+    public RangeWrapper Range
+    {
+        get
+        {
+            Comment comment = _commentRangeStart.GetComment();
+            Paragraph first = comment.Elements<Paragraph>().FirstOrDefault();
+            Paragraph last = comment.Elements<Paragraph>().LastOrDefault();
+            return first == null ? new RangeWrapper(comment) : new RangeWrapper(first, last);
+        }
     }
 
     /// <summary>
@@ -37,7 +54,7 @@ public class CommentWrapper : System.IEquatable<CommentWrapper>
         set { _commentRangeStart.GetComment().Author = value; }
     }
 
-    public string Initials
+    public string Initial
     {
         get { return _commentRangeStart.GetComment().Initials?.Value; }
         set { _commentRangeStart.GetComment().Initials = value; }
