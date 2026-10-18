@@ -35,7 +35,7 @@ internal static class CharactersExample
             word.Font.Bold = true;
 
             RangeWrapper sentences = document.Paragraphs[2].Range;
-            sentences.Sentences[1].Font.Underline = true;
+            sentences.Sentences[1].Font.Underline = UnderlineStyle.SingleLine;
             sentences.Sentences[1].Font.Color = "C00000";
 
             //A comment on the third sentence, and a bookmark on one word.

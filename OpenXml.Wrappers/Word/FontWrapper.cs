@@ -80,29 +80,365 @@ public class FontWrapper
         set { SetOnOff("strike", null, value, flag => new Strike() { Val = flag }, null); }
     }
 
-    /// <summary>Underlined text. Setting true gives a single underline and any underline style reads as true.</summary>
-    public bool? Underline
+    /// <summary>The underline of the text, as <c>Font.Underline</c> in Word. <see cref="UnderlineStyle.None"/> when there is none.</summary>
+    public UnderlineStyle? Underline
     {
         get
         {
-            return GetValue<bool?>(properties =>
+            return GetValue<UnderlineStyle?>(properties =>
             {
                 Underline underline = properties?.Elements<Underline>().FirstOrDefault();
-                return underline != null && underline.Val != null && underline.Val.HasValue && underline.Val.Value != UnderlineValues.None;
+                if (underline == null)
+                {
+                    return UnderlineStyle.None;
+                }
+                return underline.Val == null || !underline.Val.HasValue ? UnderlineStyle.SingleLine : ToUnderlineStyle(underline.Val.Value);
             });
         }
         set
         {
+            if (value.HasValue && !EnumCompat.IsDefined(value.Value))
+            {
+                throw new ArgumentOutOfRangeException(nameof(value));
+            }
+
             Apply(properties =>
             {
+                //Keep the colour of the underline when only its style changes.
+                string color = properties.Elements<Underline>().FirstOrDefault()?.Color?.Value;
                 properties.RemoveRunProperty("u");
                 if (value.HasValue)
                 {
-                    properties.SetRunProperty(new Underline() { Val = value.Value ? UnderlineValues.Single : UnderlineValues.None });
+                    Underline underline = new Underline() { Val = ToUnderlineValues(value.Value) };
+                    if (color != null && value.Value != UnderlineStyle.None)
+                    {
+                        underline.Color = color;
+                    }
+                    properties.SetRunProperty(underline);
                 }
             });
         }
     }
+
+    /// <summary>
+    /// The colour of the underline as six hexadecimal digits, or <c>auto</c> (as <c>Font.UnderlineColor</c> in Word). Setting it on text
+    /// that is not underlined gives a single underline.
+    /// </summary>
+    public string UnderlineColor
+    {
+        get
+        {
+            return GetValue(properties =>
+            {
+                Underline underline = properties?.Elements<Underline>().FirstOrDefault();
+                return underline?.Color?.Value ?? (_direct ? null : "auto");
+            });
+        }
+        set
+        {
+            if (value != null && !ColorPattern.IsMatch(value))
+            {
+                throw new ArgumentException("The colour must be six hexadecimal digits (such as FF0000) or 'auto'.", nameof(value));
+            }
+
+            Apply(properties =>
+            {
+                Underline underline = properties.Elements<Underline>().FirstOrDefault();
+                if (underline == null && value == null)
+                {
+                    return;
+                }
+                if (underline == null)
+                {
+                    underline = new Underline() { Val = UnderlineValues.Single };
+                    properties.SetRunProperty(underline);
+                }
+                underline.Color = value == null ? null : new DocumentFormat.OpenXml.StringValue(value);
+            });
+        }
+    }
+
+    /// <summary>Superscript text. Setting it to true makes <see cref="Subscript"/> false.</summary>
+    public bool? Superscript
+    {
+        get { return GetVerticalAlignment(VerticalPositionValues.Superscript); }
+        set { SetVerticalAlignment(value, VerticalPositionValues.Superscript); }
+    }
+
+    /// <summary>Subscript text. Setting it to true makes <see cref="Superscript"/> false.</summary>
+    public bool? Subscript
+    {
+        get { return GetVerticalAlignment(VerticalPositionValues.Subscript); }
+        set { SetVerticalAlignment(value, VerticalPositionValues.Subscript); }
+    }
+
+    /// <summary>Text in capital letters.</summary>
+    public bool? AllCaps
+    {
+        get { return GetOnOff<Caps>(e => e.Val); }
+        set { SetOnOff("caps", null, value, flag => new Caps() { Val = flag }, null); }
+    }
+
+    /// <summary>Small capitals.</summary>
+    public bool? SmallCaps
+    {
+        get { return GetOnOff<SmallCaps>(e => e.Val); }
+        set { SetOnOff("smallCaps", null, value, flag => new SmallCaps() { Val = flag }, null); }
+    }
+
+    /// <summary>Hidden text.</summary>
+    public bool? Hidden
+    {
+        get { return GetOnOff<Vanish>(e => e.Val); }
+        set { SetOnOff("vanish", null, value, flag => new Vanish() { Val = flag }, null); }
+    }
+
+    /// <summary>Text with a double line through it. Setting it to true makes <see cref="StrikeThrough"/> false.</summary>
+    public bool? DoubleStrikeThrough
+    {
+        get { return GetOnOff<DoubleStrike>(e => e.Val); }
+        set
+        {
+            if (value == true)
+            {
+                Apply(properties => properties.RemoveRunProperty("strike"));
+            }
+            SetOnOff("dstrike", null, value, flag => new DoubleStrike() { Val = flag }, null);
+        }
+    }
+
+    /// <summary>Embossed text.</summary>
+    public bool? Emboss
+    {
+        get { return GetOnOff<Emboss>(e => e.Val); }
+        set { SetOnOff("emboss", null, value, flag => new Emboss() { Val = flag }, null); }
+    }
+
+    /// <summary>Engraved text.</summary>
+    public bool? Engrave
+    {
+        get { return GetOnOff<Imprint>(e => e.Val); }
+        set { SetOnOff("imprint", null, value, flag => new Imprint() { Val = flag }, null); }
+    }
+
+    /// <summary>Text drawn as an outline.</summary>
+    public bool? Outline
+    {
+        get { return GetOnOff<Outline>(e => e.Val); }
+        set { SetOnOff("outline", null, value, flag => new Outline() { Val = flag }, null); }
+    }
+
+    /// <summary>Text with a shadow.</summary>
+    public bool? Shadow
+    {
+        get { return GetOnOff<Shadow>(e => e.Val); }
+        set { SetOnOff("shadow", null, value, flag => new Shadow() { Val = flag }, null); }
+    }
+
+    /// <summary>The space between the characters in points; negative to condense them (<c>Font.Spacing</c> in Word).</summary>
+    public double? Spacing
+    {
+        get
+        {
+            return GetValue<double?>(properties =>
+            {
+                long? twips = properties?.Elements<Spacing>().FirstOrDefault()?.Val?.Value;
+                return twips.HasValue ? twips.Value / 20.0 : 0;
+            });
+        }
+        set
+        {
+            if (value.HasValue && (Double.IsNaN(value.Value) || Math.Abs(value.Value) > 1584))
+            {
+                throw new ArgumentOutOfRangeException(nameof(value), "The spacing must be between -1584 and 1584 points.");
+            }
+
+            Apply(properties =>
+            {
+                properties.RemoveRunProperty("spacing");
+                if (value.HasValue && value.Value != 0)
+                {
+                    properties.SetRunProperty(new Spacing() { Val = (int)Math.Round(value.Value * 20, MidpointRounding.AwayFromZero) });
+                }
+            });
+        }
+    }
+
+    /// <summary>The width of the characters as a percentage of their normal width, 100 by default (<c>Font.Scaling</c> in Word).</summary>
+    public int? Scaling
+    {
+        get
+        {
+            return GetValue<int?>(properties =>
+            {
+                long? scale = properties?.Elements<CharacterScale>().FirstOrDefault()?.Val?.Value;
+                return (int)(scale ?? 100);
+            });
+        }
+        set
+        {
+            if (value.HasValue && (value.Value < 1 || value.Value > 600))
+            {
+                throw new ArgumentOutOfRangeException(nameof(value), "The scaling must be between 1 and 600 percent.");
+            }
+
+            Apply(properties =>
+            {
+                properties.RemoveRunProperty("w");
+                if (value.HasValue && value.Value != 100)
+                {
+                    properties.SetRunProperty(new CharacterScale() { Val = value.Value });
+                }
+            });
+        }
+    }
+
+    /// <summary>The distance in points that the text is raised (positive) or lowered (negative) from the baseline (<c>Font.Position</c> in Word).</summary>
+    public double? Position
+    {
+        get
+        {
+            return GetValue<double?>(properties =>
+            {
+                string value = properties?.Elements<Position>().FirstOrDefault()?.Val?.Value;
+                return Int32.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int halfPoints) ? halfPoints / 2.0 : 0;
+            });
+        }
+        set
+        {
+            if (value.HasValue && (Double.IsNaN(value.Value) || Math.Abs(value.Value) > 1584))
+            {
+                throw new ArgumentOutOfRangeException(nameof(value), "The position must be between -1584 and 1584 points.");
+            }
+
+            Apply(properties =>
+            {
+                properties.RemoveRunProperty("position");
+                if (value.HasValue && value.Value != 0)
+                {
+                    properties.SetRunProperty(new Position() { Val = ((int)Math.Round(value.Value * 2, MidpointRounding.AwayFromZero)).ToString(CultureInfo.InvariantCulture) });
+                }
+            });
+        }
+    }
+
+    /// <summary>The smallest font size in points that is kerned, 0 when the characters are not kerned (<c>Font.Kerning</c> in Word).</summary>
+    public double? Kerning
+    {
+        get
+        {
+            return GetValue<double?>(properties =>
+            {
+                uint? halfPoints = properties?.Elements<Kern>().FirstOrDefault()?.Val?.Value;
+                return halfPoints.HasValue ? halfPoints.Value / 2.0 : 0;
+            });
+        }
+        set
+        {
+            if (value.HasValue && (Double.IsNaN(value.Value) || value.Value < 0 || value.Value > 1638))
+            {
+                throw new ArgumentOutOfRangeException(nameof(value), "The kerning must be between 0 and 1638 points.");
+            }
+
+            Apply(properties =>
+            {
+                properties.RemoveRunProperty("kern");
+                if (value.HasValue && value.Value != 0)
+                {
+                    properties.SetRunProperty(new Kern() { Val = (uint)Math.Round(value.Value * 2, MidpointRounding.AwayFromZero) });
+                }
+            });
+        }
+    }
+
+    /// <summary>
+    /// Removes the direct character formatting, so that the styles apply (<c>Font.Reset</c> in Word). A character style that has been applied
+    /// is kept.
+    /// </summary>
+    public void Reset()
+    {
+        Apply(properties =>
+        {
+            foreach (OpenXmlElement child in properties.ChildElements.Where(e => !(e is RunStyle)).ToList())
+            {
+                child.Remove();
+            }
+        });
+    }
+
+    private bool? GetVerticalAlignment(VerticalPositionValues position)
+    {
+        return GetValue<bool?>(properties =>
+        {
+            VerticalTextAlignment alignment = properties?.Elements<VerticalTextAlignment>().FirstOrDefault();
+            return alignment?.Val != null && alignment.Val.HasValue && alignment.Val.Value == position;
+        });
+    }
+
+    private void SetVerticalAlignment(bool? value, VerticalPositionValues position)
+    {
+        Apply(properties =>
+        {
+            VerticalTextAlignment existing = properties.Elements<VerticalTextAlignment>().FirstOrDefault();
+            bool isThis = existing?.Val != null && existing.Val.HasValue && existing.Val.Value == position;
+            if (value == true)
+            {
+                properties.SetRunProperty(new VerticalTextAlignment() { Val = position });
+            }
+            else if (isThis)
+            {
+                //Setting false (or null) only removes this kind of alignment; the opposite one stays.
+                properties.RemoveRunProperty("vertAlign");
+            }
+        });
+    }
+
+    private static UnderlineStyle ToUnderlineStyle(UnderlineValues value)
+    {
+        foreach (KeyValuePair<UnderlineStyle, UnderlineValues> pair in UnderlineMap)
+        {
+            if (pair.Value == value)
+            {
+                return pair.Key;
+            }
+        }
+        return UnderlineStyle.SingleLine;
+    }
+
+    private static UnderlineValues ToUnderlineValues(UnderlineStyle style)
+    {
+        foreach (KeyValuePair<UnderlineStyle, UnderlineValues> pair in UnderlineMap)
+        {
+            if (pair.Key == style)
+            {
+                return pair.Value;
+            }
+        }
+        return UnderlineValues.Single;
+    }
+
+    //The Open XML SDK 3.x values are structs, so they are looked up in a list rather than a switch.
+    private static readonly List<KeyValuePair<UnderlineStyle, UnderlineValues>> UnderlineMap = new List<KeyValuePair<UnderlineStyle, UnderlineValues>>
+    {
+        new KeyValuePair<UnderlineStyle, UnderlineValues>(UnderlineStyle.None, UnderlineValues.None),
+        new KeyValuePair<UnderlineStyle, UnderlineValues>(UnderlineStyle.SingleLine, UnderlineValues.Single),
+        new KeyValuePair<UnderlineStyle, UnderlineValues>(UnderlineStyle.Words, UnderlineValues.Words),
+        new KeyValuePair<UnderlineStyle, UnderlineValues>(UnderlineStyle.DoubleLine, UnderlineValues.Double),
+        new KeyValuePair<UnderlineStyle, UnderlineValues>(UnderlineStyle.Dotted, UnderlineValues.Dotted),
+        new KeyValuePair<UnderlineStyle, UnderlineValues>(UnderlineStyle.Thick, UnderlineValues.Thick),
+        new KeyValuePair<UnderlineStyle, UnderlineValues>(UnderlineStyle.Dash, UnderlineValues.Dash),
+        new KeyValuePair<UnderlineStyle, UnderlineValues>(UnderlineStyle.DotDash, UnderlineValues.DotDash),
+        new KeyValuePair<UnderlineStyle, UnderlineValues>(UnderlineStyle.DotDotDash, UnderlineValues.DotDotDash),
+        new KeyValuePair<UnderlineStyle, UnderlineValues>(UnderlineStyle.Wavy, UnderlineValues.Wave),
+        new KeyValuePair<UnderlineStyle, UnderlineValues>(UnderlineStyle.DottedHeavy, UnderlineValues.DottedHeavy),
+        new KeyValuePair<UnderlineStyle, UnderlineValues>(UnderlineStyle.DashHeavy, UnderlineValues.DashedHeavy),
+        new KeyValuePair<UnderlineStyle, UnderlineValues>(UnderlineStyle.DotDashHeavy, UnderlineValues.DashDotHeavy),
+        new KeyValuePair<UnderlineStyle, UnderlineValues>(UnderlineStyle.DotDotDashHeavy, UnderlineValues.DashDotDotHeavy),
+        new KeyValuePair<UnderlineStyle, UnderlineValues>(UnderlineStyle.WavyHeavy, UnderlineValues.WavyHeavy),
+        new KeyValuePair<UnderlineStyle, UnderlineValues>(UnderlineStyle.DashLong, UnderlineValues.DashLong),
+        new KeyValuePair<UnderlineStyle, UnderlineValues>(UnderlineStyle.WavyDouble, UnderlineValues.WavyDouble),
+        new KeyValuePair<UnderlineStyle, UnderlineValues>(UnderlineStyle.DashLongHeavy, UnderlineValues.DashLongHeavy)
+    };
 
     /// <summary>The size of the characters in points, which may be a half point such as 10.5.</summary>
     public double? Size

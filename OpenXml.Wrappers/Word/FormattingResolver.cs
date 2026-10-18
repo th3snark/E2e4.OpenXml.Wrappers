@@ -159,7 +159,7 @@ internal sealed class FormattingResolver
     #region Paragraphs
 
     /// <summary>The formatting of a paragraph.</summary>
-    public ParagraphProperties ResolveParagraph(Paragraph paragraph)
+    public ParagraphProperties ResolveParagraph(Paragraph paragraph, bool includeDirect = true)
     {
         ParagraphProperties result = new ParagraphProperties();
         Overlay(result, GetDefaultParagraph());
@@ -169,7 +169,10 @@ internal sealed class FormattingResolver
             Overlay(result, CollapseParagraphChain(tableStyleId));
         }
         Overlay(result, CollapseParagraphChain(GetParagraphStyleId(paragraph)));
-        Overlay(result, paragraph.ParagraphProperties);
+        if (includeDirect)
+        {
+            Overlay(result, paragraph.ParagraphProperties);
+        }
         return result;
     }
 
@@ -394,6 +397,12 @@ internal sealed class FormattingResolver
             }
 
             OpenXmlElement existing = FindByName(target, name);
+            if (existing is Tabs existingTabs && child is Tabs newTabs)
+            {
+                MergeTabs(existingTabs, newTabs);
+                continue;
+            }
+
             if (existing != null && (child is RunFonts || child is Indentation || child is SpacingBetweenLines))
             {
                 MergeAttributes(existing, child);
@@ -407,6 +416,23 @@ internal sealed class FormattingResolver
                 target.AppendChild(child.CloneNode(true));
             }
         }
+    }
+
+    //Tab stops add up: a tab stop replaces one at the same position, and a "clear" tab stop removes it.
+    private static void MergeTabs(Tabs target, Tabs source)
+    {
+        foreach (TabStop tab in source.Elements<TabStop>())
+        {
+            foreach (TabStop existing in target.Elements<TabStop>().Where(t => t.Position != null && tab.Position != null && t.Position.Value == tab.Position.Value).ToList())
+            {
+                existing.Remove();
+            }
+            if (!TabStopWrapper.IsClear(tab))
+            {
+                target.AppendChild(tab.CloneNode(true));
+            }
+        }
+        TabStopWrapperCollection.Sort(target);
     }
 
     //Properties such as spacing and indentation are made of attributes, and each one of them is inherited on its own.

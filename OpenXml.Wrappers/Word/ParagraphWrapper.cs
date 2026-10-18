@@ -52,6 +52,76 @@ public class ParagraphWrapper : System.IEquatable<ParagraphWrapper>
         set { Range.Text = value; }
     }
 
+    /// <summary>The alignment of the paragraph. The same as <see cref="Format"/>.<c>Alignment</c>.</summary>
+    public ParagraphAlignment Alignment
+    {
+        get { return Format.Alignment ?? ParagraphAlignment.Left; }
+        set { Format.Alignment = value; }
+    }
+
+    /// <summary>The distance in points between the left margin and the left edge of the paragraph. The same as <see cref="Format"/>.<c>LeftIndent</c>.</summary>
+    public double LeftIndent
+    {
+        get { return Format.LeftIndent ?? 0; }
+        set { Format.LeftIndent = value; }
+    }
+
+    /// <summary>The distance in points between the right margin and the right edge of the paragraph. The same as <see cref="Format"/>.<c>RightIndent</c>.</summary>
+    public double RightIndent
+    {
+        get { return Format.RightIndent ?? 0; }
+        set { Format.RightIndent = value; }
+    }
+
+    /// <summary>The indent of the first line in points (negative for a hanging indent). The same as <see cref="Format"/>.<c>FirstLineIndent</c>.</summary>
+    public double FirstLineIndent
+    {
+        get { return Format.FirstLineIndent ?? 0; }
+        set { Format.FirstLineIndent = value; }
+    }
+
+    /// <summary>The line spacing in points. The same as <see cref="Format"/>.<c>LineSpacing</c>.</summary>
+    public double LineSpacing
+    {
+        get { return Format.LineSpacing ?? 12; }
+        set { Format.LineSpacing = value; }
+    }
+
+    /// <summary>The rule for the line spacing. The same as <see cref="Format"/>.<c>LineSpacingRule</c>.</summary>
+    public LineSpacingRule LineSpacingRule
+    {
+        get { return Format.LineSpacingRule ?? LineSpacingRule.SingleSpacing; }
+        set { Format.LineSpacingRule = value; }
+    }
+
+    /// <summary>Whether all the lines of the paragraph are kept on the same page. The same as <see cref="Format"/>.<c>KeepTogether</c>.</summary>
+    public bool KeepTogether
+    {
+        get { return Format.KeepTogether == true; }
+        set { Format.KeepTogether = value; }
+    }
+
+    /// <summary>Whether the paragraph starts a new page. The same as <see cref="Format"/>.<c>PageBreakBefore</c>.</summary>
+    public bool PageBreakBefore
+    {
+        get { return Format.PageBreakBefore == true; }
+        set { Format.PageBreakBefore = value; }
+    }
+
+    /// <summary>Whether the first and last lines are kept from being alone on a page. The same as <see cref="Format"/>.<c>WidowControl</c>.</summary>
+    public bool WidowControl
+    {
+        get { return Format.WidowControl == true; }
+        set { Format.WidowControl = value; }
+    }
+
+    /// <summary>The name of the paragraph style. The same as <see cref="RangeWrapper.Style"/> of <see cref="Range"/>.</summary>
+    public string Style
+    {
+        get { return Range.Style; }
+        set { Range.Style = value; }
+    }
+
     /// <summary>
     /// The space before the paragraph in points, 0 when none is set. The same as <see cref="Format"/>.<c>SpaceBefore</c>.
     /// </summary>
@@ -71,19 +141,19 @@ public class ParagraphWrapper : System.IEquatable<ParagraphWrapper>
     }
 
     /// <summary>
-    /// The paragraph after this one in the document, including paragraphs in table cells, or null for the last paragraph (<c>Paragraph.Next</c> in Word).
+    /// The paragraph <paramref name="count"/> after this one in the document, including paragraphs in table cells, or null if there is none (<c>Paragraph.Next</c> in Word).
     /// </summary>
-    public ParagraphWrapper Next()
+    public ParagraphWrapper Next(int count = 1)
     {
-        return GetNeighbour(1);
+        return GetNeighbour(count);
     }
 
     /// <summary>
-    /// The paragraph before this one in the document, or null for the first paragraph (<c>Paragraph.Previous</c> in Word).
+    /// The paragraph <paramref name="count"/> before this one in the document, or null if there is none (<c>Paragraph.Previous</c> in Word).
     /// </summary>
-    public ParagraphWrapper Previous()
+    public ParagraphWrapper Previous(int count = 1)
     {
-        return GetNeighbour(-1);
+        return GetNeighbour(-count);
     }
 
     private ParagraphWrapper GetNeighbour(int offset)

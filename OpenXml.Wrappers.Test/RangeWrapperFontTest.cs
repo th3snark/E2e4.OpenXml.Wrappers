@@ -83,24 +83,24 @@ public class RangeWrapperFontTest
         FontWrapper font = new RangeWrapper(paragraph).Font;
         font.Italic = true;
         font.StrikeThrough = true;
-        font.Underline = true;
+        font.Underline = UnderlineStyle.SingleLine;
 
         Assert.True(font.Italic);
         Assert.True(font.StrikeThrough);
-        Assert.True(font.Underline);
+        Assert.Equal(UnderlineStyle.SingleLine, font.Underline);
         Assert.Equal(UnderlineValues.Single, paragraph.Elements<Run>().Single().RunProperties.Underline.Val.Value);
 
-        font.Underline = false;
-        Assert.False(font.Underline);
+        font.Underline = UnderlineStyle.None;
+        Assert.Equal(UnderlineStyle.None, font.Underline);
         Assert.Equal(UnderlineValues.None, paragraph.Elements<Run>().Single().RunProperties.Underline.Val.Value);
     }
 
     [Fact]
-    public void AnyUnderlineStyleReadsAsUnderlined()
+    public void TheUnderlineStyleIsRead()
     {
         Paragraph paragraph = new Paragraph(new Run(new RunProperties(new Underline() { Val = UnderlineValues.Double }), new Text("a")));
 
-        Assert.True(new RangeWrapper(paragraph).Font.Underline);
+        Assert.Equal(UnderlineStyle.DoubleLine, new RangeWrapper(paragraph).Font.Underline);
     }
 
     [Fact]
@@ -190,7 +190,7 @@ public class RangeWrapperFontTest
         FontWrapper font = new RangeWrapper(paragraph).Font;
         font.Size = 12;
         font.Color = "FF0000";
-        font.Underline = true;
+        font.Underline = UnderlineStyle.SingleLine;
         font.Bold = true;
         font.Name = "Arial";
 

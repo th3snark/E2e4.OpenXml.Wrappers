@@ -104,3 +104,60 @@ public enum BuiltInStyle
     IntenseReference = -264,
     BookTitle = -265
 }
+
+/// <summary>
+/// The kind of break that <see cref="RangeWrapper.InsertBreak"/> inserts, as <c>WdBreakType</c> in Word (with the same values).
+/// </summary>
+public enum BreakType
+{
+    SectionBreakNextPage = 2,
+    SectionBreakContinuous = 3,
+    SectionBreakEvenPage = 4,
+    SectionBreakOddPage = 5,
+    LineBreak = 6,
+    PageBreak = 7,
+    ColumnBreak = 8,
+    TextWrappingBreak = 11
+}
+
+/// <summary>
+/// The style of an underline, as <c>WdUnderline</c> in Word (with the same values).
+/// </summary>
+public enum UnderlineStyle
+{
+    None = 0,
+    SingleLine = 1,
+    Words = 2,
+    DoubleLine = 3,
+    Dotted = 4,
+    Thick = 6,
+    Dash = 7,
+    DotDash = 9,
+    DotDotDash = 10,
+    Wavy = 11,
+    DottedHeavy = 20,
+    DashHeavy = 23,
+    DotDashHeavy = 25,
+    DotDotDashHeavy = 26,
+    WavyHeavy = 27,
+    DashLong = 39,
+    WavyDouble = 43,
+    DashLongHeavy = 55
+}
+
+/// <summary>
+/// The outline level of a paragraph, as <c>WdOutlineLevel</c> in Word (with the same values).
+/// </summary>
+public enum ParagraphOutlineLevel
+{
+    Level1 = 1,
+    Level2 = 2,
+    Level3 = 3,
+    Level4 = 4,
+    Level5 = 5,
+    Level6 = 6,
+    Level7 = 7,
+    Level8 = 8,
+    Level9 = 9,
+    BodyText = 10
+}

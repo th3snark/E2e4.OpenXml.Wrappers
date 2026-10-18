@@ -31,13 +31,13 @@ public class ParagraphWrapperCollection : IEnumerable<ParagraphWrapper>
                 Guard.ThrowIfNegative(index);
                 return new ParagraphWrapper(GetElements().Skip(index).First());
             }
-            catch (InvalidOperationException ex)
+            catch (InvalidOperationException)
             {
-                throw new ArgumentOutOfRangeException(String.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index), ex);
+                throw new ArgumentOutOfRangeException(nameof(index), String.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index));
             }
-            catch (ArgumentOutOfRangeException ex)
+            catch (ArgumentOutOfRangeException)
             {
-                throw new ArgumentOutOfRangeException(String.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index), ex);
+                throw new ArgumentOutOfRangeException(nameof(index), String.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index));
             }
         }
     }
@@ -45,6 +45,42 @@ public class ParagraphWrapperCollection : IEnumerable<ParagraphWrapper>
     public int Count
     {
         get { return GetElements().Count(); }
+    }
+
+    /// <summary>The first paragraph, or null if there are none.</summary>
+    public ParagraphWrapper First
+    {
+        get
+        {
+            Paragraph paragraph = GetElements().FirstOrDefault();
+            return paragraph == null ? null : new ParagraphWrapper(paragraph);
+        }
+    }
+
+    /// <summary>The last paragraph, or null if there are none.</summary>
+    public ParagraphWrapper Last
+    {
+        get
+        {
+            Paragraph paragraph = GetElements().LastOrDefault();
+            return paragraph == null ? null : new ParagraphWrapper(paragraph);
+        }
+    }
+
+    /// <summary>
+    /// The paragraph formatting of all the paragraphs, as <c>Paragraphs.Format</c> in Word: reading gives null for a property where they
+    /// differ and setting applies to every one.
+    /// </summary>
+    public ParagraphFormatWrapper Format
+    {
+        get { return _range.ParagraphFormat; }
+    }
+
+    /// <summary>The style of all the paragraphs (null where they differ). Setting applies it to every one.</summary>
+    public string Style
+    {
+        get { return _range.Style; }
+        set { _range.Style = value; }
     }
 
     //The paragraphs of the range, produced as they are asked for so that the first few do not need the rest to be looked at.

@@ -11,6 +11,11 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - `CopyAllPartsTo` replaces the parts the target already has, and `CopyLayoutTo` drops header and footer references the source does not have. The collection indexers of bookmarks and comments report the index in their out of range message.
 
 ### Added
+- `Range.InsertBreak(BreakType)` (page, column, line and section breaks); column breaks are the shift out character in text, as in Word.
+- `Paragraph` has the properties of its format (`Alignment`, `LeftIndent`, `RightIndent`, `FirstLineIndent`, `LineSpacing`, `LineSpacingRule`, `KeepTogether`, `PageBreakBefore`, `WidowControl`, `Style`), `Next(count)` and `Previous(count)`; `Paragraphs` has `First`, `Last`, `Format` and `Style`.
+- `Font`: `UnderlineColor`, `Superscript`, `Subscript`, `AllCaps`, `SmallCaps`, `Hidden`, `DoubleStrikeThrough`, `Emboss`, `Engrave`, `Outline`, `Shadow`, `Spacing`, `Scaling`, `Position`, `Kerning` and `Reset()`. `Font.Underline` is an `UnderlineStyle` (breaking, before the first release).
+- `ParagraphFormat`: `OutlineLevel`, `NoLineNumber`, `MirrorIndents`, `Hyphenation`, `SpaceBeforeAuto`, `SpaceAfterAuto`, `TabStops` and `Reset()`.
+- `Find`: `Forward`, `Wrap`, `MatchWildcards` (Word patterns), `^&`, `^w`, `^#`, `^$`, `^?`, `^s`, `^+`, `^=`, `^-` and `^n`, `ClearFormatting()`, and `Execute` with Word's parameters in Word's order (a parameter that is left out leaves its property as it is).
 - The built-in styles: `Styles["Heading 1"]` and `Styles[BuiltInStyle.Heading1]` (the `BuiltInStyle` enum has the values of `WdBuiltinStyle`) find the style even when the document has not used it yet, and applying one by name adds its definition to the document.
 - `Font.Direct` and `ParagraphFormat.Direct`.
 
