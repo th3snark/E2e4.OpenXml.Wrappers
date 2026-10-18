@@ -99,7 +99,21 @@ The API follows the shape of the Word object model, but it is C# over Open XML r
 - **Wrappers compare by the item they wrap.** Two wrappers of the same paragraph, table, bookmark and so on are `==` and have the same hash code, even though each property access creates a new wrapper.
 - **Units are points**, as in Word, for every width, height, indent and spacing: `ParagraphWrapper.SpaceBefore`/`SpaceAfter`, `Cell.Width`, `Column.Width`, `Table.Width`, `Table.PreferredWidth`, `Row.Height`, `Font.Size`, `ParagraphFormat` and `PageSetup`. The low-level helpers in `OpenXmlExtensions` and `ConversionHelper` that work on Open XML elements keep Open XML's own units (twips, called dxa there).
 - **`Range.Text` uses Word's markers**: `\r` ends a paragraph, `\a` ends a table cell, `\r\a` ends a table row, `\v` is a line break and `\f` a page break. Reading text is supported for every kind of range. Setting it is supported for table cells, paragraphs, bookmarks, headers and footers, the whole document and spans of characters; rows and tables throw `InvalidOperationException`.
-- **Not everything is implemented.** Features that are not supported throw `NotSupportedException`, `NotImplementedException` or `InvalidOperationException` rather than doing nothing, for example adding a comment to a range other than a bookmark, paragraph or table cell.
+- **Not everything is implemented.** Features that are not supported throw `NotSupportedException`, `NotImplementedException` or `InvalidOperationException` rather than doing nothing, for example adding a comment to a range other than a bookmark, paragraph, table cell, row, table, document or span.
+
+## Not supported
+
+**Needs a layout engine.** Nothing here measures or paginates text, so `Pages` and `Lines` statistics (`ComputeStatistics`), the page and line items of `Range.Information`, `Selection`, printing and spelling are not available. Fields that depend on layout (`PAGE`, `NUMPAGES`, `PAGEREF`, `TOC`) are left for Word to update; `Fields.Update` does not compute them and `Field.Update` returns `false`.
+
+**Objects that do not exist yet.** Hyperlinks, footnotes and endnotes (and their stories), lists and `ListFormat`, content controls, pictures and other shapes, revisions (`Revisions`; `TrackRevisions` only sets the document setting) and tables of contents.
+
+**Known limits of objects that do exist.**
+
+- `Find` cannot search for formatting, sounds-like or word forms (it throws `NotSupportedException`).
+- Legacy horizontal merges (`hMerge`) are not supported; `Table.Sort`, `Table.ConvertToText`, `Range.ConvertToTable`, `Cell.Delete` and `Rows.DistributeHeight` are not implemented.
+- `Field.Code` and `Field.Result` expose only `Text`, not a full range.
+- `PageNumbers.Add` does not support the Inside and Outside alignments, and `Document.PageSetup` forwards only the common members (columns, line numbering and page borders are set per section).
+- `Document.Saved` and `Comment.Reference` are not implemented.
 
 ## Editing a range
 
