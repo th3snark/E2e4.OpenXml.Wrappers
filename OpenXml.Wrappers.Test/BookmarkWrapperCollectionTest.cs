@@ -26,6 +26,7 @@ public class BookmarkWrapperCollectionTest : System.IDisposable
     public void IterateCollectionReturnsCorrectItemsInCorrectOrder()
     {
         BookmarkWrapperCollection bookmarks = _document1.Bookmarks;
+        bookmarks.DefaultSorting = BookmarkSorting.Location;
         List<string> bookmarkNames = new List<string>();
         List<int> bookmarkIds = new List<int>();
         foreach (BookmarkWrapper bookmark in bookmarks)

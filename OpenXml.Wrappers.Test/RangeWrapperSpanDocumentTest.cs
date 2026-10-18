@@ -95,7 +95,7 @@ public class RangeWrapperSpanDocumentTest : IDisposable
         {
             RangeWrapper range = document.Range(4, 4);
 
-            document.Fields.Add(range, FieldType.Page).Result = "1";
+            document.Fields.Add(range, FieldType.Page).Result.Text = "1";
 
             Assert.Single(document.Fields);
             Assert.Equal("Page1 of\r", document.Content.Text);

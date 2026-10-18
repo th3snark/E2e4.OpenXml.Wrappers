@@ -49,11 +49,35 @@ public class HeaderFooterWrapper : System.IEquatable<HeaderFooterWrapper>
     }
 
     /// <summary>
-    /// True when the section has a header or footer of its own of this kind (not when it only shows that of an earlier section).
+    /// True when the section has a header or footer of its own of this kind (not when it only shows that of an earlier section), as
+    /// <c>HeaderFooter.Exists</c> in Word. Setting it to true gives the section an empty header or footer of its own, and false removes it.
     /// </summary>
     public bool Exists
     {
         get { return GetReference(_section) != null; }
+        set
+        {
+            if (value == Exists)
+            {
+                return;
+            }
+            if (value)
+            {
+                Create(null);
+            }
+            else
+            {
+                RemoveReference();
+            }
+        }
+    }
+
+    /// <summary>
+    /// The page numbers of the header or footer, as <c>HeaderFooter.PageNumbers</c> in Word.
+    /// </summary>
+    public PageNumbersWrapper PageNumbers
+    {
+        get { return new PageNumbersWrapper(this); }
     }
 
     /// <summary>

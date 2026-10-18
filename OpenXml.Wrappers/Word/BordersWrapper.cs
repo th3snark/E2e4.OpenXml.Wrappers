@@ -35,9 +35,15 @@ public class BordersWrapper
     /// </summary>
     private static readonly BorderPosition[] OutsidePositions = { BorderPosition.Top, BorderPosition.Left, BorderPosition.Bottom, BorderPosition.Right };
 
+    /// <summary>The space between a border and the text it surrounds, in points: that of Word for a page border (24) and none for a table.</summary>
+    internal uint DefaultSpace
+    {
+        get { return _owner is SectionProperties ? 24u : 0u; }
+    }
+
     private BorderPosition[] InsidePositions
     {
-        get { return _owner is TableRow ? new[] { BorderPosition.Vertical } : _owner is GridColumn ? new[] { BorderPosition.Horizontal } : new[] { BorderPosition.Horizontal, BorderPosition.Vertical }; }
+        get { return _owner is SectionProperties ? Array.Empty<BorderPosition>() : _owner is TableRow ? new[] { BorderPosition.Vertical } : _owner is GridColumn ? new[] { BorderPosition.Horizontal } : new[] { BorderPosition.Horizontal, BorderPosition.Vertical }; }
     }
 
     public BorderWrapper this[BorderPosition position]
@@ -51,6 +57,10 @@ public class BordersWrapper
             if ((_isTable || _owner is TableRow || _owner is GridColumn) && (position == BorderPosition.DiagonalDown || position == BorderPosition.DiagonalUp))
             {
                 throw new NotSupportedException("Only a cell has diagonal borders.");
+            }
+            if (_owner is SectionProperties && position != BorderPosition.Top && position != BorderPosition.Left && position != BorderPosition.Bottom && position != BorderPosition.Right)
+            {
+                throw new NotSupportedException("A page has the four outside borders only.");
             }
             if (_owner is GridColumn column)
             {
@@ -305,6 +315,27 @@ public class BordersWrapper
 
     private OpenXmlCompositeElement GetContainer(bool create)
     {
+        if (_owner is SectionProperties sectionProperties)
+        {
+            PageBorders pageBorders = sectionProperties.GetFirstChild<PageBorders>();
+            if (pageBorders == null && create)
+            {
+                pageBorders = new PageBorders();
+                //It goes before the first of the section properties that come after it in the schema.
+                string[] later = { "lnNumType", "pgNumType", "cols", "formProt", "vAlign", "noEndnote", "titlePg", "textDirection", "bidi", "rtlGutter", "docGrid", "printerSettings" };
+                OpenXmlElement next = sectionProperties.ChildElements.FirstOrDefault(e => Array.IndexOf(later, e.LocalName) >= 0);
+                if (next != null)
+                {
+                    next.InsertBeforeSelf(pageBorders);
+                }
+                else
+                {
+                    sectionProperties.AppendChild(pageBorders);
+                }
+            }
+            return pageBorders;
+        }
+
         if (_isTable)
         {
             Table table = (Table)_owner;

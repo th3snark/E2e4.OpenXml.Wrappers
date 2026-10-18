@@ -64,7 +64,7 @@ internal static class QuarterlyReportExample
             builder.Paragraph("Contents", "Heading 1");
             ParagraphWrapper contents = builder.Paragraph(string.Empty);
             FieldWrapper toc = document.Fields.Add(contents.Range, FieldType.TableOfContents, "\\o \"1-2\" \\h \\z \\u");
-            toc.Result = "Update this field to build the table of contents.";
+            toc.Result.Text = "Update this field to build the table of contents.";
             contents.InsertBreak(BreakValues.Page);
 
             //1. Executive summary. The revenue figure is bookmarked so that other parts of the document can quote it.
@@ -111,7 +111,7 @@ internal static class QuarterlyReportExample
             ParagraphWrapper refer = builder.Paragraph("As the summary says: ");
             refer.Format.SpaceBefore = 10;
             FieldWrapper quote = document.Fields.Add(refer.Range, FieldType.Ref, "revenue_total \\h");
-            quote.Result = figure.Range.Text.TrimEnd('\r');
+            quote.Result.Text = figure.Range.Text.TrimEnd('\r');
 
             //3. Operations.
             builder.Paragraph("3. Operations", "Heading 1");
@@ -210,9 +210,9 @@ internal static class QuarterlyReportExample
             footer.Text = "Page ";
             footer.Style = "Footer";
             footer.ParagraphFormat.Alignment = ParagraphAlignment.Center;
-            document.Fields.Add(footer, FieldType.Page).Result = "2";
+            document.Fields.Add(footer, FieldType.Page).Result.Text = "2";
             footer.InsertAfter(" of ");
-            document.Fields.Add(footer, FieldType.NumPages).Result = "7";
+            document.Fields.Add(footer, FieldType.NumPages).Result.Text = "7";
 
             //Properties: the built-in ones, and some of the company's own.
             DocumentPropertiesWrapper properties = document.BuiltInDocumentProperties;

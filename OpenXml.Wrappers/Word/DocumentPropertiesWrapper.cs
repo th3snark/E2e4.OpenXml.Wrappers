@@ -11,7 +11,7 @@ namespace OpenXml.Wrappers.Word;
 /// <remarks>
 /// A property that has not been set reads as null. Setting a property requires a document that was opened as editable.
 /// </remarks>
-public class DocumentPropertiesWrapper
+public partial class DocumentPropertiesWrapper
 {
     private readonly WordprocessingDocument _document;
 

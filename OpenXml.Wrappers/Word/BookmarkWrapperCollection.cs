@@ -3,14 +3,44 @@ using System.Globalization;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
 
+/// <summary>
+/// How the bookmarks of a document are ordered, as <c>WdBookmarkSortBy</c> in Word (with the same values).
+/// </summary>
+public enum BookmarkSorting
+{
+    /// <summary>Alphabetically by name, ignoring case (an underscore sorts before letters).</summary>
+    Name = 0,
+
+    /// <summary>In the order they are in the document.</summary>
+    Location = 1
+}
+
+/// <summary>
+/// The bookmarks of a range, as <c>Bookmarks</c> in Word.
+/// </summary>
+/// <remarks>
+/// As in Word the bookmarks are in alphabetical order by default (<see cref="DefaultSorting"/>), and a bookmark whose name starts with an
+/// underscore is hidden and left out unless <see cref="ShowHidden"/> is true. Both settings belong to the document, so setting them on one
+/// collection applies to every collection of the document.
+/// </remarks>
 public class BookmarkWrapperCollection : IEnumerable<BookmarkWrapper>
 {
+    //The settings are those of the document, held by the root of its tree.
+    private sealed class Settings
+    {
+        public bool ShowHidden;
+        public BookmarkSorting Sorting = BookmarkSorting.Name;
+    }
+
+    private static readonly ConditionalWeakTable<OpenXmlElement, Settings> DocumentSettings = new ConditionalWeakTable<OpenXmlElement, Settings>();
+
     private RangeWrapper _rangeWrapper;
 
     public BookmarkWrapperCollection(RangeWrapper rangeWrapper)
@@ -26,18 +56,70 @@ public class BookmarkWrapperCollection : IEnumerable<BookmarkWrapper>
         get { return _rangeWrapper; }
     }
 
+    private OpenXmlElement Start
+    {
+        get { return _rangeWrapper.StartElement ?? _rangeWrapper.AnchorElement; }
+    }
+
+    private Settings GetSettings()
+    {
+        return DocumentSettings.GetValue(Start.GetRoot(), key => new Settings());
+    }
+
+    /// <summary>True to include the hidden bookmarks, those whose names start with an underscore (<c>Bookmarks.ShowHidden</c> in Word).</summary>
+    public bool ShowHidden
+    {
+        get { return GetSettings().ShowHidden; }
+        set { GetSettings().ShowHidden = value; }
+    }
+
+    /// <summary>How the bookmarks are ordered: by name (the default, as in Word) or by location in the document.</summary>
+    public BookmarkSorting DefaultSorting
+    {
+        get { return GetSettings().Sorting; }
+        set
+        {
+            if (!EnumCompat.IsDefined(value))
+            {
+                throw new ArgumentOutOfRangeException(nameof(value));
+            }
+            GetSettings().Sorting = value;
+        }
+    }
+
+    private static bool IsHidden(BookmarkStart bookmark)
+    {
+        string name = bookmark.Name?.Value;
+        return name != null && name.Length > 0 && name[0] == '_';
+    }
+
+    //The bookmarks that the collection holds, in its order.
+    private IList<BookmarkStart> GetElementList()
+    {
+        Settings settings = GetSettings();
+        IEnumerable<BookmarkStart> bookmarks = Start.GetElements<BookmarkStart>(_rangeWrapper.EndElement ?? Start);
+        if (!settings.ShowHidden)
+        {
+            bookmarks = bookmarks.Where(b => !IsHidden(b));
+        }
+        if (settings.Sorting == BookmarkSorting.Name)
+        {
+            //A stable sort, so bookmarks that differ only in case stay in document order.
+            bookmarks = bookmarks.Select((b, i) => (Bookmark: b, Index: i)).OrderBy(p => p.Bookmark.Name?.Value, StringComparer.InvariantCultureIgnoreCase).ThenBy(p => p.Index).Select(p => p.Bookmark);
+        }
+        return bookmarks.ToList();
+    }
+
     public BookmarkWrapper this[int index]
     {
         get
         {
-            try
-            {
-                return new BookmarkWrapper(_rangeWrapper.StartElement.GetElements<BookmarkStart>(_rangeWrapper.EndElement).ElementAt(index));
-            }
-            catch (ArgumentOutOfRangeException)
+            IList<BookmarkStart> bookmarks = GetElementList();
+            if (index < 0 || index >= bookmarks.Count)
             {
                 throw new ArgumentOutOfRangeException(nameof(index), String.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index));
             }
+            return new BookmarkWrapper(bookmarks[index]);
         }
     }
 
@@ -45,7 +127,7 @@ public class BookmarkWrapperCollection : IEnumerable<BookmarkWrapper>
     {
         get
         {
-            BookmarkStart bookmarkStart = _rangeWrapper.StartElement.GetElements<BookmarkStart>(_rangeWrapper.EndElement).Where(e => String.Equals(e.Name?.Value, name, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+            BookmarkStart bookmarkStart = GetElementList().Where(e => String.Equals(e.Name?.Value, name, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
             if (bookmarkStart != null)
             {
                 return new BookmarkWrapper(bookmarkStart);
@@ -59,7 +141,7 @@ public class BookmarkWrapperCollection : IEnumerable<BookmarkWrapper>
     /// </summary>
     public bool Exists(string name)
     {
-        return _rangeWrapper.StartElement.GetElements<BookmarkStart>(_rangeWrapper.EndElement).Any(e => String.Equals(e.Name?.Value, name, StringComparison.OrdinalIgnoreCase));
+        return GetElementList().Any(e => String.Equals(e.Name?.Value, name, StringComparison.OrdinalIgnoreCase));
     }
 
     /// <summary>
@@ -67,7 +149,7 @@ public class BookmarkWrapperCollection : IEnumerable<BookmarkWrapper>
     /// moved to the new range.
     /// </summary>
     /// <remarks>
-    /// Supported for the ranges of a paragraph, table, table cell, bookmark or comment, and for any span of characters (a collapsed one gives a bookmark at an insertion point). A table is bookmarked by markers before and after it. The name must start with a letter, contain only
+    /// Supported for the ranges of a paragraph, table, table cell, bookmark or comment, and for any span of characters (a collapsed one gives a bookmark at an insertion point). A table is bookmarked by markers before and after it. The name must start with a letter or an underscore (which makes the bookmark hidden), contain only
     /// letters, digits and underscores, and be at most 40 characters long.
     /// </remarks>
     /// <exception cref="ArgumentException">The name is not valid.</exception>
@@ -75,9 +157,9 @@ public class BookmarkWrapperCollection : IEnumerable<BookmarkWrapper>
     public BookmarkWrapper Add(string name, RangeWrapper range)
     {
         Guard.ThrowIfNull(range);
-        if (String.IsNullOrEmpty(name) || name.Length > 40 || !Char.IsLetter(name[0]) || !name.All(c => Char.IsLetterOrDigit(c) || c == '_'))
+        if (String.IsNullOrEmpty(name) || name.Length > 40 || !(Char.IsLetter(name[0]) || name[0] == '_') || !name.All(c => Char.IsLetterOrDigit(c) || c == '_'))
         {
-            throw new ArgumentException("A bookmark name must start with a letter, contain only letters, digits and underscores, and be at most 40 characters long.", nameof(name));
+            throw new ArgumentException("A bookmark name must start with a letter or underscore, contain only letters, digits and underscores, and be at most 40 characters long.", nameof(name));
         }
         if (!range.IsSpan && !(range.StartElement is Paragraph || range.StartElement is TableCell || range.StartElement is Table || range.StartElement is BookmarkStart || range.StartElement is CommentRangeStart))
         {
@@ -139,14 +221,9 @@ public class BookmarkWrapperCollection : IEnumerable<BookmarkWrapper>
         last.AppendChild(bookmarkEnd);
     }
 
-    private IList<BookmarkStart> GetElementList()
-    {
-        return _rangeWrapper.StartElement.GetElements<BookmarkStart>(_rangeWrapper.EndElement).ToList();
-    }
-
     public int Count
     {
-        get { return _rangeWrapper.StartElement.GetElements<BookmarkStart>(_rangeWrapper.EndElement).Count(); }
+        get { return GetElementList().Count; }
     }
 
     public void DeleteAll()
@@ -154,7 +231,7 @@ public class BookmarkWrapperCollection : IEnumerable<BookmarkWrapper>
         //It is important that the list is fetched since we are deleting items inside the iteration.
         //Each bookmark is removed as a whole (its start and its matching end) so that no dangling start or end markers are left behind
         //when the two markers are not both inside the range.
-        IList<BookmarkStart> bookmarkStartList = _rangeWrapper.StartElement.GetElements<BookmarkStart>(_rangeWrapper.EndElement).ToList();
+        IList<BookmarkStart> bookmarkStartList = GetElementList();
         foreach (BookmarkStart bookmarkStart in bookmarkStartList)
         {
             BookmarkEnd bookmarkEnd = bookmarkStart.GetRoot().Descendants<BookmarkEnd>().FirstOrDefault(e => e.Id.Value == bookmarkStart.Id.Value);

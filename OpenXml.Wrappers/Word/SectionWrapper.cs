@@ -1,5 +1,7 @@
 using System.Linq;
 
+using DocumentFormat.OpenXml;
+
 using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
@@ -47,6 +49,61 @@ public class SectionWrapper : System.IEquatable<SectionWrapper>
         get { return new SectionWrapperCollection(_body); }
     }
 
+    /// <summary>
+    /// The text of the section, as <c>Section.Range</c> in Word: from the end of the section before it to the paragraph that ends it (the
+    /// section break), or to the end of the document for the last section. It is a range of characters of the document.
+    /// </summary>
+    public RangeWrapper Range
+    {
+        get
+        {
+            int sectionIndex = Index;
+            int current = 0;
+            OpenXmlElement first = null;
+            OpenXmlElement last = null;
+            foreach (OpenXmlElement block in _body.Elements().Where(e => !(e is SectionProperties)))
+            {
+                if (current == sectionIndex)
+                {
+                    first ??= block;
+                    last = block;
+                }
+                if (block is Paragraph paragraph && paragraph.ParagraphProperties?.SectionProperties != null)
+                {
+                    if (current == sectionIndex)
+                    {
+                        break;
+                    }
+                    current++;
+                }
+            }
+
+            OpenXmlElement root = (OpenXmlElement)_body.Ancestors<Document>().FirstOrDefault() ?? _body;
+            RangeWrapper range = new RangeWrapper(root);
+            if (first == null)
+            {
+                int length = range.StoryLength;
+                range.SetRange(length, length);
+            }
+            else
+            {
+                range.SetRange(new RangeWrapper(first).Start, new RangeWrapper(last).End);
+            }
+            return range;
+        }
+    }
+
+    /// <summary>
+    /// The page borders of the section, as <c>Section.Borders</c> in Word. See <see cref="PageSetupWrapper.Borders"/>.
+    /// </summary>
+    public BordersWrapper Borders
+    {
+        get { return PageSetup.Borders; }
+    }
+
+    /// <summary>
+    /// The page setup of the section.
+    /// </summary>
     public PageSetupWrapper PageSetup
     {
         get { return new PageSetupWrapper(this); }

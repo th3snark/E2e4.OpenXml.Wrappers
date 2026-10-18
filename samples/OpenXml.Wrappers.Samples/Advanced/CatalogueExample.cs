@@ -88,7 +88,7 @@ internal static class CatalogueExample
             footer.Text = "Page ";
             footer.Style = "Footer";
             footer.ParagraphFormat.Alignment = ParagraphAlignment.Center;
-            document.Fields.Add(footer, FieldType.Page).Result = "1";
+            document.Fields.Add(footer, FieldType.Page).Result.Text = "1";
 
             document.BuiltInDocumentProperties.Subject = "Product catalogue";
             document.BuiltInDocumentProperties.Keywords = string.Join("; ", categories);

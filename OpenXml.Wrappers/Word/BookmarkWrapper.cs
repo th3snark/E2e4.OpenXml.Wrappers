@@ -39,6 +39,34 @@ public class BookmarkWrapper : System.IEquatable<BookmarkWrapper>
         get { return new RangeWrapper(_bookmarkStart, _bookmarkEnd); }
     }
 
+    /// <summary>The character position where the bookmark starts (<c>Bookmark.Start</c> in Word).</summary>
+    public int Start
+    {
+        get { return Range.Start; }
+    }
+
+    /// <summary>The character position where the bookmark ends (<c>Bookmark.End</c> in Word).</summary>
+    public int End
+    {
+        get { return Range.End; }
+    }
+
+    /// <summary>True if the bookmark covers no text, only a point in the document (<c>Bookmark.Empty</c> in Word).</summary>
+    public bool Empty
+    {
+        get { return Start == End; }
+    }
+
+    /// <summary>
+    /// Adds a bookmark with another name over the same range and returns it (<c>Bookmark.Copy</c> in Word). A bookmark of that name is moved.
+    /// </summary>
+    /// <exception cref="ArgumentException">The name is not valid.</exception>
+    public BookmarkWrapper Copy(string name)
+    {
+        RangeWrapper range = Range;
+        return new BookmarkWrapperCollection(range).Add(name, range);
+    }
+
     public void Delete()
     {
         _bookmarkStart.Parent.RemoveChild(_bookmarkStart);

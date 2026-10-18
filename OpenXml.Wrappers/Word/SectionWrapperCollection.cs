@@ -46,6 +46,49 @@ public class SectionWrapperCollection : IEnumerable<SectionWrapper>
         }
     }
 
+    /// <summary>The first section.</summary>
+    public SectionWrapper First
+    {
+        get { return GetList()[0]; }
+    }
+
+    /// <summary>The last section.</summary>
+    public SectionWrapper Last
+    {
+        get { return GetList().Last(); }
+    }
+
+    /// <summary>
+    /// Ends the section at the range with a section break and returns the section that starts after it, as <c>Sections.Add</c> in Word. The
+    /// range is the place of the break (the end of the document when omitted); see <see cref="RangeWrapper.InsertBreak"/>.
+    /// </summary>
+    /// <param name="range">Where the break goes, or null for the end of the document.</param>
+    /// <param name="start">Where the new section starts: on a new page, continuously, or on an even or odd page.</param>
+    /// <exception cref="ArgumentOutOfRangeException">The start is not one that a section can have (a new column is not supported here).</exception>
+    public SectionWrapper Add(RangeWrapper range = null, SectionStart start = SectionStart.NewPage)
+    {
+        if (!EnumCompat.IsDefined(start) || start == SectionStart.NewColumn)
+        {
+            throw new ArgumentOutOfRangeException(nameof(start));
+        }
+
+        if (range == null)
+        {
+            range = Parent.Duplicate();
+            range.SetRange(range.StoryLength, range.StoryLength);
+        }
+
+        HashSet<SectionProperties> before = new HashSet<SectionProperties>(_body.Descendants<ParagraphProperties>().Select(p => p.GetFirstChild<SectionProperties>()).Where(s => s != null));
+        range.InsertBreak(start == SectionStart.Continuous ? BreakType.SectionBreakContinuous
+            : start == SectionStart.EvenPage ? BreakType.SectionBreakEvenPage
+            : start == SectionStart.OddPage ? BreakType.SectionBreakOddPage : BreakType.SectionBreakNextPage);
+
+        //The break ends a section, so the new section is the one after the section properties that were added.
+        List<SectionProperties> after = _body.Descendants<ParagraphProperties>().Select(p => p.GetFirstChild<SectionProperties>()).Where(s => s != null).ToList();
+        int added = after.FindIndex(s => !before.Contains(s));
+        return GetList()[added + 1];
+    }
+
     public int Count
     {
         get { return GetList().Count; }

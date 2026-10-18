@@ -48,7 +48,7 @@ internal static class MinutesExample
 
             //REF is the field behind Insert, Cross-reference. Its result is the text of the bookmark. Word refreshes it when it updates fields.
             FieldWrapper cross = document.Fields.Add(reference.Range, FieldType.Ref, "decision_pilot \\h");
-            cross.Result = decision.Range.Text.TrimEnd('\r');
+            cross.Result.Text = decision.Range.Text.TrimEnd('\r');
 
             string[][] actions =
             {
@@ -88,7 +88,7 @@ internal static class MinutesExample
             RangeWrapper footer = document.Sections[0].Footers[HeaderFooterIndex.Primary].Range;
             footer.Text = "Project board minutes - page ";
             footer.Style = "Footer";
-            document.Fields.Add(footer, FieldType.Page).Result = "1";
+            document.Fields.Add(footer, FieldType.Page).Result.Text = "1";
         }
     }
 }

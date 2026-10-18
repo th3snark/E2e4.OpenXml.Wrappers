@@ -28,7 +28,7 @@ internal static class ReportExample
             builder.Paragraph("Contents", "Heading 1");
             ParagraphWrapper contents = builder.Paragraph(string.Empty);
             FieldWrapper toc = document.Fields.Add(contents.Range, FieldType.TableOfContents, "\\o \"1-2\" \\h \\z \\u");
-            toc.Result = "Right-click and choose Update Field to build the table of contents.";
+            toc.Result.Text = "Right-click and choose Update Field to build the table of contents.";
             contents.InsertBreak(BreakValues.Page);
 
             //The body: headings in the styles of the document and some text under each one.
@@ -96,9 +96,9 @@ internal static class ReportExample
             footer.Text = "Page ";
             footer.Style = "Footer";
             footer.ParagraphFormat.Alignment = ParagraphAlignment.Center;
-            document.Fields.Add(footer, FieldType.Page).Result = "2";
+            document.Fields.Add(footer, FieldType.Page).Result.Text = "2";
             footer.InsertAfter(" of ");
-            document.Fields.Add(footer, FieldType.NumPages).Result = "6";
+            document.Fields.Add(footer, FieldType.NumPages).Result.Text = "6";
         }
     }
 

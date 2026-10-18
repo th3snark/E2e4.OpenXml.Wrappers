@@ -8,9 +8,11 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
 
-public class WordprocessingDocumentWrapper : IDisposable
+public partial class WordprocessingDocumentWrapper : IDisposable
 {
     private WordprocessingDocument _wordprocessingDocument;
+    private bool _skipSave;
+    private bool _disposed;
 
     public WordprocessingDocumentWrapper(WordprocessingDocument wordprocessingDocument)
     {
@@ -29,7 +31,8 @@ public class WordprocessingDocumentWrapper : IDisposable
 
     public static WordprocessingDocumentWrapper Open(string path, bool isEditable)
     {
-        WordprocessingDocument wordprocessingDocument = WordprocessingDocument.Open(path, isEditable);
+        WordprocessingDocument wordprocessingDocument = WordprocessingDocument.Open(path, isEditable, new OpenSettings() { AutoSave = false });
+        FieldUpdater.RememberPath(wordprocessingDocument, path);
         return new WordprocessingDocumentWrapper(wordprocessingDocument);
     }
 
@@ -39,7 +42,7 @@ public class WordprocessingDocumentWrapper : IDisposable
     /// </summary>
     public static WordprocessingDocumentWrapper Open(Stream stream, bool isEditable)
     {
-        WordprocessingDocument wordprocessingDocument = WordprocessingDocument.Open(stream, isEditable);
+        WordprocessingDocument wordprocessingDocument = WordprocessingDocument.Open(stream, isEditable, new OpenSettings() { AutoSave = false });
         return new WordprocessingDocumentWrapper(wordprocessingDocument);
     }
 
@@ -50,7 +53,8 @@ public class WordprocessingDocumentWrapper : IDisposable
     public static WordprocessingDocumentWrapper Create(string path, bool addMainDocumentPart, bool addWordprocessingCommentsPart)
     {
         ValidateCreateArguments(addMainDocumentPart, addWordprocessingCommentsPart);
-        WordprocessingDocument wordprocessingDocument = WordprocessingDocument.Create(path, WordprocessingDocumentType.Document);
+        WordprocessingDocument wordprocessingDocument = WordprocessingDocument.Create(path, WordprocessingDocumentType.Document, false);
+        FieldUpdater.RememberPath(wordprocessingDocument, path);
         return InitializeNewDocument(wordprocessingDocument, addMainDocumentPart, addWordprocessingCommentsPart);
     }
 
@@ -60,7 +64,7 @@ public class WordprocessingDocumentWrapper : IDisposable
     public static WordprocessingDocumentWrapper Create(Stream stream, bool addMainDocumentPart, bool addWordprocessingCommentsPart)
     {
         ValidateCreateArguments(addMainDocumentPart, addWordprocessingCommentsPart);
-        WordprocessingDocument wordprocessingDocument = WordprocessingDocument.Create(stream, WordprocessingDocumentType.Document);
+        WordprocessingDocument wordprocessingDocument = WordprocessingDocument.Create(stream, WordprocessingDocumentType.Document, false);
         return InitializeNewDocument(wordprocessingDocument, addMainDocumentPart, addWordprocessingCommentsPart);
     }
 
@@ -102,7 +106,7 @@ public class WordprocessingDocumentWrapper : IDisposable
     {
         //Flush any changes held in the part trees so that the copy contains them.
         _wordprocessingDocument.Save();
-        WordprocessingDocument copy = _wordprocessingDocument.Clone(path, true);
+        WordprocessingDocument copy = _wordprocessingDocument.Clone(path, true, new OpenSettings() { AutoSave = false });
 
         //Clone does not carry over the core properties (title, author and so on), so copy them.
 #pragma warning disable OOXML0001 // Only the name of the experimental interface is used; the properties themselves are not marked.
@@ -123,6 +127,7 @@ public class WordprocessingDocumentWrapper : IDisposable
         to.Created = from.Created;
         to.Modified = from.Modified;
         to.LastPrinted = from.LastPrinted;
+        FieldUpdater.RememberPath(copy, path);
         return new WordprocessingDocumentWrapper(copy);
     }
 
@@ -139,8 +144,14 @@ public class WordprocessingDocumentWrapper : IDisposable
 
     protected virtual void Dispose(bool disposing)
     {
-        if (disposing)
+        if (disposing && !_disposed)
         {
+            _disposed = true;
+            //A document opened by this library does not save itself, so that Close can leave the changes out.
+            if (!_skipSave && !_wordprocessingDocument.AutoSave && _wordprocessingDocument.FileOpenAccess != FileAccess.Read)
+            {
+                _wordprocessingDocument.Save();
+            }
             _wordprocessingDocument.Dispose();
         }
     }

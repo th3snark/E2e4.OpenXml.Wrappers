@@ -49,7 +49,7 @@ internal static class AgreementExample
 
             //A cross reference: a REF field to the bookmark of the heading of the fees clause.
             FieldWrapper reference = document.Fields.Add(termination.Range, FieldType.Ref, "clause_fees \\h");
-            reference.Result = "3. Fees and payment";
+            reference.Result.Text = "3. Fees and payment";
             termination.Range.InsertAfter(", up to the date on which this agreement ends.");
 
             //Comments from the reviewers.
@@ -128,9 +128,9 @@ internal static class AgreementExample
             footer.Text = "Agreement {{reference}} - page ";
             footer.Style = "Footer";
             footer.ParagraphFormat.Alignment = ParagraphAlignment.Center;
-            document.Fields.Add(footer, FieldType.Page).Result = "1";
+            document.Fields.Add(footer, FieldType.Page).Result.Text = "1";
             footer.InsertAfter(" of ");
-            document.Fields.Add(footer, FieldType.NumPages).Result = "3";
+            document.Fields.Add(footer, FieldType.NumPages).Result.Text = "3";
 
             //Fill in the placeholders: the same Find that was used to look for text replaces it in every part of the document. The
             //header and footer are separate ranges, so they are replaced too.
@@ -169,7 +169,7 @@ internal static class AgreementExample
     {
         ParagraphWrapper heading = builder.Paragraph(string.Empty, "Heading 2");
         FieldWrapper numberField = document.Fields.Add(heading.Range, FieldType.Sequence, "clause \\* ARABIC");
-        numberField.Result = number.ToString(CultureInfo.InvariantCulture);
+        numberField.Result.Text = number.ToString(CultureInfo.InvariantCulture);
         heading.Range.InsertAfter(". " + title);
         string name = "clause_" + title.Split(' ')[0].ToLowerInvariant();
         document.Bookmarks.Add(name, heading.Range);

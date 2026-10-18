@@ -44,12 +44,12 @@ public class FieldWrapperTest
 
         Assert.Equal(3, fields.Count);
         Assert.Equal(FieldType.Page, fields[0].Type);
-        Assert.Equal("PAGE \\* MERGEFORMAT", fields[0].Code);
-        Assert.Equal("3", fields[0].Result);
+        Assert.Equal("PAGE \\* MERGEFORMAT", fields[0].Code.Text);
+        Assert.Equal("3", fields[0].Result.Text);
         Assert.Equal(FieldType.NumPages, fields[1].Type);
-        Assert.Equal("9", fields[1].Result);
+        Assert.Equal("9", fields[1].Result.Text);
         Assert.Equal(FieldType.Date, fields[2].Type);
-        Assert.Equal("today", fields[2].Result);
+        Assert.Equal("today", fields[2].Result.Text);
         Assert.Equal(3, fields.ToList().Count);
         Assert.Throws<System.ArgumentOutOfRangeException>(() => fields[3]);
     }
@@ -81,10 +81,10 @@ public class FieldWrapperTest
         FieldWrapperCollection fields = new RangeWrapper(paragraph).Fields;
 
         Assert.Equal(2, fields.Count);
-        Assert.Equal("IF  = 1", fields[0].Code);
-        Assert.Equal("first", fields[0].Result);
-        Assert.Equal("PAGE", fields[1].Code);
-        Assert.Equal("1", fields[1].Result);
+        Assert.Equal("IF  = 1", fields[0].Code.Text);
+        Assert.Equal("first", fields[0].Result.Text);
+        Assert.Equal("PAGE", fields[1].Code.Text);
+        Assert.Equal("1", fields[1].Result.Text);
     }
 
     [Fact]
@@ -93,9 +93,9 @@ public class FieldWrapperTest
         Paragraph paragraph = ComplexParagraph();
         FieldWrapper field = new RangeWrapper(paragraph).Fields[0];
 
-        field.Result = "4";
+        field.Result.Text = "4";
 
-        Assert.Equal("4", field.Result);
+        Assert.Equal("4", field.Result.Text);
         Run resultRun = paragraph.Elements<Run>().Single(r => r.GetFirstChild<Text>()?.Text == "4");
         Assert.NotNull(resultRun.RunProperties.Bold);
         Assert.Equal("Page 4 of 9", new RangeWrapper(paragraph).Text.TrimEnd('\r'));
@@ -106,9 +106,9 @@ public class FieldWrapperTest
     {
         FieldWrapper field = new RangeWrapper(CreateBody()).Fields[2];
 
-        field.Result = "yesterday";
+        field.Result.Text = "yesterday";
 
-        Assert.Equal("yesterday", field.Result);
+        Assert.Equal("yesterday", field.Result.Text);
         Assert.NotNull(field.Range.StartElement.Descendants<Italic>().SingleOrDefault());
     }
 
@@ -117,11 +117,11 @@ public class FieldWrapperTest
     {
         Paragraph paragraph = new Paragraph(FieldCharRun(FieldCharValues.Begin), new Run(new FieldCode(" PAGE ")), FieldCharRun(FieldCharValues.End));
         FieldWrapper field = new RangeWrapper(paragraph).Fields.Single();
-        Assert.Equal(string.Empty, field.Result);
+        Assert.Equal(string.Empty, field.Result.Text);
 
-        field.Result = "7";
+        field.Result.Text = "7";
 
-        Assert.Equal("7", field.Result);
+        Assert.Equal("7", field.Result.Text);
         Assert.Single(paragraph.Descendants<FieldChar>(), f => f.FieldCharType.Value == FieldCharValues.Separate);
     }
 
@@ -136,20 +136,20 @@ public class FieldWrapperTest
             new Run(new Text("1")),
             FieldCharRun(FieldCharValues.End));
         FieldWrapper field = new RangeWrapper(paragraph).Fields.Single();
-        Assert.Equal("PAGE", field.Code);
+        Assert.Equal("PAGE", field.Code.Text);
 
-        field.Code = "NUMPAGES";
+        field.Code.Text = "NUMPAGES";
 
-        Assert.Equal("NUMPAGES", field.Code);
+        Assert.Equal("NUMPAGES", field.Code.Text);
         Assert.Equal(FieldType.NumPages, field.Type);
         Assert.Single(paragraph.Descendants<FieldCode>());
-        Assert.Equal("1", field.Result);
+        Assert.Equal("1", field.Result.Text);
     }
 
     [Fact]
     public void UnknownCodesAreOtherType()
     {
-        Paragraph paragraph = new Paragraph(new SimpleField() { Instruction = " QUOTE \"x\" " });
+        Paragraph paragraph = new Paragraph(new SimpleField() { Instruction = " NOSUCHFIELD \"x\" " });
 
         Assert.Equal(FieldType.Other, new RangeWrapper(paragraph).Fields.Single().Type);
     }
@@ -175,12 +175,12 @@ public class FieldWrapperTest
         FieldWrapper field = range.Fields.Add(range, FieldType.Page, "\\* MERGEFORMAT");
 
         Assert.Equal(field, range.Fields.Single());
-        Assert.Equal("PAGE \\* MERGEFORMAT", field.Code);
+        Assert.Equal("PAGE \\* MERGEFORMAT", field.Code.Text);
         Assert.Equal(FieldType.Page, field.Type);
         Assert.True(paragraph.Descendants<FieldChar>().First().Dirty.Value);
         Assert.Equal(3, paragraph.Descendants<FieldChar>().Count());
 
-        field.Result = "1";
+        field.Result.Text = "1";
         Assert.Equal("Page 1", range.Text.TrimEnd('\r'));
     }
 

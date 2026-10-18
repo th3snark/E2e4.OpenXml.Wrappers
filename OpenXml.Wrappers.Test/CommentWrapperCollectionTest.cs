@@ -107,7 +107,8 @@ public class CommentWrapperCollectionTest : System.IDisposable
 
                 CommentWrapper third = document.Comments.Add(new ParagraphWrapper(paragraph).Range, "three");
 
-                Assert.Equal(6, third.Index);
+                Assert.Equal("6", comments.Elements<Comment>().Last().Id.Value);
+                Assert.Equal(2, third.Index);
             }
             finally
             {
