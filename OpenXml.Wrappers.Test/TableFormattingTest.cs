@@ -145,17 +145,22 @@ public class TableFormattingTest
     {
         Table table = CreateTable(1, 1);
         TableWrapper wrapper = new TableWrapper(table);
-        Assert.Null(wrapper.PreferredWidth);
+        Assert.Equal(0, wrapper.PreferredWidth);
+        Assert.Equal(PreferredWidthType.Auto, wrapper.PreferredWidthType);
 
         wrapper.PreferredWidth = 468;
+        Assert.Equal(PreferredWidthType.Points, wrapper.PreferredWidthType);
         Assert.Equal(468, wrapper.PreferredWidth);
         Assert.Equal("9360", table.GetFirstChild<TableProperties>().TableWidth.Width.Value);
 
-        table.GetFirstChild<TableProperties>().TableWidth.Type = TableWidthUnitValues.Pct;
-        Assert.Null(wrapper.PreferredWidth);
+        wrapper.PreferredWidthType = PreferredWidthType.Percent;
+        Assert.Equal(PreferredWidthType.Percent, wrapper.PreferredWidthType);
+        wrapper.PreferredWidth = 50;
+        Assert.Equal(50, wrapper.PreferredWidth);
+        Assert.Equal("2500", table.GetFirstChild<TableProperties>().TableWidth.Width.Value);
 
-        wrapper.PreferredWidth = null;
-        Assert.Null(table.GetFirstChild<TableProperties>().TableWidth);
+        wrapper.PreferredWidthType = PreferredWidthType.Auto;
+        Assert.Equal(0, wrapper.PreferredWidth);
         Assert.Throws<ArgumentOutOfRangeException>(() => wrapper.PreferredWidth = -1);
     }
 

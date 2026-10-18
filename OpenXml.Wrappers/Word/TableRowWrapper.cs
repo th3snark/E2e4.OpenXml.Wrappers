@@ -6,7 +6,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
 
-public class TableRowWrapper : System.IEquatable<TableRowWrapper>
+public partial class TableRowWrapper : System.IEquatable<TableRowWrapper>
 {
     TableRow _tableRow;
 

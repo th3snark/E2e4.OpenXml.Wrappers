@@ -8,7 +8,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
 
-public class TableRowWrapperCollection : IEnumerable<TableRowWrapper>
+public partial class TableRowWrapperCollection : IEnumerable<TableRowWrapper>
 {
     private RangeWrapper _range;
 
@@ -30,9 +30,9 @@ public class TableRowWrapperCollection : IEnumerable<TableRowWrapper>
             {
                 return new TableRowWrapper(GetElementList()[index]);
             }
-            catch (ArgumentOutOfRangeException ex)
+            catch (ArgumentOutOfRangeException)
             {
-                throw new ArgumentOutOfRangeException(String.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index), ex);
+                throw new ArgumentOutOfRangeException(nameof(index), String.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index));
             }
         }
     }

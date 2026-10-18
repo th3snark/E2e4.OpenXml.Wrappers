@@ -51,4 +51,25 @@ public partial class RangeWrapper
         Paragraph ending = _isSpan && inserted.Paragraph.PreviousSibling<Paragraph>() != null ? inserted.Paragraph.PreviousSibling<Paragraph>() : inserted.Paragraph;
         new ParagraphWrapper(ending).InsertSectionBreak(sectionType);
     }
+    /// <summary>
+    /// Makes room for a block (a table, say) at the start of a span: the text of a span that is not collapsed is deleted, and the paragraph is
+    /// split at that point unless it is already at the start of one. Returns the paragraph that the block goes in front of.
+    /// </summary>
+    internal Paragraph PrepareInsertBlock()
+    {
+        if (!_isSpan)
+        {
+            throw new InvalidOperationException("The range is not a span of characters.");
+        }
+
+        GetScoped(false, out StoryMap map, out int start, out int end);
+        if (start != end)
+        {
+            Delete();
+            GetScoped(false, out map, out start, out end);
+        }
+
+        Paragraph holder = ParagraphForPosition(map, start, out int local);
+        return local == 0 ? holder : SplitParagraphAt(holder, local);
+    }
 }

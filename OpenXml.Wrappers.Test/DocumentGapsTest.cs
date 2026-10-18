@@ -97,7 +97,7 @@ public class DocumentGapsTest : IDisposable
             Assert.Equal(BorderLineStyle.SingleLine, table.Borders[BorderPosition.Top].LineStyle);
             Assert.Equal(1.5, table.Borders[BorderPosition.Top].LineWidth);
             Assert.Equal("FF0000", table.Cell(0, 1).Borders[BorderPosition.Top].Color);
-            Assert.Equal(BorderLineStyle.Dashed, table.Cell(0, 0).Borders[BorderPosition.Bottom].LineStyle);
+            Assert.Equal(BorderLineStyle.DashLargeGap, table.Cell(0, 0).Borders[BorderPosition.Bottom].LineStyle);
             Assert.Equal(BorderLineStyle.None, table.Cell(1, 0).Borders[BorderPosition.Bottom].LineStyle);
 
             //A direct setting wins over the style.

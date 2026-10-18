@@ -5,7 +5,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
 
-public class TableWrapper : System.IEquatable<TableWrapper>
+public partial class TableWrapper : System.IEquatable<TableWrapper>
 {
     Table _table;
 
@@ -99,40 +99,6 @@ public class TableWrapper : System.IEquatable<TableWrapper>
             GetOrAddTableProperties().TableJustification = new TableJustification()
             {
                 Val = value == RowAlignment.Center ? TableRowAlignmentValues.Center : TableRowAlignmentValues.Right
-            };
-        }
-    }
-
-    /// <summary>
-    /// The preferred width of the table in points, or null when it is not a fixed width (automatic or a percentage). Setting null
-    /// removes the preferred width.
-    /// </summary>
-    public double? PreferredWidth
-    {
-        get
-        {
-            TableWidth width = _table.GetFirstChild<TableProperties>()?.TableWidth;
-            if (width?.Type == null || !width.Type.HasValue || width.Type.Value != TableWidthUnitValues.Dxa || width.Width == null)
-            {
-                return null;
-            }
-            return Double.TryParse(width.Width.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out double twips) ? twips / 20.0 : null;
-        }
-        set
-        {
-            if (value == null)
-            {
-                _table.GetFirstChild<TableProperties>()?.RemoveAllChildren<TableWidth>();
-                return;
-            }
-            if (Double.IsNaN(value.Value) || value.Value < 0 || value.Value > 1584)
-            {
-                throw new ArgumentOutOfRangeException(nameof(value), "The width must be between 0 and 1584 points.");
-            }
-            GetOrAddTableProperties().TableWidth = new TableWidth()
-            {
-                Width = Math.Round(value.Value * 20, MidpointRounding.AwayFromZero).ToString(CultureInfo.InvariantCulture),
-                Type = TableWidthUnitValues.Dxa
             };
         }
     }

@@ -30,6 +30,16 @@ public class BordersWrapper
         _isTable = isTable;
     }
 
+    /// <summary>
+    /// The positions of the outside borders: the four edges.
+    /// </summary>
+    private static readonly BorderPosition[] OutsidePositions = { BorderPosition.Top, BorderPosition.Left, BorderPosition.Bottom, BorderPosition.Right };
+
+    private BorderPosition[] InsidePositions
+    {
+        get { return _owner is TableRow ? new[] { BorderPosition.Vertical } : _owner is GridColumn ? new[] { BorderPosition.Horizontal } : new[] { BorderPosition.Horizontal, BorderPosition.Vertical }; }
+    }
+
     public BorderWrapper this[BorderPosition position]
     {
         get
@@ -38,9 +48,17 @@ public class BordersWrapper
             {
                 throw new ArgumentOutOfRangeException(nameof(position));
             }
-            if ((_isTable || _owner is TableRow) && (position == BorderPosition.DiagonalDown || position == BorderPosition.DiagonalUp))
+            if ((_isTable || _owner is TableRow || _owner is GridColumn) && (position == BorderPosition.DiagonalDown || position == BorderPosition.DiagonalUp))
             {
                 throw new NotSupportedException("Only a cell has diagonal borders.");
+            }
+            if (_owner is GridColumn column)
+            {
+                if (position == BorderPosition.Vertical)
+                {
+                    throw new NotSupportedException("A column has no vertical inside border.");
+                }
+                return new BorderWrapper(GetColumnTargets(column, position));
             }
             if (_owner is TableRow row)
             {
@@ -83,6 +101,35 @@ public class BordersWrapper
         return targets;
     }
 
+    //The borders of a column are those of its cells: left and right on all of them, top on the first, bottom on the last, and the line between the
+    //cells as the bottom border of one and the top border of the next.
+    private static List<(BordersWrapper Borders, BorderPosition Position)> GetColumnTargets(GridColumn column, BorderPosition position)
+    {
+        List<TableCell> cells = new TableColumnCellCollection(column).Select(c => c.TableCell).ToList();
+        List<(BordersWrapper, BorderPosition)> targets = new List<(BordersWrapper, BorderPosition)>();
+        for (int i = 0; i < cells.Count; i++)
+        {
+            BordersWrapper borders = new BordersWrapper(cells[i], false);
+            if (position == BorderPosition.Left || position == BorderPosition.Right
+                || (position == BorderPosition.Top && i == 0) || (position == BorderPosition.Bottom && i == cells.Count - 1))
+            {
+                targets.Add((borders, position));
+            }
+            else if (position == BorderPosition.Horizontal)
+            {
+                if (i > 0)
+                {
+                    targets.Add((borders, BorderPosition.Top));
+                }
+                if (i < cells.Count - 1)
+                {
+                    targets.Add((borders, BorderPosition.Bottom));
+                }
+            }
+        }
+        return targets;
+    }
+
     /// <summary>
     /// Sets the style, width and colour of the four outside borders.
     /// </summary>
@@ -96,7 +143,7 @@ public class BordersWrapper
     /// </summary>
     public void SetInside(BorderLineStyle lineStyle, double lineWidth, string color)
     {
-        Set(_owner is TableRow ? new[] { BorderPosition.Vertical } : new[] { BorderPosition.Horizontal, BorderPosition.Vertical }, lineStyle, lineWidth, color);
+        Set(InsidePositions, lineStyle, lineWidth, color);
     }
 
     /// <summary>
@@ -112,18 +159,143 @@ public class BordersWrapper
             }
             return;
         }
+        if (_owner is GridColumn column)
+        {
+            foreach (TableCellWrapper cell in new TableColumnCellCollection(column))
+            {
+                cell.Borders.Clear();
+            }
+            return;
+        }
 
         OpenXmlCompositeElement container = GetContainer(false);
         container?.Remove();
     }
 
-    private void Set(BorderPosition[] positions, BorderLineStyle lineStyle, double lineWidth, string color)
+    /// <summary>
+    /// The number of borders: the four edges and the lines between rows and columns (two of them for a table or cell, one for a row or
+    /// column), and the two diagonals for a cell.
+    /// </summary>
+    public int Count
     {
+        get { return OutsidePositions.Length + InsidePositions.Length + (_owner is TableCell ? 2 : 0); }
+    }
+
+    private BorderLineStyle GetGroupStyle(IEnumerable<BorderPosition> positions)
+    {
+        List<BorderLineStyle> styles = positions.Select(p => this[p].LineStyle).Distinct().ToList();
+        return styles.Count == 1 ? styles[0] : BorderLineStyle.Other;
+    }
+
+    private double GetGroupWidth(IEnumerable<BorderPosition> positions)
+    {
+        List<double> widths = positions.Select(p => this[p].LineWidth).Distinct().ToList();
+        return widths.Count == 1 ? widths[0] : 0;
+    }
+
+    private string GetGroupColor(IEnumerable<BorderPosition> positions)
+    {
+        List<string> colors = positions.Select(p => this[p].Color).Distinct().ToList();
+        return colors.Count == 1 ? colors[0] : null;
+    }
+
+    /// <summary>
+    /// The line style of the four outside borders, or <see cref="BorderLineStyle.Other"/> when they differ (<c>Borders.OutsideLineStyle</c> in Word).
+    /// </summary>
+    public BorderLineStyle OutsideLineStyle
+    {
+        get { return GetGroupStyle(OutsidePositions); }
+        set { Set(OutsidePositions, value, 0.5, "auto", false); }
+    }
+
+    /// <summary>
+    /// The line style of the borders between rows and between columns, or <see cref="BorderLineStyle.Other"/> when they differ.
+    /// </summary>
+    public BorderLineStyle InsideLineStyle
+    {
+        get { return GetGroupStyle(InsidePositions); }
+        set { Set(InsidePositions, value, 0.5, "auto", false); }
+    }
+
+    /// <summary>The width in points of the outside borders; 0 when they differ or are not set.</summary>
+    public double OutsideLineWidth
+    {
+        get { return GetGroupWidth(OutsidePositions); }
+        set { SetWidth(OutsidePositions, value); }
+    }
+
+    /// <summary>The width in points of the borders between rows and between columns; 0 when they differ or are not set.</summary>
+    public double InsideLineWidth
+    {
+        get { return GetGroupWidth(InsidePositions); }
+        set { SetWidth(InsidePositions, value); }
+    }
+
+    /// <summary>The colour of the outside borders (six hex digits or <c>auto</c>); null when they differ.</summary>
+    public string OutsideColor
+    {
+        get { return GetGroupColor(OutsidePositions); }
+        set { SetColor(OutsidePositions, value); }
+    }
+
+    /// <summary>The colour of the borders between rows and between columns; null when they differ.</summary>
+    public string InsideColor
+    {
+        get { return GetGroupColor(InsidePositions); }
+        set { SetColor(InsidePositions, value); }
+    }
+
+    /// <summary>
+    /// Whether the borders are on, as <c>Borders.Enable</c> in Word: true when every outside and inside border has a line. Setting it to true
+    /// gives the ones without a line a single half-point line; false switches all of them off.
+    /// </summary>
+    public bool Enable
+    {
+        get { return OutsidePositions.Concat(InsidePositions).All(p => this[p].LineStyle != BorderLineStyle.None); }
+        set
+        {
+            foreach (BorderPosition position in OutsidePositions.Concat(InsidePositions))
+            {
+                BorderWrapper border = this[position];
+                if (!value)
+                {
+                    border.LineStyle = BorderLineStyle.None;
+                }
+                else if (border.LineStyle == BorderLineStyle.None)
+                {
+                    border.LineStyle = BorderLineStyle.SingleLine;
+                }
+            }
+        }
+    }
+
+    private void SetWidth(IEnumerable<BorderPosition> positions, double width)
+    {
+        foreach (BorderPosition position in positions)
+        {
+            this[position].LineWidth = width;
+        }
+    }
+
+    private void SetColor(IEnumerable<BorderPosition> positions, string color)
+    {
+        foreach (BorderPosition position in positions)
+        {
+            this[position].Color = color;
+        }
+    }
+
+    private void Set(IEnumerable<BorderPosition> positions, BorderLineStyle lineStyle, double lineWidth, string color, bool setWidthAndColor = true)
+    {
+        if (lineStyle == BorderLineStyle.Other)
+        {
+            throw new ArgumentException("The style Other cannot be set.", nameof(lineStyle));
+        }
         foreach (BorderPosition position in positions)
         {
             BorderWrapper border = this[position];
             border.LineStyle = lineStyle;
-            if (lineStyle != BorderLineStyle.None)
+            if (setWidthAndColor && lineStyle != BorderLineStyle.None)
             {
                 border.LineWidth = lineWidth;
                 border.Color = color;

@@ -29,9 +29,9 @@ public class TableCellWrapperCollection : IEnumerable<TableCellWrapper>
             {
                 return new TableCellWrapper(GetElementList()[index]);
             }
-            catch (ArgumentOutOfRangeException ex)
+            catch (ArgumentOutOfRangeException)
             {
-                throw new ArgumentOutOfRangeException(String.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index), ex);
+                throw new ArgumentOutOfRangeException(nameof(index), String.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index));
             }
         }
     }

@@ -142,6 +142,25 @@ public class BorderWrapper
     }
 
     /// <summary>
+    /// Whether the border has a line (<c>Border.Visible</c> in Word). Setting it to true gives a border without a line a single half-point line.
+    /// </summary>
+    public bool Visible
+    {
+        get { return LineStyle != BorderLineStyle.None; }
+        set
+        {
+            if (!value)
+            {
+                LineStyle = BorderLineStyle.None;
+            }
+            else if (LineStyle == BorderLineStyle.None)
+            {
+                LineStyle = BorderLineStyle.SingleLine;
+            }
+        }
+    }
+
+    /// <summary>
     /// Removes the direct border setting.
     /// </summary>
     public void Clear()
@@ -171,30 +190,58 @@ public class BorderWrapper
 
     private static BorderLineStyle Map(BorderValues value)
     {
-        foreach (BorderLineStyle style in EnumCompat.GetValues<BorderLineStyle>())
+        foreach (KeyValuePair<BorderLineStyle, BorderValues> pair in Styles)
         {
-            if (style != BorderLineStyle.None && style != BorderLineStyle.Other && ToValue(style) == value)
+            if (pair.Value == value)
             {
-                return style;
+                return pair.Key;
             }
         }
         return BorderLineStyle.Other;
     }
 
+    private static readonly List<KeyValuePair<BorderLineStyle, BorderValues>> Styles = new List<KeyValuePair<BorderLineStyle, BorderValues>>
+    {
+        Pair(BorderLineStyle.SingleLine, BorderValues.Single),
+        Pair(BorderLineStyle.Dotted, BorderValues.Dotted),
+        Pair(BorderLineStyle.DashSmallGap, BorderValues.DashSmallGap),
+        Pair(BorderLineStyle.DashLargeGap, BorderValues.Dashed),
+        Pair(BorderLineStyle.DashDot, BorderValues.DotDash),
+        Pair(BorderLineStyle.DashDotDot, BorderValues.DotDotDash),
+        Pair(BorderLineStyle.DoubleLine, BorderValues.Double),
+        Pair(BorderLineStyle.Triple, BorderValues.Triple),
+        Pair(BorderLineStyle.ThinThickSmallGap, BorderValues.ThinThickSmallGap),
+        Pair(BorderLineStyle.ThickThinSmallGap, BorderValues.ThickThinSmallGap),
+        Pair(BorderLineStyle.ThinThickThinSmallGap, BorderValues.ThinThickThinSmallGap),
+        Pair(BorderLineStyle.ThinThickMediumGap, BorderValues.ThinThickMediumGap),
+        Pair(BorderLineStyle.ThickThinMediumGap, BorderValues.ThickThinMediumGap),
+        Pair(BorderLineStyle.ThinThickThinMediumGap, BorderValues.ThinThickThinMediumGap),
+        Pair(BorderLineStyle.ThinThickLargeGap, BorderValues.ThinThickLargeGap),
+        Pair(BorderLineStyle.ThickThinLargeGap, BorderValues.ThickThinLargeGap),
+        Pair(BorderLineStyle.ThinThickThinLargeGap, BorderValues.ThinThickThinLargeGap),
+        Pair(BorderLineStyle.SingleWavy, BorderValues.Wave),
+        Pair(BorderLineStyle.DoubleWavy, BorderValues.DoubleWave),
+        Pair(BorderLineStyle.DashDotStroked, BorderValues.DashDotStroked),
+        Pair(BorderLineStyle.Emboss3D, BorderValues.ThreeDEmboss),
+        Pair(BorderLineStyle.Engrave3D, BorderValues.ThreeDEngrave),
+        Pair(BorderLineStyle.Outset, BorderValues.Outset),
+        Pair(BorderLineStyle.Inset, BorderValues.Inset)
+    };
+
+    private static KeyValuePair<BorderLineStyle, BorderValues> Pair(BorderLineStyle style, BorderValues value)
+    {
+        return new KeyValuePair<BorderLineStyle, BorderValues>(style, value);
+    }
+
     private static BorderValues ToValue(BorderLineStyle style)
     {
-        return style switch
+        foreach (KeyValuePair<BorderLineStyle, BorderValues> pair in Styles)
         {
-            BorderLineStyle.SingleLine => BorderValues.Single,
-            BorderLineStyle.Dotted => BorderValues.Dotted,
-            BorderLineStyle.Dashed => BorderValues.Dashed,
-            BorderLineStyle.DotDash => BorderValues.DotDash,
-            BorderLineStyle.DoubleLine => BorderValues.Double,
-            BorderLineStyle.Triple => BorderValues.Triple,
-            BorderLineStyle.Wave => BorderValues.Wave,
-            BorderLineStyle.Inset => BorderValues.Inset,
-            BorderLineStyle.Outset => BorderValues.Outset,
-            _ => BorderValues.Nil
-        };
+            if (pair.Key == style)
+            {
+                return pair.Value;
+            }
+        }
+        return BorderValues.Nil;
     }
 }

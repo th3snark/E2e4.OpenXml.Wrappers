@@ -422,8 +422,11 @@ public class TableStructureTest
         (Body body, Paragraph paragraph) = CreateBody();
         TableWrapper table = new TableWrapperCollection(new RangeWrapper(body)).Add(new RangeWrapper(body), 1, 1);
 
+        //As in Word the whole document is replaced by the table.
         Assert.Same(table.Table, body.FirstChild);
-        Assert.Same(paragraph, table.Table.NextSibling());
+        Assert.IsType<Paragraph>(table.Table.NextSibling());
+        Assert.Equal("", new ParagraphWrapper((Paragraph)table.Table.NextSibling()).Text);
+        Assert.Null(paragraph.Parent);
     }
 
     [Fact]

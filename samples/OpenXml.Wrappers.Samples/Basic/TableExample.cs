@@ -16,7 +16,7 @@ internal static class TableExample
             document.Paragraphs[0].Range.Text = "Sales by region (thousands)";
             document.Paragraphs[0].Range.Font.Bold = true;
 
-            //Tables.Add puts the table before the range it is given, so give it the paragraph that should follow the table.
+            //Tables.Add replaces the range it is given (as in Word) and puts the table before its paragraph, so give it an empty paragraph, which follows the table.
             ParagraphWrapper after = document.Content.InsertParagraphAfter();
             TableWrapper table = document.Tables.Add(after.Range, 4, 3);
 
