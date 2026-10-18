@@ -2,9 +2,9 @@
 
 All notable changes are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/) and the project uses [Semantic Versioning](https://semver.org/).
 
-## [1.0.0] - not yet released
+## [1.0.0] - 2026-10-18
 
-The first release. Set the date here when it is published.
+The first release.
 
 ### Added
 - A Word-object-model-like API over the Open XML SDK for `.docx` files, with `DocumentFormat.OpenXml` as the only dependency. Builds for `net10.0`, `net8.0` and `netstandard2.0` (so .NET Framework 4.6.1 and later and every .NET version are supported); the tests run on `net10.0`, `net8.0` and `net48`.
