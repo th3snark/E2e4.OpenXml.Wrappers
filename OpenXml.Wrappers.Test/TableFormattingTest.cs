@@ -214,7 +214,7 @@ public class TableFormattingTest
     public void ColumnDeletePassesTheStartOfAVerticalMergeToTheNextRow()
     {
         Table table = CreateTable(2, 2);
-        new TableWrapper(table).Cell(0, 0).MergeDown();
+        new TableWrapper(table).Cell(0, 0).Merge(new TableWrapper(table).Cell(1, 0));
 
         new TableWrapper(table).Columns[0].Delete();
 

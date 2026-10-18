@@ -131,15 +131,19 @@ This is the best-covered area, and the collection objects are where it is thinne
 * Missing: `Saved`, `SaveAs2`, `Type`, `HasPassword`, `Password`, `WritePassword`, `ReadOnlyRecommended`, `DefaultTabStop`, `AttachedTemplate`, `UpdateStylesOnOpen`, `CopyStylesFromTemplate`, `StoryRanges`, `Repaginate`, `Compare`, `Merge`, `AcceptAllRevisions`/`RejectAllRevisions` (with the Revisions object), `Shapes`, `InlineShapes`, `Hyperlinks`, `Footnotes`, `Endnotes`, `Lists`, `ListParagraphs`, `ListTemplates`, `ContentControls`, `TablesOfContents`, `TablesOfFigures`, `Indexes`, `FormFields`, `CustomXMLParts`, `DocumentTheme` (`ApplyTheme`), `Frames`, `Subdocuments`, `Windows`/`ActiveWindow`/`Selection`, `Undo`/`Redo`, `PrintOut`, `ExportAsFixedFormat`, `CheckSpelling`, `Select`, `Range()` with no arguments (C5).
 * `BuiltInDocumentProperties` exposes typed members and a name indexer. Word's collection also enumerates and has `Count`, and each item is a `DocumentProperty` with `Name`, `Type`, `Value`, `LinkToContent`. Add enumeration and an item object so `For Each p In BuiltInDocumentProperties` ports.
 
-## 4. Non-Word surface to review
+## 4. Non-Word surface (status after Phase 1)
 
-These do not exist in Word. They are not wrong, but a macro author will not expect them, and some leak Open XML types:
+Done: `Paragraph.InsertBreak` takes `BreakType`; `Cell.BackgroundColor`, `Cell.MergeDown`/`MergeRight` and `Table.InsertParagraphAfterSelf` are removed (each is `Shading`, `Merge` with `Next()` or `Table.Cell`, and `Range.InsertParagraphAfter`); `OpenXmlExtensions` is internal. `StoryMap`, `Anchor`, `FoundMatch` and `UnitNavigator` are internal already.
 
-* `Paragraph.InsertBreak(BreakValues)` takes an Open XML enum. `Range.InsertBreak(BreakType)` is the Word shape. Make the `Paragraph` one use `BreakType`, or drop it.
-* `Paragraph.DeleteBreaks`, `CopyPropertiesTo`, `InsertSectionBreak`; `Table.AppendRow`, `MergeTable`, `InsertParagraphAfterSelf`; `Row.Copy`, `ClearText`; `Cell.MergeDown`/`MergeRight`, `BackgroundColor`. `Cell.BackgroundColor` duplicates `Cell.Shading.BackgroundPatternColor`. Word's merge is `Cell.Merge(MergeTo)`.
-* `Table.Width` is not Word. Word uses `PreferredWidth` and `Column.Width`.
-* `OpenXmlExtensions` is a public static class with general helpers (`Truncate`, `IndexRange`, `DescendantsAtRelativeNestingLevel`). Check which of these should be internal now that the API is being shaped for a first publish.
-* The listing shows public-looking members for `StoryMap`, `Anchor`, `FoundMatch`, `UnitNavigator`. If those types are public, narrow them to internal. `PositionIndex` is the deliberate public one.
+Kept on purpose, because one or two other members cannot do the same thing:
+
+* `Table.AppendRow` and `Row.Copy`: together they copy a row with its content; `Rows.Add()` adds an empty row.
+* `Table.MergeTable`: Word merges tables by deleting the paragraph between them.
+* `Table.Width`: it works out a width in points for fixed and percentage widths; `PreferredWidth` is in the unit of `PreferredWidthType`.
+* `Row.ClearText`, `Paragraph.DeleteBreaks`, `Paragraph.CopyPropertiesTo`.
+* `Paragraph.InsertSectionBreak`: it ends the section with the paragraph. `Sections.Add(range)` and `Range.InsertBreak` insert a new paragraph for the break.
+
+Still public and not Word's: `ConversionHelper` (`ToPct`, `CentimeterToDxa`, in Open XML's own units).
 
 ## 5. Limitations of the library as it stands
 

@@ -167,10 +167,6 @@ public partial class TableWrapper : System.IEquatable<TableWrapper>
         _table.MergeTable(reportTable.Table);
     }
 
-    public ParagraphWrapper InsertParagraphAfterSelf()
-    {
-        return Range.InsertParagraphAfter();
-    }
     /// <summary>
     /// The width of the table in points, worked out from the fixed or percentage width it has (0 when it has neither).
     /// </summary>

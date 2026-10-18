@@ -204,4 +204,77 @@ public class RangeWrapperDeleteTest
     {
         Assert.Throws<NotSupportedException>(() => new RangeWrapper(new Comment()).Delete());
     }
+
+    private static RangeWrapper CreateSpanOver(string text, int start, int end, out Body body)
+    {
+        body = new Body(CreateParagraph(text));
+        RangeWrapper range = new RangeWrapper(body);
+        range.SetRange(start, end);
+        return range;
+    }
+
+    [Fact]
+    public void DeletingUnitsAfterACollapsedRangeReturnsTheNumberDeleted()
+    {
+        RangeWrapper range = CreateSpanOver("Hello world", 5, 5, out Body body);
+
+        int deleted = range.Delete(TextUnit.Character, 3);
+
+        Assert.Equal(3, deleted);
+        Assert.Equal("Hellorld\r", new RangeWrapper(body).Text);
+        Assert.Equal(5, range.Start);
+        Assert.Equal(5, range.End);
+    }
+
+    [Fact]
+    public void DeletingUnitsWithANegativeCountDeletesBeforeTheRange()
+    {
+        RangeWrapper range = CreateSpanOver("Hello world", 5, 5, out Body body);
+
+        int deleted = range.Delete(TextUnit.Character, -2);
+
+        Assert.Equal(2, deleted);
+        Assert.Equal("Hel world\r", new RangeWrapper(body).Text);
+        Assert.Equal(3, range.Start);
+    }
+
+    [Fact]
+    public void DeletingWordsDeletesWholeWords()
+    {
+        RangeWrapper range = CreateSpanOver("one two three", 4, 4, out Body body);
+
+        int deleted = range.Delete(TextUnit.Word, 1);
+
+        Assert.Equal(1, deleted);
+        Assert.Equal("one three\r", new RangeWrapper(body).Text);
+    }
+
+    [Fact]
+    public void DeletingMoreUnitsThanThereAreReturnsHowManyWereDeleted()
+    {
+        RangeWrapper range = CreateSpanOver("abc", 1, 1, out Body body);
+
+        int deleted = range.Delete(TextUnit.Character, 100);
+
+        Assert.InRange(deleted, 2, 3);
+        Assert.StartsWith("a", new RangeWrapper(body).Text);
+    }
+
+    [Fact]
+    public void DeletingZeroUnitsDeletesNothing()
+    {
+        RangeWrapper range = CreateSpanOver("abc", 1, 1, out Body body);
+
+        Assert.Equal(0, range.Delete(TextUnit.Character, 0));
+        Assert.Equal("abc\r", new RangeWrapper(body).Text);
+    }
+
+    [Fact]
+    public void DeletingUnitsNeedsACollapsedRange()
+    {
+        RangeWrapper range = CreateSpanOver("abc", 0, 2, out Body body);
+
+        Assert.Throws<InvalidOperationException>(() => range.Delete(TextUnit.Character, 1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => CreateSpanOver("abc", 1, 1, out _).Delete((TextUnit)99, 1));
+    }
 }

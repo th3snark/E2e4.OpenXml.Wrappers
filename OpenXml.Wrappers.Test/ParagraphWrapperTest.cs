@@ -274,4 +274,33 @@ public class ParagraphWrapperTest : System.IDisposable
         Assert.Equal("b\r", wrapper.Text);
         Assert.Single(paragraph.Elements<Run>());
     }
+
+    [Fact]
+    public void FormatPropertiesAreNullableLikeParagraphFormat()
+    {
+        Paragraph paragraph = new Paragraph();
+        ParagraphWrapper wrapper = new ParagraphWrapper(paragraph);
+
+        wrapper.Alignment = ParagraphAlignment.Center;
+        wrapper.LeftIndent = 18;
+        wrapper.KeepWithNext = true;
+        wrapper.SpaceAfter = 6;
+
+        Assert.Equal(ParagraphAlignment.Center, wrapper.Alignment);
+        Assert.Equal(18, wrapper.LeftIndent);
+        Assert.Equal(true, wrapper.KeepWithNext);
+        Assert.Equal(6, wrapper.SpaceAfter);
+        Assert.Equal(wrapper.Format.LeftIndent, wrapper.LeftIndent);
+
+        //Null removes the direct setting, as for ParagraphFormat.
+        wrapper.Alignment = null;
+        wrapper.LeftIndent = null;
+        wrapper.KeepWithNext = null;
+        wrapper.SpaceAfter = null;
+
+        Assert.Null(paragraph.ParagraphProperties?.Justification);
+        Assert.Null(paragraph.ParagraphProperties?.Indentation);
+        Assert.Null(paragraph.ParagraphProperties?.KeepNext);
+        Assert.Null(paragraph.ParagraphProperties?.SpacingBetweenLines);
+    }
 }

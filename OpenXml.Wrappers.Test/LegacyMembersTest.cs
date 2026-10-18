@@ -78,7 +78,7 @@ public class LegacyMembersTest
     }
 
     [Fact]
-    public void MergeRightAddsTheSpansAndMovesTheText()
+    public void MergeWithTheNextCellAddsTheSpansAndMovesTheText()
     {
         TableCell left = new TableCell(new Paragraph(new Run(new Text("L"))));
         TableCell middle = new TableCell(new TableCellProperties(new GridSpan() { Val = 2 }), new Paragraph(new Run(new Text("M"))));
@@ -86,28 +86,11 @@ public class LegacyMembersTest
         TableRow row = new TableRow(left, middle, right);
         Table table = new Table(row);
 
-        new TableCellWrapper(left).MergeRight();
+        new TableCellWrapper(left).Merge(new TableCellWrapper(left).Next());
 
         Assert.Equal(2, row.Elements<TableCell>().Count());
         Assert.Equal(3, left.TableCellProperties.GridSpan.Val.Value);
         Assert.Contains("M", new TableCellWrapper(left).Range.Text);
-    }
-
-    [Fact]
-    public void MergeDownFindsTheCellByGridColumnWhenAnotherCellSpans()
-    {
-        TableCell topSecond = new TableCell(new Paragraph());
-        TableCell bottomSecond = new TableCell(new Paragraph());
-        TableCell bottomFirst = new TableCell(new TableCellProperties(new GridSpan() { Val = 2 }), new Paragraph());
-        Table table = new Table(
-            new TableRow(new TableCell(new Paragraph()), topSecond, new TableCell(new Paragraph())),
-            new TableRow(bottomFirst, bottomSecond));
-
-        //The second top cell starts at grid column 1, which the two-column cell below covers.
-        new TableCellWrapper(topSecond).MergeDown();
-
-        Assert.NotNull(bottomFirst.TableCellProperties.VerticalMerge);
-        Assert.Null(bottomSecond.TableCellProperties?.VerticalMerge);
     }
 
     [Theory]

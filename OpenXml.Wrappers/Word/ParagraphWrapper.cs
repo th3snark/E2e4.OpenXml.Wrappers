@@ -53,66 +53,66 @@ public class ParagraphWrapper : System.IEquatable<ParagraphWrapper>
         set { Range.Text = value; }
     }
 
-    /// <summary>The alignment of the paragraph. The same as <see cref="Format"/>.<c>Alignment</c>.</summary>
-    public ParagraphAlignment Alignment
+    /// <summary>The alignment of the paragraph; null when it cannot be read as one value. The same as <see cref="Format"/>.<c>Alignment</c>.</summary>
+    public ParagraphAlignment? Alignment
     {
-        get { return Format.Alignment ?? ParagraphAlignment.Left; }
+        get { return Format.Alignment; }
         set { Format.Alignment = value; }
     }
 
     /// <summary>The distance in points between the left margin and the left edge of the paragraph. The same as <see cref="Format"/>.<c>LeftIndent</c>.</summary>
-    public double LeftIndent
+    public double? LeftIndent
     {
-        get { return Format.LeftIndent ?? 0; }
+        get { return Format.LeftIndent; }
         set { Format.LeftIndent = value; }
     }
 
     /// <summary>The distance in points between the right margin and the right edge of the paragraph. The same as <see cref="Format"/>.<c>RightIndent</c>.</summary>
-    public double RightIndent
+    public double? RightIndent
     {
-        get { return Format.RightIndent ?? 0; }
+        get { return Format.RightIndent; }
         set { Format.RightIndent = value; }
     }
 
     /// <summary>The indent of the first line in points (negative for a hanging indent). The same as <see cref="Format"/>.<c>FirstLineIndent</c>.</summary>
-    public double FirstLineIndent
+    public double? FirstLineIndent
     {
-        get { return Format.FirstLineIndent ?? 0; }
+        get { return Format.FirstLineIndent; }
         set { Format.FirstLineIndent = value; }
     }
 
     /// <summary>The line spacing in points. The same as <see cref="Format"/>.<c>LineSpacing</c>.</summary>
-    public double LineSpacing
+    public double? LineSpacing
     {
-        get { return Format.LineSpacing ?? 12; }
+        get { return Format.LineSpacing; }
         set { Format.LineSpacing = value; }
     }
 
     /// <summary>The rule for the line spacing. The same as <see cref="Format"/>.<c>LineSpacingRule</c>.</summary>
-    public LineSpacingRule LineSpacingRule
+    public LineSpacingRule? LineSpacingRule
     {
-        get { return Format.LineSpacingRule ?? LineSpacingRule.SingleSpacing; }
+        get { return Format.LineSpacingRule; }
         set { Format.LineSpacingRule = value; }
     }
 
     /// <summary>Whether all the lines of the paragraph are kept on the same page. The same as <see cref="Format"/>.<c>KeepTogether</c>.</summary>
-    public bool KeepTogether
+    public bool? KeepTogether
     {
-        get { return Format.KeepTogether == true; }
+        get { return Format.KeepTogether; }
         set { Format.KeepTogether = value; }
     }
 
     /// <summary>Whether the paragraph starts a new page. The same as <see cref="Format"/>.<c>PageBreakBefore</c>.</summary>
-    public bool PageBreakBefore
+    public bool? PageBreakBefore
     {
-        get { return Format.PageBreakBefore == true; }
+        get { return Format.PageBreakBefore; }
         set { Format.PageBreakBefore = value; }
     }
 
     /// <summary>Whether the first and last lines are kept from being alone on a page. The same as <see cref="Format"/>.<c>WidowControl</c>.</summary>
-    public bool WidowControl
+    public bool? WidowControl
     {
-        get { return Format.WidowControl == true; }
+        get { return Format.WidowControl; }
         set { Format.WidowControl = value; }
     }
 
@@ -131,20 +131,20 @@ public class ParagraphWrapper : System.IEquatable<ParagraphWrapper>
     }
 
     /// <summary>
-    /// The space before the paragraph in points, 0 when none is set. The same as <see cref="Format"/>.<c>SpaceBefore</c>.
+    /// The space before the paragraph in points. The same as <see cref="Format"/>.<c>SpaceBefore</c>.
     /// </summary>
-    public double SpaceBefore
+    public double? SpaceBefore
     {
-        get { return Format.SpaceBefore ?? 0; }
+        get { return Format.SpaceBefore; }
         set { Format.SpaceBefore = value; }
     }
 
     /// <summary>
-    /// The space after the paragraph in points, 0 when none is set. The same as <see cref="Format"/>.<c>SpaceAfter</c>.
+    /// The space after the paragraph in points. The same as <see cref="Format"/>.<c>SpaceAfter</c>.
     /// </summary>
-    public double SpaceAfter
+    public double? SpaceAfter
     {
-        get { return Format.SpaceAfter ?? 0; }
+        get { return Format.SpaceAfter; }
         set { Format.SpaceAfter = value; }
     }
 
@@ -313,11 +313,12 @@ public class ParagraphWrapper : System.IEquatable<ParagraphWrapper>
     /// <summary>
     /// Whether the paragraph is kept on the same page as the next one; the same as <c>Format.KeepWithNext</c>.
     /// </summary>
-    public bool KeepWithNext
+    public bool? KeepWithNext
     {
-        get { return Format.KeepWithNext == true; }
-        set { Format.KeepWithNext = value ? true : null; }
+        get { return Format.KeepWithNext; }
+        set { Format.KeepWithNext = value; }
     }
+
     #region Equality
 
     // Two wrappers are equal when they wrap the same underlying element(s), so a new wrapper obtained for the same item compares equal.

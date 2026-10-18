@@ -189,7 +189,7 @@ public class TableWordMembersTest : IDisposable
         TableWrapper table = _document.Tables.Add(_document.Range(0, 0), 3, 3);
         Assert.True(table.Uniform);
 
-        table.Cell(0, 0).MergeRight();
+        table.Cell(0, 0).Merge(table.Cell(0, 1));
         Assert.False(table.Uniform);
     }
 
@@ -427,7 +427,7 @@ public class TableWordMembersTest : IDisposable
     public void AColumnIsAddedBeforeAnotherAndWidensCellsThatSpanIt()
     {
         TableWrapper table = _document.Tables.Add(_document.Range(0, 0), 2, 3);
-        table.Cell(0, 0).MergeRight();
+        table.Cell(0, 0).Merge(table.Cell(0, 1));
         table.Cell(1, 1).Range.Text = "kept";
 
         TableColumnWrapper added = table.Columns.Add(table.Columns[1]);

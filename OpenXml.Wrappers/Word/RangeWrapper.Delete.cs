@@ -62,6 +62,41 @@ public partial class RangeWrapper
         }
     }
 
+    /// <summary>
+    /// Deletes <paramref name="count"/> units after a collapsed range (before it when <paramref name="count"/> is negative), as
+    /// <c>Range.Delete(Unit, Count)</c> in Word. Returns the number of units deleted: fewer than asked for when the start or the end of the story
+    /// is reached first, and 0 when nothing was deleted.
+    /// </summary>
+    /// <remarks>
+    /// Word describes <paramref name="unit"/> as the unit "by which the collapsed range is to be deleted". For a range that has content this
+    /// method throws; use <see cref="Delete()"/> to delete the content of a range.
+    /// </remarks>
+    /// <exception cref="ArgumentOutOfRangeException">The unit is not a text unit.</exception>
+    /// <exception cref="InvalidOperationException">The range is not collapsed.</exception>
+    public int Delete(TextUnit unit, int count = 1)
+    {
+        if (!EnumCompat.IsDefined(unit))
+        {
+            throw new ArgumentOutOfRangeException(nameof(unit));
+        }
+        if (Start != End)
+        {
+            throw new InvalidOperationException("Delete with a unit and a count needs a collapsed range. Use Delete() to delete the content of a range.");
+        }
+        if (count == 0)
+        {
+            return 0;
+        }
+
+        RangeWrapper target = Duplicate();
+        int moved = Math.Abs(count > 0 ? target.MoveEnd(unit, count) : target.MoveStart(unit, count));
+        if (moved > 0)
+        {
+            target.Delete();
+        }
+        return moved;
+    }
+
     private static void DeleteParagraph(Paragraph paragraph)
     {
         OpenXmlElement parent = paragraph.Parent;

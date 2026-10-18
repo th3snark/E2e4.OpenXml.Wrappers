@@ -243,7 +243,7 @@ dotnet format E2e4.OpenXml.Wrappers.slnx --verify-no-changes
 
 | Path | Contents |
 | --- | --- |
-| `OpenXml.Wrappers/Word` | The wrappers, their collections and the `OpenXmlExtensions` tree-walking helpers |
+| `OpenXml.Wrappers/Word` | The wrappers, their collections and the internal `OpenXmlExtensions` tree-walking helpers |
 | `OpenXml.Wrappers/Helpers` | Unit conversion helpers |
 | `OpenXml.Wrappers.Test` | xUnit tests and the fixture documents in `TestFiles` |
 | `samples/OpenXml.Wrappers.Samples` | The 21 runnable examples |
