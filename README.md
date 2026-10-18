@@ -213,7 +213,7 @@ document.Sections[0].Headers[HeaderFooterIndex.Primary].Range.Text = "Quarterly 
 FieldWrapperCollection fields = document.Sections[0].Footers[HeaderFooterIndex.Primary].Range.Fields;
 ```
 
-Reading `Range` creates an empty header or footer if the section and the sections before it have none; a section without its own shows (and edits) that of the nearest earlier section, as `LinkToPrevious` says. `LinkToPrevious = false` gives the section a copy of what it was showing; `true` removes its own. `Exists` is true only for a header or footer the section has of its own. A header range supports `Text`, `InsertBefore`/`InsertAfter`, `Find`, `Font`, `Fields` and the other paragraph-level features; setting `Text` replaces the content with one plain paragraph per line.
+`Range` of a header or footer that the section and the sections before it do not have gives an empty one to read and write, as in Word; it is not `Exists`, and is left out of the saved file unless something was written to it (take the range again after a save); a section without its own shows (and edits) that of the nearest earlier section, as `LinkToPrevious` says. `LinkToPrevious = false` gives the section a copy of what it was showing; `true` removes its own. `Exists` is true only for a header or footer the section has of its own. A header range supports `Text`, `InsertBefore`/`InsertAfter`, `Find`, `Font`, `Fields` and the other paragraph-level features; setting `Text` replaces the content with one plain paragraph per line.
 
 Creating a first-page header does not switch on `DifferentFirstPageHeaderFooter`, and even-page headers only show when the document's odd/even setting is on: `section.PageSetup.OddAndEvenPagesHeaderFooter = true` (a setting of the whole document).
 

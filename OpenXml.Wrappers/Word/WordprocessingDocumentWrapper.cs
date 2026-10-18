@@ -91,12 +91,19 @@ public partial class WordprocessingDocumentWrapper : IDisposable
         return wrapper;
     }
 
+    //Saves the package after the headers and footers that were only read and are still empty have been taken out.
+    private void SaveChanges()
+    {
+        HeaderFooterWrapper.RemoveLatentStories(_wordprocessingDocument);
+        _wordprocessingDocument.Save();
+    }
+
     /// <summary>
     /// Saves any changes made to the document to its file or stream. Documents opened as editable also save when closed or disposed.
     /// </summary>
     public void Save()
     {
-        _wordprocessingDocument.Save();
+        SaveChanges();
     }
 
     /// <summary>
@@ -105,7 +112,7 @@ public partial class WordprocessingDocumentWrapper : IDisposable
     public WordprocessingDocumentWrapper SaveAs(string path)
     {
         //Flush any changes held in the part trees so that the copy contains them.
-        _wordprocessingDocument.Save();
+        SaveChanges();
         WordprocessingDocument copy = _wordprocessingDocument.Clone(path, true, new OpenSettings() { AutoSave = false });
 
         //Clone does not carry over the core properties (title, author and so on), so copy them.
@@ -150,7 +157,7 @@ public partial class WordprocessingDocumentWrapper : IDisposable
             //A document opened by this library does not save itself, so that Close can leave the changes out.
             if (!_skipSave && !_wordprocessingDocument.AutoSave && _wordprocessingDocument.FileOpenAccess != FileAccess.Read)
             {
-                _wordprocessingDocument.Save();
+                SaveChanges();
             }
             _wordprocessingDocument.Dispose();
         }

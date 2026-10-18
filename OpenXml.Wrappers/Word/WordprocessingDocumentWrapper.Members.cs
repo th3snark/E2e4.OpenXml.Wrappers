@@ -141,7 +141,7 @@ public partial class WordprocessingDocumentWrapper
 
         if (saveChanges == SaveOptions.SaveChanges)
         {
-            _wordprocessingDocument.Save();
+            SaveChanges();
         }
         else if (_wordprocessingDocument.AutoSave && _wordprocessingDocument.FileOpenAccess != FileAccess.Read)
         {

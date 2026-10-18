@@ -53,20 +53,74 @@ public class HeaderFooterTest : IDisposable
     }
 
     [Fact]
-    public void ReadingTheRangeCreatesAnEmptyHeader()
+    public void ReadingTheRangeGivesAnEmptyStoryThatDoesNotExistYet()
     {
         HeaderFooterWrapper header = _document.Sections[0].Headers[HeaderFooterIndex.Primary];
 
         RangeWrapper range = header.Range;
 
-        Assert.True(header.Exists);
+        Assert.False(header.Exists);
         Assert.True(header.IsHeader);
         Assert.Equal(string.Empty, range.Text.TrimEnd('\r'));
+    }
+
+    [Fact]
+    public void AnEmptyStoryThatWasOnlyReadIsNotSaved()
+    {
+        _document.Sections[0].Headers[HeaderFooterIndex.Primary].Range.Text.Length.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        _document.Sections[0].Footers[HeaderFooterIndex.Primary].PageNumbers.Count.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+        _document.Save();
+
+        Assert.Empty(MainPart.HeaderParts);
+        Assert.Empty(MainPart.FooterParts);
+        Assert.Empty(_body.Elements<SectionProperties>().Single().Elements<HeaderReference>());
+        Assert.Empty(_body.Elements<SectionProperties>().Single().Elements<FooterReference>());
+    }
+
+    [Fact]
+    public void WritingToTheRangeMakesTheHeaderExistAndKeepsIt()
+    {
+        HeaderFooterWrapper header = _document.Sections[0].Headers[HeaderFooterIndex.Primary];
+
+        header.Range.Text = "Top";
+
+        Assert.True(header.Exists);
+        _document.Save();
+        Assert.True(header.Exists);
         Assert.Single(MainPart.HeaderParts);
         HeaderReference reference = _body.Elements<SectionProperties>().Single().Elements<HeaderReference>().Single();
         Assert.Equal(HeaderFooterValues.Default, reference.Type.Value);
         Assert.Equal(MainPart.HeaderParts.Single(), MainPart.GetPartById(reference.Id.Value));
-        Assert.IsType<HeaderReference>(_body.Elements<SectionProperties>().Single().FirstChild);
+        Assert.Equal("Top", header.Range.Text.TrimEnd('\r'));
+    }
+
+    [Fact]
+    public void SettingExistsKeepsAnEmptyStoryThatWasRead()
+    {
+        HeaderFooterWrapper header = _document.Sections[0].Headers[HeaderFooterIndex.Primary];
+        RangeWrapper range = header.Range;
+
+        header.Exists = true;
+        _document.Save();
+
+        Assert.True(header.Exists);
+        Assert.Single(MainPart.HeaderParts);
+        Assert.Equal(string.Empty, header.Range.Text.TrimEnd('\r'));
+    }
+
+    [Fact]
+    public void AReadStoryOfTheFirstSectionIsWhatALaterSectionShows()
+    {
+        AddSecondSection();
+        RangeWrapper first = _document.Sections[0].Headers[HeaderFooterIndex.Primary].Range;
+        HeaderFooterWrapper second = _document.Sections[1].Headers[HeaderFooterIndex.Primary];
+
+        first.Text = "Shared";
+
+        Assert.False(second.Exists);
+        Assert.True(second.LinkToPrevious);
+        Assert.Equal("Shared", second.Range.Text.TrimEnd('\r'));
     }
 
     [Fact]
