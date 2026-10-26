@@ -313,10 +313,22 @@ public class RangeWrapperSpanAnchorTest
     }
 
     [Fact]
-    public void LoopingFindThroughALargeDocumentIsFast()
+    public void LoopingFindThroughALargeDocumentScalesLinearly()
     {
-        Body body = BigBody(6000);
-        RangeWrapper range = new RangeWrapper(body);
+        // Compares two sizes instead of timing against a fixed limit, so the result does not depend on the speed of the machine:
+        // four times the paragraphs take about four times as long when each step is cheap, and about sixteen times as long
+        // when each step walks the whole document.
+        LoopFindAndItalicise(200);
+        TimeSpan small = LoopFindAndItalicise(1500);
+        TimeSpan large = LoopFindAndItalicise(6000);
+
+        double ratio = large.TotalMilliseconds / Math.Max(small.TotalMilliseconds, 1);
+        Assert.True(ratio < 8, "4x the paragraphs took " + ratio.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture) + "x as long (" + small + " then " + large + ")");
+    }
+
+    private static TimeSpan LoopFindAndItalicise(int paragraphs)
+    {
+        RangeWrapper range = new RangeWrapper(BigBody(paragraphs));
         int count = 0;
         Stopwatch watch = Stopwatch.StartNew();
 
@@ -327,8 +339,8 @@ public class RangeWrapperSpanAnchorTest
         }
 
         watch.Stop();
-        Assert.Equal(6000, count);
-        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(8), "Took " + watch.Elapsed);
+        Assert.Equal(paragraphs, count);
+        return watch.Elapsed;
     }
 
     [Fact]
