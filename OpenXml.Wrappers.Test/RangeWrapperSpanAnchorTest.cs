@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Linq;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Wordprocessing;
@@ -295,85 +294,87 @@ public class RangeWrapperSpanAnchorTest
     }
 
     [Fact]
-    public void FormattingTheFirstWordOfEveryParagraphOfALargeDocumentIsFast()
+    public void FormattingTheFirstWordOfEveryParagraphOfALargeDocumentStaysWithinQuadraticCost()
     {
-        Body body = BigBody(6000);
-        RangeWrapper content = new RangeWrapper(body);
-        Stopwatch watch = Stopwatch.StartNew();
-
-        foreach (ParagraphWrapper paragraph in content.Paragraphs)
+        Scaling.AssertGrowth(paragraphs =>
         {
-            paragraph.Range.Words[0].Font.Bold = true;
-        }
+            Body body = BigBody(paragraphs);
+            RangeWrapper content = new RangeWrapper(body);
 
-        watch.Stop();
-        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(8), "Took " + watch.Elapsed);
-        Assert.Equal(true, new ParagraphWrapper(body.Elements<Paragraph>().Last()).Range.Words[0].Font.Bold);
-        Assert.Equal(false, new ParagraphWrapper(body.Elements<Paragraph>().Last()).Range.Words[1].Font.Bold);
+            TimeSpan took = Scaling.Time(() =>
+            {
+                foreach (ParagraphWrapper paragraph in content.Paragraphs)
+                {
+                    paragraph.Range.Words[0].Font.Bold = true;
+                }
+            });
+
+            Assert.Equal(true, new ParagraphWrapper(body.Elements<Paragraph>().Last()).Range.Words[0].Font.Bold);
+            Assert.Equal(false, new ParagraphWrapper(body.Elements<Paragraph>().Last()).Range.Words[1].Font.Bold);
+            return took;
+        }, maxRatio: 32);
     }
 
     [Fact]
-    public void LoopingFindThroughALargeDocumentScalesLinearly()
+    public void LoopingFindThroughALargeDocumentStaysWithinQuadraticCost()
     {
-        // Compares two sizes instead of timing against a fixed limit, so the result does not depend on the speed of the machine:
-        // four times the paragraphs take about four times as long when each step is cheap, and about sixteen times as long
-        // when each step walks the whole document.
-        LoopFindAndItalicise(200);
-        TimeSpan small = LoopFindAndItalicise(1500);
-        TimeSpan large = LoopFindAndItalicise(6000);
-
-        double ratio = large.TotalMilliseconds / Math.Max(small.TotalMilliseconds, 1);
-        Assert.True(ratio < 8, "4x the paragraphs took " + ratio.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture) + "x as long (" + small + " then " + large + ")");
+        Scaling.AssertGrowth(LoopFindAndItalicise, maxRatio: 32);
     }
 
     private static TimeSpan LoopFindAndItalicise(int paragraphs)
     {
         RangeWrapper range = new RangeWrapper(BigBody(paragraphs));
         int count = 0;
-        Stopwatch watch = Stopwatch.StartNew();
 
-        while (range.Find.Execute("words"))
+        TimeSpan took = Scaling.Time(() =>
         {
-            range.Font.Italic = true;
-            count++;
-        }
+            while (range.Find.Execute("words"))
+            {
+                range.Font.Italic = true;
+                count++;
+            }
+        });
 
-        watch.Stop();
         Assert.Equal(paragraphs, count);
-        return watch.Elapsed;
+        return took;
     }
 
     [Fact]
-    public void WalkingAParagraphCollectionByIndexIsFast()
+    public void WalkingAParagraphCollectionByIndexStaysWithinQuadraticCost()
     {
-        Body body = BigBody(6000);
-        ParagraphWrapperCollection paragraphs = new RangeWrapper(body).Paragraphs;
-        Stopwatch watch = Stopwatch.StartNew();
-
-        int length = 0;
-        for (int i = 0; i < paragraphs.Count; i++)
+        Scaling.AssertGrowth(count =>
         {
-            length += paragraphs[i].Text.Length;
-        }
+            Body body = BigBody(count);
+            ParagraphWrapperCollection paragraphs = new RangeWrapper(body).Paragraphs;
+            int length = 0;
 
-        watch.Stop();
-        Assert.True(length > 6000 * 40);
-        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(8), "Took " + watch.Elapsed);
-        Assert.Throws<ArgumentOutOfRangeException>(() => paragraphs[6000]);
-        Assert.Throws<ArgumentOutOfRangeException>(() => paragraphs[-1]);
+            TimeSpan took = Scaling.Time(() =>
+            {
+                for (int i = 0; i < paragraphs.Count; i++)
+                {
+                    length += paragraphs[i].Text.Length;
+                }
+            });
+
+            Assert.True(length > count * 40);
+            Assert.Throws<ArgumentOutOfRangeException>(() => paragraphs[count]);
+            Assert.Throws<ArgumentOutOfRangeException>(() => paragraphs[-1]);
+            return took;
+        }, maxRatio: 32);
     }
 
     [Fact]
-    public void ReplacingAcrossALargeDocumentIsFast()
+    public void ReplacingAcrossALargeDocumentScalesLinearly()
     {
-        Body body = BigBody(6000);
-        Stopwatch watch = Stopwatch.StartNew();
+        Scaling.AssertGrowth(paragraphs =>
+        {
+            Body body = BigBody(paragraphs);
 
-        new RangeWrapper(body).Find.Execute("words", replaceWith: "terms", replace: ReplaceMode.All);
+            TimeSpan took = Scaling.Time(() => new RangeWrapper(body).Find.Execute("words", replaceWith: "terms", replace: ReplaceMode.All));
 
-        watch.Stop();
-        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(8), "Took " + watch.Elapsed);
-        Assert.Contains("some terms in it", StoryText(body), StringComparison.Ordinal);
+            Assert.Contains("some terms in it", StoryText(body), StringComparison.Ordinal);
+            return took;
+        }, maxRatio: 12);
     }
 
     #endregion

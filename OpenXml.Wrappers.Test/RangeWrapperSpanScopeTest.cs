@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using DocumentFormat.OpenXml;
@@ -168,17 +167,19 @@ public class RangeWrapperSpanScopeTest
     [Fact]
     public void DeletingAcrossParagraphsInABodyOnlyNeedsThoseParagraphs()
     {
-        Body body = BigBody(6000);
-        RangeWrapper range = new ParagraphWrapper(body.Elements<Paragraph>().ElementAt(3000)).Range;
-        range.Collapse();
-        range.MoveEnd(TextUnit.Character, 120);
-        Stopwatch watch = Stopwatch.StartNew();
+        // The work is the same however long the document is, so the time must not grow with it.
+        Scaling.AssertGrowth(paragraphs =>
+        {
+            Body body = BigBody(paragraphs);
+            RangeWrapper range = new ParagraphWrapper(body.Elements<Paragraph>().ElementAt(paragraphs / 2)).Range;
+            range.Collapse();
+            range.MoveEnd(TextUnit.Character, 120);
 
-        range.Delete();
+            TimeSpan took = Scaling.Time(range.Delete);
 
-        watch.Stop();
-        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(3), "Took " + watch.Elapsed);
-        Assert.Equal(5998, body.Elements<Paragraph>().Count());
+            Assert.Equal(paragraphs - 2, body.Elements<Paragraph>().Count());
+            return took;
+        }, maxRatio: 3);
     }
 
     [Fact]
@@ -202,35 +203,37 @@ public class RangeWrapperSpanScopeTest
     [Fact]
     public void DeletingFromBeforeATableToAfterItNeedsOnlyThoseBlocks()
     {
-        Body body = BigBody(6000);
-        Paragraph anchor = body.Elements<Paragraph>().ElementAt(3000);
-        anchor.InsertAfterSelf(Paragraph("after"));
-        anchor.InsertAfterSelf(new Table(new TableRow(new TableCell(Paragraph("cell")))));
-        anchor.InsertAfterSelf(Paragraph("before"));
+        // The work is the same however long the document is, so the time must not grow with it.
+        Scaling.AssertGrowth(paragraphs =>
+        {
+            Body body = BigBody(paragraphs);
+            Paragraph anchor = body.Elements<Paragraph>().ElementAt(paragraphs / 2);
+            anchor.InsertAfterSelf(Paragraph("after"));
+            anchor.InsertAfterSelf(new Table(new TableRow(new TableCell(Paragraph("cell")))));
+            anchor.InsertAfterSelf(Paragraph("before"));
 
-        //From after "bef" to after "af": the rest of "before", its paragraph mark, the whole table, and the start of "after".
-        RangeWrapper before = new RangeWrapper(body);
-        before.Find.Execute("before");
-        RangeWrapper after = new RangeWrapper(body);
-        after.Find.Execute("after");
-        RangeWrapper span = before.Duplicate();
-        span.Collapse();
-        span.MoveEnd(TextUnit.Character, 3);
-        span.Collapse(CollapseDirection.End);
-        RangeWrapper till = after.Duplicate();
-        till.Collapse();
-        till.MoveEnd(TextUnit.Character, 2);
-        till.Collapse(CollapseDirection.End);
-        span.SetRange(span.Start, till.Start);
-        Stopwatch watch = Stopwatch.StartNew();
+            //From after "bef" to after "af": the rest of "before", its paragraph mark, the whole table, and the start of "after".
+            RangeWrapper before = new RangeWrapper(body);
+            before.Find.Execute("before");
+            RangeWrapper after = new RangeWrapper(body);
+            after.Find.Execute("after");
+            RangeWrapper span = before.Duplicate();
+            span.Collapse();
+            span.MoveEnd(TextUnit.Character, 3);
+            span.Collapse(CollapseDirection.End);
+            RangeWrapper till = after.Duplicate();
+            till.Collapse();
+            till.MoveEnd(TextUnit.Character, 2);
+            till.Collapse(CollapseDirection.End);
+            span.SetRange(span.Start, till.Start);
 
-        span.Delete();
+            TimeSpan took = Scaling.Time(span.Delete);
 
-        watch.Stop();
-        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(3), "Took " + watch.Elapsed);
-        Assert.Equal("befter\r", new ParagraphWrapper(body.Elements<Paragraph>().ElementAt(3001)).Text);
-        Assert.Empty(body.Descendants<Table>());
-        Assert.Equal(6001, body.Elements<Paragraph>().Count());
+            Assert.Equal("befter\r", new ParagraphWrapper(body.Elements<Paragraph>().ElementAt(paragraphs / 2 + 1)).Text);
+            Assert.Empty(body.Descendants<Table>());
+            Assert.Equal(paragraphs + 1, body.Elements<Paragraph>().Count());
+            return took;
+        }, maxRatio: 3);
     }
     [Fact]
     public void AFindWithAParagraphMarkFindsAndReplacesAcrossParagraphs()
@@ -246,38 +249,45 @@ public class RangeWrapperSpanScopeTest
     }
 
     [Fact]
-    public void AFindWithAParagraphMarkIsQuickInALargeDocument()
+    public void AFindWithAParagraphMarkScalesLinearlyInALargeDocument()
     {
-        Body body = BigBody(6000);
-        body.Elements<Paragraph>().ElementAt(5000).InsertAfterSelf(Paragraph("zebra"));
-        body.Elements<Paragraph>().ElementAt(5001).InsertAfterSelf(Paragraph("crossing"));
-        Stopwatch watch = Stopwatch.StartNew();
+        Scaling.AssertGrowth(paragraphs =>
+        {
+            Body body = BigBody(paragraphs);
+            int at = paragraphs * 5 / 6;
+            body.Elements<Paragraph>().ElementAt(at).InsertAfterSelf(Paragraph("zebra"));
+            body.Elements<Paragraph>().ElementAt(at + 1).InsertAfterSelf(Paragraph("crossing"));
+            RangeWrapper range = new RangeWrapper(body);
+            bool found = false;
 
-        RangeWrapper range = new RangeWrapper(body);
-        bool found = range.Find.Execute("zebra^pcrossing");
+            TimeSpan took = Scaling.Time(() => found = range.Find.Execute("zebra^pcrossing"));
 
-        watch.Stop();
-        Assert.True(found);
-        Assert.Equal("zebra\rcrossing", range.Text);
-        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(4), "Took " + watch.Elapsed);
+            Assert.True(found);
+            Assert.Equal("zebra\rcrossing", range.Text);
+            return took;
+        }, maxRatio: 12);
     }
 
     [Fact]
-    public void MovingByWordsThroughALargeDocumentIsQuick()
+    public void MovingByWordsThroughALargeDocumentStaysWithinQuadraticCost()
     {
-        Body body = BigBody(6000);
-        RangeWrapper range = new RangeWrapper(body);
-        range.SetRange(100000, 100000);
-        Stopwatch watch = Stopwatch.StartNew();
-
-        for (int i = 0; i < 2000; i++)
+        Scaling.AssertGrowth(paragraphs =>
         {
-            range.Move(TextUnit.Word, 7);
-        }
+            int start = paragraphs * 100000 / 6000;
+            RangeWrapper range = new RangeWrapper(BigBody(paragraphs));
+            range.SetRange(start, start);
 
-        watch.Stop();
-        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(4), "Took " + watch.Elapsed);
-        Assert.True(range.Start > 100000);
+            TimeSpan took = Scaling.Time(() =>
+            {
+                for (int i = 0; i < paragraphs / 3; i++)
+                {
+                    range.Move(TextUnit.Word, 7);
+                }
+            });
+
+            Assert.True(range.Start > start);
+            return took;
+        }, maxRatio: 32);
     }
 
     #endregion
@@ -287,20 +297,24 @@ public class RangeWrapperSpanScopeTest
     [Fact]
     public void ReadingPositionsDoesNotBuildAMap()
     {
-        Body body = BigBody(6000);
-        RangeWrapper far = new RangeWrapper(body);
-        far.SetRange(100000, 100020);
-        Stopwatch watch = Stopwatch.StartNew();
-
-        int total = 0;
-        for (int i = 0; i < 50; i++)
+        Scaling.AssertGrowth(paragraphs =>
         {
-            total += far.Start + far.End;
-        }
+            int start = paragraphs * 100000 / 6000;
+            RangeWrapper far = new RangeWrapper(BigBody(paragraphs));
+            far.SetRange(start, start + 20);
+            int total = 0;
 
-        watch.Stop();
-        Assert.Equal(50 * (100000 + 100020), total);
-        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(5), "Took " + watch.Elapsed);
+            TimeSpan took = Scaling.Time(() =>
+            {
+                for (int i = 0; i < 50; i++)
+                {
+                    total += far.Start + far.End;
+                }
+            });
+
+            Assert.Equal(50 * (start + start + 20), total);
+            return took;
+        }, maxRatio: 12);
     }
 
     [Fact]
@@ -321,24 +335,28 @@ public class RangeWrapperSpanScopeTest
     }
 
     [Fact]
-    public void WordsOfTableCellsOfALargeTableAreQuick()
+    public void WordsOfTableCellsOfALargeTableScaleLinearly()
     {
-        Table table = new Table();
-        for (int i = 0; i < 3000; i++)
+        Scaling.AssertGrowth(rows =>
         {
-            table.AppendChild(new TableRow(new TableCell(Paragraph("cell " + i.ToString(CultureInfo.InvariantCulture) + " has words")), new TableCell(Paragraph("second cell"))));
-        }
-        Body body = new Body(table, Paragraph("end"));
-        Stopwatch watch = Stopwatch.StartNew();
+            Table table = new Table();
+            for (int i = 0; i < rows; i++)
+            {
+                table.AppendChild(new TableRow(new TableCell(Paragraph("cell " + i.ToString(CultureInfo.InvariantCulture) + " has words")), new TableCell(Paragraph("second cell"))));
+            }
+            Body body = new Body(table, Paragraph("end"));
 
-        foreach (TableCellWrapper cell in new RangeWrapper(table).Cells)
-        {
-            cell.Range.Words[0].Font.Bold = true;
-        }
+            TimeSpan took = Scaling.Time(() =>
+            {
+                foreach (TableCellWrapper cell in new RangeWrapper(table).Cells)
+                {
+                    cell.Range.Words[0].Font.Bold = true;
+                }
+            });
 
-        watch.Stop();
-        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(8), "Took " + watch.Elapsed);
-        Assert.Equal(true, new TableCellWrapper(table.Descendants<TableCell>().Last()).Range.Words[0].Font.Bold);
+            Assert.Equal(true, new TableCellWrapper(table.Descendants<TableCell>().Last()).Range.Words[0].Font.Bold);
+            return took;
+        }, maxRatio: 12, small: 750, large: 3000);
     }
 
     #endregion
