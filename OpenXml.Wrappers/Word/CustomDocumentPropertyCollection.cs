@@ -39,7 +39,7 @@ public class CustomDocumentPropertyCollection : IEnumerable<CustomDocumentProper
             IList<DocumentFormat.OpenXml.CustomProperties.CustomDocumentProperty> properties = GetElementList();
             if (index < 0 || index >= properties.Count)
             {
-                throw new ArgumentOutOfRangeException(nameof(index), String.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index));
+                throw new ArgumentOutOfRangeException(nameof(index), string.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index));
             }
             return new CustomDocumentProperty(properties[index]);
         }
@@ -53,7 +53,7 @@ public class CustomDocumentPropertyCollection : IEnumerable<CustomDocumentProper
         get
         {
             DocumentFormat.OpenXml.CustomProperties.CustomDocumentProperty property = GetElementList()
-                .FirstOrDefault(p => String.Equals(p.Name?.Value, name, StringComparison.OrdinalIgnoreCase));
+                .FirstOrDefault(p => string.Equals(p.Name?.Value, name, StringComparison.OrdinalIgnoreCase));
             return property == null ? null : new CustomDocumentProperty(property);
         }
     }
@@ -77,13 +77,13 @@ public class CustomDocumentPropertyCollection : IEnumerable<CustomDocumentProper
     /// <exception cref="ArgumentException">The name is empty or taken, or the value cannot be converted to the type.</exception>
     public CustomDocumentProperty Add(string name, DocumentPropertyType type, object value)
     {
-        if (String.IsNullOrWhiteSpace(name))
+        if (string.IsNullOrWhiteSpace(name))
         {
             throw new ArgumentException("A property needs a name.", nameof(name));
         }
         if (Exists(name))
         {
-            throw new ArgumentException(String.Format(CultureInfo.InvariantCulture, "A property named '{0}' already exists.", name), nameof(name));
+            throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, "A property named '{0}' already exists.", name), nameof(name));
         }
         object converted = Convert(type, value);
 
@@ -122,14 +122,14 @@ public class CustomDocumentPropertyCollection : IEnumerable<CustomDocumentProper
                 case DocumentPropertyType.Number:
                     return value == null ? 0 : System.Convert.ToInt32(value, CultureInfo.InvariantCulture);
                 case DocumentPropertyType.Text:
-                    return value == null ? String.Empty : System.Convert.ToString(value, CultureInfo.InvariantCulture);
+                    return value == null ? string.Empty : System.Convert.ToString(value, CultureInfo.InvariantCulture);
                 default:
                     throw new ArgumentOutOfRangeException(nameof(type));
             }
         }
         catch (Exception ex) when (ex is FormatException || ex is InvalidCastException || ex is OverflowException)
         {
-            throw new ArgumentException(String.Format(CultureInfo.InvariantCulture, "The value cannot be converted to the type {0}.", type), nameof(value), ex);
+            throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, "The value cannot be converted to the type {0}.", type), nameof(value), ex);
         }
     }
 

@@ -37,7 +37,7 @@ public partial class RangeWrapper
     /// </summary>
     internal int ReplaceSpanText(string text)
     {
-        string newText = text ?? String.Empty;
+        string newText = text ?? string.Empty;
         GetScoped(false, out StoryMap map, out int start, out int end);
 
         //Formatting is taken from the text before it goes.
@@ -62,7 +62,7 @@ public partial class RangeWrapper
         (Paragraph last, int lastLocal) = InsertSpanText(paragraph, local, newText, formatting);
 
         MakeSpanAnchors(Anchor.At(StoryMap.Build(paragraph), local), Anchor.At(StoryMap.Build(last), lastLocal));
-        return newText.Replace("\a", String.Empty, StringComparison.Ordinal).Replace("\r\n", "\r", StringComparison.Ordinal).Length;
+        return newText.Replace("\a", string.Empty, StringComparison.Ordinal).Replace("\r\n", "\r", StringComparison.Ordinal).Length;
     }
 
     //The paragraph an anchor is in, and the position in it; when the anchor is the end of a table row (where no text can go, as in Word) the
@@ -119,7 +119,7 @@ public partial class RangeWrapper
 
     private void InsertIntoSpan(string text, bool after)
     {
-        if (String.IsNullOrEmpty(text))
+        if (string.IsNullOrEmpty(text))
         {
             return;
         }
@@ -234,7 +234,7 @@ public partial class RangeWrapper
     {
         Paragraph current = paragraph;
         int at = position;
-        string[] lines = text.Replace("\a", String.Empty, StringComparison.Ordinal).Replace("\r\n", "\r", StringComparison.Ordinal).Split('\r');
+        string[] lines = text.Replace("\a", string.Empty, StringComparison.Ordinal).Replace("\r\n", "\r", StringComparison.Ordinal).Split('\r');
         for (int i = 0; i < lines.Length; i++)
         {
             if (i > 0)

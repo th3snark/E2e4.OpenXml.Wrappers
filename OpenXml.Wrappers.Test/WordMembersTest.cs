@@ -34,7 +34,7 @@ public class WordMembersTest : IDisposable
     {
         _document.Save();
         string[] errors = new OpenXmlValidator().Validate(_document.WordprocessingDocument).Select(e => e.Description + " at " + e.Path?.XPath).ToArray();
-        Assert.True(errors.Length == 0, String.Join("; ", errors));
+        Assert.True(errors.Length == 0, string.Join("; ", errors));
     }
 
     #region Breaks

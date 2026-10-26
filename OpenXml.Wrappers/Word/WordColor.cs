@@ -120,7 +120,7 @@ public readonly struct WordColor : IEquatable<WordColor>
     {
         Guard.ThrowIfNull(hex);
 
-        if (String.Equals(hex, "auto", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(hex, "auto", StringComparison.OrdinalIgnoreCase))
         {
             _bgr = 0;
             _specified = false;
@@ -128,7 +128,7 @@ public readonly struct WordColor : IEquatable<WordColor>
         }
 
         int rgb;
-        if (hex.Length != 6 || !Int32.TryParse(hex, NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out rgb))
+        if (hex.Length != 6 || !int.TryParse(hex, NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out rgb))
         {
             throw new ArgumentException("The colour must be six hexadecimal digits (such as FF0000) or 'auto'.", nameof(hex));
         }
@@ -140,7 +140,7 @@ public readonly struct WordColor : IEquatable<WordColor>
     //Reads a colour as a document stores it. Text that is not a colour (a file can hold anything) reads as the automatic colour.
     internal static WordColor FromStored(string stored)
     {
-        if (stored == null || (stored.Length != 6 && !String.Equals(stored, "auto", StringComparison.OrdinalIgnoreCase)))
+        if (stored == null || (stored.Length != 6 && !string.Equals(stored, "auto", StringComparison.OrdinalIgnoreCase)))
         {
             return default(WordColor);
         }
@@ -259,7 +259,7 @@ public readonly struct WordColor : IEquatable<WordColor>
         }
 
         ColorIndex best = ColorIndex.Black;
-        long bestDistance = Int64.MaxValue;
+        long bestDistance = long.MaxValue;
         for (int index = (int)ColorIndex.Black; index <= (int)ColorIndex.Gray25; index++)
         {
             WordColor candidate = FromColorIndex((ColorIndex)index);

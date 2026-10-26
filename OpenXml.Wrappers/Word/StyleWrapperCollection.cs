@@ -34,7 +34,7 @@ public class StyleWrapperCollection : IEnumerable<StyleWrapper>
             IList<Style> styles = GetElementList();
             if (index < 0 || index >= styles.Count)
             {
-                throw new ArgumentOutOfRangeException(nameof(index), String.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index));
+                throw new ArgumentOutOfRangeException(nameof(index), string.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index));
             }
             return new StyleWrapper(styles[index]);
         }
@@ -80,7 +80,7 @@ public class StyleWrapperCollection : IEnumerable<StyleWrapper>
     /// <exception cref="ArgumentException">The name is empty or a style with the name (or the id made from it) already exists.</exception>
     public StyleWrapper Add(string name, StyleType type)
     {
-        if (String.IsNullOrWhiteSpace(name))
+        if (string.IsNullOrWhiteSpace(name))
         {
             throw new ArgumentException("A style needs a name.", nameof(name));
         }
@@ -90,10 +90,10 @@ public class StyleWrapperCollection : IEnumerable<StyleWrapper>
         }
 
         //The id is the name without the characters that are not allowed in one, as Word makes it.
-        string styleId = new string(name.Where(Char.IsLetterOrDigit).ToArray());
+        string styleId = new string(name.Where(char.IsLetterOrDigit).ToArray());
         if (styleId.Length == 0 || Exists(name) || Exists(styleId) || BuiltInStyles.IsBuiltInName(name) || BuiltInStyles.IsBuiltInName(styleId))
         {
-            throw new ArgumentException(String.Format(CultureInfo.InvariantCulture, "A style named '{0}' already exists or cannot be given an id.", name), nameof(name));
+            throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, "A style named '{0}' already exists or cannot be given an id.", name), nameof(name));
         }
 
         StyleDefinitionsPart part = _mainDocumentPart.StyleDefinitionsPart ?? _mainDocumentPart.AddNewPart<StyleDefinitionsPart>();

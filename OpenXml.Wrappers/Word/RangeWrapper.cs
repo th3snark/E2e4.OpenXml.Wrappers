@@ -134,14 +134,14 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
             }
             else
             {
-                throw new InvalidOperationException(String.Format(CultureInfo.InvariantCulture, "Getting the Text property is not currently supported for the type {0}", _startOpenXmlElement.GetType().Name));
+                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "Getting the Text property is not currently supported for the type {0}", _startOpenXmlElement.GetType().Name));
             }
             return sb.ToString();
         }
 
         set
         {
-            string text = value == null ? String.Empty : value;
+            string text = value == null ? string.Empty : value;
 
             if (_isSpan)
             {
@@ -213,7 +213,7 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
             }
             else
             {
-                throw new InvalidOperationException(String.Format(CultureInfo.InvariantCulture, "Setting the Text property is not currently supported for the type {0}", _startOpenXmlElement.GetType().Name));
+                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "Setting the Text property is not currently supported for the type {0}", _startOpenXmlElement.GetType().Name));
             }
         }
     }

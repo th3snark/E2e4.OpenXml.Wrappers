@@ -31,6 +31,8 @@ jobs:
 
       - name: Check formatting
         run: dotnet format E2e4.OpenXml.Wrappers.slnx --verify-no-changes --no-restore
+      - name: Check type keywords
+        run: dotnet format style E2e4.OpenXml.Wrappers.slnx --verify-no-changes --no-restore --diagnostics IDE0049 --severity warn
 
       - name: Build
         run: dotnet build E2e4.OpenXml.Wrappers.slnx --configuration Release --no-restore

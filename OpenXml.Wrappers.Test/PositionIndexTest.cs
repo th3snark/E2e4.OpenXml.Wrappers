@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using DocumentFormat.OpenXml;
@@ -68,27 +67,32 @@ public class PositionIndexTest
     }
 
     [Fact]
-    public void ThePositionsOfThousandsOfRangesAreQuickWithAnIndex()
+    public void ThePositionsOfThousandsOfRangesScaleLinearlyWithAnIndex()
     {
-        Body body = new Body();
-        for (int i = 0; i < 6000; i++)
+        Scaling.AssertGrowth(paragraphs =>
         {
-            body.AppendChild(Paragraph("Paragraph number " + i.ToString(CultureInfo.InvariantCulture) + " has some words in it and ends here."));
-        }
-        RangeWrapper content = new RangeWrapper(body);
-        RangeWrapper[] words = content.Paragraphs.Select(p => p.Range.Words[0]).ToArray();
-        Stopwatch watch = Stopwatch.StartNew();
+            Body body = new Body();
+            for (int i = 0; i < paragraphs; i++)
+            {
+                body.AppendChild(Paragraph("Paragraph number " + i.ToString(CultureInfo.InvariantCulture) + " has some words in it and ends here."));
+            }
+            RangeWrapper content = new RangeWrapper(body);
+            RangeWrapper[] words = content.Paragraphs.Select(p => p.Range.Words[0]).ToArray();
+            PositionIndex index = null;
+            long total = 0;
 
-        PositionIndex index = content.CreatePositionIndex();
-        long total = 0;
-        foreach (RangeWrapper word in words)
-        {
-            total += index.StartOf(word);
-        }
+            TimeSpan took = Scaling.Time(() =>
+            {
+                index = content.CreatePositionIndex();
+                foreach (RangeWrapper word in words)
+                {
+                    total += index.StartOf(word);
+                }
+            });
 
-        watch.Stop();
-        Assert.True(total > 0);
-        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(3), "Took " + watch.Elapsed);
-        Assert.Equal(words[4000].Start, index.StartOf(words[4000]));
+            Assert.True(total > 0);
+            Assert.Equal(words[paragraphs * 2 / 3].Start, index.StartOf(words[paragraphs * 2 / 3]));
+            return took;
+        }, maxRatio: 12);
     }
 }

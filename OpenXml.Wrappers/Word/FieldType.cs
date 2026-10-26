@@ -137,7 +137,7 @@ internal static class FieldCodes
     {
         foreach ((string known, FieldType type) in Names)
         {
-            if (String.Equals(known, name, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(known, name, StringComparison.OrdinalIgnoreCase))
             {
                 return type;
             }

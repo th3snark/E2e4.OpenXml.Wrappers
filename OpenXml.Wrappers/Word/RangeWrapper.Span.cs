@@ -165,7 +165,7 @@ public partial class RangeWrapper
         OpenXmlElement story = StoryMap.FindRoot(AnchorElement);
         if (start < 0 || end < start || !StoryMap.TryAnchorsFor(story, start, end, out Anchor startAnchor, out Anchor endAnchor))
         {
-            throw new ArgumentOutOfRangeException(nameof(end), String.Format(CultureInfo.InvariantCulture, "The range {0} to {1} is not inside the story, which is {2} positions long.", start, end, StoryMap.CountLength(story)));
+            throw new ArgumentOutOfRangeException(nameof(end), string.Format(CultureInfo.InvariantCulture, "The range {0} to {1} is not inside the story, which is {2} positions long.", start, end, StoryMap.CountLength(story)));
         }
 
         _isSpan = true;

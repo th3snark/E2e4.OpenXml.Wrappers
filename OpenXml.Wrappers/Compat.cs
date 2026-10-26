@@ -111,7 +111,7 @@ internal static class StringCompat
         {
             throw new ArgumentException("The string to replace must not be empty.", nameof(oldValue));
         }
-        newValue = newValue ?? String.Empty;
+        newValue = newValue ?? string.Empty;
         System.Text.StringBuilder result = null;
         int position = 0;
         int found;

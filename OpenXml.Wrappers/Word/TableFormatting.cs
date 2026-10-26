@@ -48,13 +48,13 @@ internal static class PreferredWidths
     public static double GetValue(string width, TableWidthUnitValues? type)
     {
         PreferredWidthType kind = GetKind(width, type);
-        if (kind == PreferredWidthType.Auto || String.IsNullOrEmpty(width))
+        if (kind == PreferredWidthType.Auto || string.IsNullOrEmpty(width))
         {
             return 0;
         }
 
         bool percent = width[width.Length - 1] == '%';
-        if (!Double.TryParse(percent ? width.Substring(0, width.Length - 1) : width, NumberStyles.Float, CultureInfo.InvariantCulture, out double number))
+        if (!double.TryParse(percent ? width.Substring(0, width.Length - 1) : width, NumberStyles.Float, CultureInfo.InvariantCulture, out double number))
         {
             return 0;
         }
@@ -72,7 +72,7 @@ internal static class PreferredWidths
         {
             throw new ArgumentOutOfRangeException(nameof(kind));
         }
-        if (Double.IsNaN(value) || value < 0 || value > (kind == PreferredWidthType.Percent ? 600 : 31680))
+        if (double.IsNaN(value) || value < 0 || value > (kind == PreferredWidthType.Percent ? 600 : 31680))
         {
             throw new ArgumentOutOfRangeException(nameof(value), kind == PreferredWidthType.Percent ? "The width must be between 0 and 600 percent." : "The width must be between 0 and 31680 points.");
         }
@@ -101,12 +101,12 @@ internal static class PreferredWidths
         {
             return 0;
         }
-        return Double.TryParse(Convert.ToString(width, CultureInfo.InvariantCulture), NumberStyles.Float, CultureInfo.InvariantCulture, out double twips) ? twips / 20 : 0;
+        return double.TryParse(Convert.ToString(width, CultureInfo.InvariantCulture), NumberStyles.Float, CultureInfo.InvariantCulture, out double twips) ? twips / 20 : 0;
     }
 
     public static string FromPoints(double points, string name)
     {
-        if (Double.IsNaN(points) || points < 0 || points > 1584)
+        if (double.IsNaN(points) || points < 0 || points > 1584)
         {
             throw new ArgumentOutOfRangeException(name, "The value must be between 0 and 1584 points.");
         }
@@ -235,7 +235,7 @@ public partial class TableWrapper
         get { return PreferredWidths.ToPoints(ExistingProperties?.TableIndentation?.Width?.Value); }
         set
         {
-            if (Double.IsNaN(value) || value < -1584 || value > 1584)
+            if (double.IsNaN(value) || value < -1584 || value > 1584)
             {
                 throw new ArgumentOutOfRangeException(nameof(value), "The indent must be between -1584 and 1584 points.");
             }
@@ -300,7 +300,7 @@ public partial class TableWrapper
             SetPadding(value, (m, twips) =>
             {
                 m.StartMargin = null;
-                m.TableCellLeftMargin = new TableCellLeftMargin() { Width = Int16.Parse(twips, CultureInfo.InvariantCulture), Type = TableWidthValues.Dxa };
+                m.TableCellLeftMargin = new TableCellLeftMargin() { Width = short.Parse(twips, CultureInfo.InvariantCulture), Type = TableWidthValues.Dxa };
             });
         }
     }
@@ -314,7 +314,7 @@ public partial class TableWrapper
             SetPadding(value, (m, twips) =>
             {
                 m.EndMargin = null;
-                m.TableCellRightMargin = new TableCellRightMargin() { Width = Int16.Parse(twips, CultureInfo.InvariantCulture), Type = TableWidthValues.Dxa };
+                m.TableCellRightMargin = new TableCellRightMargin() { Width = short.Parse(twips, CultureInfo.InvariantCulture), Type = TableWidthValues.Dxa };
             });
         }
     }
@@ -332,7 +332,7 @@ public partial class TableWrapper
             return value.Value;
         }
         string hex = look.Val?.Value;
-        return hex != null && Int32.TryParse(hex, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out int bits) && (bits & mask) != 0;
+        return hex != null && int.TryParse(hex, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out int bits) && (bits & mask) != 0;
     }
 
     private void SetLook(bool value, int mask, Action<TableLook, bool> write)
@@ -401,10 +401,10 @@ public partial class TableWrapper
     /// <summary>The title of the table for people who cannot see it (<c>Table.Title</c> in Word).</summary>
     public string Title
     {
-        get { return ExistingProperties?.TableCaption?.Val?.Value ?? String.Empty; }
+        get { return ExistingProperties?.TableCaption?.Val?.Value ?? string.Empty; }
         set
         {
-            if (String.IsNullOrEmpty(value))
+            if (string.IsNullOrEmpty(value))
             {
                 ExistingProperties?.RemoveAllChildren<TableCaption>();
                 return;
@@ -416,10 +416,10 @@ public partial class TableWrapper
     /// <summary>The description of the table for people who cannot see it (<c>Table.Descr</c> in Word).</summary>
     public string Descr
     {
-        get { return ExistingProperties?.TableDescription?.Val?.Value ?? String.Empty; }
+        get { return ExistingProperties?.TableDescription?.Val?.Value ?? string.Empty; }
         set
         {
-            if (String.IsNullOrEmpty(value))
+            if (string.IsNullOrEmpty(value))
             {
                 ExistingProperties?.RemoveAllChildren<TableDescription>();
                 return;
@@ -940,7 +940,7 @@ public class TableColumnCellCollection : IEnumerable<TableCellWrapper>
             IList<TableCell> cells = GetElementList();
             if (index < 0 || index >= cells.Count)
             {
-                throw new ArgumentOutOfRangeException(nameof(index), String.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index));
+                throw new ArgumentOutOfRangeException(nameof(index), string.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index));
             }
             return new TableCellWrapper(cells[index]);
         }

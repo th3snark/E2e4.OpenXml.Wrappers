@@ -25,8 +25,26 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\README.md" Pack="true" PackagePath="\" />
     <None Include="..\assets\icon.png" Pack="true" PackagePath="\" Visible="false" />
   </ItemGroup>
+
+  <!-- nuget.org renders neither raw HTML nor relative paths, and shows images only from allowed hosts (raw.githubusercontent.com is one).
+       The packed README is a copy whose icon <img> is a Markdown image on a raw URL pinned to the release tag, and whose repo-relative links are
+       absolute links to that tag (GitHub keeps the original). -->
+  <Target Name="PackReadme" BeforeTargets="_GetPackageFiles;GenerateNuspec">
+    <PropertyGroup>
+      <RepoBlob>https://github.com/th3snark/E2e4.OpenXml.Wrappers/blob/v$(Version)/</RepoBlob>
+      <RepoRaw>https://raw.githubusercontent.com/th3snark/E2e4.OpenXml.Wrappers/v$(Version)/</RepoRaw>
+      <PackedReadme>$(MSBuildProjectDirectory)/$(IntermediateOutputPath)nuget/README.md</PackedReadme>
+      <PackedReadmeText>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)/../README.md'))</PackedReadmeText>
+      <PackedReadmeText>$([System.Text.RegularExpressions.Regex]::Replace('$(PackedReadmeText)', '(?m)^&lt;img src="([^"]+)" alt="([^"]*)"[^
+]*', '![$2]($(RepoRaw)$1)'))</PackedReadmeText>
+      <PackedReadmeText>$([System.Text.RegularExpressions.Regex]::Replace('$(PackedReadmeText)', '\]\((?!https?:|#)([^)]+)\)', ']($(RepoBlob)$1)'))</PackedReadmeText>
+    </PropertyGroup>
+    <WriteLinesToFile File="$(PackedReadme)" Lines="$([MSBuild]::Escape('$(PackedReadmeText)'))" Overwrite="true" />
+    <ItemGroup>
+      <None Include="$(PackedReadme)" Pack="true" PackagePath="\" />
+    </ItemGroup>
+  </Target>
 
 </Project>

@@ -89,7 +89,7 @@ public partial class CommentWrapper
         }
 
         CommentsEx commentsEx = GetCommentsEx(create);
-        CommentEx entry = commentsEx?.Elements<CommentEx>().FirstOrDefault(e => String.Equals(e.ParaId?.Value, paragraphId, StringComparison.OrdinalIgnoreCase));
+        CommentEx entry = commentsEx?.Elements<CommentEx>().FirstOrDefault(e => string.Equals(e.ParaId?.Value, paragraphId, StringComparison.OrdinalIgnoreCase));
         if (entry == null && create)
         {
             entry = new CommentEx() { ParaId = paragraphId, Done = false };
@@ -135,7 +135,7 @@ public partial class CommentWrapper
             }
 
             Comments comments = MainPart.WordprocessingCommentsPart?.Comments;
-            Comment parent = comments?.Elements<Comment>().FirstOrDefault(c => String.Equals(c.Elements<Paragraph>().LastOrDefault()?.ParagraphId?.Value, parentId, StringComparison.OrdinalIgnoreCase));
+            Comment parent = comments?.Elements<Comment>().FirstOrDefault(c => string.Equals(c.Elements<Paragraph>().LastOrDefault()?.ParagraphId?.Value, parentId, StringComparison.OrdinalIgnoreCase));
             if (parent == null)
             {
                 return null;
@@ -164,7 +164,7 @@ public partial class CommentWrapper
         }
 
         HashSet<string> replyIds = new HashSet<string>(
-            commentsEx.Elements<CommentEx>().Where(e => String.Equals(e.ParaIdParent?.Value, paragraphId, StringComparison.OrdinalIgnoreCase)).Select(e => e.ParaId?.Value),
+            commentsEx.Elements<CommentEx>().Where(e => string.Equals(e.ParaIdParent?.Value, paragraphId, StringComparison.OrdinalIgnoreCase)).Select(e => e.ParaId?.Value),
             StringComparer.OrdinalIgnoreCase);
         if (replyIds.Count == 0)
         {
@@ -242,7 +242,7 @@ public class CommentReplyCollection : IEnumerable<CommentWrapper>
             IList<CommentWrapper> replies = _comment.GetReplies();
             if (index < 0 || index >= replies.Count)
             {
-                throw new ArgumentOutOfRangeException(nameof(index), String.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index));
+                throw new ArgumentOutOfRangeException(nameof(index), string.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index));
             }
             return replies[index];
         }

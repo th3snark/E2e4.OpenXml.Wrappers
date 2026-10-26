@@ -73,15 +73,15 @@ public class CustomDocumentProperty : System.IEquatable<CustomDocumentProperty>
             switch (Type)
             {
                 case DocumentPropertyType.Boolean:
-                    return String.Equals(_property.VTBool.Text, "true", StringComparison.OrdinalIgnoreCase) || _property.VTBool.Text == "1";
+                    return string.Equals(_property.VTBool.Text, "true", StringComparison.OrdinalIgnoreCase) || _property.VTBool.Text == "1";
                 case DocumentPropertyType.Date:
                     return DateTime.Parse(_property.VTFileTime.Text, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal);
                 case DocumentPropertyType.FloatingPoint:
-                    return Double.Parse(_property.VTDouble.Text, NumberStyles.Float, CultureInfo.InvariantCulture);
+                    return double.Parse(_property.VTDouble.Text, NumberStyles.Float, CultureInfo.InvariantCulture);
                 case DocumentPropertyType.Number:
-                    return Int32.Parse(_property.VTInt32.Text, NumberStyles.Integer, CultureInfo.InvariantCulture);
+                    return int.Parse(_property.VTInt32.Text, NumberStyles.Integer, CultureInfo.InvariantCulture);
                 default:
-                    return _property.VTLPWSTR?.Text ?? String.Empty;
+                    return _property.VTLPWSTR?.Text ?? string.Empty;
             }
         }
         set
@@ -95,7 +95,7 @@ public class CustomDocumentProperty : System.IEquatable<CustomDocumentProperty>
     {
         if (value == null)
         {
-            return new VTLPWSTR(String.Empty);
+            return new VTLPWSTR(string.Empty);
         }
         if (value is string text)
         {
@@ -117,7 +117,7 @@ public class CustomDocumentProperty : System.IEquatable<CustomDocumentProperty>
         {
             return new VTFileTime(date.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture));
         }
-        throw new ArgumentException(String.Format(CultureInfo.InvariantCulture, "A value of the type {0} cannot be stored in a document property.", value.GetType().Name), nameof(value));
+        throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, "A value of the type {0} cannot be stored in a document property.", value.GetType().Name), nameof(value));
     }
 
     /// <summary>

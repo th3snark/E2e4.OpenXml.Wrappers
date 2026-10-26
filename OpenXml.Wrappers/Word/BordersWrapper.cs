@@ -491,7 +491,7 @@ public class BordersWrapper
         {
             return attribute.Value;
         }
-        return look.Val != null && look.Val.HasValue && Int32.TryParse(look.Val.Value, System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture, out int bits) && (bits & mask) != 0;
+        return look.Val != null && look.Val.HasValue && int.TryParse(look.Val.Value, System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture, out int bits) && (bits & mask) != 0;
     }
 
     private static BorderPosition? MapToTable(TableCell cell, Table table, BorderPosition position)

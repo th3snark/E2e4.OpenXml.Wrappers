@@ -132,7 +132,7 @@ public class DocumentStructureTest : IDisposable
 
         Assert.Throws<ArgumentOutOfRangeException>(() => setup.TopMargin = -1);
         Assert.Throws<ArgumentOutOfRangeException>(() => setup.PageWidth = 2000);
-        Assert.Throws<ArgumentOutOfRangeException>(() => setup.LeftMargin = Double.NaN);
+        Assert.Throws<ArgumentOutOfRangeException>(() => setup.LeftMargin = double.NaN);
         Assert.Throws<ArgumentOutOfRangeException>(() => setup.Orientation = (PageOrientation)5);
         Assert.Throws<ArgumentOutOfRangeException>(() => setup.SectionStart = (SectionStart)9);
     }

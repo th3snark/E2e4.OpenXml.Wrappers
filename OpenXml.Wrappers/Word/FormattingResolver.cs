@@ -233,7 +233,7 @@ internal sealed class FormattingResolver
         bool major = themeFont == ThemeFontValues.MajorAscii || themeFont == ThemeFontValues.MajorHighAnsi
             || themeFont == ThemeFontValues.MajorEastAsia || themeFont == ThemeFontValues.MajorBidi;
         string typeface = major ? scheme.MajorFont?.LatinFont?.Typeface?.Value : scheme.MinorFont?.LatinFont?.Typeface?.Value;
-        return String.IsNullOrEmpty(typeface) ? null : typeface;
+        return string.IsNullOrEmpty(typeface) ? null : typeface;
     }
 
     /// <summary>The red, green and blue value of a theme colour, or null. Tints and shades are not applied.</summary>

@@ -58,7 +58,7 @@ public partial class RangeWrapper
         }
         else
         {
-            throw new NotSupportedException(String.Format(CultureInfo.InvariantCulture, "Deleting is not currently supported for a range starting with the type {0}", _startOpenXmlElement.GetType().Name));
+            throw new NotSupportedException(string.Format(CultureInfo.InvariantCulture, "Deleting is not currently supported for a range starting with the type {0}", _startOpenXmlElement.GetType().Name));
         }
     }
 

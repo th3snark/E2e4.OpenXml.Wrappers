@@ -379,11 +379,11 @@ public class LineNumberingWrapper
         get
         {
             string distance = _setup.GetProperty<LineNumberType>()?.Distance?.Value;
-            return distance != null && Double.TryParse(distance, NumberStyles.Float, CultureInfo.InvariantCulture, out double twips) ? twips / 20 : 0;
+            return distance != null && double.TryParse(distance, NumberStyles.Float, CultureInfo.InvariantCulture, out double twips) ? twips / 20 : 0;
         }
         set
         {
-            if (Double.IsNaN(value) || value < 0 || value > 1584)
+            if (double.IsNaN(value) || value < 0 || value > 1584)
             {
                 throw new ArgumentOutOfRangeException(nameof(value), "The distance must be between 0 and 1584 points.");
             }
@@ -542,11 +542,11 @@ public class TextColumnsWrapper
         {
             Columns columns = Existing;
             string space = columns?.Elements<Column>().FirstOrDefault()?.Space?.Value ?? columns?.Space?.Value;
-            return space != null && Double.TryParse(space, NumberStyles.Float, CultureInfo.InvariantCulture, out double twips) ? twips / 20 : 36;
+            return space != null && double.TryParse(space, NumberStyles.Float, CultureInfo.InvariantCulture, out double twips) ? twips / 20 : 36;
         }
         set
         {
-            if (Double.IsNaN(value) || value < 0 || value > 1584)
+            if (double.IsNaN(value) || value < 0 || value > 1584)
             {
                 throw new ArgumentOutOfRangeException(nameof(value), "The spacing must be between 0 and 1584 points.");
             }
@@ -568,7 +568,7 @@ public class TextColumnsWrapper
         {
             Columns columns = Existing;
             Column first = columns?.Elements<Column>().FirstOrDefault();
-            if (first?.Width != null && Double.TryParse(first.Width.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out double twips))
+            if (first?.Width != null && double.TryParse(first.Width.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out double twips))
             {
                 return twips / 20;
             }

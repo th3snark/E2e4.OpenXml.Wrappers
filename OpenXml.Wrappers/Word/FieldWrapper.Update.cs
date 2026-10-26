@@ -227,7 +227,7 @@ internal static class FieldUpdater
             {
                 if (pair.Key == key)
                 {
-                    return pair.Value ?? String.Empty;
+                    return pair.Value ?? string.Empty;
                 }
             }
             return null;
@@ -241,14 +241,14 @@ internal static class FieldUpdater
         StringBuilder current = new StringBuilder();
         bool quoted = false;
         bool hasToken = false;
-        foreach (char c in code ?? String.Empty)
+        foreach (char c in code ?? string.Empty)
         {
             if (c == '"' || c == '“' || c == '”')
             {
                 quoted = !quoted;
                 hasToken = true;
             }
-            else if (Char.IsWhiteSpace(c) && !quoted)
+            else if (char.IsWhiteSpace(c) && !quoted)
             {
                 if (hasToken)
                 {
@@ -268,7 +268,7 @@ internal static class FieldUpdater
             tokens.Add(current.ToString());
         }
 
-        Instruction instruction = new Instruction() { Name = tokens.Count > 0 ? tokens[0].ToUpperInvariant() : String.Empty };
+        Instruction instruction = new Instruction() { Name = tokens.Count > 0 ? tokens[0].ToUpperInvariant() : string.Empty };
         for (int i = 1; i < tokens.Count; i++)
         {
             string token = tokens[i];
@@ -276,7 +276,7 @@ internal static class FieldUpdater
             {
                 string key = token.Substring(1);
                 string value = null;
-                bool takesArgument = key == "@" || key == "*" || key == "#" || ((key == "r" || key == "s") && i + 1 < tokens.Count && Int32.TryParse(tokens[i + 1], NumberStyles.Integer, CultureInfo.InvariantCulture, out _));
+                bool takesArgument = key == "@" || key == "*" || key == "#" || ((key == "r" || key == "s") && i + 1 < tokens.Count && int.TryParse(tokens[i + 1], NumberStyles.Integer, CultureInfo.InvariantCulture, out _));
                 if (takesArgument && i + 1 < tokens.Count)
                 {
                     value = tokens[++i];
@@ -329,25 +329,25 @@ internal static class FieldUpdater
                 DateTime? printed = document?.PackageProperties.LastPrinted;
                 return printed == null ? "0/0/0000 0:00" : FormatDate(printed.Value.ToLocalTime(), picture ?? DefaultDateTime(culture), culture);
             case "AUTHOR":
-                return instruction.Arguments.Count > 0 ? instruction.Arguments[0] : properties?.Author ?? String.Empty;
+                return instruction.Arguments.Count > 0 ? instruction.Arguments[0] : properties?.Author ?? string.Empty;
             case "TITLE":
-                return instruction.Arguments.Count > 0 ? instruction.Arguments[0] : properties?.Title ?? String.Empty;
+                return instruction.Arguments.Count > 0 ? instruction.Arguments[0] : properties?.Title ?? string.Empty;
             case "SUBJECT":
-                return instruction.Arguments.Count > 0 ? instruction.Arguments[0] : properties?.Subject ?? String.Empty;
+                return instruction.Arguments.Count > 0 ? instruction.Arguments[0] : properties?.Subject ?? string.Empty;
             case "KEYWORDS":
-                return instruction.Arguments.Count > 0 ? instruction.Arguments[0] : properties?.Keywords ?? String.Empty;
+                return instruction.Arguments.Count > 0 ? instruction.Arguments[0] : properties?.Keywords ?? string.Empty;
             case "COMMENTS":
-                return instruction.Arguments.Count > 0 ? instruction.Arguments[0] : properties?.Comments ?? String.Empty;
+                return instruction.Arguments.Count > 0 ? instruction.Arguments[0] : properties?.Comments ?? string.Empty;
             case "LASTSAVEDBY":
-                return properties?.LastAuthor ?? String.Empty;
+                return properties?.LastAuthor ?? string.Empty;
             case "REVNUM":
                 return document?.PackageProperties.Revision ?? "1";
             case "USERNAME":
                 return instruction.Arguments.Count > 0 ? instruction.Arguments[0] : Environment.UserName;
             case "USERINITIALS":
-                return instruction.Arguments.Count > 0 ? instruction.Arguments[0] : Environment.UserName.Length > 0 ? Environment.UserName.Substring(0, 1).ToUpperInvariant() : String.Empty;
+                return instruction.Arguments.Count > 0 ? instruction.Arguments[0] : Environment.UserName.Length > 0 ? Environment.UserName.Substring(0, 1).ToUpperInvariant() : string.Empty;
             case "USERADDRESS":
-                return instruction.Arguments.Count > 0 ? instruction.Arguments[0] : String.Empty;
+                return instruction.Arguments.Count > 0 ? instruction.Arguments[0] : string.Empty;
             case "DOCPROPERTY":
                 return instruction.Arguments.Count == 0 || document == null ? null : DocumentProperty(document, properties, instruction.Arguments[0], ref ok);
             case "FILENAME":
@@ -366,15 +366,15 @@ internal static class FieldUpdater
                     return null;
                 }
                 DocumentVariable variable = main.DocumentSettingsPart?.Settings?.GetFirstChild<DocumentVariables>()?.Elements<DocumentVariable>()
-                    .FirstOrDefault(v => String.Equals(v.Name?.Value, instruction.Arguments[0], StringComparison.OrdinalIgnoreCase));
+                    .FirstOrDefault(v => string.Equals(v.Name?.Value, instruction.Arguments[0], StringComparison.OrdinalIgnoreCase));
                 if (variable == null)
                 {
                     ok = false;
                     return "Error! No document variable supplied.";
                 }
-                return variable.Val?.Value ?? String.Empty;
+                return variable.Val?.Value ?? string.Empty;
             case "QUOTE":
-                return String.Join(" ", instruction.Arguments);
+                return string.Join(" ", instruction.Arguments);
             case "SEQ":
                 return Sequence(field, instruction);
             case "REF":
@@ -398,33 +398,33 @@ internal static class FieldUpdater
 
     private static string DocumentProperty(WordprocessingDocument document, DocumentPropertiesWrapper properties, string name, ref bool ok)
     {
-        switch (name.Replace(" ", String.Empty, StringComparison.Ordinal).ToUpperInvariant())
+        switch (name.Replace(" ", string.Empty, StringComparison.Ordinal).ToUpperInvariant())
         {
             case "TITLE":
-                return properties.Title ?? String.Empty;
+                return properties.Title ?? string.Empty;
             case "SUBJECT":
-                return properties.Subject ?? String.Empty;
+                return properties.Subject ?? string.Empty;
             case "AUTHOR":
-                return properties.Author ?? String.Empty;
+                return properties.Author ?? string.Empty;
             case "KEYWORDS":
-                return properties.Keywords ?? String.Empty;
+                return properties.Keywords ?? string.Empty;
             case "COMMENTS":
-                return properties.Comments ?? String.Empty;
+                return properties.Comments ?? string.Empty;
             case "CATEGORY":
-                return properties.Category ?? String.Empty;
+                return properties.Category ?? string.Empty;
             case "LASTAUTHOR":
             case "LASTSAVEDBY":
-                return properties.LastAuthor ?? String.Empty;
+                return properties.LastAuthor ?? string.Empty;
             case "COMPANY":
-                return properties.Company ?? String.Empty;
+                return properties.Company ?? string.Empty;
             case "MANAGER":
-                return properties.Manager ?? String.Empty;
+                return properties.Manager ?? string.Empty;
             case "CREATIONDATE":
             case "CREATEDATE":
-                return properties.CreationDate?.ToLocalTime().ToString(CultureInfo.CurrentCulture) ?? String.Empty;
+                return properties.CreationDate?.ToLocalTime().ToString(CultureInfo.CurrentCulture) ?? string.Empty;
             case "LASTSAVETIME":
             case "SAVEDATE":
-                return properties.LastSaveTime?.ToLocalTime().ToString(CultureInfo.CurrentCulture) ?? String.Empty;
+                return properties.LastSaveTime?.ToLocalTime().ToString(CultureInfo.CurrentCulture) ?? string.Empty;
         }
 
         CustomDocumentProperty custom = new CustomDocumentPropertyCollection(document)[name];
@@ -438,12 +438,12 @@ internal static class FieldUpdater
         {
             return date.ToLocalTime().ToString(CultureInfo.CurrentCulture);
         }
-        return Convert.ToString(value, CultureInfo.CurrentCulture) ?? String.Empty;
+        return Convert.ToString(value, CultureInfo.CurrentCulture) ?? string.Empty;
     }
 
     private static string GetStoryText(MainDocumentPart main)
     {
-        return new RangeWrapper(main.Document).Text ?? String.Empty;
+        return new RangeWrapper(main.Document).Text ?? string.Empty;
     }
 
     private static int CountWords(MainDocumentPart main)
@@ -453,7 +453,7 @@ internal static class FieldUpdater
 
     private static int CountCharacters(MainDocumentPart main)
     {
-        return GetStoryText(main).Count(c => !Char.IsWhiteSpace(c) && !Char.IsControl(c));
+        return GetStoryText(main).Count(c => !char.IsWhiteSpace(c) && !char.IsControl(c));
     }
 
     #endregion
@@ -473,10 +473,10 @@ internal static class FieldUpdater
         {
             Instruction otherInstruction = ReferenceEquals(other, field) || other.Equals(field) ? instruction : Parse(other.CodeText);
             if (otherInstruction.Name == "SEQ" && otherInstruction.Arguments.Count > 0
-                && String.Equals(otherInstruction.Arguments[0], identifier, StringComparison.OrdinalIgnoreCase))
+                && string.Equals(otherInstruction.Arguments[0], identifier, StringComparison.OrdinalIgnoreCase))
             {
                 string reset = otherInstruction.GetSwitch("r");
-                if (reset != null && Int64.TryParse(reset, NumberStyles.Integer, CultureInfo.InvariantCulture, out long number))
+                if (reset != null && long.TryParse(reset, NumberStyles.Integer, CultureInfo.InvariantCulture, out long number))
                 {
                     value = number;
                 }
@@ -492,7 +492,7 @@ internal static class FieldUpdater
             }
         }
         //The switch that hides the number leaves the result empty.
-        return instruction.GetSwitch("h") != null ? String.Empty : FormatNumber(value, instruction.GetSwitch("*"));
+        return instruction.GetSwitch("h") != null ? string.Empty : FormatNumber(value, instruction.GetSwitch("*"));
     }
 
     private static string Reference(FieldWrapper field, Instruction instruction, ref bool ok)
@@ -510,7 +510,7 @@ internal static class FieldUpdater
         }
 
         OpenXmlElement root = field.Key.GetRoot();
-        BookmarkStart bookmark = root.Descendants<BookmarkStart>().FirstOrDefault(b => String.Equals(b.Name?.Value, instruction.Arguments[0], StringComparison.OrdinalIgnoreCase));
+        BookmarkStart bookmark = root.Descendants<BookmarkStart>().FirstOrDefault(b => string.Equals(b.Name?.Value, instruction.Arguments[0], StringComparison.OrdinalIgnoreCase));
         if (bookmark == null)
         {
             ok = false;
@@ -531,11 +531,11 @@ internal static class FieldUpdater
         string left = arguments[0];
         string op = arguments[1];
         string right = arguments[2];
-        string whenTrue = arguments.Count > 3 ? arguments[3] : String.Empty;
-        string whenFalse = arguments.Count > 4 ? arguments[4] : String.Empty;
+        string whenTrue = arguments.Count > 3 ? arguments[3] : string.Empty;
+        string whenFalse = arguments.Count > 4 ? arguments[4] : string.Empty;
 
-        bool numbers = Double.TryParse(left, NumberStyles.Float, CultureInfo.InvariantCulture, out double a) & Double.TryParse(right, NumberStyles.Float, CultureInfo.InvariantCulture, out double b);
-        int comparison = numbers ? a.CompareTo(b) : String.Compare(left, right, StringComparison.OrdinalIgnoreCase);
+        bool numbers = double.TryParse(left, NumberStyles.Float, CultureInfo.InvariantCulture, out double a) & double.TryParse(right, NumberStyles.Float, CultureInfo.InvariantCulture, out double b);
+        int comparison = numbers ? a.CompareTo(b) : string.Compare(left, right, StringComparison.OrdinalIgnoreCase);
         bool result;
         switch (op)
         {
@@ -593,7 +593,7 @@ internal static class FieldUpdater
                     text = text.ToLowerInvariant();
                     break;
                 case "FirstCap":
-                    text = text.Length == 0 ? text : Char.ToUpperInvariant(text[0]) + text.Substring(1).ToLowerInvariant();
+                    text = text.Length == 0 ? text : char.ToUpperInvariant(text[0]) + text.Substring(1).ToLowerInvariant();
                     break;
                 case "Caps":
                     text = CultureInfo.InvariantCulture.TextInfo.ToTitleCase(text.ToLowerInvariant());
@@ -605,7 +605,7 @@ internal static class FieldUpdater
 
     private static string FormatNumber(long value, string format)
     {
-        if (format == null || String.Equals(format, "ARABIC", StringComparison.OrdinalIgnoreCase))
+        if (format == null || string.Equals(format, "ARABIC", StringComparison.OrdinalIgnoreCase))
         {
             return value.ToString(CultureInfo.InvariantCulture);
         }
@@ -613,12 +613,12 @@ internal static class FieldUpdater
         {
             return value.ToString(CultureInfo.InvariantCulture);
         }
-        if (String.Equals(format, "ROMAN", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(format, "ROMAN", StringComparison.OrdinalIgnoreCase))
         {
             string roman = ToRoman(value);
             return format == "ROMAN" ? roman : roman.ToLowerInvariant();
         }
-        if (String.Equals(format, "ALPHABETIC", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(format, "ALPHABETIC", StringComparison.OrdinalIgnoreCase))
         {
             string letters = ToLetters(value);
             return format == "ALPHABETIC" ? letters : letters.ToLowerInvariant();

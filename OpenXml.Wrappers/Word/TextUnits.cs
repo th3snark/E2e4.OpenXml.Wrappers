@@ -222,7 +222,7 @@ public class TextUnitCollection : IEnumerable<RangeWrapper>
             List<(int Start, int End)> units = GetUnits(out StoryMap map);
             if (index < 0 || index >= units.Count)
             {
-                throw new ArgumentOutOfRangeException(nameof(index), String.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index));
+                throw new ArgumentOutOfRangeException(nameof(index), string.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index));
             }
             return RangeWrapper.FromMap(map, units[index].Start, units[index].End);
         }

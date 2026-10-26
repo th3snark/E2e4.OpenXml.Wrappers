@@ -57,6 +57,6 @@ public partial class RangeWrapper
                 .ToList();
         }
 
-        throw new NotSupportedException(String.Format(CultureInfo.InvariantCulture, "Finding text is not currently supported for a range starting with the type {0}", _startOpenXmlElement.GetType().Name));
+        throw new NotSupportedException(string.Format(CultureInfo.InvariantCulture, "Finding text is not currently supported for a range starting with the type {0}", _startOpenXmlElement.GetType().Name));
     }
 }

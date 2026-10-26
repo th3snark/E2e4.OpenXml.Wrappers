@@ -616,9 +616,9 @@ public class ParagraphFormatWrapper
 
     private static void Points(double? value, double minimum, string parameterName)
     {
-        if (value.HasValue && (Double.IsNaN(value.Value) || value.Value < minimum || value.Value > MaximumPoints))
+        if (value.HasValue && (double.IsNaN(value.Value) || value.Value < minimum || value.Value > MaximumPoints))
         {
-            throw new ArgumentOutOfRangeException(parameterName, String.Format(CultureInfo.InvariantCulture, "The value must be between {0} and {1} points.", minimum, MaximumPoints));
+            throw new ArgumentOutOfRangeException(parameterName, string.Format(CultureInfo.InvariantCulture, "The value must be between {0} and {1} points.", minimum, MaximumPoints));
         }
     }
 
@@ -629,7 +629,7 @@ public class ParagraphFormatWrapper
 
     private static double? ToPoints(string twips)
     {
-        if (twips != null && Double.TryParse(twips, NumberStyles.Float, CultureInfo.InvariantCulture, out double value))
+        if (twips != null && double.TryParse(twips, NumberStyles.Float, CultureInfo.InvariantCulture, out double value))
         {
             return value / 20;
         }

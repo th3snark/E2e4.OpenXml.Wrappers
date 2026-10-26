@@ -35,7 +35,7 @@ public class DocumentWordMembersTest : IDisposable
     {
         _document.Save();
         string[] errors = new OpenXmlValidator(DocumentFormat.OpenXml.FileFormatVersions.Office2010).Validate(_document.WordprocessingDocument).Select(e => e.Description + " at " + e.Path?.XPath).ToArray();
-        Assert.True(errors.Length == 0, String.Join("; ", errors));
+        Assert.True(errors.Length == 0, string.Join("; ", errors));
     }
 
     #region Sections

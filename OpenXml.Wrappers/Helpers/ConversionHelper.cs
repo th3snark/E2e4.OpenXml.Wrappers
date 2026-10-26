@@ -18,7 +18,7 @@ internal static class ConversionHelper
     /// </summary>
     internal static int PointsToTwips(double points, string parameterName)
     {
-        if (Double.IsNaN(points) || points < 0 || points > 31680)
+        if (double.IsNaN(points) || points < 0 || points > 31680)
         {
             throw new ArgumentOutOfRangeException(parameterName, "The value must be between 0 and 31680 points.");
         }

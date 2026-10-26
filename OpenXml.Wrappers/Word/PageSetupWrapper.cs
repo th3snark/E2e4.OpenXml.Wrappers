@@ -61,9 +61,9 @@ public partial class PageSetupWrapper
 
     private static void CheckPoints(double value, string parameterName)
     {
-        if (Double.IsNaN(value) || value < 0 || value > MaximumPoints)
+        if (double.IsNaN(value) || value < 0 || value > MaximumPoints)
         {
-            throw new ArgumentOutOfRangeException(parameterName, String.Format(CultureInfo.InvariantCulture, "The value must be between 0 and {0} points.", MaximumPoints));
+            throw new ArgumentOutOfRangeException(parameterName, string.Format(CultureInfo.InvariantCulture, "The value must be between 0 and {0} points.", MaximumPoints));
         }
     }
 

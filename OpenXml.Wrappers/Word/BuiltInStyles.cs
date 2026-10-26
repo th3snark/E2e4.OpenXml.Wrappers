@@ -76,9 +76,9 @@ internal static class BuiltInStyles
 
     private static Definition Find(string nameOrId)
     {
-        return Definitions.FirstOrDefault(d => String.Equals(d.Name, nameOrId, StringComparison.OrdinalIgnoreCase)
-            || String.Equals(d.StoredName, nameOrId, StringComparison.OrdinalIgnoreCase)
-            || String.Equals(d.StyleId, nameOrId, StringComparison.OrdinalIgnoreCase));
+        return Definitions.FirstOrDefault(d => string.Equals(d.Name, nameOrId, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(d.StoredName, nameOrId, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(d.StyleId, nameOrId, StringComparison.OrdinalIgnoreCase));
     }
 
     private static Style Create(MainDocumentPart mainDocumentPart, Definition definition)

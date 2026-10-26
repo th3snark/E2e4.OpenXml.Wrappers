@@ -171,7 +171,7 @@ public class BookmarkCommentEditingTest : IDisposable
 
         comment.Text = null;
         Assert.Single(element.Elements<Paragraph>());
-        Assert.Equal(String.Empty, element.InnerText);
+        Assert.Equal(string.Empty, element.InnerText);
     }
 
     [Fact]
