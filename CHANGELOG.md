@@ -2,6 +2,14 @@
 
 All notable changes are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [1.0.1] - 2026-10-26
+
+### Fixed
+- The package icon now shows on nuget.org: the packed README is a copy with the icon as an absolute image link and relative links made absolute, pinned to the release tag. The README in the repository is unchanged.
+
+### Changed
+- No change to the public API or behaviour. The source now follows the predefined type keyword rule (`string` rather than `String`), enforced in CI, and the performance tests compare run time at two document sizes instead of using fixed time limits, so they no longer fail on slow machines.
+
 ## [1.0.0] - 2026-10-18
 
 The first release.
