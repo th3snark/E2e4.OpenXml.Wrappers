@@ -38,7 +38,7 @@ public class TableWrapperCollection : IEnumerable<TableWrapper>
             }
             catch (ArgumentOutOfRangeException)
             {
-                throw new ArgumentOutOfRangeException(nameof(index), String.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index));
+                throw new ArgumentOutOfRangeException(nameof(index), string.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index));
             }
         }
     }
@@ -106,17 +106,17 @@ public class TableWrapperCollection : IEnumerable<TableWrapper>
             {
                 if (anchor is BookmarkStart)
                 {
-                    range.Text = String.Empty;
+                    range.Text = string.Empty;
                 }
                 anchor = anchor.Ancestors<Paragraph>().FirstOrDefault();
             }
             else if (anchor is Paragraph)
             {
-                range.Text = String.Empty;
+                range.Text = string.Empty;
             }
             else if (anchor is TableCell cell)
             {
-                range.Text = String.Empty;
+                range.Text = string.Empty;
                 anchor = cell.Elements().FirstOrDefault(e => e is Paragraph || e is Table);
             }
             else if (anchor is Document || anchor is Body)
@@ -152,7 +152,7 @@ public class TableWrapperCollection : IEnumerable<TableWrapper>
         }
         if (!(anchor is Paragraph || anchor is Table))
         {
-            throw new NotSupportedException(String.Format(CultureInfo.InvariantCulture, "Adding a table to a range starting with the type {0} is not currently supported.", range.IsSpan ? "span" : range.StartElement.GetType().Name));
+            throw new NotSupportedException(string.Format(CultureInfo.InvariantCulture, "Adding a table to a range starting with the type {0} is not currently supported.", range.IsSpan ? "span" : range.StartElement.GetType().Name));
         }
 
         int totalWidth = GetAvailableWidth(anchor);
@@ -189,7 +189,7 @@ public class TableWrapperCollection : IEnumerable<TableWrapper>
         TableCell cell = element.Ancestors<TableCell>().FirstOrDefault();
         TableWidthUnitValues? cellType = cell?.TableCellProperties?.TableCellWidth?.Type?.Value;
         if (cell != null && (cellType == null || cellType == TableWidthUnitValues.Dxa)
-            && Int32.TryParse(cell.TableCellProperties?.TableCellWidth?.Width?.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int cellWidth) && cellWidth > 0)
+            && int.TryParse(cell.TableCellProperties?.TableCellWidth?.Width?.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int cellWidth) && cellWidth > 0)
         {
             return cellWidth;
         }

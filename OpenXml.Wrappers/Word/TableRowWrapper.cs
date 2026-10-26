@@ -114,7 +114,7 @@ public partial class TableRowWrapper : System.IEquatable<TableRowWrapper>
         }
         set
         {
-            if (Double.IsNaN(value) || value < 0 || value > 1584)
+            if (double.IsNaN(value) || value < 0 || value > 1584)
             {
                 throw new ArgumentOutOfRangeException(nameof(value), "The height must be between 0 and 1584 points.");
             }

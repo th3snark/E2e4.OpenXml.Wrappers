@@ -409,28 +409,28 @@ internal sealed class StoryMap
                 //one piece with the last child of the field as its element (a field without a result has them all in the first).
                 int codeLength = child is SimpleField simple ? simple.Instruction?.Value?.Length ?? 0 : HyperlinkCodeLength((Hyperlink)child);
                 OpenXmlElement last = child.LastChild;
-                yield return new AtomInfo(AtomKind.FieldCode, child, last == null ? codeLength + 3 : codeLength + 2, String.Empty);
+                yield return new AtomInfo(AtomKind.FieldCode, child, last == null ? codeLength + 3 : codeLength + 2, string.Empty);
                 foreach (AtomInfo info in EnumerateInline(child))
                 {
                     yield return info;
                 }
                 if (last != null)
                 {
-                    yield return new AtomInfo(AtomKind.FieldMark, last, 1, String.Empty);
+                    yield return new AtomInfo(AtomKind.FieldMark, last, 1, string.Empty);
                 }
             }
             else if (child is SdtRun)
             {
                 //A content control has a position at each end, as in Word.
                 OpenXmlElement content = child.GetFirstChild<SdtContentRun>();
-                yield return new AtomInfo(AtomKind.FieldMark, child, content == null ? 2 : 1, String.Empty);
+                yield return new AtomInfo(AtomKind.FieldMark, child, content == null ? 2 : 1, string.Empty);
                 foreach (AtomInfo info in EnumerateInline(child))
                 {
                     yield return info;
                 }
                 if (content != null)
                 {
-                    yield return new AtomInfo(AtomKind.FieldMark, content, 1, String.Empty);
+                    yield return new AtomInfo(AtomKind.FieldMark, content, 1, string.Empty);
                 }
             }
             else if (child is OpenXmlCompositeElement && !(child is Paragraph) && !(child is ParagraphProperties))
@@ -448,7 +448,7 @@ internal sealed class StoryMap
     {
         System.Text.StringBuilder code = new System.Text.StringBuilder(" HYPERLINK ");
         string id = link.Id?.Value;
-        if (!String.IsNullOrEmpty(id))
+        if (!string.IsNullOrEmpty(id))
         {
             OpenXmlPart part = (link.GetRoot() as OpenXmlPartRootElement)?.OpenXmlPart;
             HyperlinkRelationship relationship = part?.HyperlinkRelationships.FirstOrDefault(r => r.Id == id);
@@ -457,19 +457,19 @@ internal sealed class StoryMap
                 code.Append('"').Append(relationship.Uri.OriginalString).Append("\" ");
             }
         }
-        if (!String.IsNullOrEmpty(link.Anchor?.Value))
+        if (!string.IsNullOrEmpty(link.Anchor?.Value))
         {
             code.Append("\\l \"").Append(link.Anchor.Value).Append("\" ");
         }
-        if (!String.IsNullOrEmpty(link.DocLocation?.Value))
+        if (!string.IsNullOrEmpty(link.DocLocation?.Value))
         {
             code.Append("\\s \"").Append(link.DocLocation.Value).Append("\" ");
         }
-        if (!String.IsNullOrEmpty(link.TargetFrame?.Value))
+        if (!string.IsNullOrEmpty(link.TargetFrame?.Value))
         {
             code.Append("\\t \"").Append(link.TargetFrame.Value).Append("\" ");
         }
-        if (!String.IsNullOrEmpty(link.Tooltip?.Value))
+        if (!string.IsNullOrEmpty(link.Tooltip?.Value))
         {
             code.Append("\\o \"").Append(link.Tooltip.Value).Append("\" ");
         }
@@ -487,7 +487,7 @@ internal sealed class StoryMap
         switch (part)
         {
             case Text text:
-                string value = text.Text ?? String.Empty;
+                string value = text.Text ?? string.Empty;
                 if (value.Length == 0)
                 {
                     return false;
@@ -501,7 +501,7 @@ internal sealed class StoryMap
                 {
                     return false;
                 }
-                info = new AtomInfo(AtomKind.FieldCode, part, deletedLength, String.Empty);
+                info = new AtomInfo(AtomKind.FieldCode, part, deletedLength, string.Empty);
                 return true;
             case TabChar:
                 info = new AtomInfo(AtomKind.Tab, part, 1, "\t");
@@ -516,7 +516,7 @@ internal sealed class StoryMap
                 info = new AtomInfo(AtomKind.Break, part, 1, "\v");
                 return true;
             case FieldChar:
-                info = new AtomInfo(AtomKind.FieldMark, part, 1, String.Empty);
+                info = new AtomInfo(AtomKind.FieldMark, part, 1, string.Empty);
                 return true;
             case FieldCode code:
                 int codeLength = code.Text?.Length ?? 0;
@@ -524,7 +524,7 @@ internal sealed class StoryMap
                 {
                     return false;
                 }
-                info = new AtomInfo(AtomKind.FieldCode, part, codeLength, String.Empty);
+                info = new AtomInfo(AtomKind.FieldCode, part, codeLength, string.Empty);
                 return true;
             case Drawing:
             case Picture:
@@ -536,13 +536,13 @@ internal sealed class StoryMap
             case AnnotationReferenceMark:
             case CommentReference:
             case SymbolChar:
-                info = new AtomInfo(AtomKind.Object, part, 1, String.Empty);
+                info = new AtomInfo(AtomKind.Object, part, 1, string.Empty);
                 return true;
             default:
                 //Drawings are often wrapped in alternate content, which is one object whatever it offers.
                 if (part.LocalName == "AlternateContent")
                 {
-                    info = new AtomInfo(AtomKind.Object, part, 1, String.Empty);
+                    info = new AtomInfo(AtomKind.Object, part, 1, string.Empty);
                     return true;
                 }
                 return false;

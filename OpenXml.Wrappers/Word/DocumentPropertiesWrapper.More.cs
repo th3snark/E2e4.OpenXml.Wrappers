@@ -32,7 +32,7 @@ public partial class DocumentPropertiesWrapper
 
     private static int? ToInt(string text)
     {
-        return text != null && Int32.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out int number) ? number : (int?)null;
+        return text != null && int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out int number) ? number : (int?)null;
     }
 
     private static string FromInt(int? number)
@@ -177,7 +177,7 @@ public partial class DocumentPropertiesWrapper
                 case "NUMBEROFCHARACTERS(WITHSPACES)": return CharactersWithSpaces;
                 case "NUMBEROFLINES": return Lines;
                 case "NUMBEROFPARAGRAPHS": return Paragraphs;
-                default: throw new ArgumentException(String.Format(CultureInfo.InvariantCulture, "There is no built-in document property named '{0}'.", name), nameof(name));
+                default: throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, "There is no built-in document property named '{0}'.", name), nameof(name));
             }
         }
         set
@@ -209,7 +209,7 @@ public partial class DocumentPropertiesWrapper
                 case "NUMBEROFCHARACTERS(WITHSPACES)": CharactersWithSpaces = (int?)value; break;
                 case "NUMBEROFLINES": Lines = (int?)value; break;
                 case "NUMBEROFPARAGRAPHS": Paragraphs = (int?)value; break;
-                default: throw new ArgumentException(String.Format(CultureInfo.InvariantCulture, "There is no built-in document property named '{0}'.", name), nameof(name));
+                default: throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, "There is no built-in document property named '{0}'.", name), nameof(name));
             }
         }
     }
@@ -217,6 +217,6 @@ public partial class DocumentPropertiesWrapper
     private static string Normalise(string name)
     {
         Guard.ThrowIfNull(name);
-        return name.Replace(" ", String.Empty, StringComparison.Ordinal).ToUpperInvariant();
+        return name.Replace(" ", string.Empty, StringComparison.Ordinal).ToUpperInvariant();
     }
 }

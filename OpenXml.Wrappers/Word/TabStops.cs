@@ -259,7 +259,7 @@ public class TabStopWrapperCollection : IEnumerable<TabStopWrapper>
             IList<long> positions = GetPositions();
             if (index < 0 || index >= positions.Count)
             {
-                throw new ArgumentOutOfRangeException(nameof(index), String.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index));
+                throw new ArgumentOutOfRangeException(nameof(index), string.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index));
             }
             return new TabStopWrapper(_format, positions[index]);
         }
@@ -312,7 +312,7 @@ public class TabStopWrapperCollection : IEnumerable<TabStopWrapper>
 
     internal static long ToTwips(double points)
     {
-        if (Double.IsNaN(points) || points < 0 || points > 1584)
+        if (double.IsNaN(points) || points < 0 || points > 1584)
         {
             throw new ArgumentOutOfRangeException(nameof(points), "The position must be between 0 and 1584 points.");
         }

@@ -53,7 +53,7 @@ public partial class TableWrapper : System.IEquatable<TableWrapper>
             string styleId = StyleHelper.FindStyleId(_table, value, out StyleValues type);
             if (type != StyleValues.Table)
             {
-                throw new ArgumentException(String.Format(CultureInfo.InvariantCulture, "The style '{0}' is not a table style.", value), nameof(value));
+                throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, "The style '{0}' is not a table style.", value), nameof(value));
             }
 
             TableProperties tableProperties = _table.GetFirstChild<TableProperties>();

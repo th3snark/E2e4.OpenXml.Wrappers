@@ -162,9 +162,9 @@ public partial class FieldWrapper : System.IEquatable<FieldWrapper>
         {
             if (_simpleField != null)
             {
-                return (_simpleField.Instruction?.Value ?? String.Empty).Trim();
+                return (_simpleField.Instruction?.Value ?? string.Empty).Trim();
             }
-            return String.Concat(Parse().Codes.Select(c => c.Text)).Trim();
+            return string.Concat(Parse().Codes.Select(c => c.Text)).Trim();
         }
         set
         {
@@ -220,13 +220,13 @@ public partial class FieldWrapper : System.IEquatable<FieldWrapper>
         {
             if (_simpleField != null)
             {
-                return String.Concat(_simpleField.Descendants<Text>().Select(t => t.Text));
+                return string.Concat(_simpleField.Descendants<Text>().Select(t => t.Text));
             }
-            return String.Concat(Parse().ResultText.Select(t => t.Text));
+            return string.Concat(Parse().ResultText.Select(t => t.Text));
         }
         set
         {
-            string text = value ?? String.Empty;
+            string text = value ?? string.Empty;
             if (_simpleField != null)
             {
                 SetSimpleResult(text);

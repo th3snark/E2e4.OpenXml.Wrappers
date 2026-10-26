@@ -200,7 +200,7 @@ public class ParagraphWrapper : System.IEquatable<ParagraphWrapper>
 
         if (!kind.HasValue)
         {
-            throw new ArgumentException(String.Format(CultureInfo.InvariantCulture, "The break type '{0}' is not supported here.", type), nameof(type));
+            throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, "The break type '{0}' is not supported here.", type), nameof(type));
         }
         _paragraph.AppendChild(new Run(new Break() { Type = kind.Value }));
     }

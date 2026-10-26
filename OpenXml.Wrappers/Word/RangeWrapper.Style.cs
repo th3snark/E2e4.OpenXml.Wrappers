@@ -98,7 +98,7 @@ public partial class RangeWrapper
             }
             else
             {
-                throw new NotSupportedException(String.Format(CultureInfo.InvariantCulture, "Applying a style of the type {0} is not currently supported.", type));
+                throw new NotSupportedException(string.Format(CultureInfo.InvariantCulture, "Applying a style of the type {0} is not currently supported.", type));
             }
         }
     }

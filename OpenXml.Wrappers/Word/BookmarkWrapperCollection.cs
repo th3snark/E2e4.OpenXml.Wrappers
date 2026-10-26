@@ -117,7 +117,7 @@ public class BookmarkWrapperCollection : IEnumerable<BookmarkWrapper>
             IList<BookmarkStart> bookmarks = GetElementList();
             if (index < 0 || index >= bookmarks.Count)
             {
-                throw new ArgumentOutOfRangeException(nameof(index), String.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index));
+                throw new ArgumentOutOfRangeException(nameof(index), string.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index));
             }
             return new BookmarkWrapper(bookmarks[index]);
         }
@@ -127,7 +127,7 @@ public class BookmarkWrapperCollection : IEnumerable<BookmarkWrapper>
     {
         get
         {
-            BookmarkStart bookmarkStart = GetElementList().Where(e => String.Equals(e.Name?.Value, name, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+            BookmarkStart bookmarkStart = GetElementList().Where(e => string.Equals(e.Name?.Value, name, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
             if (bookmarkStart != null)
             {
                 return new BookmarkWrapper(bookmarkStart);
@@ -141,7 +141,7 @@ public class BookmarkWrapperCollection : IEnumerable<BookmarkWrapper>
     /// </summary>
     public bool Exists(string name)
     {
-        return GetElementList().Any(e => String.Equals(e.Name?.Value, name, StringComparison.OrdinalIgnoreCase));
+        return GetElementList().Any(e => string.Equals(e.Name?.Value, name, StringComparison.OrdinalIgnoreCase));
     }
 
     /// <summary>
@@ -157,23 +157,23 @@ public class BookmarkWrapperCollection : IEnumerable<BookmarkWrapper>
     public BookmarkWrapper Add(string name, RangeWrapper range)
     {
         Guard.ThrowIfNull(range);
-        if (String.IsNullOrEmpty(name) || name.Length > 40 || !(Char.IsLetter(name[0]) || name[0] == '_') || !name.All(c => Char.IsLetterOrDigit(c) || c == '_'))
+        if (string.IsNullOrEmpty(name) || name.Length > 40 || !(char.IsLetter(name[0]) || name[0] == '_') || !name.All(c => char.IsLetterOrDigit(c) || c == '_'))
         {
             throw new ArgumentException("A bookmark name must start with a letter or underscore, contain only letters, digits and underscores, and be at most 40 characters long.", nameof(name));
         }
         if (!range.IsSpan && !(range.StartElement is Paragraph || range.StartElement is TableCell || range.StartElement is Table || range.StartElement is BookmarkStart || range.StartElement is CommentRangeStart))
         {
-            throw new NotSupportedException(String.Format(CultureInfo.InvariantCulture, "Adding a bookmark to a range starting with the type {0} is not currently supported.", range.StartElement.GetType().Name));
+            throw new NotSupportedException(string.Format(CultureInfo.InvariantCulture, "Adding a bookmark to a range starting with the type {0} is not currently supported.", range.StartElement.GetType().Name));
         }
 
-        if (!range.IsSpan && range.StartElement is BookmarkStart sameBookmark && String.Equals(sameBookmark.Name?.Value, name, StringComparison.OrdinalIgnoreCase))
+        if (!range.IsSpan && range.StartElement is BookmarkStart sameBookmark && string.Equals(sameBookmark.Name?.Value, name, StringComparison.OrdinalIgnoreCase))
         {
             //The range already is the bookmark.
             return new BookmarkWrapper(sameBookmark);
         }
 
         OpenXmlElement root = range.AnchorElement.GetRoot();
-        foreach (BookmarkStart existing in root.Descendants<BookmarkStart>().Where(e => String.Equals(e.Name?.Value, name, StringComparison.OrdinalIgnoreCase)).ToList())
+        foreach (BookmarkStart existing in root.Descendants<BookmarkStart>().Where(e => string.Equals(e.Name?.Value, name, StringComparison.OrdinalIgnoreCase)).ToList())
         {
             new BookmarkWrapper(existing).Delete();
         }

@@ -77,7 +77,7 @@ public partial class RangeWrapper
         }
         else
         {
-            throw new NotSupportedException(String.Format(CultureInfo.InvariantCulture, "Adding a paragraph is not currently supported for a range starting with the type {0}", _startOpenXmlElement.GetType().Name));
+            throw new NotSupportedException(string.Format(CultureInfo.InvariantCulture, "Adding a paragraph is not currently supported for a range starting with the type {0}", _startOpenXmlElement.GetType().Name));
         }
         return new ParagraphWrapper(paragraph);
     }

@@ -36,7 +36,7 @@ public class TableColumnWrapperCollectionTest
         Assert.Equal(100, column.Width);
 
         TableCell added = table.Elements<TableRow>().First().Elements<TableCell>().Last();
-        Assert.Equal(String.Empty, new RangeWrapper(added).Text.TrimEnd('\r', '\a'));
+        Assert.Equal(string.Empty, new RangeWrapper(added).Text.TrimEnd('\r', '\a'));
     }
 
     [Fact]

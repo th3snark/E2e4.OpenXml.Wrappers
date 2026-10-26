@@ -243,7 +243,7 @@ public class FontWrapper
         }
         set
         {
-            if (value.HasValue && (Double.IsNaN(value.Value) || Math.Abs(value.Value) > 1584))
+            if (value.HasValue && (double.IsNaN(value.Value) || Math.Abs(value.Value) > 1584))
             {
                 throw new ArgumentOutOfRangeException(nameof(value), "The spacing must be between -1584 and 1584 points.");
             }
@@ -296,12 +296,12 @@ public class FontWrapper
             return GetValue<double?>(properties =>
             {
                 string value = properties?.Elements<Position>().FirstOrDefault()?.Val?.Value;
-                return Int32.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int halfPoints) ? halfPoints / 2.0 : 0;
+                return int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int halfPoints) ? halfPoints / 2.0 : 0;
             });
         }
         set
         {
-            if (value.HasValue && (Double.IsNaN(value.Value) || Math.Abs(value.Value) > 1584))
+            if (value.HasValue && (double.IsNaN(value.Value) || Math.Abs(value.Value) > 1584))
             {
                 throw new ArgumentOutOfRangeException(nameof(value), "The position must be between -1584 and 1584 points.");
             }
@@ -330,7 +330,7 @@ public class FontWrapper
         }
         set
         {
-            if (value.HasValue && (Double.IsNaN(value.Value) || value.Value < 0 || value.Value > 1638))
+            if (value.HasValue && (double.IsNaN(value.Value) || value.Value < 0 || value.Value > 1638))
             {
                 throw new ArgumentOutOfRangeException(nameof(value), "The kerning must be between 0 and 1638 points.");
             }
@@ -527,7 +527,7 @@ public class FontWrapper
                     return value == null ? (WordColor?)null : WordColor.FromStored(value);
                 }
 
-                if (value == null || String.Equals(value, "auto", StringComparison.OrdinalIgnoreCase))
+                if (value == null || string.Equals(value, "auto", StringComparison.OrdinalIgnoreCase))
                 {
                     ThemeColorValues? theme = color?.ThemeColor?.Value;
                     value = theme.HasValue ? resolver.GetThemeColorHex(theme.Value) : null;

@@ -151,7 +151,7 @@ public class FindWrapper
     {
         if (value)
         {
-            throw new NotSupportedException(String.Format(CultureInfo.InvariantCulture, "Find.{0} is not supported.", name));
+            throw new NotSupportedException(string.Format(CultureInfo.InvariantCulture, "Find.{0} is not supported.", name));
         }
     }
 
@@ -163,7 +163,7 @@ public class FindWrapper
     public bool Execute(ReplaceMode replace = ReplaceMode.None)
     {
         Found = false;
-        if (String.IsNullOrEmpty(Text))
+        if (string.IsNullOrEmpty(Text))
         {
             return false;
         }
@@ -173,7 +173,7 @@ public class FindWrapper
         }
 
         _pattern = Pattern.Create(Text, MatchWildcards, MatchCase);
-        _replacer = new Replacer(Replacement.Text ?? String.Empty, MatchWildcards);
+        _replacer = new Replacer(Replacement.Text ?? string.Empty, MatchWildcards);
 
         //Where the search starts and ends. Looking for the same thing again from the match carries on from its end.
         _range.GetScoped(false, out StoryMap scopeMap, out int scopeStart, out int scopeEnd);
@@ -564,9 +564,9 @@ public class FindWrapper
         {
             Atom atom = map.Atoms[index];
             Text text = (Text)atom.Element;
-            string current = text.Text ?? String.Empty;
+            string current = text.Text ?? string.Empty;
             int offset = start - atom.Start;
-            text.Text = String.Concat(current.Substring(0, offset), replacement, current.Substring(offset + length));
+            text.Text = string.Concat(current.Substring(0, offset), replacement, current.Substring(offset + length));
             text.Space = SpaceProcessingModeValues.Preserve;
             SpanRegistry.TextEdited(text, offset, length, replacement.Length);
             return replacement.Length;
@@ -684,9 +684,9 @@ public class FindWrapper
     private static bool IsWholeWord(string haystack, int index, int length)
     {
         //Only the edges of the match that are themselves part of a word need a word boundary.
-        bool startOk = !Char.IsLetterOrDigit(haystack[index]) || index == 0 || !Char.IsLetterOrDigit(haystack[index - 1]);
+        bool startOk = !char.IsLetterOrDigit(haystack[index]) || index == 0 || !char.IsLetterOrDigit(haystack[index - 1]);
         int end = index + length;
-        bool endOk = !Char.IsLetterOrDigit(haystack[end - 1]) || end == haystack.Length || !Char.IsLetterOrDigit(haystack[end]);
+        bool endOk = !char.IsLetterOrDigit(haystack[end - 1]) || end == haystack.Length || !char.IsLetterOrDigit(haystack[end]);
         return startOk && endOk;
     }
 

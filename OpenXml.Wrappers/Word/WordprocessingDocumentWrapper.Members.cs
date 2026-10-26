@@ -115,7 +115,7 @@ public partial class WordprocessingDocumentWrapper
     /// <summary>The folder of the file of the document, as <c>Document.Path</c> in Word; empty for a document without a file.</summary>
     public string Path
     {
-        get { return DocumentFiles.TryGetPath(_wordprocessingDocument, out string path) ? System.IO.Path.GetDirectoryName(System.IO.Path.GetFullPath(path)) : String.Empty; }
+        get { return DocumentFiles.TryGetPath(_wordprocessingDocument, out string path) ? System.IO.Path.GetDirectoryName(System.IO.Path.GetFullPath(path)) : string.Empty; }
     }
 
     /// <summary>True if the document was opened so that it cannot be changed, as <c>Document.ReadOnly</c> in Word.</summary>
@@ -217,7 +217,7 @@ public partial class WordprocessingDocumentWrapper
             throw new NotSupportedException("Lines and pages depend on the layout of the pages, which the library does not work out.");
         }
 
-        string text = Content.Text ?? String.Empty;
+        string text = Content.Text ?? string.Empty;
         if (statistic == Statistic.Words)
         {
             return text.Split(new[] { ' ', '\t', '\r', '\n', '\a', '\v', '\f', ' ' }, StringSplitOptions.RemoveEmptyEntries).Length;
@@ -228,9 +228,9 @@ public partial class WordprocessingDocumentWrapper
         }
         if (statistic == Statistic.Characters)
         {
-            return text.Count(c => !Char.IsWhiteSpace(c) && !Char.IsControl(c));
+            return text.Count(c => !char.IsWhiteSpace(c) && !char.IsControl(c));
         }
-        return text.Count(c => !Char.IsControl(c) || c == '\t');
+        return text.Count(c => !char.IsControl(c) || c == '\t');
     }
 
     private Settings GetSettings(bool create)
@@ -284,7 +284,7 @@ public partial class WordprocessingDocumentWrapper
         {
             CompatibilitySetting setting = GetSettings(false)?.GetFirstChild<Compatibility>()?.Elements<CompatibilitySetting>()
                 .FirstOrDefault(s => s.Name != null && s.Name.HasValue && s.Name.Value == CompatSettingNameValues.CompatibilityMode);
-            return setting?.Val != null && Int32.TryParse(setting.Val.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int mode) ? mode : 12;
+            return setting?.Val != null && int.TryParse(setting.Val.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int mode) ? mode : 12;
         }
         set
         {
@@ -360,7 +360,7 @@ public partial class WordprocessingDocumentWrapper
                 : type == ProtectionType.AllowOnlyFormFields ? DocumentProtectionValues.Forms : DocumentProtectionValues.ReadOnly,
             Enforcement = true
         };
-        if (!String.IsNullOrEmpty(password))
+        if (!string.IsNullOrEmpty(password))
         {
             byte[] salt = new byte[16];
             using (RandomNumberGenerator random = RandomNumberGenerator.Create())
@@ -395,7 +395,7 @@ public partial class WordprocessingDocumentWrapper
         {
             int spin = (int)(protection.CryptographicSpinCount?.Value ?? 100000);
             byte[] expected = Convert.FromBase64String(protection.HashValue.Value);
-            byte[] actual = HashPassword(password ?? String.Empty, Convert.FromBase64String(protection.SaltValue.Value), spin);
+            byte[] actual = HashPassword(password ?? string.Empty, Convert.FromBase64String(protection.SaltValue.Value), spin);
             if (!SameBytes(expected, actual))
             {
                 throw new UnauthorizedAccessException("The password is not correct.");
@@ -466,7 +466,7 @@ public class VariableWrapper
     private DocumentFormat.OpenXml.Wordprocessing.DocumentVariable Find()
     {
         return _document.GetSettingsPart(false)?.GetFirstChild<DocumentVariables>()?.Elements<DocumentFormat.OpenXml.Wordprocessing.DocumentVariable>()
-            .FirstOrDefault(v => String.Equals(v.Name?.Value, _name, StringComparison.OrdinalIgnoreCase));
+            .FirstOrDefault(v => string.Equals(v.Name?.Value, _name, StringComparison.OrdinalIgnoreCase));
     }
 
     /// <summary>The name of the variable.</summary>
@@ -478,7 +478,7 @@ public class VariableWrapper
     /// <summary>The value of the variable (an empty string when the variable has been deleted).</summary>
     public string Value
     {
-        get { return Find()?.Val?.Value ?? String.Empty; }
+        get { return Find()?.Val?.Value ?? string.Empty; }
         set
         {
             DocumentFormat.OpenXml.Wordprocessing.DocumentVariable variable = Find();
@@ -486,7 +486,7 @@ public class VariableWrapper
             {
                 throw new InvalidOperationException("The variable has been deleted.");
             }
-            variable.Val = value ?? String.Empty;
+            variable.Val = value ?? string.Empty;
         }
     }
 
@@ -529,7 +529,7 @@ public class VariableWrapperCollection : IEnumerable<VariableWrapper>
             IList<DocumentFormat.OpenXml.Wordprocessing.DocumentVariable> variables = GetElementList();
             if (index < 0 || index >= variables.Count)
             {
-                throw new ArgumentOutOfRangeException(nameof(index), String.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index));
+                throw new ArgumentOutOfRangeException(nameof(index), string.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index));
             }
             return new VariableWrapper(_document, variables[index].Name.Value);
         }
@@ -544,13 +544,13 @@ public class VariableWrapperCollection : IEnumerable<VariableWrapper>
     /// <summary>True if there is a variable with the name (ignoring case).</summary>
     public bool Exists(string name)
     {
-        return GetElementList().Any(v => String.Equals(v.Name?.Value, name, StringComparison.OrdinalIgnoreCase));
+        return GetElementList().Any(v => string.Equals(v.Name?.Value, name, StringComparison.OrdinalIgnoreCase));
     }
 
     /// <summary>Adds a variable, or sets the value of the one with the name, and returns it.</summary>
     public VariableWrapper Add(string name, string value = "")
     {
-        if (String.IsNullOrEmpty(name))
+        if (string.IsNullOrEmpty(name))
         {
             throw new ArgumentException("A variable needs a name.", nameof(name));
         }
@@ -562,13 +562,13 @@ public class VariableWrapperCollection : IEnumerable<VariableWrapper>
             variables = new DocumentVariables();
             settings.AddChild(variables);
         }
-        DocumentFormat.OpenXml.Wordprocessing.DocumentVariable existing = variables.Elements<DocumentFormat.OpenXml.Wordprocessing.DocumentVariable>().FirstOrDefault(v => String.Equals(v.Name?.Value, name, StringComparison.OrdinalIgnoreCase));
+        DocumentFormat.OpenXml.Wordprocessing.DocumentVariable existing = variables.Elements<DocumentFormat.OpenXml.Wordprocessing.DocumentVariable>().FirstOrDefault(v => string.Equals(v.Name?.Value, name, StringComparison.OrdinalIgnoreCase));
         if (existing != null)
         {
-            existing.Val = value ?? String.Empty;
+            existing.Val = value ?? string.Empty;
             return new VariableWrapper(_document, existing.Name.Value);
         }
-        variables.AppendChild(new DocumentFormat.OpenXml.Wordprocessing.DocumentVariable() { Name = name, Val = value ?? String.Empty });
+        variables.AppendChild(new DocumentFormat.OpenXml.Wordprocessing.DocumentVariable() { Name = name, Val = value ?? string.Empty });
         return new VariableWrapper(_document, name);
     }
 

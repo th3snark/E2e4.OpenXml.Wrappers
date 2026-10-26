@@ -944,7 +944,7 @@ internal static class OpenXmlExtensions
     {
         paragraph.RemoveAllChildren<Run>();
 
-        text = text ?? String.Empty;
+        text = text ?? string.Empty;
         StringBuilder sb = new StringBuilder();
         Run run = null;
         foreach (char c in text.AsEnumerable().Reverse())

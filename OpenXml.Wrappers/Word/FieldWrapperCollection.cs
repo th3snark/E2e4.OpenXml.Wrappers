@@ -37,7 +37,7 @@ public class FieldWrapperCollection : IEnumerable<FieldWrapper>
             IList<FieldWrapper> fields = GetElementList();
             if (index < 0 || index >= fields.Count)
             {
-                throw new ArgumentOutOfRangeException(nameof(index), String.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index));
+                throw new ArgumentOutOfRangeException(nameof(index), string.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index));
             }
             return fields[index];
         }
@@ -79,9 +79,9 @@ public class FieldWrapperCollection : IEnumerable<FieldWrapper>
         else
         {
             string name = FieldCodes.ToName(type);
-            code = String.IsNullOrWhiteSpace(text) ? name : name + " " + text.Trim();
+            code = string.IsNullOrWhiteSpace(text) ? name : name + " " + text.Trim();
         }
-        if (preserveFormatting && !String.IsNullOrWhiteSpace(code) && !code.Contains("MERGEFORMAT", StringComparison.OrdinalIgnoreCase))
+        if (preserveFormatting && !string.IsNullOrWhiteSpace(code) && !code.Contains("MERGEFORMAT", StringComparison.OrdinalIgnoreCase))
         {
             code = code.Trim() + " \\* MERGEFORMAT";
         }
@@ -94,7 +94,7 @@ public class FieldWrapperCollection : IEnumerable<FieldWrapper>
     public FieldWrapper Add(RangeWrapper range, string code)
     {
         Guard.ThrowIfNull(range);
-        if (String.IsNullOrWhiteSpace(code))
+        if (string.IsNullOrWhiteSpace(code))
         {
             throw new ArgumentException("A field needs a code.", nameof(code));
         }
@@ -106,7 +106,7 @@ public class FieldWrapperCollection : IEnumerable<FieldWrapper>
                 new Run(begin),
                 new Run(new FieldCode(" " + code.Trim() + " ") { Space = SpaceProcessingModeValues.Preserve }),
                 new Run(new FieldChar() { FieldCharType = FieldCharValues.Separate }),
-                new Run(new Text(String.Empty) { Space = SpaceProcessingModeValues.Preserve }),
+                new Run(new Text(string.Empty) { Space = SpaceProcessingModeValues.Preserve }),
                 new Run(new FieldChar() { FieldCharType = FieldCharValues.End })
             });
         FieldWrapper field = new FieldWrapper(begin);

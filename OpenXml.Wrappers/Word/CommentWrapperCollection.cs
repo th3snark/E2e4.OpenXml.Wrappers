@@ -40,7 +40,7 @@ public class CommentWrapperCollection : IEnumerable<CommentWrapper>
             }
             catch (ArgumentOutOfRangeException)
             {
-                throw new ArgumentOutOfRangeException(nameof(index), String.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index));
+                throw new ArgumentOutOfRangeException(nameof(index), string.Format(CultureInfo.InvariantCulture, "The requested member of the collection '{0}' does not exist.", index));
             }
         }
     }
@@ -69,7 +69,7 @@ public class CommentWrapperCollection : IEnumerable<CommentWrapper>
         OpenXmlElement start = range.StartElement;
         if (!range.IsSpan && !(start is BookmarkStart || start is Paragraph || start is TableCell || start is TableRow || start is Table || start is Document || start is Body))
         {
-            throw new NotSupportedException(String.Format(CultureInfo.InvariantCulture, "Adding a comment to a range starting with the type {0} is not currently supported.", start.GetType().Name));
+            throw new NotSupportedException(string.Format(CultureInfo.InvariantCulture, "Adding a comment to a range starting with the type {0} is not currently supported.", start.GetType().Name));
         }
 
         MainDocumentPart mainDocumentPart = (start ?? range.AnchorElement).GetDocument().MainDocumentPart;
@@ -140,10 +140,10 @@ public class CommentWrapperCollection : IEnumerable<CommentWrapper>
             id = comments.Elements<Comment>().Max(e => Convert.ToInt32(e.Id.Value, CultureInfo.InvariantCulture)) + 1;
         }
 
-        string author = String.IsNullOrEmpty(Environment.UserName) ? "Unknown" : Environment.UserName;
+        string author = string.IsNullOrEmpty(Environment.UserName) ? "Unknown" : Environment.UserName;
         string initials = author.Substring(0, 1);
 
-        if (String.IsNullOrEmpty(text))
+        if (string.IsNullOrEmpty(text))
         {
             text = " ";
         }

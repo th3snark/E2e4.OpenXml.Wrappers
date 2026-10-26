@@ -15,7 +15,7 @@ public class RangeWrapperFindOptionsTest
 
     private static string Text(Body body)
     {
-        return String.Join("|", body.Elements<Paragraph>().Select(p => String.Concat(p.Descendants<Text>().Select(t => t.Text))));
+        return string.Join("|", body.Elements<Paragraph>().Select(p => string.Concat(p.Descendants<Text>().Select(t => t.Text))));
     }
 
     [Fact]

@@ -55,7 +55,7 @@ public class TableStructureTest
         Assert.Null(Cell(table, 1, 1).TableCell.TableCellProperties.VerticalMerge.Val);
         Assert.Null(Cell(table, 2, 1).TableCell.TableCellProperties.VerticalMerge.Val);
         Assert.Equal("0,11,12,1", Cell(table, 0, 1).TableCell.InnerText);
-        Assert.Equal(String.Empty, Cell(table, 1, 1).TableCell.InnerText);
+        Assert.Equal(string.Empty, Cell(table, 1, 1).TableCell.InnerText);
         Assert.Single(Cell(table, 1, 1).TableCell.Elements<Paragraph>());
     }
 
@@ -65,7 +65,7 @@ public class TableStructureTest
         Table table = CreateTable(3, 3);
         Cell(table, 2, 2).Merge(Cell(table, 1, 1));
 
-        Assert.Equal(new[] { "0,00,10,2" }, new[] { Texts(table, 0).Aggregate(String.Concat) });
+        Assert.Equal(new[] { "0,00,10,2" }, new[] { Texts(table, 0).Aggregate(string.Concat) });
         Assert.Equal(2, Texts(table, 1).Length);
         Assert.Equal(2, Cell(table, 1, 1).TableCell.TableCellProperties.GridSpan.Val.Value);
         Assert.Equal(MergedCellValues.Restart, Cell(table, 1, 1).TableCell.TableCellProperties.VerticalMerge.Val.Value);
@@ -173,7 +173,7 @@ public class TableStructureTest
         Cell(table, 0, 0).Split(1, 2);
 
         Assert.Equal(new[] { "500", "500", "1000" }, table.GetFirstChild<TableGrid>().Elements<GridColumn>().Select(g => g.Width.Value).ToArray());
-        Assert.Equal(new[] { "0,0", String.Empty, "0,1" }, Texts(table, 0));
+        Assert.Equal(new[] { "0,0", string.Empty, "0,1" }, Texts(table, 0));
         Assert.Equal(new[] { "500", "500", "1000" }, table.Elements<TableRow>().First().Elements<TableCell>().Select(c => c.TableCellProperties.TableCellWidth.Width.Value).ToArray());
 
         TableCell other = table.Elements<TableRow>().ElementAt(1).Elements<TableCell>().First();
@@ -225,7 +225,7 @@ public class TableStructureTest
         Assert.Equal(MergedCellValues.Restart, kept.TableCellProperties.VerticalMerge.Val.Value);
         Assert.NotNull(Cell(table, 1, 1).TableCell.TableCellProperties.VerticalMerge);
         Assert.Null(Cell(table, 1, 0).TableCell.TableCellProperties.VerticalMerge);
-        Assert.Equal(String.Empty, Cell(table, 1, 0).TableCell.InnerText);
+        Assert.Equal(string.Empty, Cell(table, 1, 0).TableCell.InnerText);
         Assert.Equal("0,0", Cell(table, 0, 0).TableCell.InnerText);
         Assert.Equal("1,0", Cell(table, 2, 0).TableCell.InnerText);
     }
@@ -343,7 +343,7 @@ public class TableStructureTest
 
         Assert.Equal(1, added.Index);
         Assert.Equal(3, rows.Count);
-        Assert.Equal(new[] { String.Empty, String.Empty }, Texts(table, 1));
+        Assert.Equal(new[] { string.Empty, string.Empty }, Texts(table, 1));
         Assert.Equal(new[] { "1,0", "1,1" }, Texts(table, 2));
     }
 
@@ -354,7 +354,7 @@ public class TableStructureTest
         TableRowWrapperCollection rows = new TableWrapper(table).Rows;
         rows.Add(rows[0]);
 
-        Assert.Equal(String.Empty, Texts(table, 0)[0]);
+        Assert.Equal(string.Empty, Texts(table, 0)[0]);
         Assert.Equal("0,0", Texts(table, 1)[0]);
     }
 

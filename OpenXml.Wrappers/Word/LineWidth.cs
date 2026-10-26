@@ -45,9 +45,9 @@ public readonly struct LineWidth : IEquatable<LineWidth>
     /// <exception cref="ArgumentOutOfRangeException">The width is not from 0.25 to 12 points.</exception>
     public LineWidth(double points)
     {
-        if (Double.IsNaN(points) || points < MinimumPoints || points > MaximumPoints)
+        if (double.IsNaN(points) || points < MinimumPoints || points > MaximumPoints)
         {
-            throw new ArgumentOutOfRangeException(nameof(points), String.Format(CultureInfo.InvariantCulture, "The width must be between {0} and {1} points.", MinimumPoints, MaximumPoints));
+            throw new ArgumentOutOfRangeException(nameof(points), string.Format(CultureInfo.InvariantCulture, "The width must be between {0} and {1} points.", MinimumPoints, MaximumPoints));
         }
         Points = Math.Round(points * 8, MidpointRounding.AwayFromZero) / 8;
     }

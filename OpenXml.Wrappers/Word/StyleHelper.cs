@@ -41,8 +41,8 @@ internal static class StyleHelper
             return null;
         }
 
-        return styles.Elements<Style>().FirstOrDefault(s => String.Equals(s.StyleName?.Val?.Value, nameOrId, StringComparison.OrdinalIgnoreCase))
-            ?? styles.Elements<Style>().FirstOrDefault(s => !IsCustom(s) && String.Equals(BuiltInStyles.GetDisplayName(s.StyleName?.Val?.Value), nameOrId, StringComparison.OrdinalIgnoreCase))
+        return styles.Elements<Style>().FirstOrDefault(s => string.Equals(s.StyleName?.Val?.Value, nameOrId, StringComparison.OrdinalIgnoreCase))
+            ?? styles.Elements<Style>().FirstOrDefault(s => !IsCustom(s) && string.Equals(BuiltInStyles.GetDisplayName(s.StyleName?.Val?.Value), nameOrId, StringComparison.OrdinalIgnoreCase))
             ?? styles.Elements<Style>().FirstOrDefault(s => s.StyleId?.Value == nameOrId);
     }
 
@@ -81,7 +81,7 @@ internal static class StyleHelper
         Style style = BuiltInStyles.GetOrCreate(mainDocumentPart, nameOrId);
         if (style == null)
         {
-            throw new ArgumentException(String.Format(CultureInfo.InvariantCulture, "The document does not have a style named '{0}'.", nameOrId), nameof(nameOrId));
+            throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, "The document does not have a style named '{0}'.", nameOrId), nameof(nameOrId));
         }
 
         type = style.Type != null && style.Type.HasValue ? style.Type.Value : StyleValues.Paragraph;

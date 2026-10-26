@@ -70,7 +70,7 @@ public partial class CommentWrapper : System.IEquatable<CommentWrapper>
         set
         {
             Comment comment = _commentRangeStart.GetComment();
-            string[] lines = (value ?? String.Empty).Replace("\r\n", "\r", StringComparison.Ordinal).Replace('\n', '\r').Split('\r');
+            string[] lines = (value ?? string.Empty).Replace("\r\n", "\r", StringComparison.Ordinal).Replace('\n', '\r').Split('\r');
             //A single trailing paragraph mark ends the last paragraph rather than starting an empty one.
             if (lines.Length > 1 && lines[lines.Length - 1].Length == 0)
             {
