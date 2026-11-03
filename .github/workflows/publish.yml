@@ -32,7 +32,7 @@ jobs:
             echo "Tag $GITHUB_REF_NAME is not of the form vX.Y.Z"
             exit 1
           fi
-          prefix=$(sed -n 's:.*<VersionPrefix>\(.*\)</VersionPrefix>.*:\1:p' Directory.Build.props)
+          prefix=$(sed -n 's:.*<VersionPrefix>\(.*\)</VersionPrefix>.*:\1:p' Directory.Build.props | tr -d '\r')
           if [ "${GITHUB_REF_NAME#v}" != "$prefix" ]; then
             echo "Tag $GITHUB_REF_NAME does not match VersionPrefix $prefix in Directory.Build.props"
             exit 1
