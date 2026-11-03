@@ -1,81 +1,58 @@
-name: Publish to NuGet
+name: Publish
 
-# Manual only: nothing is published by a push. Trusted Publishing: nuget.org trusts this repository, workflow file and environment,
-# and issues a one-hour key per run. There is no stored API key. The policy is created by the owner on nuget.org.
+# Publishes E2e4.OpenXml.Wrappers to nuget.org when a version tag is pushed, e.g. `git tag v1.0.2 && git push origin v1.0.2`.
+# Only push a tag when the owner says so. Uses nuget.org Trusted Publishing: no API key is stored. The policy on nuget.org must name this workflow file (publish.yml).
 on:
+  push:
+    tags: [ 'v*' ]
+  # A manual run (workflow_dispatch) only checks that nuget.org still accepts this repository (Trusted Publishing login); it never packs or pushes.
   workflow_dispatch:
-    inputs:
-      version:
-        description: "Version to publish; must equal the version the build produces (for example 1.0.0-preview.1)"
-        required: true
-        type: string
-      dry_run:
-        description: "Only check that nuget.org accepts the login; nothing is packed or pushed"
-        required: false
-        type: boolean
-        default: false
-
-permissions:
-  contents: read
-  id-token: write
 
 jobs:
   publish:
-    name: Build, test and push
-    runs-on: windows-latest
-    # The environment waits for the owner's approval before the job (and so the nuget.org login) runs.
-    environment: nuget
+    environment: nuget  # waits for the owner's approval before the job (and so the nuget.org login) runs
+    runs-on: windows-latest  # the tests include net48
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write  # lets the job request a GitHub OIDC token for nuget.org
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
         with:
           global-json-file: global.json
           dotnet-version: 8.0.x
-
-      - name: Restore
-        if: ${{ !inputs.dry_run }}
-        run: dotnet restore E2e4.OpenXml.Wrappers.slnx
-
-      - name: Build
-        if: ${{ !inputs.dry_run }}
-        run: dotnet build E2e4.OpenXml.Wrappers.slnx --configuration Release --no-restore
-
-      - name: Test
-        if: ${{ !inputs.dry_run }}
-        run: dotnet test E2e4.OpenXml.Wrappers.slnx --configuration Release --no-build
-
-      - name: Pack
-        if: ${{ !inputs.dry_run }}
-        run: dotnet pack OpenXml.Wrappers/OpenXml.Wrappers.csproj --configuration Release --no-build --output artifacts
-
-      - name: Check the version
-        if: ${{ !inputs.dry_run }}
-        shell: bash
+      - name: Check the tag is the version of the build
+        if: github.event_name == 'push'
         run: |
-          if [ ! -f "artifacts/E2e4.OpenXml.Wrappers.${{ inputs.version }}.nupkg" ]; then
-            echo "The build produced:"; ls artifacts
-            echo "::error::The requested version ${{ inputs.version }} is not the version of the build."
+          if ! [[ "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "Tag $GITHUB_REF_NAME is not of the form vX.Y.Z"
             exit 1
           fi
-
-      - name: Get a short-lived NuGet key
-        id: login
+          prefix=$(sed -n 's:.*<VersionPrefix>\(.*\)</VersionPrefix>.*:\1:p' Directory.Build.props)
+          if [ "${GITHUB_REF_NAME#v}" != "$prefix" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match VersionPrefix $prefix in Directory.Build.props"
+            exit 1
+          fi
+      - name: Test
+        if: github.event_name == 'push'
+        run: dotnet test E2e4.OpenXml.Wrappers.slnx --configuration Release
+      - name: Pack
+        if: github.event_name == 'push'
+        run: dotnet pack OpenXml.Wrappers/OpenXml.Wrappers.csproj --configuration Release -p:Version=${GITHUB_REF_NAME#v} --output artifacts
+      # Request the temporary key last: it is valid for one hour.
+      - name: NuGet login (OIDC to a temporary API key)
         uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1
+        id: login
         with:
           user: ${{ secrets.NUGET_USER }}
-
       - name: Report the login check
-        if: ${{ inputs.dry_run }}
+        if: github.event_name == 'workflow_dispatch'
         run: echo "Trusted Publishing login succeeded for ${GITHUB_REPOSITORY}; nothing was packed or pushed."
-
-      - name: Push
-        if: ${{ !inputs.dry_run }}
-        shell: bash
-        env:
-          NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
-        run: |
-          dotnet nuget push "artifacts/E2e4.OpenXml.Wrappers.${{ inputs.version }}.nupkg" \
-            --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
-          dotnet nuget push "artifacts/E2e4.OpenXml.Wrappers.${{ inputs.version }}.snupkg" \
-            --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+      # Pushing the .nupkg also pushes the .snupkg symbol package beside it.
+      - name: NuGet push
+        if: github.event_name == 'push'
+        run: dotnet nuget push artifacts/*.nupkg --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
