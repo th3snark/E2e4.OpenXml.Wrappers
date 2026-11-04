@@ -1,8 +1,8 @@
 using System;
 using System.IO;
 using System.Linq;
-using DocumentFormat.OpenXml.Validation;
 using DocumentFormat.OpenXml.Wordprocessing;
+using OpenXml.Wrappers.Test.Utils;
 using OpenXml.Wrappers.Word;
 using Xunit;
 
@@ -39,8 +39,7 @@ public class BuiltInStylesTest : IDisposable
         }
 
         _document.Save();
-        OpenXmlValidator validator = new OpenXmlValidator();
-        Assert.Empty(validator.Validate(_document.WordprocessingDocument).Select(e => e.Description));
+        Assert.Empty(DocumentIntegrity.SchemaErrors(_document.WordprocessingDocument));
     }
 
     [Fact]

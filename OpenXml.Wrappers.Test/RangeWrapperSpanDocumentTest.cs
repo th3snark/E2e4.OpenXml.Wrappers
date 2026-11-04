@@ -2,8 +2,8 @@ using System;
 using System.IO;
 using System.Linq;
 using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Validation;
 using DocumentFormat.OpenXml.Wordprocessing;
+using OpenXml.Wrappers.Test.Utils;
 using OpenXml.Wrappers.Word;
 using Xunit;
 
@@ -31,7 +31,7 @@ public class RangeWrapperSpanDocumentTest : IDisposable
 
     private static void AssertValid(WordprocessingDocumentWrapper document)
     {
-        Assert.Empty(new OpenXmlValidator(DocumentFormat.OpenXml.FileFormatVersions.Microsoft365).Validate(document.WordprocessingDocument));
+        Assert.Empty(DocumentIntegrity.SchemaErrors(document.WordprocessingDocument));
     }
     [Fact]
     public void ADocumentRangeIsASpanOfTheMainText()
