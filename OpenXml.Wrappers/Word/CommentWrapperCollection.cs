@@ -105,7 +105,7 @@ public class CommentWrapperCollection : IEnumerable<CommentWrapper>
                     firstParagraph = new Paragraph();
                     container.AppendChild(firstParagraph);
                 }
-                firstParagraph.AppendChild(new Run(new Text(" ") { Space = SpaceProcessingModeValues.Preserve }));
+                firstParagraph.AppendChild(new Run(OpenXmlExtensions.NewText(" ")));
             }
             container.Descendants<Run>().First().InsertBeforeSelf(commentRangeStart);
             container.Descendants<Run>().Last().InsertAfterSelf(commentRangeEnd);
@@ -159,7 +159,7 @@ public class CommentWrapperCollection : IEnumerable<CommentWrapper>
                        new ParagraphProperties(new ParagraphStyleId() { Val = "CommentText" }),
                        new Run(new RunProperties(new RunStyle() { Val = "CommentReference" }),
                                new AnnotationReferenceMark()),
-                       new Run(new Text(text) { Space = SpaceProcessingModeValues.Preserve })))
+                       new Run(OpenXmlExtensions.NewText(text))))
         {
             Id = id.ToString(CultureInfo.InvariantCulture),
             Date = DateTime.UtcNow.Truncate(TimeSpan.TicksPerSecond),

@@ -46,14 +46,45 @@ public partial class RangeWrapper
             return;
         }
 
-        InsertRuns(paragraph => BuildNewRunListFromText(text, paragraph), after);
+        if (text.Contains('\r') && TryInsertParagraphs(text, after))
+        {
+            return;
+        }
+
+        InsertRuns(paragraph => BuildNewRunListFromText(text, paragraph), after, null);
+    }
+
+    //Text with carriage returns, which start new paragraphs, for the ranges that say which paragraph the text goes in. Text in a bookmark or
+    //comment range goes in with its markers.
+    private bool TryInsertParagraphs(string text, bool after)
+    {
+        Paragraph target = null;
+        if (_startOpenXmlElement is Paragraph paragraph)
+        {
+            target = after ? NextParagraphInStory(paragraph) ?? paragraph : paragraph;
+            after = after && target == paragraph;
+        }
+        else if (_startOpenXmlElement is TableCell || _startOpenXmlElement is Header || _startOpenXmlElement is Footer || _startOpenXmlElement is Document || _startOpenXmlElement is Body)
+        {
+            OpenXmlElement container = _startOpenXmlElement is Document ? GetBody() : _startOpenXmlElement;
+            target = (after ? container.ChildElements.LastOrDefault(e => !(e is SectionProperties)) : container.ChildElements.FirstOrDefault(e => !(e is SectionProperties || e is TableCellProperties))) as Paragraph;
+        }
+        if (target == null)
+        {
+            return false;
+        }
+
+        List<Run> formatted = BuildNewRunListFromText("x", target);
+        RunProperties formatting = formatted[0].RunProperties;
+        InsertSpanText(target, after ? StoryMap.Build(target).Length - 1 : 0, text, formatting);
+        return true;
     }
 
     /// <summary>
     /// Inserts the runs made by <paramref name="build"/> at the start or end of the range, by the rules of <see cref="InsertBefore"/> and
-    /// <see cref="InsertAfter"/>.
+    /// <see cref="InsertAfter"/>. In a span of characters they take <paramref name="formatting"/> when it is given.
     /// </summary>
-    private void InsertRuns(Func<Paragraph, List<Run>> build, bool after)
+    private void InsertRuns(Func<Paragraph, List<Run>> build, bool after, RunProperties formatting)
     {
         if (_isSpan)
         {
@@ -61,7 +92,7 @@ public partial class RangeWrapper
             int position = after ? end : start;
             Paragraph paragraph = ParagraphForPosition(map, position, out int local);
             int lengthBefore = StoryMap.Build(paragraph).Length;
-            InsertRunsAt(paragraph, local, build, null);
+            InsertRunsAt(paragraph, local, build, formatting);
 
             //The range grows to include what was added.
             StoryMap changed = StoryMap.Build(paragraph);
@@ -161,6 +192,7 @@ public partial class RangeWrapper
                 paragraph.PrependRun(runs[i]);
             }
         }
+        paragraph.CoalesceRuns();
     }
 
     private void InsertRunsAtMarker(OpenXmlElement marker, Func<Paragraph, List<Run>> build, bool after)

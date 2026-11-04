@@ -25,7 +25,6 @@ namespace OpenXml.Wrappers.Test;
 /// </remarks>
 public class MarkupConformanceTest
 {
-    private const string Step4Reason = "Plan step 4 (run and paragraph content): runs, on/off properties, xml:space and paragraph edits differ from Word's.";
     private const string Step5Reason = "Plan step 5 (tables, sections, comments and package): table, section, header, comment and protection markup differs from Word's.";
 
     private static readonly XNamespace W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
@@ -36,7 +35,6 @@ public class MarkupConformanceTest
     private enum PlanStep
     {
         None = 0,
-        RunsAndParagraphs = 4,
         TablesSectionsCommentsPackage = 5,
     }
 
@@ -44,11 +42,11 @@ public class MarkupConformanceTest
     {
         new Scenario("blank-document", PlanStep.None, d => { }, AllParts()),
 
-        new Scenario("insert-after-tab-and-line-break", PlanStep.RunsAndParagraphs,
+        new Scenario("insert-after-tab-and-line-break", PlanStep.None,
             d => d.Content.InsertAfter("Before\tafter the tab\vafter the break"),
             Body()),
 
-        new Scenario("bold-on", PlanStep.RunsAndParagraphs,
+        new Scenario("bold-on", PlanStep.None,
             d =>
             {
                 d.Content.InsertAfter("Bold text");
@@ -56,7 +54,7 @@ public class MarkupConformanceTest
             },
             Body()),
 
-        new Scenario("bold-on-then-off", PlanStep.RunsAndParagraphs,
+        new Scenario("bold-on-then-off", PlanStep.None,
             d =>
             {
                 d.Content.InsertAfter("Bold text");
@@ -65,7 +63,7 @@ public class MarkupConformanceTest
             },
             Body()),
 
-        new Scenario("font-name", PlanStep.RunsAndParagraphs,
+        new Scenario("font-name", PlanStep.None,
             d =>
             {
                 d.Content.InsertAfter("Arial text");
@@ -104,7 +102,7 @@ public class MarkupConformanceTest
             },
             Body(), Part("comments.xml"), Part("commentsExtended.xml"), Part("commentsIds.xml"), Part("commentsExtensible.xml"), Part("people.xml")),
 
-        new Scenario("bookmark", PlanStep.RunsAndParagraphs,
+        new Scenario("bookmark", PlanStep.None,
             d =>
             {
                 d.Content.InsertAfter("Bookmarked text");
@@ -112,7 +110,7 @@ public class MarkupConformanceTest
             },
             Body()),
 
-        new Scenario("date-field", PlanStep.RunsAndParagraphs, d => d.Fields.Add(d.Range(0, 0), FieldType.Date), Body()),
+        new Scenario("date-field", PlanStep.None, d => d.Fields.Add(d.Range(0, 0), FieldType.Date), Body()),
 
         new Scenario("header-footer-text", PlanStep.TablesSectionsCommentsPackage,
             d =>
@@ -125,7 +123,7 @@ public class MarkupConformanceTest
             HeaderFooter("header", "default"), HeaderFooter("header", "even"), HeaderFooter("header", "first"),
             HeaderFooter("footer", "default"), HeaderFooter("footer", "even"), HeaderFooter("footer", "first")),
 
-        new Scenario("section-add", PlanStep.RunsAndParagraphs,
+        new Scenario("section-add", PlanStep.None,
             d =>
             {
                 d.Content.InsertAfter("First section");
@@ -139,7 +137,7 @@ public class MarkupConformanceTest
             d => d.Protect(ProtectionType.AllowOnlyReading, "password"),
             Elements("settings.xml", "documentProtection")),
 
-        new Scenario("heading-insert-paragraph-after", PlanStep.RunsAndParagraphs,
+        new Scenario("heading-insert-paragraph-after", PlanStep.None,
             d =>
             {
                 d.Content.InsertAfter("Heading");
@@ -150,7 +148,285 @@ public class MarkupConformanceTest
 
         new Scenario("built-in-styles", PlanStep.None, ApplyEveryBuiltInStyle, Part("styles.xml")),
 
-        new Scenario("join-paragraphs", PlanStep.RunsAndParagraphs,
+        new Scenario("font-properties-on", PlanStep.None,
+            d =>
+            {
+                d.Content.InsertAfter(FontWords());
+                for (int i = 0; i < 20; i++)
+                {
+                    SetFontProperty(d.Range(4 * i, (4 * i) + 3).Font, i, true);
+                }
+            },
+            Body()),
+
+        new Scenario("font-properties-on-then-off", PlanStep.None,
+            d =>
+            {
+                d.Content.InsertAfter(FontWords());
+                for (int i = 0; i < 20; i++)
+                {
+                    SetFontProperty(d.Range(4 * i, (4 * i) + 3).Font, i, true);
+                    SetFontProperty(d.Range(4 * i, (4 * i) + 3).Font, i, false);
+                }
+            },
+            Body()),
+
+        new Scenario("bold-off-in-a-bold-style", PlanStep.None,
+            d =>
+            {
+                d.Content.InsertAfter("Strong text");
+                d.Range(0, 6).Style = "Strong";
+                d.Range(0, 6).Font.Bold = false;
+            },
+            Body()),
+
+        new Scenario("runs-merge-when-formatting-matches", PlanStep.None,
+            d =>
+            {
+                d.Content.InsertAfter("One two three");
+                d.Range(0, 3).Font.Bold = true;
+                d.Range(3, 7).Font.Bold = true;
+            },
+            Body()),
+
+        new Scenario("paragraph-properties-on", PlanStep.None,
+            d =>
+            {
+                AddParagraphs(d, 17);
+                for (int i = 0; i < 17; i++)
+                {
+                    SetParagraphProperty(d.Paragraphs[i].Range.ParagraphFormat, i, true);
+                }
+            },
+            Body()),
+
+        new Scenario("paragraph-properties-on-then-off", PlanStep.None,
+            d =>
+            {
+                AddParagraphs(d, 17);
+                for (int i = 0; i < 17; i++)
+                {
+                    SetParagraphProperty(d.Paragraphs[i].Range.ParagraphFormat, i, true);
+                    SetParagraphProperty(d.Paragraphs[i].Range.ParagraphFormat, i, false);
+                }
+            },
+            Body()),
+
+        new Scenario("normal-style-applied", PlanStep.None,
+            d =>
+            {
+                d.Content.InsertAfter("Text");
+                d.Paragraphs[0].Style = "Heading 1";
+                d.Paragraphs[0].Style = "Normal";
+            },
+            Body()),
+
+        new Scenario("insert-paragraph-after-formatted", PlanStep.None,
+            d =>
+            {
+                d.Content.InsertAfter("Text");
+                d.Paragraphs[0].Range.ParagraphFormat.Alignment = ParagraphAlignment.Center;
+                d.Range(0, 4).Font.Bold = true;
+                d.Paragraphs[0].Range.InsertParagraphAfter();
+            },
+            Body()),
+
+        new Scenario("insert-paragraph-before-formatted", PlanStep.None,
+            d =>
+            {
+                d.Content.InsertAfter("Text");
+                d.Paragraphs[0].Range.ParagraphFormat.Alignment = ParagraphAlignment.Center;
+                d.Range(0, 4).Font.Bold = true;
+                d.Paragraphs[0].Range.InsertParagraphBefore();
+            },
+            Body()),
+
+        new Scenario("paragraphs-add", PlanStep.None,
+            d =>
+            {
+                d.Content.InsertAfter("Text");
+                d.Paragraphs[0].Range.ParagraphFormat.Alignment = ParagraphAlignment.Center;
+                d.Paragraphs.Add();
+            },
+            Body()),
+
+        new Scenario("split-a-formatted-paragraph", PlanStep.None,
+            d =>
+            {
+                d.Content.InsertAfter("One two");
+                d.Paragraphs[0].Range.ParagraphFormat.Alignment = ParagraphAlignment.Center;
+                d.Range(3, 3).InsertParagraphAfter();
+            },
+            Body()),
+
+        new Scenario("insert-paragraph-after-middle", PlanStep.None,
+            d =>
+            {
+                d.Content.InsertAfter("One");
+                d.Content.InsertParagraphAfter();
+                d.Content.InsertAfter("Two");
+                d.Paragraphs[0].Range.ParagraphFormat.Alignment = ParagraphAlignment.Center;
+                d.Paragraphs[1].Range.ParagraphFormat.Alignment = ParagraphAlignment.Right;
+                d.Paragraphs[0].Range.InsertParagraphAfter();
+            },
+            Body()),
+
+        new Scenario("heading-with-format-insert-paragraph-after", PlanStep.None,
+            d =>
+            {
+                d.Content.InsertAfter("Heading");
+                d.Paragraphs[0].Style = "Heading 1";
+                d.Paragraphs[0].Range.ParagraphFormat.Alignment = ParagraphAlignment.Center;
+                d.Paragraphs[0].Range.InsertParagraphAfter();
+            },
+            Body()),
+
+        new Scenario("split-a-heading-at-its-end", PlanStep.None,
+            d =>
+            {
+                d.Content.InsertAfter("Heading");
+                d.Paragraphs[0].Style = "Heading 1";
+                d.Range(7, 7).InsertParagraphAfter();
+            },
+            Body()),
+
+        new Scenario("split-a-heading-in-the-middle", PlanStep.None,
+            d =>
+            {
+                d.Content.InsertAfter("Heading");
+                d.Paragraphs[0].Style = "Heading 1";
+                d.Range(3, 3).InsertParagraphAfter();
+            },
+            Body()),
+
+        new Scenario("content-text-with-paragraphs", PlanStep.None, d => d.Content.Text = "One\rTwo", Body()),
+
+        new Scenario("insert-before-with-a-paragraph", PlanStep.None,
+            d =>
+            {
+                d.Content.InsertAfter("Text");
+                d.Range(0, 0).InsertBefore("A\rB");
+            },
+            Body()),
+
+        new Scenario("join-formatted-paragraphs", PlanStep.None,
+            d =>
+            {
+                d.Content.InsertAfter("First");
+                d.Content.InsertParagraphAfter();
+                d.Content.InsertAfter("Second");
+                d.Paragraphs[0].Range.ParagraphFormat.Alignment = ParagraphAlignment.Center;
+                d.Paragraphs[1].Range.ParagraphFormat.Alignment = ParagraphAlignment.Right;
+                TextUnitCollection characters = d.Paragraphs[0].Range.Characters;
+                characters[characters.Count - 1].Delete();
+            },
+            Body()),
+
+        new Scenario("delete-a-section-break", PlanStep.None,
+            d =>
+            {
+                d.Content.InsertAfter("First");
+                d.Sections.Add();
+                d.Content.InsertAfter("Second");
+                d.Sections[0].PageSetup.LeftMargin = 36;
+                TextUnitCollection characters = d.Sections[0].Range.Characters;
+                characters[characters.Count - 1].Delete();
+            },
+            WholeBody()),
+
+        new Scenario("breaks", PlanStep.None,
+            d =>
+            {
+                d.Content.InsertAfter("Line Page Column");
+                d.Range(11, 11).InsertBreak(BreakType.ColumnBreak);
+                d.Range(5, 5).InsertBreak(BreakType.PageBreak);
+                d.Range(0, 0).InsertBreak(BreakType.LineBreak);
+            },
+            Body()),
+
+        new Scenario("page-break-at-paragraph-start", PlanStep.None,
+            d =>
+            {
+                d.Content.InsertAfter("Text");
+                d.Range(0, 0).InsertBreak(BreakType.PageBreak);
+            },
+            Body()),
+
+        new Scenario("page-break-at-paragraph-end", PlanStep.None,
+            d =>
+            {
+                d.Content.InsertAfter("Text");
+                d.Range(4, 4).InsertBreak(BreakType.PageBreak);
+            },
+            Body()),
+
+        new Scenario("column-break-at-paragraph-start", PlanStep.None,
+            d =>
+            {
+                d.Content.InsertAfter("Text");
+                d.Range(0, 0).InsertBreak(BreakType.ColumnBreak);
+            },
+            Body()),
+
+        new Scenario("column-break-at-paragraph-end", PlanStep.None,
+            d =>
+            {
+                d.Content.InsertAfter("Text");
+                d.Range(4, 4).InsertBreak(BreakType.ColumnBreak);
+            },
+            Body()),
+
+        new Scenario("line-break-at-paragraph-end", PlanStep.None,
+            d =>
+            {
+                d.Content.InsertAfter("Text");
+                d.Range(4, 4).InsertBreak(BreakType.LineBreak);
+            },
+            Body()),
+
+        new Scenario("delete-text-within-a-run", PlanStep.None,
+            d =>
+            {
+                d.Content.InsertAfter("One two three");
+                d.Range(3, 7).Delete();
+            },
+            Body()),
+
+        new Scenario("replace-text-within-a-run", PlanStep.None,
+            d =>
+            {
+                d.Content.InsertAfter("One two three");
+                d.Range(4, 7).Text = "2";
+            },
+            Body()),
+
+        //The results of these need page layout: Word has worked them out and the library leaves them for Word, so only their code is compared.
+        new Scenario("field-from-code", PlanStep.None, d => d.Fields.Add(d.Range(0, 0), FieldType.Empty, "PAGE", false), Elements("document.xml", "instrText", "fldSimple")),
+
+        new Scenario("field-page-with-merge-format", PlanStep.None, d => d.Fields.Add(d.Range(0, 0), FieldType.Page), Elements("document.xml", "instrText", "fldSimple")),
+
+        new Scenario("field-date-without-merge-format", PlanStep.None, d => d.Fields.Add(d.Range(0, 0), FieldType.Date, string.Empty, false), Body()),
+
+        new Scenario("field-date-from-code", PlanStep.None, d => d.Fields.Add(d.Range(0, 0), FieldType.Empty, "DATE", false), Body()),
+
+        new Scenario("field-within-text", PlanStep.None,
+            d =>
+            {
+                d.Content.InsertAfter("Before after");
+                d.Fields.Add(d.Range(7, 7), FieldType.Date);
+            },
+            Body()),
+
+        new Scenario("field-within-bold-text", PlanStep.None,
+            d =>
+            {
+                d.Content.InsertAfter("Before after");
+                d.Range(0, 12).Font.Bold = true;
+                d.Fields.Add(d.Range(7, 7), FieldType.Date);
+            },
+            Body()),
+
+        new Scenario("join-paragraphs", PlanStep.None,
             d =>
             {
                 d.Content.InsertAfter("First paragraph");
@@ -161,6 +437,72 @@ public class MarkupConformanceTest
             },
             Body()),
     };
+
+    //Twenty three-letter words, one for each property below, as in scenarios.ps1: word i is at positions 4i to 4i + 3.
+    private static string FontWords()
+    {
+        return string.Join(" ", Enumerable.Range(1, 20).Select(i => "w" + i.ToString("00", CultureInfo.InvariantCulture)));
+    }
+
+    private static void SetFontProperty(FontWrapper font, int index, bool on)
+    {
+        switch (index)
+        {
+            case 0: font.Italic = on; break;
+            case 1: font.StrikeThrough = on; break;
+            case 2: font.DoubleStrikeThrough = on; break;
+            case 3: font.AllCaps = on; break;
+            case 4: font.SmallCaps = on; break;
+            case 5: font.Hidden = on; break;
+            case 6: font.Emboss = on; break;
+            case 7: font.Engrave = on; break;
+            case 8: font.Outline = on; break;
+            case 9: font.Shadow = on; break;
+            case 10: font.Superscript = on; break;
+            case 11: font.Subscript = on; break;
+            case 12: font.Underline = on ? UnderlineStyle.SingleLine : UnderlineStyle.None; break;
+            case 13: font.Size = on ? 14 : 12; break;
+            case 14: font.Color = on ? WordColor.FromRgb(255, 0, 0) : WordColor.Automatic; break;
+            case 15: font.Spacing = on ? 1.5 : 0; break;
+            case 16: font.Scaling = on ? 150 : 100; break;
+            case 17: font.Position = on ? 3 : 0; break;
+            case 18: font.Kerning = on ? 14 : 1; break;
+            default: font.Bold = on; break;
+        }
+    }
+
+    private static void AddParagraphs(WordprocessingDocumentWrapper document, int count)
+    {
+        for (int i = 0; i < count; i++)
+        {
+            document.Content.InsertAfter("p");
+            document.Content.InsertParagraphAfter();
+        }
+    }
+
+    private static void SetParagraphProperty(ParagraphFormatWrapper format, int index, bool on)
+    {
+        switch (index)
+        {
+            case 0: format.Alignment = on ? ParagraphAlignment.Center : ParagraphAlignment.Left; break;
+            case 1: format.Alignment = on ? ParagraphAlignment.Right : ParagraphAlignment.Left; break;
+            case 2: format.Alignment = on ? ParagraphAlignment.Justify : ParagraphAlignment.Left; break;
+            case 3: format.LeftIndent = on ? 18 : 0; break;
+            case 4: format.RightIndent = on ? 18 : 0; break;
+            case 5: format.FirstLineIndent = on ? 18 : 0; break;
+            case 6: format.FirstLineIndent = on ? -18 : 0; break;
+            case 7: format.SpaceBefore = on ? 6 : 0; break;
+            case 8: format.SpaceAfter = on ? 6 : 8; break;
+            case 9: format.LineSpacingRule = on ? LineSpacingRule.OnePointFive : LineSpacingRule.SingleSpacing; break;
+            case 10: format.KeepWithNext = on; break;
+            case 11: format.KeepTogether = on; break;
+            case 12: format.PageBreakBefore = on; break;
+            case 13: format.WidowControl = !on; break;
+            case 14: format.OutlineLevel = on ? ParagraphOutlineLevel.Level1 : ParagraphOutlineLevel.BodyText; break;
+            case 15: format.NoLineNumber = on; break;
+            default: format.Hyphenation = !on; break;
+        }
+    }
 
     //The styles of the built-in-styles scenario in scenarios.ps1, in the same order: every BuiltInStyle a new document does not have, then the
     //built-in styles that have no BuiltInStyle value, by name.
@@ -195,8 +537,6 @@ public class MarkupConformanceTest
     }
 
     public static TheoryData<string> Matching => ScenariosWaitingFor(PlanStep.None);
-
-    public static TheoryData<string> WaitingForStep4 => ScenariosWaitingFor(PlanStep.RunsAndParagraphs);
 
     public static TheoryData<string> WaitingForStep5 => ScenariosWaitingFor(PlanStep.TablesSectionsCommentsPackage);
 
@@ -237,7 +577,6 @@ public class MarkupConformanceTest
 
     [Theory]
     [MemberData(nameof(Matching))]
-    [MemberData(nameof(WaitingForStep4), Skip = Step4Reason)]
     [MemberData(nameof(WaitingForStep5), Skip = Step5Reason)]
     public void LibraryWritesWhatWordWrites(string name)
     {
@@ -314,6 +653,12 @@ public class MarkupConformanceTest
     private static Comparison Body()
     {
         return new Comparison("document.xml body", parts => "document.xml", root => root.Element(W + "body").Elements().Where(e => e.Name != W + "sectPr"));
+    }
+
+    //The content of the body and the section properties of the last section.
+    private static Comparison WholeBody()
+    {
+        return new Comparison("document.xml body", parts => "document.xml", root => root.Element(W + "body").Elements());
     }
 
     private static Comparison Elements(string part, params string[] localNames)

@@ -158,7 +158,9 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
             else if (_startOpenXmlElement is Paragraph)
             {
                 //The paragraph mark stays, so the one that the text of a paragraph ends with is not part of the new text.
-                SetParagraphRunText((Paragraph)_startOpenXmlElement, text.EndsWith('\r') || text.EndsWith('\a') ? text.Substring(0, text.Length - 1) : text);
+                Paragraph target = (Paragraph)_startOpenXmlElement;
+                bool endsWithMark = text.EndsWith('\r') || text.EndsWith('\a') || (text.EndsWith('\f') && target.ParagraphProperties?.GetFirstChild<SectionProperties>() != null);
+                SetParagraphRunText(target, endsWithMark ? text.Substring(0, text.Length - 1) : text);
             }
             else if (_startOpenXmlElement is BookmarkStart)
             {
@@ -188,7 +190,9 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
                 if (oldRunList.Count > 0)
                 {
                     DeleteAllRunsInList(oldRunList);
+                    RemoveEmptyInlineContainers(paragraph);
                 }
+                paragraph.CoalesceRuns();
             }
             else if (_startOpenXmlElement is Document || _startOpenXmlElement is Body)
             {
@@ -221,11 +225,56 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
     private void SetParagraphRunText(Paragraph paragraph, string value)
     {
         List<Run> oldRunList = paragraph.GetElements<Run>().ToList();
-        List<Run> newRunList = BuildNewRunListFromText(value, paragraph);
-        DeleteAllRunsInList(oldRunList);
+
+        //A carriage return starts a new paragraph, which needs more than a list of runs.
+        string[] lines = value.Replace("\r\n", "\r", StringComparison.Ordinal).Split('\r');
+        List<Run> newRunList = BuildNewRunListFromText(lines[0], paragraph);
+
+        //The new text goes where the old text started, so that it stays inside a bookmark round the paragraph, which an element that holds
+        //runs and has lost them does not outlive.
+        OpenXmlElement first = oldRunList.FirstOrDefault();
+        while (first != null && first.Parent != paragraph)
+        {
+            first = first.Parent;
+        }
         foreach (Run run in newRunList)
         {
-            paragraph.AppendChild(run);
+            if (first != null)
+            {
+                first.InsertBeforeSelf(run);
+            }
+            else
+            {
+                paragraph.AppendChild(run);
+            }
+        }
+        DeleteAllRunsInList(oldRunList);
+        RemoveEmptyInlineContainers(paragraph);
+        paragraph.CoalesceRuns();
+
+        if (lines.Length > 1)
+        {
+            InsertLinesAfter(paragraph, lines);
+        }
+    }
+
+    //Adds the text of the lines after the first as paragraphs after the paragraph.
+    private void InsertLinesAfter(Paragraph paragraph, string[] lines)
+    {
+        string rest = string.Join("\r", lines.Skip(1));
+        RunProperties formatting = paragraph.Elements<Run>().LastOrDefault()?.RunProperties;
+        InsertSpanText(paragraph, StoryMap.Build(paragraph).Length - 1, "\r" + rest, formatting);
+    }
+
+    //Removes the elements directly in the paragraph that hold runs and no longer have any.
+    private static void RemoveEmptyInlineContainers(Paragraph paragraph)
+    {
+        foreach (OpenXmlElement child in paragraph.ChildElements.Where(e => e is Hyperlink || e is SimpleField || e is SdtRun).ToList())
+        {
+            if (!child.Descendants<Run>().Any())
+            {
+                child.Remove();
+            }
         }
     }
 
@@ -254,7 +303,7 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
                     run = new Run(new TabChar());
                     if (sb.Length > 0)
                     {
-                        run.AppendChild<Text>(new Text(sb.ToString()) { Space = SpaceProcessingModeValues.Preserve });
+                        run.AppendChild<Text>(OpenXmlExtensions.NewText(sb.ToString()));
                     }
                     PrependRunProperties(run, paragraphMarkRunProperties);
                     runList.Insert(0, run);
@@ -265,7 +314,7 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
                     run = new Run(new Break() { Type = BreakValues.Page });
                     if (sb.Length > 0)
                     {
-                        run.AppendChild<Text>(new Text(sb.ToString()) { Space = SpaceProcessingModeValues.Preserve });
+                        run.AppendChild<Text>(OpenXmlExtensions.NewText(sb.ToString()));
                     }
                     PrependRunProperties(run, paragraphMarkRunProperties);
                     runList.Insert(0, run);
@@ -276,7 +325,7 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
                     run = new Run(new Break() { Type = BreakValues.Column });
                     if (sb.Length > 0)
                     {
-                        run.AppendChild<Text>(new Text(sb.ToString()) { Space = SpaceProcessingModeValues.Preserve });
+                        run.AppendChild<Text>(OpenXmlExtensions.NewText(sb.ToString()));
                     }
                     PrependRunProperties(run, paragraphMarkRunProperties);
                     runList.Insert(0, run);
@@ -288,7 +337,7 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
                     run = new Run(new Break());
                     if (sb.Length > 0)
                     {
-                        run.AppendChild<Text>(new Text(sb.ToString()) { Space = SpaceProcessingModeValues.Preserve });
+                        run.AppendChild<Text>(OpenXmlExtensions.NewText(sb.ToString()));
                     }
                     PrependRunProperties(run, paragraphMarkRunProperties);
                     runList.Insert(0, run);
@@ -302,7 +351,7 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
         }
         if (sb.Length > 0)
         {
-            run = new Run(new Text(sb.ToString()) { Space = SpaceProcessingModeValues.Preserve });
+            run = new Run(OpenXmlExtensions.NewText(sb.ToString()));
             PrependRunProperties(run, paragraphMarkRunProperties);
 
             runList.Insert(0, run);
@@ -412,8 +461,9 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
             AppendRunText(sb, run, false);
         }
 
-        //Every paragraph, including an empty one, ends with an end of paragraph marker.
-        sb.Append('\r');
+        //Every paragraph, including an empty one, ends with an end of paragraph marker; the one that ends a section reads as a page break.
+        bool endsCell = paragraph.Parent is TableCell && paragraph.Parent.LastChild.Equals(paragraph);
+        sb.Append(!endsCell && paragraph.ParagraphProperties?.GetFirstChild<SectionProperties>() != null ? '\f' : '\r');
 
         //If the paragraph is the last one in a table cell then add the end of cell marker.
         if (paragraph.Parent is TableCell && paragraph.Parent.LastChild.Equals(paragraph))

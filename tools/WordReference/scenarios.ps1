@@ -6,6 +6,63 @@ The name is the folder the snapshot goes to under OpenXml.Wrappers.Test/TestFile
 the same name that does the same thing through the library. Word's indexes are 1-based; the library's are 0-based. Keep the two in step.
 #>
 
+# Twenty three-letter words, one for each font property below: word i is at positions 4i to 4i + 3.
+$script:FontWords = (1..20 | ForEach-Object { 'w{0:00}' -f $_ }) -join ' '
+
+function Set-FontProperty($font, [int] $index, [bool] $on) {
+    switch ($index) {
+        0 { $font.Italic = $on }
+        1 { $font.StrikeThrough = $on }
+        2 { $font.DoubleStrikeThrough = $on }
+        3 { $font.AllCaps = $on }
+        4 { $font.SmallCaps = $on }
+        5 { $font.Hidden = $on }
+        6 { $font.Emboss = $on }
+        7 { $font.Engrave = $on }
+        8 { $font.Outline = $on }
+        9 { $font.Shadow = $on }
+        10 { $font.Superscript = $on }
+        11 { $font.Subscript = $on }
+        12 { $font.Underline = $(if ($on) { 1 } else { 0 }) }  # wdUnderlineSingle, wdUnderlineNone
+        13 { $font.Size = $(if ($on) { 14 } else { 12 }) }
+        14 { $font.Color = $(if ($on) { 255 } else { -16777216 }) }  # wdColorRed, wdColorAutomatic
+        15 { $font.Spacing = $(if ($on) { 1.5 } else { 0.0 }) }
+        16 { $font.Scaling = $(if ($on) { 150 } else { 100 }) }
+        17 { $font.Position = $(if ($on) { 3 } else { 0 }) }
+        18 { $font.Kerning = $(if ($on) { 14 } else { 1 }) }
+        19 { $font.Bold = $on }
+    }
+}
+
+function Add-Paragraphs($doc, [int] $count) {
+    for ($i = 0; $i -lt $count; $i++) {
+        $doc.Content.InsertAfter('p')
+        $doc.Content.InsertParagraphAfter()
+    }
+}
+
+function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
+    switch ($index) {
+        0 { $format.Alignment = $(if ($on) { 1 } else { 0 }) }
+        1 { $format.Alignment = $(if ($on) { 2 } else { 0 }) }
+        2 { $format.Alignment = $(if ($on) { 3 } else { 0 }) }
+        3 { $format.LeftIndent = $(if ($on) { 18 } else { 0 }) }
+        4 { $format.RightIndent = $(if ($on) { 18 } else { 0 }) }
+        5 { $format.FirstLineIndent = $(if ($on) { 18 } else { 0 }) }
+        6 { $format.FirstLineIndent = $(if ($on) { -18 } else { 0 }) }
+        7 { $format.SpaceBefore = $(if ($on) { 6 } else { 0 }) }
+        8 { $format.SpaceAfter = $(if ($on) { 6 } else { 8 }) }
+        9 { $format.LineSpacingRule = $(if ($on) { 1 } else { 0 }) }  # wdLineSpace1pt5, wdLineSpaceSingle
+        10 { $format.KeepWithNext = $on }
+        11 { $format.KeepTogether = $on }
+        12 { $format.PageBreakBefore = $on }
+        13 { $format.WidowControl = -not $on }
+        14 { $format.OutlineLevel = $(if ($on) { 1 } else { 10 }) }  # wdOutlineLevel1, wdOutlineLevelBodyText
+        15 { $format.NoLineNumber = $on }
+        16 { $format.Hyphenation = -not $on }
+    }
+}
+
 [ordered]@{
     'blank-document'                  = { param($doc) }
 
@@ -121,6 +178,236 @@ the same name that does the same thing through the library. Word's indexes are 1
         }
         $table = $doc.Tables.Add($doc.Paragraphs.Item($doc.Paragraphs.Count).Range, 1, 1)
         $table.Style = 'Table Grid'
+    }
+
+    'font-properties-on'              = {
+        param($doc)
+        $doc.Content.InsertAfter($script:FontWords)
+        for ($i = 0; $i -lt 20; $i++) {
+            Set-FontProperty $doc.Range(4 * $i, 4 * $i + 3).Font $i $true
+        }
+    }
+
+    'font-properties-on-then-off'     = {
+        param($doc)
+        $doc.Content.InsertAfter($script:FontWords)
+        for ($i = 0; $i -lt 20; $i++) {
+            Set-FontProperty $doc.Range(4 * $i, 4 * $i + 3).Font $i $true
+            Set-FontProperty $doc.Range(4 * $i, 4 * $i + 3).Font $i $false
+        }
+    }
+
+    'bold-off-in-a-bold-style'        = {
+        param($doc)
+        $doc.Content.InsertAfter('Strong text')
+        $doc.Range(0, 6).Style = -88  # wdStyleStrong
+        $doc.Range(0, 6).Font.Bold = $false
+    }
+
+    'runs-merge-when-formatting-matches' = {
+        param($doc)
+        $doc.Content.InsertAfter('One two three')
+        $doc.Range(0, 3).Font.Bold = $true
+        $doc.Range(3, 7).Font.Bold = $true
+    }
+
+    'paragraph-properties-on'         = {
+        param($doc)
+        Add-Paragraphs $doc 17
+        for ($i = 0; $i -lt 17; $i++) {
+            Set-ParagraphProperty $doc.Paragraphs.Item($i + 1).Range.ParagraphFormat $i $true
+        }
+    }
+
+    'paragraph-properties-on-then-off' = {
+        param($doc)
+        Add-Paragraphs $doc 17
+        for ($i = 0; $i -lt 17; $i++) {
+            Set-ParagraphProperty $doc.Paragraphs.Item($i + 1).Range.ParagraphFormat $i $true
+            Set-ParagraphProperty $doc.Paragraphs.Item($i + 1).Range.ParagraphFormat $i $false
+        }
+    }
+
+    'normal-style-applied'            = {
+        param($doc)
+        $doc.Content.InsertAfter('Text')
+        $doc.Paragraphs.Item(1).Style = -2  # wdStyleHeading1
+        $doc.Paragraphs.Item(1).Style = -1  # wdStyleNormal
+    }
+
+    'insert-paragraph-after-formatted' = {
+        param($doc)
+        $doc.Content.InsertAfter('Text')
+        $doc.Paragraphs.Item(1).Range.ParagraphFormat.Alignment = 1
+        $doc.Range(0, 4).Font.Bold = $true
+        $doc.Paragraphs.Item(1).Range.InsertParagraphAfter()
+    }
+
+    'insert-paragraph-before-formatted' = {
+        param($doc)
+        $doc.Content.InsertAfter('Text')
+        $doc.Paragraphs.Item(1).Range.ParagraphFormat.Alignment = 1
+        $doc.Range(0, 4).Font.Bold = $true
+        $doc.Paragraphs.Item(1).Range.InsertParagraphBefore()
+    }
+
+    'paragraphs-add'                  = {
+        param($doc)
+        $doc.Content.InsertAfter('Text')
+        $doc.Paragraphs.Item(1).Range.ParagraphFormat.Alignment = 1
+        [void]$doc.Paragraphs.Add()
+    }
+
+    'split-a-formatted-paragraph'     = {
+        param($doc)
+        $doc.Content.InsertAfter('One two')
+        $doc.Paragraphs.Item(1).Range.ParagraphFormat.Alignment = 1
+        $doc.Range(3, 3).InsertParagraphAfter()
+    }
+
+    'content-text-with-paragraphs'    = {
+        param($doc)
+        $doc.Content.Text = "One`rTwo"
+    }
+
+    'insert-before-with-a-paragraph'  = {
+        param($doc)
+        $doc.Content.InsertAfter('Text')
+        $doc.Range(0, 0).InsertBefore("A`rB")
+    }
+
+    'join-formatted-paragraphs'       = {
+        param($doc)
+        $doc.Content.InsertAfter('First')
+        $doc.Content.InsertParagraphAfter()
+        $doc.Content.InsertAfter('Second')
+        $doc.Paragraphs.Item(1).Range.ParagraphFormat.Alignment = 1
+        $doc.Paragraphs.Item(2).Range.ParagraphFormat.Alignment = 2
+        [void]$doc.Paragraphs.Item(1).Range.Characters.Last.Delete()
+    }
+
+    'delete-a-section-break'          = {
+        param($doc)
+        $doc.Content.InsertAfter('First')
+        [void]$doc.Sections.Add()
+        $doc.Content.InsertAfter('Second')
+        $doc.Sections.Item(1).PageSetup.LeftMargin = 36
+        [void]$doc.Sections.Item(1).Range.Characters.Last.Delete()
+    }
+
+    'breaks'                          = {
+        param($doc)
+        $doc.Content.InsertAfter('Line Page Column')
+        $doc.Range(11, 11).InsertBreak(8)  # wdColumnBreak
+        $doc.Range(5, 5).InsertBreak(7)  # wdPageBreak
+        $doc.Range(0, 0).InsertBreak(6)  # wdLineBreak
+    }
+
+    'delete-text-within-a-run'        = {
+        param($doc)
+        $doc.Content.InsertAfter('One two three')
+        [void]$doc.Range(3, 7).Delete()
+    }
+
+    'replace-text-within-a-run'       = {
+        param($doc)
+        $doc.Content.InsertAfter('One two three')
+        $doc.Range(4, 7).Text = '2'
+    }
+
+    'field-from-code'                 = {
+        param($doc)
+        [void]$doc.Fields.Add($doc.Range(0, 0), -1, 'PAGE', $false)  # wdFieldEmpty
+    }
+
+    'field-within-text'               = {
+        param($doc)
+        $doc.Content.InsertAfter('Before after')
+        [void]$doc.Fields.Add($doc.Range(7, 7), 31)  # wdFieldDate
+    }
+
+    'field-within-bold-text'          = {
+        param($doc)
+        $doc.Content.InsertAfter('Before after')
+        $doc.Range(0, 12).Font.Bold = $true
+        [void]$doc.Fields.Add($doc.Range(7, 7), 31)  # wdFieldDate
+    }
+
+    'insert-paragraph-after-middle'   = {
+        param($doc)
+        $doc.Content.InsertAfter('One')
+        $doc.Content.InsertParagraphAfter()
+        $doc.Content.InsertAfter('Two')
+        $doc.Paragraphs.Item(1).Range.ParagraphFormat.Alignment = 1
+        $doc.Paragraphs.Item(2).Range.ParagraphFormat.Alignment = 2
+        $doc.Paragraphs.Item(1).Range.InsertParagraphAfter()
+    }
+
+    'heading-with-format-insert-paragraph-after' = {
+        param($doc)
+        $doc.Content.InsertAfter('Heading')
+        $doc.Paragraphs.Item(1).Style = -2  # wdStyleHeading1
+        $doc.Paragraphs.Item(1).Range.ParagraphFormat.Alignment = 1
+        $doc.Paragraphs.Item(1).Range.InsertParagraphAfter()
+    }
+
+    'split-a-heading-at-its-end'      = {
+        param($doc)
+        $doc.Content.InsertAfter('Heading')
+        $doc.Paragraphs.Item(1).Style = -2  # wdStyleHeading1
+        $doc.Range(7, 7).InsertParagraphAfter()
+    }
+
+    'split-a-heading-in-the-middle'   = {
+        param($doc)
+        $doc.Content.InsertAfter('Heading')
+        $doc.Paragraphs.Item(1).Style = -2  # wdStyleHeading1
+        $doc.Range(3, 3).InsertParagraphAfter()
+    }
+
+    'page-break-at-paragraph-start'   = {
+        param($doc)
+        $doc.Content.InsertAfter('Text')
+        $doc.Range(0, 0).InsertBreak(7)  # wdPageBreak
+    }
+
+    'page-break-at-paragraph-end'     = {
+        param($doc)
+        $doc.Content.InsertAfter('Text')
+        $doc.Range(4, 4).InsertBreak(7)  # wdPageBreak
+    }
+
+    'column-break-at-paragraph-start' = {
+        param($doc)
+        $doc.Content.InsertAfter('Text')
+        $doc.Range(0, 0).InsertBreak(8)  # wdColumnBreak
+    }
+
+    'column-break-at-paragraph-end'   = {
+        param($doc)
+        $doc.Content.InsertAfter('Text')
+        $doc.Range(4, 4).InsertBreak(8)  # wdColumnBreak
+    }
+
+    'line-break-at-paragraph-end'     = {
+        param($doc)
+        $doc.Content.InsertAfter('Text')
+        $doc.Range(4, 4).InsertBreak(6)  # wdLineBreak
+    }
+
+    'field-date-without-merge-format' = {
+        param($doc)
+        [void]$doc.Fields.Add($doc.Range(0, 0), 31, '', $false)  # wdFieldDate
+    }
+
+    'field-page-with-merge-format'    = {
+        param($doc)
+        [void]$doc.Fields.Add($doc.Range(0, 0), 33)  # wdFieldPage
+    }
+
+    'field-date-from-code'            = {
+        param($doc)
+        [void]$doc.Fields.Add($doc.Range(0, 0), -1, 'DATE', $false)  # wdFieldEmpty
     }
 
     'join-paragraphs'                 = {

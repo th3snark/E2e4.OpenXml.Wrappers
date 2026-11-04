@@ -26,6 +26,9 @@ theme (`Document Themes 16\Office Theme.thmx`, Aptos) applied first, as a new do
 `Normal.dotm` is copied to `%TEMP%\WordReference-<time>\` first and compared afterwards (restored and reported if it changed), and the
 Office user name in the registry is checked too.
 
+The normaliser puts adjacent runs of the same formatting together, on both sides, because Word keeps runs apart that differ only in their revision
+ids; `RunMarkupTest` checks directly that the library merges them.
+
 Each scenario's document is saved as .docx; every XML part of it is normalised and written to `<scenario>/<part>`, and the Word build goes in
 `TestFiles/WordReference/README.md`. The parts of `blank-document` and the styles of `built-in-styles` also go to
 `OpenXml.Wrappers/Word/Templates`, without revision and document ids, statistics or the application's name: these are what the library's

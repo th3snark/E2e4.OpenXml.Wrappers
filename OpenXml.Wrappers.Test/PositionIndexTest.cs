@@ -40,7 +40,7 @@ public class PositionIndexTest
     [Fact]
     public void AnIndexIsASnapshotThatCanBeRefreshed()
     {
-        Body body = new Body(Paragraph("one two"));
+        Body body = new Body(Paragraph("one"), Paragraph("two"));
         RangeWrapper two = new RangeWrapper(body);
         two.SetRange(4, 7);
         PositionIndex index = two.CreatePositionIndex();

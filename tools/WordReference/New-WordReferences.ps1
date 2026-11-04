@@ -34,7 +34,8 @@ $repositoryRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $outputRoot = Join-Path $repositoryRoot 'OpenXml.Wrappers.Test\TestFiles\WordReference'
 $tool = Join-Path $PSScriptRoot 'Tool\WordReference.Tool.csproj'
 
-$scenarios = & (Join-Path $PSScriptRoot 'scenarios.ps1')
+# Dot-sourced: the scenarios use the helper functions that the file defines.
+$scenarios = . (Join-Path $PSScriptRoot 'scenarios.ps1')
 $names = @(if ($Scenario) { $Scenario } else { $scenarios.Keys })
 foreach ($name in $names) {
     if (-not $scenarios.Contains($name)) {

@@ -37,8 +37,9 @@ public class FieldUpdateTest : IDisposable
     //The flag that tells Word to update the field when the document is opened.
     private static bool IsDirty(FieldWrapper field)
     {
-        FieldChar begin = field.Range.StartElement.Descendants<FieldChar>().First();
-        return begin.Dirty != null && begin.Dirty.HasValue && begin.Dirty.Value;
+        //A field that was worked out when it was added is one element, without field characters.
+        FieldChar begin = field.Range.StartElement.Descendants<FieldChar>().FirstOrDefault();
+        return begin != null && begin.Dirty != null && begin.Dirty.HasValue && begin.Dirty.Value;
     }
 
     private void AssertValid()
@@ -311,7 +312,7 @@ public class FieldUpdateTest : IDisposable
         FieldWrapper preserved = _document.Fields.Add(_document.Paragraphs.Last.Range, FieldType.Title);
         FieldWrapper plain = _document.Fields.Add(_document.Paragraphs.Last.Range, FieldType.Subject, null, false);
 
-        Assert.Equal("TITLE \\* MERGEFORMAT", preserved.Code.Text);
+        Assert.Equal("TITLE  \\* MERGEFORMAT", preserved.Code.Text);
         Assert.Equal("SUBJECT", plain.Code.Text);
     }
 }

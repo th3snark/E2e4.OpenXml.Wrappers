@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using System.Linq;
 
+using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
@@ -31,7 +32,11 @@ public partial class RangeWrapper
             : null;
         if (breakText != null)
         {
-            if (_isSpan)
+            if (_isSpan && (type == BreakType.PageBreak || type == BreakType.ColumnBreak))
+            {
+                InsertBlockBreakInSpan(type == BreakType.PageBreak ? BreakValues.Page : BreakValues.Column);
+            }
+            else if (_isSpan)
             {
                 Text = breakText;
             }
@@ -50,6 +55,57 @@ public partial class RangeWrapper
         //For a span the new paragraph is the second half of the split one; the first half ends the section.
         Paragraph ending = _isSpan && inserted.Paragraph.PreviousSibling<Paragraph>() != null ? inserted.Paragraph.PreviousSibling<Paragraph>() : inserted.Paragraph;
         new ParagraphWrapper(ending).EndSection(sectionType);
+    }
+
+    //As Word does it: a page break has a paragraph of its own, with the text after it in a new paragraph, and a column break starts a paragraph,
+    //unless it is at the start of one already.
+    private void InsertBlockBreakInSpan(BreakValues kind)
+    {
+        GetScoped(false, out StoryMap map, out int start, out int end);
+        RunProperties formatting = FindFormatting(map, start, start);
+        if (end > start)
+        {
+            Delete();
+            GetScoped(false, out map, out start, out end);
+        }
+
+        Paragraph holder = ParagraphForPosition(map, start, out int local);
+        Paragraph rest = local == 0 ? holder : SplitParagraphAt(holder, local);
+        Break breakElement = new Break() { Type = kind };
+
+        if (kind == BreakValues.Column)
+        {
+            //Straight in front of the text when the break starts a paragraph that was there; a paragraph split off has it in a run of its own.
+            Run first = rest.Elements<Run>().FirstOrDefault();
+            if (local == 0 && first != null && !(first.ChildElements.FirstOrDefault(e => !(e is RunProperties)) is Break))
+            {
+                first.InsertAfter(breakElement, first.RunProperties);
+            }
+            else
+            {
+                rest.PrependRun(WithFormatting(new Run(breakElement), formatting));
+            }
+            MakeSpanAnchors(_endAnchor, _endAnchor);
+            return;
+        }
+
+        Paragraph page = new Paragraph(WithFormatting(new Run(breakElement), formatting));
+        ParagraphProperties properties = CopyPropertiesWithoutMark(rest);
+        if (properties != null)
+        {
+            page.PrependChild(properties);
+        }
+        rest.InsertBeforeSelf(page);
+        MakeSpanAnchors(_endAnchor, _endAnchor);
+    }
+
+    private static Run WithFormatting(Run run, RunProperties formatting)
+    {
+        if (formatting != null && formatting.HasChildren)
+        {
+            run.PrependChild((RunProperties)formatting.CloneNode(true));
+        }
+        return run;
     }
 
     /// <summary>

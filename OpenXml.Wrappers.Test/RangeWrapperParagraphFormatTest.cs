@@ -280,12 +280,17 @@ public class RangeWrapperParagraphFormatTest
         Assert.True(format.PageBreakBefore);
         Assert.True(format.WidowControl);
 
+        //Off is nothing at all unless a style turns it on.
         format.KeepWithNext = false;
         Assert.False(format.KeepWithNext);
-        Assert.False(paragraph.ParagraphProperties.KeepNext.Val.Value);
-
-        format.KeepWithNext = null;
         Assert.Null(paragraph.ParagraphProperties.KeepNext);
+
+        format.WidowControl = false;
+        Assert.False(format.WidowControl);
+        Assert.NotNull(paragraph.ParagraphProperties.WidowControl);
+
+        format.WidowControl = null;
+        Assert.Null(paragraph.ParagraphProperties.WidowControl);
     }
 
     [Fact]
@@ -296,7 +301,7 @@ public class RangeWrapperParagraphFormatTest
         format.Alignment = ParagraphAlignment.Center;
         format.SpaceAfter = 6;
         format.LeftIndent = 10;
-        format.WidowControl = true;
+        format.WidowControl = false;
         format.KeepWithNext = true;
 
         Assert.Equal(new[] { "pStyle", "keepNext", "widowControl", "spacing", "ind", "jc", "rPr" }, ChildNames(paragraph.ParagraphProperties));

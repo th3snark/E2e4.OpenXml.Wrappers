@@ -243,7 +243,7 @@ public partial class FieldWrapper : System.IEquatable<FieldWrapper>
         Run first = _simpleField.Elements<Run>().FirstOrDefault();
         RunProperties properties = first?.RunProperties?.CloneNode(true) as RunProperties;
         _simpleField.RemoveAllChildren<Run>();
-        Run run = new Run(new Text(text) { Space = SpaceProcessingModeValues.Preserve });
+        Run run = new Run(OpenXmlExtensions.NewText(text));
         if (properties != null)
         {
             run.PrependChild(properties);
@@ -265,7 +265,8 @@ public partial class FieldWrapper : System.IEquatable<FieldWrapper>
             throw new NotSupportedException("The result of a field can only be set when it is within a single paragraph.");
         }
 
-        RunProperties properties = parts.ResultRuns.FirstOrDefault()?.RunProperties?.CloneNode(true) as RunProperties;
+        //A field with no result yet has its result in the formatting of the field.
+        RunProperties properties = (parts.ResultRuns.FirstOrDefault()?.RunProperties ?? ((Run)_begin.Parent).RunProperties)?.CloneNode(true) as RunProperties;
         foreach (Run old in parts.ResultRuns)
         {
             old.Remove();
@@ -278,12 +279,43 @@ public partial class FieldWrapper : System.IEquatable<FieldWrapper>
             endRun.InsertBeforeSelf(separateRun);
         }
 
-        Run resultRun = new Run(new Text(text) { Space = SpaceProcessingModeValues.Preserve });
+        Run resultRun = new Run(OpenXmlExtensions.NewText(text));
         if (properties != null)
         {
             resultRun.PrependChild(properties);
         }
         separateRun.InsertAfterSelf(resultRun);
+    }
+
+    //Word does not check the spelling of the result of a field it has just worked out.
+    internal void MarkResultNotProofed()
+    {
+        Run result = _simpleField != null ? _simpleField.Elements<Run>().FirstOrDefault() : Parse().ResultRuns.FirstOrDefault();
+        result?.GetOrAddRunProperties().SetRunProperty(new NoProof());
+    }
+
+    //Writes a new field as one element, as Word does when it has a result and no formatting of its own. Returns the field as it now is.
+    internal FieldWrapper ToSimpleFieldIfPlain()
+    {
+        Parts parts = Parse();
+        if (_begin == null || parts.AllRuns.Any(r => r.RunProperties != null && r.RunProperties.HasChildren && !parts.ResultRuns.Contains(r)))
+        {
+            return this;
+        }
+
+        Run beginRun = (Run)_begin.Parent;
+        SimpleField simple = new SimpleField() { Instruction = string.Concat(parts.Codes.Select(c => c.Text)) };
+        foreach (Run result in parts.ResultRuns)
+        {
+            result.Remove();
+            simple.AppendChild(result);
+        }
+        beginRun.InsertBeforeSelf(simple);
+        foreach (Run run in parts.AllRuns.Where(r => r.Parent != null && r.Parent != simple).ToList())
+        {
+            run.Remove();
+        }
+        return new FieldWrapper(simple);
     }
 
     /// <summary>

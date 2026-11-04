@@ -151,7 +151,7 @@ public class RangeWrapperStyleTest : IDisposable
         range.Style = "Heading 1";
         range.Style = null;
 
-        Assert.Empty(paragraph.ParagraphProperties.Elements<ParagraphStyleId>());
+        Assert.Null(paragraph.ParagraphProperties);
         Assert.Equal("Normal", range.Style);
     }
 
@@ -302,7 +302,7 @@ public class RangeWrapperStyleTest : IDisposable
         Assert.Equal("Heading1", paragraph.ParagraphProperties.ParagraphStyleId.Val.Value);
 
         range.StyleObject = null;
-        Assert.Null(paragraph.ParagraphProperties.ParagraphStyleId);
+        Assert.Null(paragraph.ParagraphProperties);
     }
 
     [Fact]

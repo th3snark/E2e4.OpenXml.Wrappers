@@ -49,7 +49,7 @@ public class DocumentWordMembersTest : IDisposable
         _document.Paragraphs[3].Range.InsertBreak(BreakType.SectionBreakContinuous);
 
         Assert.Equal(3, _document.Sections.Count);
-        Assert.Equal("\r", _document.Sections[0].Range.Text);
+        Assert.Equal("\f", _document.Sections[0].Range.Text);
         Assert.StartsWith("one two three\rsecond\r", _document.Sections[1].Range.Text, StringComparison.Ordinal);
         Assert.Equal("third\r", _document.Sections[2].Range.Text);
         Assert.Equal(_document.Sections[0], _document.Sections.First);

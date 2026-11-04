@@ -72,6 +72,7 @@ public partial class RangeWrapper
                     foreach (Paragraph paragraph in GetStyledParagraphs().Where(p => p.ParagraphProperties != null))
                     {
                         paragraph.ParagraphProperties.RemoveAllChildren<ParagraphStyleId>();
+                        paragraph.RemoveEmptyProperties();
                     }
                 }
                 return;
@@ -80,16 +81,34 @@ public partial class RangeWrapper
             string styleId = StyleHelper.FindStyleId(AnchorElement, value, out StyleValues type);
             if (type == StyleValues.Paragraph)
             {
+                //The default style is what a paragraph has when it names none, so Word does not name it.
+                bool isDefault = StyleHelper.IsDefaultParagraphStyle(AnchorElement, styleId);
                 foreach (Paragraph paragraph in GetStyledParagraphs())
                 {
-                    paragraph.GetOrAddParagraphProperties().ParagraphStyleId = new ParagraphStyleId() { Val = styleId };
+                    if (isDefault)
+                    {
+                        paragraph.ParagraphProperties?.RemoveAllChildren<ParagraphStyleId>();
+                        paragraph.RemoveEmptyProperties();
+                    }
+                    else
+                    {
+                        paragraph.GetOrAddParagraphProperties().ParagraphStyleId = new ParagraphStyleId() { Val = styleId };
+                    }
                 }
             }
             else if (type == StyleValues.Character)
             {
-                foreach (Run run in GetRuns())
+                List<Run> runs = GetRuns().ToList();
+                foreach (Run run in runs)
                 {
                     run.GetOrAddRunProperties().SetRunProperty(new RunStyle() { Val = styleId });
+                }
+                if (!(_startOpenXmlElement is Run))
+                {
+                    foreach (OpenXmlElement parent in runs.Select(r => r.Parent).Where(e => e != null).Distinct().ToList())
+                    {
+                        parent.CoalesceRuns();
+                    }
                 }
             }
             else if (type == StyleValues.Table)

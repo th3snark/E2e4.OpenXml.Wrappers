@@ -71,21 +71,15 @@ public class FieldWrapperCollection : IEnumerable<FieldWrapper>
     /// <param name="preserveFormatting">True (as in Word) to add <c>* MERGEFORMAT</c> so that formatting given to the result is kept when the field is updated.</param>
     public FieldWrapper Add(RangeWrapper range, FieldType type = FieldType.Empty, string text = null, bool preserveFormatting = true)
     {
-        string code;
-        if (type == FieldType.Empty)
-        {
-            code = text;
-        }
-        else
-        {
-            string name = FieldCodes.ToName(type);
-            code = string.IsNullOrWhiteSpace(text) ? name : name + " " + text.Trim();
-        }
+        //As Word spaces it: a typed field has its name, a space, the text and a space, so two spaces when there is no text.
+        string code = type == FieldType.Empty
+            ? " " + (text ?? string.Empty).Trim() + " "
+            : " " + FieldCodes.ToName(type) + " " + (text ?? string.Empty).Trim() + " ";
         if (preserveFormatting && !string.IsNullOrWhiteSpace(code) && !code.Contains("MERGEFORMAT", StringComparison.OrdinalIgnoreCase))
         {
-            code = code.Trim() + " \\* MERGEFORMAT";
+            code += "\\* MERGEFORMAT ";
         }
-        return Add(range, code);
+        return AddField(range, code);
     }
 
     /// <summary>
@@ -98,20 +92,31 @@ public class FieldWrapperCollection : IEnumerable<FieldWrapper>
         {
             throw new ArgumentException("A field needs a code.", nameof(code));
         }
+        return AddField(range, " " + code.Trim() + " ");
+    }
 
+    //Adds the field as Word writes it: as one element when its result can be worked out here and the text around it has no formatting of its
+    //own, otherwise in pieces, each with the formatting of the text around it. A result that cannot be worked out (it needs page layout, for
+    //instance) is left for Word to fill in when the document is opened.
+    private static FieldWrapper AddField(RangeWrapper range, string code)
+    {
+        Guard.ThrowIfNull(range);
         FieldChar begin = new FieldChar() { FieldCharType = FieldCharValues.Begin, Dirty = true };
         range.InsertFieldRuns(
             _ => new List<Run>
             {
                 new Run(begin),
-                new Run(new FieldCode(" " + code.Trim() + " ") { Space = SpaceProcessingModeValues.Preserve }),
+                new Run(new FieldCode(code) { Space = SpaceProcessingModeValues.Preserve }),
                 new Run(new FieldChar() { FieldCharType = FieldCharValues.Separate }),
-                new Run(new Text(string.Empty) { Space = SpaceProcessingModeValues.Preserve }),
                 new Run(new FieldChar() { FieldCharType = FieldCharValues.End })
             });
         FieldWrapper field = new FieldWrapper(begin);
         //As in Word a new field shows its result straight away when that can be worked out; the others are left for Word to update.
-        field.Update();
+        if (field.Update())
+        {
+            field.MarkResultNotProofed();
+            return field.ToSimpleFieldIfPlain();
+        }
         return field;
     }
 

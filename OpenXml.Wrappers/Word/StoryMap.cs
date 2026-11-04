@@ -355,7 +355,9 @@ internal sealed class StoryMap
 
             //Every paragraph, including an empty one, ends with an end of paragraph marker, and the last one in a table cell also ends the cell.
             bool endsCell = paragraph.Parent is TableCell && paragraph.Parent.LastChild == paragraph;
-            yield return new AtomInfo(AtomKind.ParagraphMark, paragraph, 1, endsCell ? "\r\a" : "\r");
+            //The mark of the paragraph that ends a section is the section break, which Word's text shows as a page break.
+            bool endsSection = !endsCell && paragraph.ParagraphProperties?.GetFirstChild<SectionProperties>() != null;
+            yield return new AtomInfo(AtomKind.ParagraphMark, paragraph, 1, endsCell ? "\r\a" : endsSection ? "\f" : "\r");
         }
         else if (element is Table table)
         {
@@ -1054,8 +1056,8 @@ internal sealed class StoryMap
         Text text = (Text)element;
         string value = text.Text;
         text.Text = value.Substring(0, offset);
-        text.Space = SpaceProcessingModeValues.Preserve;
-        Text second = new Text(value.Substring(offset)) { Space = SpaceProcessingModeValues.Preserve };
+        OpenXmlExtensions.SetSpacePreservation(text);
+        Text second = OpenXmlExtensions.NewText(value.Substring(offset));
         text.InsertAfterSelf(second);
         SpanRegistry.TextSplit(text, second, offset);
         return second;

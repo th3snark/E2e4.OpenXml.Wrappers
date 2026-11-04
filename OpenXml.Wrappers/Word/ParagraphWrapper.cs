@@ -202,15 +202,24 @@ public class ParagraphWrapper : System.IEquatable<ParagraphWrapper>
         {
             throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, "The break type '{0}' is not supported here.", type), nameof(type));
         }
-        _paragraph.AppendChild(new Run(new Break() { Type = kind.Value }));
+        //A line break is the default kind, which Word does not name.
+        _paragraph.AppendChild(new Run(kind.Value == BreakValues.TextWrapping ? new Break() : new Break() { Type = kind.Value }));
     }
 
     public void DeleteBreaks()
     {
-        foreach (Run run in _paragraph.Elements<Run>())
+        foreach (Run run in _paragraph.Elements<Run>().ToList())
         {
-            run.RemoveAllChildren<Break>();
+            if (run.Elements<Break>().Any())
+            {
+                run.RemoveAllChildren<Break>();
+                if (!run.ChildElements.Any(e => !(e is RunProperties)))
+                {
+                    run.Remove();
+                }
+            }
         }
+        _paragraph.CoalesceRuns();
     }
 
     /// <summary>
@@ -260,6 +269,12 @@ public class ParagraphWrapper : System.IEquatable<ParagraphWrapper>
         System.Collections.Generic.List<SectionProperties> all = _paragraph.GetRoot().Descendants<SectionProperties>().ToList();
         SectionProperties following = all[all.IndexOf(newSectionProperties) + 1];
         SectionType sectionType = following.GetFirstChild<SectionType>();
+        if (markType == SectionMarkValues.NextPage)
+        {
+            //The default, which Word does not write.
+            sectionType?.Remove();
+            return newSectionProperties;
+        }
         if (sectionType == null)
         {
             sectionType = new SectionType();

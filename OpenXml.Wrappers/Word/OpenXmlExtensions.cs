@@ -301,6 +301,142 @@ internal static class OpenXmlExtensions
 
     #region Run Routines
 
+    /// <summary>
+    /// A text element as Word writes it: <c>xml:space="preserve"</c> only when the text starts or ends with white space, which would otherwise
+    /// be lost.
+    /// </summary>
+    internal static Text NewText(string value)
+    {
+        Text text = new Text(value);
+        SetSpacePreservation(text);
+        return text;
+    }
+
+    /// <summary>Gives a text element <c>xml:space="preserve"</c> if its text needs it, and takes it away if it does not.</summary>
+    internal static void SetSpacePreservation(Text text)
+    {
+        string value = text.Text;
+        bool needed = value.Length > 0 && (char.IsWhiteSpace(value[0]) || char.IsWhiteSpace(value[value.Length - 1]));
+        text.Space = needed ? SpaceProcessingModeValues.Preserve : (EnumValue<SpaceProcessingModeValues>)null;
+    }
+
+    /// <summary>The value of an on and off property that is off, as Word writes it (<c>w:val="0"</c>).</summary>
+    internal static OnOffValue OffValue()
+    {
+        return new OnOffValue() { InnerText = "0" };
+    }
+
+    /// <summary>
+    /// Merges the runs of the paragraph (or hyperlink) that follow one another and have the same formatting, as Word does, so that editing
+    /// does not leave text in more and more pieces. Text and field characters stay as they are: a run that holds anything but text, tabs and
+    /// breaks is left alone, and text never joins a tab or break that comes after it, or a page or column break before it, which Word gives
+    /// a run of their own. Ranges on the text are moved with it.
+    /// </summary>
+    internal static void CoalesceRuns(this OpenXmlElement parent)
+    {
+        Run previous = null;
+        foreach (OpenXmlElement child in parent.ChildElements.ToList())
+        {
+            if (child is Hyperlink)
+            {
+                child.CoalesceRuns();
+            }
+
+            Run run = child as Run;
+            if (run != null && previous != null && CanMergeRuns(previous, run))
+            {
+                MergeRuns(previous, run);
+            }
+            else
+            {
+                previous = run;
+            }
+        }
+    }
+
+    private static bool CanMergeRuns(Run first, Run second)
+    {
+        List<OpenXmlElement> firstContent = first.ChildElements.Where(e => !(e is RunProperties)).ToList();
+        List<OpenXmlElement> secondContent = second.ChildElements.Where(e => !(e is RunProperties)).ToList();
+        if (firstContent.Count == 0 || secondContent.Count == 0 || !(secondContent[0] is Text))
+        {
+            return false;
+        }
+        if (firstContent.Concat(secondContent).Any(e => !(e is Text || e is TabChar || e is Break)))
+        {
+            return false;
+        }
+        if (firstContent[firstContent.Count - 1] is Break last && last.Type != null && last.Type.Value != BreakValues.TextWrapping)
+        {
+            return false;
+        }
+        return SameProperties(first.RunProperties, second.RunProperties);
+    }
+
+    private static void MergeRuns(Run first, Run second)
+    {
+        List<OpenXmlElement> moved = second.ChildElements.Where(e => !(e is RunProperties)).ToList();
+        if (first.LastChild is Text firstText)
+        {
+            Text secondText = (Text)moved[0];
+            int length = firstText.Text.Length;
+            firstText.Text += secondText.Text;
+            SetSpacePreservation(firstText);
+            SpanRegistry.TextJoined(firstText, secondText, length);
+            moved.RemoveAt(0);
+        }
+        foreach (OpenXmlElement element in moved)
+        {
+            element.Remove();
+            first.AppendChild(element);
+        }
+        second.Remove();
+    }
+
+    /// <summary>Whether two sets of properties say the same: the same elements in the same order, with the same attributes.</summary>
+    internal static bool SameProperties(OpenXmlElement first, OpenXmlElement second)
+    {
+        int firstCount = first == null ? 0 : first.ChildElements.Count;
+        int secondCount = second == null ? 0 : second.ChildElements.Count;
+        if (firstCount != secondCount)
+        {
+            return false;
+        }
+        for (int i = 0; i < firstCount; i++)
+        {
+            OpenXmlElement a = first.ChildElements[i];
+            OpenXmlElement b = second.ChildElements[i];
+            if (a.GetType() != b.GetType() || !SameAttributes(a, b) || !SameProperties(a, b))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static bool SameAttributes(OpenXmlElement first, OpenXmlElement second)
+    {
+        IList<OpenXmlAttribute> a = first.GetAttributes();
+        IList<OpenXmlAttribute> b = second.GetAttributes();
+        return a.Count == b.Count && a.All(x => b.Any(y => y.NamespaceUri == x.NamespaceUri && y.LocalName == x.LocalName && y.Value == x.Value));
+    }
+
+    /// <summary>The properties of a paragraph mark that has the formatting of a run.</summary>
+    internal static ParagraphMarkRunProperties ToParagraphMarkProperties(this RunProperties runProperties)
+    {
+        return new ParagraphMarkRunProperties(runProperties.ChildElements.Where(e => !(e is RunPropertiesChange)).Select(e => e.CloneNode(true)));
+    }
+
+    /// <summary>Removes paragraph properties that have nothing in them.</summary>
+    internal static void RemoveEmptyProperties(this Paragraph paragraph)
+    {
+        ParagraphProperties properties = paragraph.ParagraphProperties;
+        if (properties != null && !properties.HasChildren && !properties.HasAttributes)
+        {
+            properties.Remove();
+        }
+    }
+
     public static bool IsLastWithText(this Run run)
     {
         //If this is the last run in the paragraph holding text (or a tab) return true.
@@ -939,14 +1075,6 @@ internal static class OpenXmlExtensions
 
     #region TableCell Routines
 
-    public static void DeleteAllRuns(this TableCell tableCell)
-    {
-        foreach (Paragraph paragraph in tableCell.Elements<Paragraph>())
-        {
-            paragraph.DeleteAllRuns();
-        }
-    }
-
     public static int GetIndex(this TableCell tableCell)
     {
         return tableCell.ElementsBefore().Where(element => element is TableCell).Count();
@@ -955,14 +1083,6 @@ internal static class OpenXmlExtensions
     #endregion
 
     #region Paragraph Routines
-
-    public static void DeleteAllRuns(this Paragraph paragraph)
-    {
-        foreach (Run run in paragraph.Elements<Run>())
-        {
-            run.Parent.RemoveChild(run);
-        }
-    }
 
     public static void PrependRun(this Paragraph paragraph, Run run)
     {
@@ -987,7 +1107,7 @@ internal static class OpenXmlExtensions
                     run = new Run(new TabChar());
                     if (sb.Length > 0)
                     {
-                        run.AppendChild(new Text(sb.ToString()) { Space = SpaceProcessingModeValues.Preserve });
+                        run.AppendChild(NewText(sb.ToString()));
                         sb.Length = 0;
                     }
                     paragraph.PrependRun(run);
@@ -998,7 +1118,7 @@ internal static class OpenXmlExtensions
                     run = new Run(new Break());
                     if (sb.Length > 0)
                     {
-                        run.AppendChild(new Text(sb.ToString()) { Space = SpaceProcessingModeValues.Preserve });
+                        run.AppendChild(NewText(sb.ToString()));
                         sb.Length = 0;
                     }
                     paragraph.PrependRun(run);
@@ -1012,7 +1132,7 @@ internal static class OpenXmlExtensions
         }
         if (sb.Length > 0)
         {
-            run = new Run(new Text(sb.ToString()) { Space = SpaceProcessingModeValues.Preserve });
+            run = new Run(NewText(sb.ToString()));
             paragraph.PrependRun(run);
         }
     }

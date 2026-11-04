@@ -13,10 +13,14 @@ public partial class RangeWrapper
     /// Adds a new empty paragraph after the range and returns it, as <c>Range.InsertParagraphAfter</c> in Word (which returns nothing).
     /// </summary>
     /// <remarks>
-    /// The paragraph is a plain one: it does not take on the formatting of the paragraph before it. After a paragraph, table or bookmark or
-    /// comment range it follows the paragraph or table; at the end of a table cell it is the last paragraph of the cell; and after the
-    /// document it is the last paragraph of the body. This is the way to append to the end of a document that ends in a table, where
-    /// <see cref="ParagraphWrapperCollection.Add"/> would add the paragraph to the last cell of the table.
+    /// After a paragraph, table or bookmark or comment range it follows the paragraph or table; at the end of a table cell it is the last
+    /// paragraph of the cell; and after the document it is the last paragraph of the body. This is the way to append to the end of a document
+    /// that ends in a table, where <see cref="ParagraphWrapperCollection.Add"/> would add the paragraph to the last cell of the table.
+    /// <para>
+    /// The formatting follows Word. A mark inserted after a paragraph is at the start of the next paragraph, so the new paragraph has the
+    /// formatting of that one. At the end of a story it continues the paragraph, or takes the style that follows that one's (<c>w:next</c>), as
+    /// when Enter is pressed: a Heading 1 is followed by a Normal paragraph. After a table it is a plain paragraph.
+    /// </para>
     /// </remarks>
     /// <exception cref="NotSupportedException">The range is of a type that does not support adding paragraphs, such as a table row.</exception>
     public ParagraphWrapper InsertParagraphAfter()
@@ -53,33 +57,172 @@ public partial class RangeWrapper
             return new ParagraphWrapper(split);
         }
 
-        Paragraph paragraph = new Paragraph();
-        if (_startOpenXmlElement is Paragraph || _startOpenXmlElement is Table)
+        if (_startOpenXmlElement is Paragraph paragraph)
         {
-            AddBlockNextTo(_startOpenXmlElement, paragraph, after);
+            return new ParagraphWrapper(after ? AddParagraphAfter(paragraph) : AddParagraphBefore(paragraph));
         }
-        else if (_startOpenXmlElement is BookmarkStart || _startOpenXmlElement is CommentRangeStart)
+        if (_startOpenXmlElement is Table)
+        {
+            Paragraph plain = new Paragraph();
+            AddBlockNextTo(_startOpenXmlElement, plain, after);
+            return new ParagraphWrapper(plain);
+        }
+        if (_startOpenXmlElement is BookmarkStart || _startOpenXmlElement is CommentRangeStart)
         {
             //The paragraph of the marker that is nearer the new paragraph.
             OpenXmlElement marker = after ? _endOpenXmlElement : _startOpenXmlElement;
-            OpenXmlElement block = marker.Ancestors<Paragraph>().FirstOrDefault();
+            Paragraph block = marker.Ancestors<Paragraph>().FirstOrDefault();
             if (block == null)
             {
                 throw new NotSupportedException("Adding a paragraph is only supported when the markers of the range are inside a paragraph.");
             }
-            AddBlockNextTo(block, paragraph, after);
+            return new ParagraphWrapper(after ? AddParagraphAfter(block) : AddParagraphBefore(block));
         }
-        else if (_startOpenXmlElement is TableCell || _startOpenXmlElement is Document || _startOpenXmlElement is Body
+        if (_startOpenXmlElement is TableCell || _startOpenXmlElement is Document || _startOpenXmlElement is Body
             || _startOpenXmlElement is Header || _startOpenXmlElement is Footer)
         {
             OpenXmlCompositeElement container = _startOpenXmlElement is Document ? GetBody() : (OpenXmlCompositeElement)_startOpenXmlElement;
-            AddToContainer(container, paragraph, after);
+            OpenXmlElement edge = after
+                ? container.ChildElements.LastOrDefault(e => !(e is SectionProperties))
+                : container.ChildElements.FirstOrDefault(e => !(e is SectionProperties || e is TableCellProperties));
+            if (edge is Paragraph edgeParagraph)
+            {
+                return new ParagraphWrapper(after ? AddParagraphAfter(edgeParagraph) : AddParagraphBefore(edgeParagraph));
+            }
+            Paragraph added = new Paragraph();
+            AddToContainer(container, added, after);
+            return new ParagraphWrapper(added);
         }
-        else
+        throw new NotSupportedException(string.Format(CultureInfo.InvariantCulture, "Adding a paragraph is not currently supported for a range starting with the type {0}", _startOpenXmlElement.GetType().Name));
+    }
+
+    /// <summary>
+    /// Adds a paragraph mark after the mark of the paragraph, as Word does. That is at the start of the next paragraph when there is one, so it
+    /// is the same as adding a paragraph before that one. Otherwise it continues this paragraph (see <see cref="SplitAtEnd"/>).
+    /// </summary>
+    internal static Paragraph AddParagraphAfter(Paragraph paragraph)
+    {
+        if (paragraph.NextSibling() is Paragraph next)
         {
-            throw new NotSupportedException(string.Format(CultureInfo.InvariantCulture, "Adding a paragraph is not currently supported for a range starting with the type {0}", _startOpenXmlElement.GetType().Name));
+            return AddParagraphBefore(next);
         }
-        return new ParagraphWrapper(paragraph);
+        return SplitAtEnd(paragraph);
+    }
+
+    /// <summary>
+    /// Adds a paragraph before this one with the same paragraph formatting, whose mark has the formatting of the character after it.
+    /// </summary>
+    private static Paragraph AddParagraphBefore(Paragraph paragraph)
+    {
+        Paragraph added = new Paragraph();
+        ParagraphProperties properties = CopyPropertiesWithoutMark(paragraph);
+        RunProperties firstRun = paragraph.Elements<Run>().FirstOrDefault()?.RunProperties;
+        ParagraphMarkRunProperties mark = firstRun != null
+            ? firstRun.ToParagraphMarkProperties()
+            : paragraph.ParagraphProperties?.ParagraphMarkRunProperties?.CloneNode(true) as ParagraphMarkRunProperties;
+        if (mark != null && mark.HasChildren)
+        {
+            properties = properties ?? new ParagraphProperties();
+            properties.ParagraphMarkRunProperties = mark;
+        }
+        if (properties != null)
+        {
+            added.AppendChild(properties);
+        }
+        paragraph.InsertBeforeSelf(added);
+        return added;
+    }
+
+    /// <summary>
+    /// Adds a paragraph after this one as pressing Enter at its end does. If the style of the paragraph is followed by another style
+    /// (<c>w:next</c>), the new paragraph is plainly in that style. Otherwise it has the same paragraph formatting, and it takes over the paragraph
+    /// mark, with its formatting; the mark of this paragraph is new and has the formatting of the character before it. A section break stays
+    /// where it is.
+    /// </summary>
+    private static Paragraph SplitAtEnd(Paragraph paragraph)
+    {
+        Paragraph added = new Paragraph();
+        if (!ApplyNextStyle(paragraph, added))
+        {
+            ContinueParagraph(paragraph, added);
+        }
+        paragraph.InsertAfterSelf(added);
+        return added;
+    }
+
+    //Gives the new paragraph the style that follows the style of the paragraph, if there is a different one. Returns whether there was.
+    private static bool ApplyNextStyle(Paragraph paragraph, Paragraph added)
+    {
+        Styles styles = StyleHelper.GetStyles(paragraph);
+        if (styles == null)
+        {
+            return false;
+        }
+        string styleId = paragraph.ParagraphProperties?.ParagraphStyleId?.Val?.Value;
+        Style style = styleId == null
+            ? styles.Elements<Style>().FirstOrDefault(s => s.Type != null && s.Type.Value == StyleValues.Paragraph && s.Default != null && s.Default.Value)
+            : styles.Elements<Style>().FirstOrDefault(s => s.StyleId?.Value == styleId);
+        string nextId = style?.NextParagraphStyle?.Val?.Value;
+        if (nextId == null || nextId == style.StyleId?.Value)
+        {
+            return false;
+        }
+        if (!StyleHelper.IsDefaultParagraphStyle(paragraph, nextId))
+        {
+            added.AppendChild(new ParagraphProperties(new ParagraphStyleId() { Val = nextId }));
+        }
+        return true;
+    }
+
+    private static void ContinueParagraph(Paragraph paragraph, Paragraph added)
+    {
+        ParagraphProperties properties = CopyPropertiesWithoutMark(paragraph);
+        ParagraphMarkRunProperties oldMark = paragraph.ParagraphProperties?.ParagraphMarkRunProperties;
+        if (oldMark != null && oldMark.HasChildren)
+        {
+            properties = properties ?? new ParagraphProperties();
+            properties.ParagraphMarkRunProperties = (ParagraphMarkRunProperties)oldMark.CloneNode(true);
+        }
+        if (properties != null)
+        {
+            added.AppendChild(properties);
+        }
+        SetMarkFromLastRun(paragraph);
+    }
+
+    //The paragraph mark that is new at the end of the paragraph has the formatting of the character before it. A paragraph with no text
+    //keeps the mark it has.
+    private static void SetMarkFromLastRun(Paragraph paragraph)
+    {
+        Run last = paragraph.Elements<Run>().LastOrDefault();
+        if (last == null)
+        {
+            return;
+        }
+        if (last.RunProperties != null && last.RunProperties.HasChildren)
+        {
+            paragraph.GetOrAddParagraphProperties().ParagraphMarkRunProperties = last.RunProperties.ToParagraphMarkProperties();
+        }
+        else if (paragraph.ParagraphProperties != null)
+        {
+            paragraph.ParagraphProperties.ParagraphMarkRunProperties = null;
+            paragraph.RemoveEmptyProperties();
+        }
+    }
+
+    //A copy of the paragraph properties for another paragraph: not the section break, which there can only be one of, the formatting of the
+    //mark or a record of a tracked change. Null when that leaves nothing.
+    private static ParagraphProperties CopyPropertiesWithoutMark(Paragraph paragraph)
+    {
+        if (paragraph.ParagraphProperties == null)
+        {
+            return null;
+        }
+        ParagraphProperties properties = (ParagraphProperties)paragraph.ParagraphProperties.CloneNode(true);
+        properties.RemoveAllChildren<SectionProperties>();
+        properties.RemoveAllChildren<ParagraphMarkRunProperties>();
+        properties.RemoveAllChildren<ParagraphPropertiesChange>();
+        return properties.HasChildren ? properties : null;
     }
 
     private static void AddBlockNextTo(OpenXmlElement block, Paragraph paragraph, bool after)

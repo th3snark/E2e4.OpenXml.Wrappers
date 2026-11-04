@@ -114,8 +114,8 @@ public class ParagraphWrapperTest : System.IDisposable
         Paragraph paragraph = new Paragraph(new Run(new RunProperties(new Bold()), new Text("abc")));
         new ParagraphWrapper(paragraph).Range.Font.Bold = false;
 
-        Bold bold = paragraph.Elements<Run>().First().RunProperties.Elements<Bold>().Single();
-        Assert.False(bold.Val.Value);
+        Assert.Null(paragraph.Elements<Run>().First().RunProperties);
+        Assert.False(new ParagraphWrapper(paragraph).Range.Font.Bold);
     }
 
     [Fact]
@@ -156,11 +156,12 @@ public class ParagraphWrapperTest : System.IDisposable
     public void InsertBreakAcceptsAllBreakTypes(string name)
     {
         BreakType type = name == "Column" ? BreakType.ColumnBreak : name == "Page" ? BreakType.PageBreak : BreakType.TextWrappingBreak;
-        BreakValues expected = name == "Column" ? BreakValues.Column : name == "Page" ? BreakValues.Page : BreakValues.TextWrapping;
+        BreakValues? expected = name == "Column" ? BreakValues.Column : name == "Page" ? BreakValues.Page : (BreakValues?)null;
         Paragraph paragraph = new Paragraph();
         new ParagraphWrapper(paragraph).InsertBreak(type);
 
-        Assert.Equal(expected, paragraph.Descendants<Break>().Single().Type.Value);
+        //A line break is the default kind, which is not named.
+        Assert.Equal(expected, paragraph.Descendants<Break>().Single().Type?.Value);
     }
 
     [Theory]
