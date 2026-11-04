@@ -413,7 +413,7 @@
     </w:pPr>
     <w:rPr>
       <w:rFonts w:asciiTheme="majorHAnsi" w:cstheme="majorBidi" w:eastAsiaTheme="majorEastAsia" w:hAnsiTheme="majorHAnsi" />
-      <w:color w:themeColor="accent1" w:themeShade="BF" w:val="2F5496" />
+      <w:color w:themeColor="accent1" w:themeShade="BF" w:val="0F4761" />
       <w:sz w:val="40" />
       <w:szCs w:val="40" />
     </w:rPr>
@@ -435,7 +435,7 @@
     </w:pPr>
     <w:rPr>
       <w:rFonts w:asciiTheme="majorHAnsi" w:cstheme="majorBidi" w:eastAsiaTheme="majorEastAsia" w:hAnsiTheme="majorHAnsi" />
-      <w:color w:themeColor="accent1" w:themeShade="BF" w:val="2F5496" />
+      <w:color w:themeColor="accent1" w:themeShade="BF" w:val="0F4761" />
       <w:sz w:val="32" />
       <w:szCs w:val="32" />
     </w:rPr>
@@ -457,7 +457,7 @@
     </w:pPr>
     <w:rPr>
       <w:rFonts w:cstheme="majorBidi" w:eastAsiaTheme="majorEastAsia" />
-      <w:color w:themeColor="accent1" w:themeShade="BF" w:val="2F5496" />
+      <w:color w:themeColor="accent1" w:themeShade="BF" w:val="0F4761" />
       <w:sz w:val="28" />
       <w:szCs w:val="28" />
     </w:rPr>
@@ -481,7 +481,7 @@
       <w:rFonts w:cstheme="majorBidi" w:eastAsiaTheme="majorEastAsia" />
       <w:i />
       <w:iCs />
-      <w:color w:themeColor="accent1" w:themeShade="BF" w:val="2F5496" />
+      <w:color w:themeColor="accent1" w:themeShade="BF" w:val="0F4761" />
     </w:rPr>
   </w:style>
   <w:style w:styleId="Heading5" w:type="paragraph">
@@ -501,7 +501,7 @@
     </w:pPr>
     <w:rPr>
       <w:rFonts w:cstheme="majorBidi" w:eastAsiaTheme="majorEastAsia" />
-      <w:color w:themeColor="accent1" w:themeShade="BF" w:val="2F5496" />
+      <w:color w:themeColor="accent1" w:themeShade="BF" w:val="0F4761" />
     </w:rPr>
   </w:style>
   <w:style w:styleId="Heading6" w:type="paragraph">
@@ -622,7 +622,7 @@
     <w:uiPriority w:val="9" />
     <w:rPr>
       <w:rFonts w:asciiTheme="majorHAnsi" w:cstheme="majorBidi" w:eastAsiaTheme="majorEastAsia" w:hAnsiTheme="majorHAnsi" />
-      <w:color w:themeColor="accent1" w:themeShade="BF" w:val="2F5496" />
+      <w:color w:themeColor="accent1" w:themeShade="BF" w:val="0F4761" />
       <w:sz w:val="40" />
       <w:szCs w:val="40" />
     </w:rPr>
@@ -635,7 +635,7 @@
     <w:semiHidden />
     <w:rPr>
       <w:rFonts w:asciiTheme="majorHAnsi" w:cstheme="majorBidi" w:eastAsiaTheme="majorEastAsia" w:hAnsiTheme="majorHAnsi" />
-      <w:color w:themeColor="accent1" w:themeShade="BF" w:val="2F5496" />
+      <w:color w:themeColor="accent1" w:themeShade="BF" w:val="0F4761" />
       <w:sz w:val="32" />
       <w:szCs w:val="32" />
     </w:rPr>
@@ -648,7 +648,7 @@
     <w:semiHidden />
     <w:rPr>
       <w:rFonts w:cstheme="majorBidi" w:eastAsiaTheme="majorEastAsia" />
-      <w:color w:themeColor="accent1" w:themeShade="BF" w:val="2F5496" />
+      <w:color w:themeColor="accent1" w:themeShade="BF" w:val="0F4761" />
       <w:sz w:val="28" />
       <w:szCs w:val="28" />
     </w:rPr>
@@ -663,7 +663,7 @@
       <w:rFonts w:cstheme="majorBidi" w:eastAsiaTheme="majorEastAsia" />
       <w:i />
       <w:iCs />
-      <w:color w:themeColor="accent1" w:themeShade="BF" w:val="2F5496" />
+      <w:color w:themeColor="accent1" w:themeShade="BF" w:val="0F4761" />
     </w:rPr>
   </w:style>
   <w:style w:customStyle="1" w:styleId="Heading5Char" w:type="character">
@@ -674,7 +674,7 @@
     <w:semiHidden />
     <w:rPr>
       <w:rFonts w:cstheme="majorBidi" w:eastAsiaTheme="majorEastAsia" />
-      <w:color w:themeColor="accent1" w:themeShade="BF" w:val="2F5496" />
+      <w:color w:themeColor="accent1" w:themeShade="BF" w:val="0F4761" />
     </w:rPr>
   </w:style>
   <w:style w:customStyle="1" w:styleId="Heading6Char" w:type="character">
@@ -836,7 +836,7 @@
     <w:rPr>
       <w:i />
       <w:iCs />
-      <w:color w:themeColor="accent1" w:themeShade="BF" w:val="2F5496" />
+      <w:color w:themeColor="accent1" w:themeShade="BF" w:val="0F4761" />
     </w:rPr>
   </w:style>
   <w:style w:styleId="IntenseQuote" w:type="paragraph">
@@ -848,8 +848,8 @@
     <w:qFormat />
     <w:pPr>
       <w:pBdr>
-        <w:top w:color="2F5496" w:space="10" w:sz="4" w:themeColor="accent1" w:themeShade="BF" w:val="single" />
-        <w:bottom w:color="2F5496" w:space="10" w:sz="4" w:themeColor="accent1" w:themeShade="BF" w:val="single" />
+        <w:top w:color="0F4761" w:space="10" w:sz="4" w:themeColor="accent1" w:themeShade="BF" w:val="single" />
+        <w:bottom w:color="0F4761" w:space="10" w:sz="4" w:themeColor="accent1" w:themeShade="BF" w:val="single" />
       </w:pBdr>
       <w:spacing w:after="360" w:before="360" />
       <w:ind w:left="864" w:right="864" />
@@ -858,7 +858,7 @@
     <w:rPr>
       <w:i />
       <w:iCs />
-      <w:color w:themeColor="accent1" w:themeShade="BF" w:val="2F5496" />
+      <w:color w:themeColor="accent1" w:themeShade="BF" w:val="0F4761" />
     </w:rPr>
   </w:style>
   <w:style w:customStyle="1" w:styleId="IntenseQuoteChar" w:type="character">
@@ -869,7 +869,7 @@
     <w:rPr>
       <w:i />
       <w:iCs />
-      <w:color w:themeColor="accent1" w:themeShade="BF" w:val="2F5496" />
+      <w:color w:themeColor="accent1" w:themeShade="BF" w:val="0F4761" />
     </w:rPr>
   </w:style>
   <w:style w:styleId="IntenseReference" w:type="character">
@@ -881,7 +881,7 @@
       <w:b />
       <w:bCs />
       <w:smallCaps />
-      <w:color w:themeColor="accent1" w:themeShade="BF" w:val="2F5496" />
+      <w:color w:themeColor="accent1" w:themeShade="BF" w:val="0F4761" />
       <w:spacing w:val="5" />
     </w:rPr>
   </w:style>

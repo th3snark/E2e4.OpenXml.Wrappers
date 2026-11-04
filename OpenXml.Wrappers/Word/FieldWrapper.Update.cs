@@ -326,7 +326,7 @@ internal static class FieldUpdater
             case "SAVEDATE":
                 return properties?.LastSaveTime == null ? null : FormatDate(properties.LastSaveTime.Value.ToLocalTime(), picture ?? DefaultDateTime(culture), culture);
             case "PRINTDATE":
-                DateTime? printed = document?.PackageProperties.LastPrinted;
+                DateTime? printed = (document == null ? null : DocumentPropertiesWrapper.GetCoreProperties(document).LastPrinted);
                 return printed == null ? "0/0/0000 0:00" : FormatDate(printed.Value.ToLocalTime(), picture ?? DefaultDateTime(culture), culture);
             case "AUTHOR":
                 return instruction.Arguments.Count > 0 ? instruction.Arguments[0] : properties?.Author ?? string.Empty;
@@ -341,7 +341,7 @@ internal static class FieldUpdater
             case "LASTSAVEDBY":
                 return properties?.LastAuthor ?? string.Empty;
             case "REVNUM":
-                return document?.PackageProperties.Revision ?? "1";
+                return (document == null ? null : DocumentPropertiesWrapper.GetCoreProperties(document).Revision) ?? "1";
             case "USERNAME":
                 return instruction.Arguments.Count > 0 ? instruction.Arguments[0] : Environment.UserName;
             case "USERINITIALS":

@@ -17,7 +17,7 @@ public class RangeWrapperStyleTest : IDisposable
     {
         _document = WordprocessingDocumentWrapper.Create(_path, true, false);
         MainDocumentPart mainDocumentPart = _document.WordprocessingDocument.MainDocumentPart;
-        StyleDefinitionsPart stylesPart = mainDocumentPart.AddNewPart<StyleDefinitionsPart>();
+        StyleDefinitionsPart stylesPart = mainDocumentPart.StyleDefinitionsPart;
         stylesPart.Styles = new Styles(
             new Style(new StyleName() { Val = "Normal" }) { Type = StyleValues.Paragraph, StyleId = "Normal", Default = true },
             new Style(new StyleName() { Val = "heading 1" }) { Type = StyleValues.Paragraph, StyleId = "Heading1" },

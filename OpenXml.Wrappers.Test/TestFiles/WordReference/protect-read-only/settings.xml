@@ -1,4 +1,4 @@
-<w:settings xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w15="http://schemas.microsoft.com/office/word/2012/wordml" mc:Ignorable="w15">
+<w:settings xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml" xmlns:w15="http://schemas.microsoft.com/office/word/2012/wordml" mc:Ignorable="w14 w15">
   <w:zoom w:percent="100" />
   <w:documentProtection w:cryptAlgorithmClass="hash" w:cryptAlgorithmSid="14" w:cryptAlgorithmType="typeAny" w:cryptProviderType="rsaAES" w:cryptSpinCount="100000" w:edit="readOnly" w:enforcement="1" w:hash="{hash}" w:salt="{salt}" />
   <w:defaultTabStop w:val="720" />
@@ -28,6 +28,7 @@
   <w:clrSchemeMapping w:accent1="accent1" w:accent2="accent2" w:accent3="accent3" w:accent4="accent4" w:accent5="accent5" w:accent6="accent6" w:bg1="light1" w:bg2="light2" w:followedHyperlink="followedHyperlink" w:hyperlink="hyperlink" w:t1="dark1" w:t2="dark2" />
   <w:decimalSymbol w:val="." />
   <w:listSeparator w:val="," />
+  <w14:docId w14:val="{docId}" />
   <w15:chartTrackingRefBased />
   <w15:docId w15:val="{docId}" />
 </w:settings>

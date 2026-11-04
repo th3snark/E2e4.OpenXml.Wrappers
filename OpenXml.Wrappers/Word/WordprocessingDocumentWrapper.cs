@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 
@@ -47,8 +48,8 @@ public partial class WordprocessingDocumentWrapper : IDisposable
     }
 
     /// <summary>
-    /// Creates a new document file. When the main document part is added it is initialised with an empty body (see
-    /// <see cref="InitializeMainDocumentPart"/>) and, if requested, an empty comments part (see <see cref="InitializeCommentsPart"/>).
+    /// Creates a new document file. When the main document part is added the document is what Word 365 writes for a new blank document (see
+    /// <see cref="InitializeMainDocumentPart"/>), with, if requested, an empty comments part (see <see cref="InitializeCommentsPart"/>).
     /// </summary>
     public static WordprocessingDocumentWrapper Create(string path, bool addMainDocumentPart, bool addWordprocessingCommentsPart)
     {
@@ -83,6 +84,7 @@ public partial class WordprocessingDocumentWrapper : IDisposable
         {
             wordprocessingDocument.AddMainDocumentPart();
             wrapper.InitializeMainDocumentPart();
+            NewDocument.AddMissingPackageParts(wordprocessingDocument);
             if (addWordprocessingCommentsPart)
             {
                 wrapper.InitializeCommentsPart();
@@ -91,10 +93,15 @@ public partial class WordprocessingDocumentWrapper : IDisposable
         return wrapper;
     }
 
-    //Saves the package after the headers and footers that were only read and are still empty have been taken out.
+    //Saves the package after the headers and footers that were only read and are still empty have been taken out, with Word's names for
+    //the indentation attributes of the parts that were loaded (see OpenXmlExtensions.UseTransitionalIndentationNames).
     private void SaveChanges()
     {
         HeaderFooterWrapper.RemoveLatentStories(_wordprocessingDocument);
+        foreach (OpenXmlPart part in _wordprocessingDocument.GetAllParts().Where(p => p.IsRootElementLoaded))
+        {
+            part.RootElement?.UseTransitionalIndentationNames();
+        }
         _wordprocessingDocument.Save();
     }
 
@@ -117,8 +124,8 @@ public partial class WordprocessingDocumentWrapper : IDisposable
 
         //Clone does not carry over the core properties (title, author and so on), so copy them.
 #pragma warning disable OOXML0001 // Only the name of the experimental interface is used; the properties themselves are not marked.
-        IPackageProperties from = _wordprocessingDocument.PackageProperties;
-        IPackageProperties to = copy.PackageProperties;
+        IPackageProperties from = DocumentPropertiesWrapper.GetCoreProperties(_wordprocessingDocument);
+        IPackageProperties to = DocumentPropertiesWrapper.GetCoreProperties(copy);
 #pragma warning restore OOXML0001
         to.Title = from.Title;
         to.Subject = from.Subject;
@@ -199,32 +206,17 @@ public partial class WordprocessingDocumentWrapper : IDisposable
         return Content;
     }
 
+    /// <summary>
+    /// Makes the main document what Word 365 writes for a new blank document: an empty paragraph and a page with Word's default size and
+    /// margins, and the settings, styles, theme, font table and web settings parts of a new document where the document does not have them
+    /// yet. Word takes the page size, the header distance, the language and the decimal and list separators from Windows' regional settings;
+    /// here they come from <see cref="CultureInfo.CurrentCulture"/>.
+    /// </summary>
     public void InitializeMainDocumentPart()
     {
-        //Initialize the main document part
-        _wordprocessingDocument.MainDocumentPart.Document =
-           new Document(
-              new Body(
-                 new Paragraph(),
-                 new SectionProperties(
-                    new PageSize() { Width = 11906, Height = 16838 },
-                    new PageMargin() { Top = 1440, Right = 1800, Bottom = 1440, Left = 1800, Header = 708, Footer = 708, Gutter = 0 },
-                    new Columns() { Space = "708" },
-                    new DocGrid() { LinePitch = 360 }
-                 )
-              )
-           );
-
-        //A document without compatibility settings is opened by Word in Compatibility Mode (as a Word 2007 document), so say that it is a
-        //current one.
         MainDocumentPart mainDocumentPart = _wordprocessingDocument.MainDocumentPart;
-        if (mainDocumentPart.DocumentSettingsPart == null)
-        {
-            DocumentSettingsPart settingsPart = mainDocumentPart.AddNewPart<DocumentSettingsPart>();
-            settingsPart.Settings = new Settings(
-                new Compatibility(
-                    new CompatibilitySetting() { Name = CompatSettingNameValues.CompatibilityMode, Uri = "http://schemas.microsoft.com/office/word", Val = "15" }));
-        }
+        NewDocument.SetDocument(mainDocumentPart);
+        NewDocument.AddMissingParts(mainDocumentPart);
     }
 
     public void InitializeCommentsPart()

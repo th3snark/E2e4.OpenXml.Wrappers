@@ -29,11 +29,18 @@ public class DocumentStructureTest : IDisposable
 
     private void AddStyles()
     {
-        StyleDefinitionsPart part = _document.WordprocessingDocument.MainDocumentPart.AddNewPart<StyleDefinitionsPart>();
+        StyleDefinitionsPart part = _document.WordprocessingDocument.MainDocumentPart.StyleDefinitionsPart;
         part.Styles = new Styles(
             new Style(new StyleName() { Val = "Normal" }) { Type = StyleValues.Paragraph, StyleId = "Normal", Default = true },
             new Style(new StyleName() { Val = "heading 1" }, new BasedOn() { Val = "Normal" }, new NextParagraphStyle() { Val = "Normal" }) { Type = StyleValues.Paragraph, StyleId = "Heading1" },
             new Style(new StyleName() { Val = "Strong" }) { Type = StyleValues.Character, StyleId = "Strong" });
+    }
+
+    //A document from elsewhere may have no styles part, unlike one made by Create.
+    private void RemoveStylesPart()
+    {
+        MainDocumentPart main = _document.WordprocessingDocument.MainDocumentPart;
+        main.DeletePart(main.StyleDefinitionsPart);
     }
 
     #region Sections
@@ -48,8 +55,8 @@ public class DocumentStructureTest : IDisposable
         Assert.Equal(16838 / 20.0, setup.PageHeight);
         Assert.Equal(PageOrientation.Portrait, setup.Orientation);
         Assert.Equal(72, setup.TopMargin);
-        Assert.Equal(90, setup.LeftMargin);
-        Assert.Equal(90, setup.RightMargin);
+        Assert.Equal(72, setup.LeftMargin);
+        Assert.Equal(72, setup.RightMargin);
         Assert.Equal(35.4, setup.HeaderDistance);
         Assert.Equal(0, setup.Gutter);
         Assert.Equal(SectionStart.NewPage, setup.SectionStart);
@@ -214,6 +221,8 @@ public class DocumentStructureTest : IDisposable
     [Fact]
     public void ADocumentWithoutStylesHasNone()
     {
+        RemoveStylesPart();
+
         Assert.Equal(0, _document.Styles.Count);
         Assert.False(_document.Styles.Exists("Normal"));
         Assert.Empty(_document.Styles);
@@ -223,6 +232,8 @@ public class DocumentStructureTest : IDisposable
     [Fact]
     public void ABuiltInStyleIsAddedToTheDocumentWhenItIsAskedFor()
     {
+        RemoveStylesPart();
+
         StyleWrapper heading = _document.Styles[BuiltInStyle.Heading1];
 
         Assert.Equal("Heading 1", heading.Name);
@@ -232,7 +243,8 @@ public class DocumentStructureTest : IDisposable
         Assert.True(_document.Styles.Exists("Heading 1"));
         Assert.True(_document.Styles.Exists("Normal"));
         Assert.Equal(heading, _document.Styles["heading 1"]);
-        Assert.Equal(2, _document.Styles.Count);
+        //Heading 1, Normal, which it is based on, Heading 1 Char, which is linked to it, and Default Paragraph Font, which that is based on.
+        Assert.Equal(4, _document.Styles.Count);
         Assert.Throws<ArgumentException>(() => _document.Styles.Add("Heading 2", StyleType.Paragraph));
     }
 
@@ -287,6 +299,8 @@ public class DocumentStructureTest : IDisposable
     [Fact]
     public void AddingToADocumentWithoutStylesCreatesThePart()
     {
+        RemoveStylesPart();
+
         StyleWrapper added = _document.Styles.Add("First", StyleType.Character);
 
         Assert.Equal(StyleType.Character, added.Type);
@@ -375,6 +389,8 @@ public class DocumentStructureTest : IDisposable
     [Fact]
     public void ExtendedPropertiesAreCreatedOnDemand()
     {
+        WordprocessingDocument package = _document.WordprocessingDocument;
+        package.DeletePart(package.ExtendedFilePropertiesPart);
         DocumentPropertiesWrapper properties = _document.BuiltInDocumentProperties;
         Assert.Null(properties.Company);
         properties.Company = null;

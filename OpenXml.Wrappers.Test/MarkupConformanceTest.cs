@@ -25,7 +25,6 @@ namespace OpenXml.Wrappers.Test;
 /// </remarks>
 public class MarkupConformanceTest
 {
-    private const string Step3Reason = "Plan step 3 (new documents and styles): Create writes no styles, theme, fontTable or webSettings, Word 2007 page margins and settings.";
     private const string Step4Reason = "Plan step 4 (run and paragraph content): runs, on/off properties, xml:space and paragraph edits differ from Word's.";
     private const string Step5Reason = "Plan step 5 (tables, sections, comments and package): table, section, header, comment and protection markup differs from Word's.";
 
@@ -37,14 +36,13 @@ public class MarkupConformanceTest
     private enum PlanStep
     {
         None = 0,
-        NewDocuments = 3,
         RunsAndParagraphs = 4,
         TablesSectionsCommentsPackage = 5,
     }
 
     private static readonly Scenario[] Scenarios = new[]
     {
-        new Scenario("blank-document", PlanStep.NewDocuments, d => { }, AllParts()),
+        new Scenario("blank-document", PlanStep.None, d => { }, AllParts()),
 
         new Scenario("insert-after-tab-and-line-break", PlanStep.RunsAndParagraphs,
             d => d.Content.InsertAfter("Before\tafter the tab\vafter the break"),
@@ -150,6 +148,8 @@ public class MarkupConformanceTest
             },
             Body()),
 
+        new Scenario("built-in-styles", PlanStep.None, ApplyEveryBuiltInStyle, Part("styles.xml")),
+
         new Scenario("join-paragraphs", PlanStep.RunsAndParagraphs,
             d =>
             {
@@ -162,9 +162,39 @@ public class MarkupConformanceTest
             Body()),
     };
 
-    public static TheoryData<string> Matching => ScenariosWaitingFor(PlanStep.None);
+    //The styles of the built-in-styles scenario in scenarios.ps1, in the same order: every BuiltInStyle a new document does not have, then the
+    //built-in styles that have no BuiltInStyle value, by name.
+    private static readonly int[] BuiltInStylesScenario =
+    {
+        -2, -3, -4, -5, -6, -7, -8, -9, -10, -20, -21, -22, -23, -24, -25, -26, -27, -28, -30, -31, -32, -33, -35, -39, -40, -41,
+        -42, -43, -44, -63, -64, -65, -67, -68, -75, -76, -77, -81, -82, -86, -87, -88, -89, -91, -180, -181, -182, -261, -262, -263, -264, -265,
+    };
 
-    public static TheoryData<string> WaitingForStep3 => ScenariosWaitingFor(PlanStep.NewDocuments);
+    private static readonly string[] BuiltInStylesScenarioByName = { "Comment Subject" };
+
+    private static void ApplyEveryBuiltInStyle(WordprocessingDocumentWrapper document)
+    {
+        foreach (StyleWrapper style in BuiltInStylesScenario.Select(id => document.Styles[(BuiltInStyle)id])
+            .Concat(BuiltInStylesScenarioByName.Select(name => document.Styles[name])))
+        {
+            document.Content.InsertAfter("x");
+            ParagraphWrapper paragraph = document.Paragraphs[document.Paragraphs.Count - 1];
+            if (style.Type == StyleType.Character)
+            {
+                int start = paragraph.Range.Start;
+                document.Range(start, start + 1).Style = style.Name;
+            }
+            else
+            {
+                paragraph.Style = style.Name;
+            }
+            document.Content.InsertParagraphAfter();
+        }
+        TableWrapper table = document.Tables.Add(document.Paragraphs[document.Paragraphs.Count - 1].Range, 1, 1);
+        table.Style = "Table Grid";
+    }
+
+    public static TheoryData<string> Matching => ScenariosWaitingFor(PlanStep.None);
 
     public static TheoryData<string> WaitingForStep4 => ScenariosWaitingFor(PlanStep.RunsAndParagraphs);
 
@@ -207,7 +237,6 @@ public class MarkupConformanceTest
 
     [Theory]
     [MemberData(nameof(Matching))]
-    [MemberData(nameof(WaitingForStep3), Skip = Step3Reason)]
     [MemberData(nameof(WaitingForStep4), Skip = Step4Reason)]
     [MemberData(nameof(WaitingForStep5), Skip = Step5Reason)]
     public void LibraryWritesWhatWordWrites(string name)
@@ -258,6 +287,7 @@ public class MarkupConformanceTest
 
     private static SortedDictionary<string, string> WriteWithLibrary(Action<WordprocessingDocumentWrapper> act)
     {
+        //The test assembly runs in the culture of the Word that wrote the references (see TestCulture), which the new document's defaults follow.
         using (MemoryStream stream = new MemoryStream())
         {
             using (WordprocessingDocumentWrapper document = WordprocessingDocumentWrapper.Create(stream, true, false))

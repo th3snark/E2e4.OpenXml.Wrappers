@@ -35,6 +35,16 @@ function Get-WordPath {
 
 # Starts a Word of its own with /a (no add-ins, and the built-in Normal template rather than the user's Normal.dotm) and /automation, and
 # attaches to it through COM. Refuses when Word is already running, because COM would then hand back that instance instead.
+# The current Office theme (Aptos, Office 2023 and later). With /a Word does not load Normal.dotm and falls back to its built-in defaults, whose
+# theme is still the Office 2013 - 2022 one (Calibri); a new document in Word 365 with a current Normal.dotm has this theme instead.
+function Get-OfficeThemePath([string] $WordPath) {
+    $path = Join-Path (Split-Path -Parent (Split-Path -Parent $WordPath)) 'Document Themes 16\Office Theme.thmx'
+    if (-not (Test-Path -LiteralPath $path)) {
+        throw ('The Office theme was not found at {0}.' -f $path)
+    }
+    return $path
+}
+
 function Start-Word([string] $WordPath) {
     if (Get-Process WINWORD -ErrorAction SilentlyContinue) {
         throw 'Word is already running. Close every Word window first, so that the script attaches to the Word it starts and not to yours.'

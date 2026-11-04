@@ -66,7 +66,8 @@ internal static class StyleHelper
     }
 
     /// <summary>
-    /// Finds a style by its name (ignoring case) or, failing that, by its id. A built-in style that the document does not have yet is added.
+    /// Finds the style to apply by its name (ignoring case) or, failing that, by its id. A built-in style that the document does not have yet
+    /// is added, and the style is marked as used (see <see cref="BuiltInStyles.MarkUsed"/>).
     /// </summary>
     /// <exception cref="InvalidOperationException">The element is not in a document.</exception>
     /// <exception cref="ArgumentException">There is no style with that name.</exception>
@@ -84,6 +85,7 @@ internal static class StyleHelper
             throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, "The document does not have a style named '{0}'.", nameOrId), nameof(nameOrId));
         }
 
+        BuiltInStyles.MarkUsed(mainDocumentPart, style);
         type = style.Type != null && style.Type.HasValue ? style.Type.Value : StyleValues.Paragraph;
         return style.StyleId.Value;
     }

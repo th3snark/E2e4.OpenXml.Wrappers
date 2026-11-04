@@ -9,10 +9,9 @@ namespace OpenXml.Wrappers.Samples;
 /// Creates the documents the examples start from.
 /// </summary>
 /// <remarks>
-/// A document made by <see cref="WordprocessingDocumentWrapper.Create(string, bool, bool)"/> has a body and nothing else, so it has no styles
-/// and Word falls back on its own defaults. <see cref="Create"/> gives it the small set of styles that an ordinary Word document has (Normal,
-/// Title, Heading 1 and 2, Header and Footer) and sets the formatting of them with the library's own <c>Style.Font</c> and
-/// <c>Style.ParagraphFormat</c>.
+/// A document made by <see cref="WordprocessingDocumentWrapper.Create(string, bool, bool)"/> has Word's own styles, as a new document in
+/// Word 365 does. <see cref="Create"/> formats some of them (Title, Heading 1 and 2, Header and Footer) with the library's own
+/// <c>Style.Font</c> and <c>Style.ParagraphFormat</c>.
 /// </remarks>
 internal static class SampleDocument
 {
@@ -32,19 +31,7 @@ internal static class SampleDocument
 
     private static void AddStyles(WordprocessingDocumentWrapper document)
     {
-        StyleDefinitionsPart part = document.WordprocessingDocument.MainDocumentPart.AddNewPart<StyleDefinitionsPart>();
-        part.Styles = new Styles(
-            new DocDefaults(
-                new RunPropertiesDefault(new RunPropertiesBaseStyle(new RunFonts() { Ascii = "Calibri", HighAnsi = "Calibri", EastAsia = "Calibri", ComplexScript = "Calibri" }, new FontSize() { Val = "22" })),
-                new ParagraphPropertiesDefault(new ParagraphPropertiesBaseStyle(new SpacingBetweenLines() { After = "120", Line = "264", LineRule = LineSpacingRuleValues.Auto }))),
-            new Style(new StyleName() { Val = "Normal" }, new PrimaryStyle()) { Type = StyleValues.Paragraph, StyleId = "Normal", Default = true },
-            CreateParagraphStyle("Title", "Title", new StyleParagraphProperties(), 10),
-            CreateParagraphStyle("Heading1", "heading 1", new StyleParagraphProperties(new KeepNext(), new KeepLines(), new OutlineLevel() { Val = 0 }), 9),
-            CreateParagraphStyle("Heading2", "heading 2", new StyleParagraphProperties(new KeepNext(), new KeepLines(), new OutlineLevel() { Val = 1 }), 9),
-            CreateParagraphStyle("Header", "header", new StyleParagraphProperties(), 99),
-            CreateParagraphStyle("Footer", "footer", new StyleParagraphProperties(), 99));
-
-        //From here the styles are formatted through the library, the way a macro would set Style.Font in Word.
+        //The styles are formatted through the library, the way a macro would set Style.Font in Word. Header and Footer are added on first use.
         StyleWrapperCollection styles = document.Styles;
         styles["Title"].Font.Size = 26;
         styles["Title"].Font.Color = "1F3864";
@@ -66,25 +53,6 @@ internal static class SampleDocument
         styles["Header"].Font.Color = "595959";
         styles["Footer"].Font.Size = 9;
         styles["Footer"].Font.Color = "595959";
-    }
-
-    private static Style CreateParagraphStyle(string id, string name, StyleParagraphProperties properties, int priority)
-    {
-        Style style = new Style(
-            new StyleName() { Val = name },
-            new BasedOn() { Val = "Normal" },
-            new NextParagraphStyle() { Val = "Normal" },
-            new UIPriority() { Val = priority },
-            new PrimaryStyle())
-        {
-            Type = StyleValues.Paragraph,
-            StyleId = id
-        };
-        if (properties.HasChildren)
-        {
-            style.AppendChild(properties);
-        }
-        return style;
     }
 }
 
