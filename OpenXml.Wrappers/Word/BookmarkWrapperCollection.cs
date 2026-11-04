@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 
 using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
@@ -178,8 +179,11 @@ public class BookmarkWrapperCollection : IEnumerable<BookmarkWrapper>
             new BookmarkWrapper(existing).Delete();
         }
 
+        //The ids are unique across the document, not just the part the bookmark is in.
+        MainDocumentPart mainDocumentPart = StyleHelper.GetMainDocumentPart(range.AnchorElement);
+        IEnumerable<OpenXmlElement> stories = mainDocumentPart != null ? mainDocumentPart.GetStoryRoots().Where(r => r != null) : new[] { root };
         int id = 0;
-        foreach (BookmarkStart other in root.Descendants<BookmarkStart>())
+        foreach (BookmarkStart other in stories.SelectMany(r => r.Descendants<BookmarkStart>()))
         {
             id = Math.Max(id, Convert.ToInt32(other.Id.Value, CultureInfo.InvariantCulture) + 1);
         }

@@ -228,15 +228,7 @@ public partial class WordprocessingDocumentWrapper : IDisposable
         }
         if (mainDocumentPart.WordprocessingCommentsPart.Comments == null)
         {
-            mainDocumentPart.WordprocessingCommentsPart.Comments = new Comments();
-        }
-    }
-
-    private static void CopyPartData(OpenXmlPart fromPart, OpenXmlPart toPart)
-    {
-        using (Stream stream = fromPart.GetStream(FileMode.Open))
-        {
-            toPart.FeedData(stream);
+            mainDocumentPart.WordprocessingCommentsPart.Comments = CommentParts.NewComments();
         }
     }
 
@@ -251,7 +243,18 @@ public partial class WordprocessingDocumentWrapper : IDisposable
         {
             toMainDocumentPart.DeletePart(existingPart);
         }
-        CopyPartData(fromPart, toMainDocumentPart.AddNewPart<T>());
+        SaveLoadedChanges(fromPart);
+        toMainDocumentPart.AddPart(fromPart);
+    }
+
+    //A part of another package is copied from its stored content, so what has been changed in its tree is stored first.
+    private static void SaveLoadedChanges(OpenXmlPart part)
+    {
+        if (part.IsRootElementLoaded && part.OpenXmlPackage.FileOpenAccess != FileAccess.Read)
+        {
+            part.RootElement?.UseTransitionalIndentationNames();
+            part.RootElement?.Save();
+        }
     }
 
     /// <summary>
@@ -284,14 +287,15 @@ public partial class WordprocessingDocumentWrapper : IDisposable
         foreach (HeaderPart fromHeaderPart in fromMainDocumentPart.HeaderParts)
         {
             string fromHeaderPartId = fromMainDocumentPart.GetIdOfPart(fromHeaderPart);
-            HeaderPart toHeaderPart = toMainDocumentPart.AddNewPart<HeaderPart>(fromHeaderPartId);
-            CopyPartData(fromHeaderPart, toHeaderPart);
+            //Adding a part of another package copies the parts it refers to as well, such as its pictures.
+            SaveLoadedChanges(fromHeaderPart);
+            toMainDocumentPart.AddPart(fromHeaderPart, fromHeaderPartId);
         }
         foreach (FooterPart fromFooterPart in fromMainDocumentPart.FooterParts)
         {
             string fromFooterPartId = fromMainDocumentPart.GetIdOfPart(fromFooterPart);
-            FooterPart toFooterPart = toMainDocumentPart.AddNewPart<FooterPart>(fromFooterPartId);
-            CopyPartData(fromFooterPart, toFooterPart);
+            SaveLoadedChanges(fromFooterPart);
+            toMainDocumentPart.AddPart(fromFooterPart, fromFooterPartId);
         }
     }
 
@@ -302,11 +306,18 @@ public partial class WordprocessingDocumentWrapper : IDisposable
         //Delete the existing header and footer parts from the target document
         if (toMainDocumentPart.GetPartsOfType<HeaderPart>().Any())
         {
-            toMainDocumentPart.DeleteParts(toMainDocumentPart.HeaderParts);
+            toMainDocumentPart.DeleteParts(toMainDocumentPart.HeaderParts.ToList());
         }
         if (toMainDocumentPart.GetPartsOfType<FooterPart>().Any())
         {
-            toMainDocumentPart.DeleteParts(toMainDocumentPart.FooterParts);
+            toMainDocumentPart.DeleteParts(toMainDocumentPart.FooterParts.ToList());
+        }
+
+        //The section breaks in the text referred to the headers and footers that have gone.
+        foreach (SectionProperties section in toMainDocumentPart.Document.Descendants<SectionProperties>())
+        {
+            section.RemoveAllChildren<HeaderReference>();
+            section.RemoveAllChildren<FooterReference>();
         }
 
         //Replace the section properties in the target document with that of the source document
@@ -341,12 +352,9 @@ public partial class WordprocessingDocumentWrapper : IDisposable
                     continue;
                 }
 
-                //Add a new header part to the target document
-                HeaderPart toHeaderPart = toMainDocumentPart.AddNewPart<HeaderPart>();
-                string toId = toMainDocumentPart.GetIdOfPart(toHeaderPart);
-
-                //Feed the targer header part with the source header part
-                CopyPartData(fromHeaderPart, toHeaderPart);
+                //Add a copy of the source header part, and what it refers to, to the target document
+                SaveLoadedChanges(fromHeaderPart);
+                string toId = toMainDocumentPart.GetIdOfPart(toMainDocumentPart.AddPart(fromHeaderPart));
 
                 //Update the header reference with the new id
                 headerReference.Id = toId;
@@ -363,12 +371,9 @@ public partial class WordprocessingDocumentWrapper : IDisposable
                     continue;
                 }
 
-                //Add a new footer part to the target document
-                FooterPart toFooterPart = toMainDocumentPart.AddNewPart<FooterPart>();
-                string toId = toMainDocumentPart.GetIdOfPart(toFooterPart);
-
-                //Feed the targer footer part with the source footer part
-                CopyPartData(fromFooterPart, toFooterPart);
+                //Add a copy of the source footer part, and what it refers to, to the target document
+                SaveLoadedChanges(fromFooterPart);
+                string toId = toMainDocumentPart.GetIdOfPart(toMainDocumentPart.AddPart(fromFooterPart));
 
                 //Update the footer reference with the new id
                 footerReference.Id = toId;

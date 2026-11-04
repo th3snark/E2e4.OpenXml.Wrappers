@@ -115,7 +115,7 @@ internal static class CatalogueExample
 
         //A table inside a cell: Tables.Add replaces the range it is given (as in Word) and puts the table before its paragraph, so give it a new, empty paragraph after the description.
         ParagraphWrapper spot = right.Range.Paragraphs[0].Range.InsertParagraphAfter();
-        TableWrapper specs = document.Tables.Add(spot.Range, product.Specs.Length, 2);
+        TableWrapper specs = document.Tables.Add(spot.Range, product.Specs.Length, 2, DefaultTableBehavior.Word9TableBehavior);
         for (int i = 0; i < product.Specs.Length; i++)
         {
             specs.Cell(i, 0).Range.Text = product.Specs[i].Name;

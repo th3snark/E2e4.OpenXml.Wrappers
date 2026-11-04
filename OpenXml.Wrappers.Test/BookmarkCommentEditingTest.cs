@@ -182,7 +182,8 @@ public class BookmarkCommentEditingTest : IDisposable
 
         DateTime date = new DateTime(2024, 5, 6, 7, 8, 9, DateTimeKind.Utc);
         comment.Date = date;
-        Assert.Equal(date, comment.Date);
+        //Word keeps local time in the comment.
+        Assert.Equal(DateTime.SpecifyKind(date.ToLocalTime(), DateTimeKind.Unspecified), comment.Date);
 
         comment.Date = null;
         Assert.Null(comment.Date);

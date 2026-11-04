@@ -18,7 +18,7 @@ internal static class TableExample
 
             //Tables.Add replaces the range it is given (as in Word) and puts the table before its paragraph, so give it an empty paragraph, which follows the table.
             ParagraphWrapper after = document.Content.InsertParagraphAfter();
-            TableWrapper table = document.Tables.Add(after.Range, 4, 3);
+            TableWrapper table = document.Tables.Add(after.Range, 4, 3, DefaultTableBehavior.Word9TableBehavior);
 
             int[][] sales = { new[] { 120, 134 }, new[] { 98, 105 }, new[] { 143, 151 } };
             string[] regions = { "North", "South", "West" };

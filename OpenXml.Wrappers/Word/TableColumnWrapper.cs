@@ -3,6 +3,7 @@ using OpenXml.Wrappers.Helpers;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
@@ -54,7 +55,7 @@ public partial class TableColumnWrapper : System.IEquatable<TableColumnWrapper>
         List<GridColumn> grid = table.GetFirstChild<TableGrid>().Elements<GridColumn>().ToList();
         if (grid.Count == 1)
         {
-            table.Remove();
+            RangeWrapper.DeleteElements(new OpenXmlElement[] { table });
             return;
         }
 
@@ -85,7 +86,7 @@ public partial class TableColumnWrapper : System.IEquatable<TableColumnWrapper>
                     below.TableCellProperties.VerticalMerge = new VerticalMerge() { Val = MergedCellValues.Restart };
                 }
             }
-            cell.Remove();
+            RangeWrapper.DeleteElements(new OpenXmlElement[] { cell });
         }
         _gridColumn.Remove();
     }

@@ -51,7 +51,13 @@ public partial class CommentWrapper : System.IEquatable<CommentWrapper>
     public string Author
     {
         get { return _commentRangeStart.GetComment().Author?.Value; }
-        set { _commentRangeStart.GetComment().Author = value; }
+        set
+        {
+            Comment comment = _commentRangeStart.GetComment();
+            string previous = comment.Author?.Value;
+            comment.Author = value;
+            CommentParts.AuthorChanged(MainPart, previous, value);
+        }
     }
 
     public string Initial
@@ -109,7 +115,7 @@ public partial class CommentWrapper : System.IEquatable<CommentWrapper>
     }
 
     /// <summary>
-    /// The date and time (UTC) the comment was made, or null if it has none.
+    /// The date and time the comment was made, in local time as in Word, or null if it has none.
     /// </summary>
     public DateTime? Date
     {
@@ -118,7 +124,12 @@ public partial class CommentWrapper : System.IEquatable<CommentWrapper>
             DateTimeValue date = _commentRangeStart.GetComment().Date;
             return date != null && date.HasValue ? date.Value : null;
         }
-        set { _commentRangeStart.GetComment().Date = value.HasValue ? value.Value.ToUniversalTime() : null; }
+        set
+        {
+            Comment comment = _commentRangeStart.GetComment();
+            comment.Date = value.HasValue ? DateTime.SpecifyKind(value.Value.ToLocalTime(), DateTimeKind.Unspecified) : null;
+            CommentParts.DateChanged(MainPart, comment, value);
+        }
     }
 
     /// <summary>

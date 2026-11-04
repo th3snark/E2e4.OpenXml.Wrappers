@@ -109,7 +109,9 @@ public class CommentWordMembersTest : IDisposable
         Assert.Equal(1, _document.Comments.Count);
         Assert.Equal("other", Plain(_document.Comments[0]));
         Assert.Single(_document.WordprocessingDocument.MainDocumentPart.WordprocessingCommentsPart.Comments.Elements<Comment>());
-        Assert.Empty(_document.WordprocessingDocument.MainDocumentPart.WordprocessingCommentsExPart.CommentsEx.ChildElements);
+        Assert.Single(_document.WordprocessingDocument.MainDocumentPart.WordprocessingCommentsExPart.CommentsEx.ChildElements);
+        Assert.Single(_document.WordprocessingDocument.MainDocumentPart.WordprocessingCommentsIdsPart.CommentsIds.ChildElements);
+        Assert.Single(_document.WordprocessingDocument.MainDocumentPart.WordCommentsExtensiblePart.CommentsExtensible.ChildElements);
         AssertValid();
     }
 

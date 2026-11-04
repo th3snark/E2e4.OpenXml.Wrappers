@@ -260,16 +260,18 @@ public class HeaderFooterWrapper : System.IEquatable<HeaderFooterWrapper>
         if (_isHeader)
         {
             HeaderPart part = main.AddNewPart<HeaderPart>();
-            part.Header = content == null ? new Header(new Paragraph()) : (Header)content.CloneNode(true);
+            part.Header = content == null ? new Header() : (Header)content.CloneNode(true);
             root = part.Header;
+            FinishNewPart(part, root, content, main);
             id = main.GetIdOfPart(part);
             properties.PrependChild(new HeaderReference() { Type = GetReferenceType(), Id = id });
         }
         else
         {
             FooterPart part = main.AddNewPart<FooterPart>();
-            part.Footer = content == null ? new Footer(new Paragraph()) : (Footer)content.CloneNode(true);
+            part.Footer = content == null ? new Footer() : (Footer)content.CloneNode(true);
             root = part.Footer;
+            FinishNewPart(part, root, content, main);
             id = main.GetIdOfPart(part);
             properties.PrependChild(new FooterReference() { Type = GetReferenceType(), Id = id });
         }
@@ -278,6 +280,53 @@ public class HeaderFooterWrapper : System.IEquatable<HeaderFooterWrapper>
             Latent.Add(root, new object());
         }
         return root;
+    }
+
+    //A new header or footer has a paragraph in the Header or Footer style. One that is a copy keeps what its content refers to, such as pictures
+    //and links; the bookmarks and comments stay with the original, because they can only be in one place.
+    private static void FinishNewPart(OpenXmlPart part, OpenXmlCompositeElement root, OpenXmlCompositeElement content, MainDocumentPart main)
+    {
+        if (content == null)
+        {
+            root.AppendChild(NewParagraph(root, main));
+            return;
+        }
+
+        OpenXmlPart source = (content.GetRoot() as OpenXmlPartRootElement)?.OpenXmlPart;
+        if (source != null)
+        {
+            foreach (IdPartPair pair in source.Parts)
+            {
+                part.AddPart(pair.OpenXmlPart, pair.RelationshipId);
+            }
+            foreach (ExternalRelationship relationship in source.ExternalRelationships)
+            {
+                part.AddExternalRelationship(relationship.RelationshipType, relationship.Uri, relationship.Id);
+            }
+            foreach (HyperlinkRelationship relationship in source.HyperlinkRelationships)
+            {
+                part.AddHyperlinkRelationship(relationship.Uri, relationship.IsExternal, relationship.Id);
+            }
+        }
+        root.RemoveAnchors();
+        root.GiveDrawingsNewIds();
+    }
+
+    /// <summary>An empty paragraph for a header or footer, in the Header or Footer style when the header or footer is in a document.</summary>
+    internal static Paragraph NewParagraph(OpenXmlElement headerOrFooter)
+    {
+        return NewParagraph(headerOrFooter, StyleHelper.GetMainDocumentPart(headerOrFooter));
+    }
+
+    private static Paragraph NewParagraph(OpenXmlElement headerOrFooter, MainDocumentPart main)
+    {
+        if (main == null)
+        {
+            return new Paragraph();
+        }
+        string style = headerOrFooter is Header ? "Header" : "Footer";
+        BuiltInStyles.GetOrCreate(main, style);
+        return new Paragraph(new ParagraphProperties(new ParagraphStyleId() { Val = style }));
     }
 
     private void RemoveReference()

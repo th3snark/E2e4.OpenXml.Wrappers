@@ -6,6 +6,8 @@ using System.Linq;
 
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Office2013.Word;
+using DocumentFormat.OpenXml.Office2019.Word.Cid;
+using DocumentFormat.OpenXml.Office2021.Word.CommentsExt;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 
@@ -35,7 +37,7 @@ public partial class CommentWrapper
         return last.ParagraphId?.Value;
     }
 
-    private static string NewParagraphId(MainDocumentPart mainDocumentPart)
+    internal static string NewParagraphId(MainDocumentPart mainDocumentPart)
     {
         HashSet<string> used = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (Paragraph paragraph in mainDocumentPart.Document.Descendants<Paragraph>().Concat(
@@ -75,7 +77,7 @@ public partial class CommentWrapper
             {
                 return null;
             }
-            part.CommentsEx = new CommentsEx();
+            part.CommentsEx = CommentParts.NewRoot(new CommentsEx(), "w15", CommentParts.W15);
         }
         return part.CommentsEx;
     }
@@ -92,7 +94,7 @@ public partial class CommentWrapper
         CommentEx entry = commentsEx?.Elements<CommentEx>().FirstOrDefault(e => string.Equals(e.ParaId?.Value, paragraphId, StringComparison.OrdinalIgnoreCase));
         if (entry == null && create)
         {
-            entry = new CommentEx() { ParaId = paragraphId, Done = false };
+            entry = new CommentEx() { ParaId = paragraphId, Done = OpenXmlExtensions.OffValue() };
             commentsEx.AppendChild(entry);
         }
         return entry;
@@ -100,8 +102,7 @@ public partial class CommentWrapper
 
     private void RemoveThreadInformation()
     {
-        CommentEx entry = FindCommentEx(false);
-        entry?.Remove();
+        CommentParts.Remove(MainPart, _commentRangeStart.GetComment());
     }
 
     /// <summary>
@@ -117,7 +118,7 @@ public partial class CommentWrapper
         set
         {
             CommentEx entry = FindCommentEx(true);
-            entry.Done = value;
+            entry.Done = value ? OpenXmlExtensions.OnValue() : OpenXmlExtensions.OffValue();
         }
     }
 
@@ -188,17 +189,16 @@ public partial class CommentWrapper
 
         Comment reply = CommentWrapperCollection.CreateComment(main, text);
         string idText = reply.Id.Value;
-        string replyParagraphId = NewParagraphId(main);
-        reply.Elements<Paragraph>().Last().ParagraphId = replyParagraphId;
-        GetCommentsEx(true).AppendChild(new CommentEx() { ParaId = replyParagraphId, ParaIdParent = parentParagraphId, Done = false });
+        string replyParagraphId = reply.Elements<Paragraph>().Last().ParagraphId.Value;
+        GetCommentsEx(true).Elements<CommentEx>().First(e => e.ParaId?.Value == replyParagraphId).ParaIdParent = parentParagraphId;
 
         //The reply is on the same text as the comment, after the replies that are there already, and its reference follows theirs.
         CommentRangeStart start = new CommentRangeStart() { Id = idText };
         CommentRangeEnd end = new CommentRangeEnd() { Id = idText };
         Run referenceRun = new Run(new RunProperties(new RunStyle() { Val = "CommentReference" }), new CommentReference() { Id = idText });
-        previous._commentRangeEnd.InsertAfterSelf(end);
         previous._commentRangeStart.InsertAfterSelf(start);
-        previous.GetReferenceRun().InsertAfterSelf(referenceRun);
+        previous.GetReferenceRun().InsertAfterSelf(end);
+        end.InsertAfterSelf(referenceRun);
 
         return new CommentWrapper(start);
     }
@@ -262,5 +262,139 @@ public class CommentReplyCollection : IEnumerable<CommentWrapper>
     IEnumerator IEnumerable.GetEnumerator()
     {
         return GetEnumerator();
+    }
+}
+
+/// <summary>
+/// The parts that hold what Word records about each comment beside its text: done and threads (<c>commentsExtended</c>), its lasting id
+/// (<c>commentsIds</c>), the time in UTC (<c>commentsExtensible</c>) and its author (<c>people</c>). Word writes all of them for every comment.
+/// </summary>
+internal static class CommentParts
+{
+    internal const string W14 = "http://schemas.microsoft.com/office/word/2010/wordml";
+    internal const string W15 = "http://schemas.microsoft.com/office/word/2012/wordml";
+    private const string W16Cid = "http://schemas.microsoft.com/office/word/2016/wordml/cid";
+    private const string W16Cex = "http://schemas.microsoft.com/office/word/2018/wordml/cex";
+    private const string MarkupCompatibility = "http://schemas.openxmlformats.org/markup-compatibility/2006";
+
+    private static readonly Random Randomizer = new Random();
+
+    /// <summary>The root of a part, marked as Word marks it, so that a program that does not know the namespace can ignore it.</summary>
+    internal static T NewRoot<T>(T root, string prefix, string namespaceUri) where T : OpenXmlPartRootElement
+    {
+        root.AddNamespaceDeclaration("mc", MarkupCompatibility);
+        root.AddNamespaceDeclaration(prefix, namespaceUri);
+        root.MCAttributes = new MarkupCompatibilityAttributes() { Ignorable = prefix };
+        return root;
+    }
+
+    internal static Comments NewComments()
+    {
+        return NewRoot(new Comments(), "w14", W14);
+    }
+
+    /// <summary>The initials Word would make of a name: the first letter of each word.</summary>
+    internal static string GetInitials(string author)
+    {
+        return string.Concat(author.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Select(w => w.Substring(0, 1)));
+    }
+
+    /// <summary>Gives a new comment its paragraph id and its entry in each of the parts.</summary>
+    internal static void Add(MainDocumentPart main, Comment comment)
+    {
+        string paragraphId = CommentWrapper.NewParagraphId(main);
+        comment.Elements<Paragraph>().Last().ParagraphId = paragraphId;
+        string durableId = Randomizer.Next(0x10000000, 0x7FFFFFFF).ToString("X8", CultureInfo.InvariantCulture);
+
+        WordprocessingCommentsExPart exPart = main.WordprocessingCommentsExPart ?? main.AddNewPart<WordprocessingCommentsExPart>();
+        if (exPart.CommentsEx == null)
+        {
+            exPart.CommentsEx = NewRoot(new CommentsEx(), "w15", W15);
+        }
+        exPart.CommentsEx.AppendChild(new CommentEx() { ParaId = paragraphId, Done = OpenXmlExtensions.OffValue() });
+
+        WordprocessingCommentsIdsPart idsPart = main.WordprocessingCommentsIdsPart ?? main.AddNewPart<WordprocessingCommentsIdsPart>();
+        if (idsPart.CommentsIds == null)
+        {
+            idsPart.CommentsIds = NewRoot(new CommentsIds(), "w16cid", W16Cid);
+        }
+        idsPart.CommentsIds.AppendChild(new CommentId() { ParaId = paragraphId, DurableId = durableId });
+
+        WordCommentsExtensiblePart extensiblePart = main.WordCommentsExtensiblePart ?? main.AddNewPart<WordCommentsExtensiblePart>();
+        if (extensiblePart.CommentsExtensible == null)
+        {
+            extensiblePart.CommentsExtensible = NewRoot(new CommentsExtensible(), "w16cex", W16Cex);
+        }
+        extensiblePart.CommentsExtensible.AppendChild(new CommentExtensible() { DurableId = durableId, DateUtc = DateTime.UtcNow.Truncate(TimeSpan.TicksPerSecond) });
+
+        AddPerson(main, comment.Author?.Value);
+    }
+
+    /// <summary>Takes away the entries of a comment that is going. The author stays listed: Word keeps its people too.</summary>
+    internal static void Remove(MainDocumentPart main, Comment comment)
+    {
+        string paragraphId = comment.Elements<Paragraph>().LastOrDefault()?.ParagraphId?.Value;
+        if (paragraphId == null)
+        {
+            return;
+        }
+
+        main.WordprocessingCommentsExPart?.CommentsEx?.Elements<CommentEx>().FirstOrDefault(e => SameId(e.ParaId?.Value, paragraphId))?.Remove();
+        CommentId id = main.WordprocessingCommentsIdsPart?.CommentsIds?.Elements<CommentId>().FirstOrDefault(e => SameId(e.ParaId?.Value, paragraphId));
+        if (id != null)
+        {
+            main.WordCommentsExtensiblePart?.CommentsExtensible?.Elements<CommentExtensible>().FirstOrDefault(e => SameId(e.DurableId?.Value, id.DurableId?.Value))?.Remove();
+            id.Remove();
+        }
+    }
+
+    internal static void DateChanged(MainDocumentPart main, Comment comment, DateTime? date)
+    {
+        string paragraphId = comment.Elements<Paragraph>().LastOrDefault()?.ParagraphId?.Value;
+        CommentId id = main.WordprocessingCommentsIdsPart?.CommentsIds?.Elements<CommentId>().FirstOrDefault(e => SameId(e.ParaId?.Value, paragraphId));
+        CommentExtensible entry = id == null ? null : main.WordCommentsExtensiblePart?.CommentsExtensible?.Elements<CommentExtensible>().FirstOrDefault(e => SameId(e.DurableId?.Value, id.DurableId?.Value));
+        if (entry != null)
+        {
+            entry.DateUtc = date.HasValue ? date.Value.ToUniversalTime() : null;
+        }
+    }
+
+    /// <summary>Lists the new author, and takes the old one off the list if nothing in the document is by them any more.</summary>
+    internal static void AuthorChanged(MainDocumentPart main, string previous, string author)
+    {
+        AddPerson(main, author);
+        if (previous == null || previous == author)
+        {
+            return;
+        }
+
+        bool stillUsed = main.GetStoryRoots().Where(r => r != null).SelectMany(r => r.Descendants())
+            .Any(e => e.GetAttributes().Any(a => a.LocalName == "author" && a.Value == previous));
+        if (!stillUsed)
+        {
+            main.WordprocessingPeoplePart?.People?.Elements<Person>().FirstOrDefault(p => p.Author?.Value == previous)?.Remove();
+        }
+    }
+
+    private static void AddPerson(MainDocumentPart main, string author)
+    {
+        if (author == null)
+        {
+            return;
+        }
+        WordprocessingPeoplePart part = main.WordprocessingPeoplePart ?? main.AddNewPart<WordprocessingPeoplePart>();
+        if (part.People == null)
+        {
+            part.People = NewRoot(new People(), "w15", W15);
+        }
+        if (!part.People.Elements<Person>().Any(p => p.Author?.Value == author))
+        {
+            part.People.AppendChild(new Person(new PresenceInfo() { ProviderId = "None", UserId = author }) { Author = author });
+        }
+    }
+
+    private static bool SameId(string first, string second)
+    {
+        return first != null && string.Equals(first, second, StringComparison.OrdinalIgnoreCase);
     }
 }

@@ -358,7 +358,7 @@ public partial class WordprocessingDocumentWrapper
             Edit = type == ProtectionType.AllowOnlyRevisions ? DocumentProtectionValues.TrackedChanges
                 : type == ProtectionType.AllowOnlyComments ? DocumentProtectionValues.Comments
                 : type == ProtectionType.AllowOnlyFormFields ? DocumentProtectionValues.Forms : DocumentProtectionValues.ReadOnly,
-            Enforcement = true
+            Enforcement = OpenXmlExtensions.OnValue()
         };
         if (!string.IsNullOrEmpty(password))
         {
@@ -372,8 +372,8 @@ public partial class WordprocessingDocumentWrapper
             protection.CryptographicAlgorithmType = CryptAlgorithmValues.TypeAny;
             protection.CryptographicAlgorithmSid = 14;
             protection.CryptographicSpinCount = 100000;
-            protection.HashValue = Convert.ToBase64String(HashPassword(password, salt, 100000));
-            protection.SaltValue = Convert.ToBase64String(salt);
+            protection.Hash = Convert.ToBase64String(HashPassword(password, salt, 100000));
+            protection.Salt = Convert.ToBase64String(salt);
         }
         settings.AddChild(protection);
     }
@@ -391,11 +391,22 @@ public partial class WordprocessingDocumentWrapper
             return;
         }
 
-        if (protection.HashValue != null && protection.SaltValue != null)
+        if (protection.Hash != null && protection.Salt != null)
         {
+            int spinCount = (int)(protection.CryptographicSpinCount?.Value ?? 100000);
+            byte[] expected = Convert.FromBase64String(protection.Hash.Value);
+            byte[] actual = HashPassword(password ?? string.Empty, Convert.FromBase64String(protection.Salt.Value), spinCount);
+            if (!SameBytes(expected, actual))
+            {
+                throw new UnauthorizedAccessException("The password is not correct.");
+            }
+        }
+        else if (protection.HashValue != null && protection.SaltValue != null)
+        {
+            //As version 1.0 of this library wrote it, which Word could not check.
             int spin = (int)(protection.CryptographicSpinCount?.Value ?? 100000);
             byte[] expected = Convert.FromBase64String(protection.HashValue.Value);
-            byte[] actual = HashPassword(password ?? string.Empty, Convert.FromBase64String(protection.SaltValue.Value), spin);
+            byte[] actual = HashPasswordVersion1(password ?? string.Empty, Convert.FromBase64String(protection.SaltValue.Value), spin);
             if (!SameBytes(expected, actual))
             {
                 throw new UnauthorizedAccessException("The password is not correct.");
@@ -421,7 +432,24 @@ public partial class WordprocessingDocumentWrapper
 
 #pragma warning disable CA1850 // SHA512.HashData does not exist for netstandard2.0.
     //The way Word 2013 and later hashes a password (SHA-512, a salt, and many rounds).
+    //As Word does it, checked against documents Word has protected: the old 16 bit key of the password, as the hexadecimal digits of its bytes in
+    //UTF-16, after the salt, and then the hash of that with the number of each round.
     private static byte[] HashPassword(string password, byte[] salt, int spinCount)
+    {
+        byte[] key = BitConverter.GetBytes(GetLegacyPasswordKey(password));
+        string digits = string.Concat(key.Select(b => b.ToString("X2", CultureInfo.InvariantCulture)));
+        using (SHA512 sha = SHA512.Create())
+        {
+            byte[] hash = sha.ComputeHash(salt.Concat(Encoding.Unicode.GetBytes(digits)).ToArray());
+            for (int i = 0; i < spinCount; i++)
+            {
+                hash = sha.ComputeHash(hash.Concat(BitConverter.GetBytes(i)).ToArray());
+            }
+            return hash;
+        }
+    }
+
+    private static byte[] HashPasswordVersion1(string password, byte[] salt, int spinCount)
     {
         using (SHA512 sha = SHA512.Create())
         {
@@ -432,6 +460,52 @@ public partial class WordprocessingDocumentWrapper
             }
             return hash;
         }
+    }
+
+    private static readonly ushort[] PasswordInitialCode = { 0xE1F0, 0x1D0F, 0xCC9C, 0x84C0, 0x110C, 0x0E10, 0xF1CE, 0x313E, 0x1872, 0xE139, 0xD40F, 0x84F9, 0x280C, 0xA96A, 0x4EC3 };
+
+    private static readonly ushort[][] PasswordMatrix =
+    {
+        new ushort[] { 0xAEFC, 0x4DD9, 0x9BB2, 0x2745, 0x4E8A, 0x9D14, 0x2A09 }, new ushort[] { 0x7B61, 0xF6C2, 0xFDA5, 0xEB6B, 0xC6F7, 0x9DCF, 0x2BBF },
+        new ushort[] { 0x4563, 0x8AC6, 0x05AD, 0x0B5A, 0x16B4, 0x2D68, 0x5AD0 }, new ushort[] { 0x0375, 0x06EA, 0x0DD4, 0x1BA8, 0x3750, 0x6EA0, 0xDD40 },
+        new ushort[] { 0xD849, 0xA0B3, 0x5147, 0xA28E, 0x553D, 0xAA7A, 0x44D5 }, new ushort[] { 0x6F45, 0xDE8A, 0xAD35, 0x4A4B, 0x9496, 0x390D, 0x721A },
+        new ushort[] { 0xEB23, 0xC667, 0x9CEF, 0x29FF, 0x53FE, 0xA7FC, 0x5FD9 }, new ushort[] { 0x47D3, 0x8FA6, 0x0F6D, 0x1EDA, 0x3DB4, 0x7B68, 0xF6D0 },
+        new ushort[] { 0xB861, 0x60E3, 0xC1C6, 0x93AD, 0x377B, 0x6EF6, 0xDDEC }, new ushort[] { 0x45A0, 0x8B40, 0x06A1, 0x0D42, 0x1A84, 0x3508, 0x6A10 },
+        new ushort[] { 0xAA51, 0x4483, 0x8906, 0x022D, 0x045A, 0x08B4, 0x1168 }, new ushort[] { 0x76B4, 0xED68, 0xCAF1, 0x85C3, 0x1BA7, 0x374E, 0x6E9C },
+        new ushort[] { 0x3730, 0x6E60, 0xDCC0, 0xA9A1, 0x4363, 0x86C6, 0x1DAD }, new ushort[] { 0x3331, 0x6662, 0xCCC4, 0x89A9, 0x0373, 0x06E6, 0x0DCC },
+        new ushort[] { 0x1021, 0x2042, 0x4084, 0x8108, 0x1231, 0x2462, 0x48C4 },
+    };
+
+    //The 32 bit key that Word has made of a password since Word 97: up to 15 characters, each as one byte.
+    private static uint GetLegacyPasswordKey(string password)
+    {
+        string text = password.Length > 15 ? password.Substring(0, 15) : password;
+        if (text.Length == 0)
+        {
+            return 0;
+        }
+        byte[] bytes = text.Select(c => (byte)((c & 0xFF) != 0 ? c & 0xFF : c >> 8)).ToArray();
+
+        uint high = PasswordInitialCode[bytes.Length - 1];
+        for (int i = 0; i < bytes.Length; i++)
+        {
+            ushort[] row = PasswordMatrix[15 - bytes.Length + i];
+            for (int bit = 0; bit < 7; bit++)
+            {
+                if ((bytes[i] & (1 << bit)) != 0)
+                {
+                    high ^= row[bit];
+                }
+            }
+        }
+
+        int low = 0;
+        for (int i = bytes.Length - 1; i >= 0; i--)
+        {
+            low = (((low >> 14) & 1) | ((low << 1) & 0x7FFF)) ^ bytes[i];
+        }
+        low = (((low >> 14) & 1) | ((low << 1) & 0x7FFF)) ^ bytes.Length ^ 0xCE4B;
+        return (high << 16) | (uint)(low & 0xFFFF);
     }
 #pragma warning restore CA1850
 

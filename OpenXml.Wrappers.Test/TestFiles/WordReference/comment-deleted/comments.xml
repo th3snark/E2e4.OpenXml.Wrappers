@@ -1,0 +1,18 @@
+<w:comments xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml" mc:Ignorable="w14">
+  <w:comment w:author="Reference" w:date="{date}" w:id="{comment1}" w:initials="R">
+    <w:p w14:paraId="{para1}">
+      <w:pPr>
+        <w:pStyle w:val="CommentText" />
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:rStyle w:val="CommentReference" />
+        </w:rPr>
+        <w:annotationRef />
+      </w:r>
+      <w:r>
+        <w:t>Another</w:t>
+      </w:r>
+    </w:p>
+  </w:comment>
+</w:comments>

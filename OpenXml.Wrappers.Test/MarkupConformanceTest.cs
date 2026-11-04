@@ -19,34 +19,23 @@ namespace OpenXml.Wrappers.Test;
 /// parts (or the elements of a part) that the scenario is about.
 /// </summary>
 /// <remarks>
-/// A scenario the library cannot match yet is skipped, under the step of the markup plan that will make it match (the last one, when several
-/// are needed). When a step lands, move its scenarios to <see cref="PlanStep.None"/>. Regenerate the references with
-/// <c>tools/WordReference/New-WordReferences.ps1</c>.
+/// Regenerate the references with <c>tools/WordReference/New-WordReferences.ps1</c>.
 /// </remarks>
 public class MarkupConformanceTest
 {
-    private const string Step5Reason = "Plan step 5 (tables, sections, comments and package): table, section, header, comment and protection markup differs from Word's.";
-
     private static readonly XNamespace W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
 
     private static readonly string ReferenceFolder = Path.Combine(AppContext.BaseDirectory, "TestFiles", "WordReference");
 
-    /// <summary>The plan step a scenario waits for before the library matches Word.</summary>
-    private enum PlanStep
-    {
-        None = 0,
-        TablesSectionsCommentsPackage = 5,
-    }
-
     private static readonly Scenario[] Scenarios = new[]
     {
-        new Scenario("blank-document", PlanStep.None, d => { }, AllParts()),
+        new Scenario("blank-document", d => { }, AllParts()),
 
-        new Scenario("insert-after-tab-and-line-break", PlanStep.None,
+        new Scenario("insert-after-tab-and-line-break",
             d => d.Content.InsertAfter("Before\tafter the tab\vafter the break"),
             Body()),
 
-        new Scenario("bold-on", PlanStep.None,
+        new Scenario("bold-on",
             d =>
             {
                 d.Content.InsertAfter("Bold text");
@@ -54,7 +43,7 @@ public class MarkupConformanceTest
             },
             Body()),
 
-        new Scenario("bold-on-then-off", PlanStep.None,
+        new Scenario("bold-on-then-off",
             d =>
             {
                 d.Content.InsertAfter("Bold text");
@@ -63,7 +52,7 @@ public class MarkupConformanceTest
             },
             Body()),
 
-        new Scenario("font-name", PlanStep.None,
+        new Scenario("font-name",
             d =>
             {
                 d.Content.InsertAfter("Arial text");
@@ -71,13 +60,13 @@ public class MarkupConformanceTest
             },
             Body()),
 
-        new Scenario("table-3x3", PlanStep.TablesSectionsCommentsPackage, d => d.Tables.Add(d.Range(0, 0), 3, 3), Body()),
+        new Scenario("table-3x3", d => d.Tables.Add(d.Range(0, 0), 3, 3), Body()),
 
-        new Scenario("table-3x3-word9-behavior", PlanStep.TablesSectionsCommentsPackage,
+        new Scenario("table-3x3-word9-behavior",
             d => d.Tables.Add(d.Range(0, 0), 3, 3, DefaultTableBehavior.Word9TableBehavior, AutoFitBehavior.Fixed),
             Body()),
 
-        new Scenario("cell-merge", PlanStep.TablesSectionsCommentsPackage,
+        new Scenario("cell-merge",
             d =>
             {
                 TableWrapper table = d.Tables.Add(d.Range(0, 0), 3, 3);
@@ -85,24 +74,19 @@ public class MarkupConformanceTest
             },
             Body()),
 
-        new Scenario("comment-with-reply", PlanStep.TablesSectionsCommentsPackage,
+        new Scenario("comment-with-reply",
             d =>
             {
                 d.Content.InsertAfter("Commented text");
                 CommentWrapper comment = d.Comments.Add(d.Range(0, 9), "A comment");
                 CommentWrapper reply = comment.Replies.Add("A reply");
 
-                //Word takes the author from Application.UserName, which the generator sets to Reference; the library takes the user's
-                //login name.
-                foreach (CommentWrapper each in new[] { comment, reply })
-                {
-                    each.Author = "Reference";
-                    each.Initial = "R";
-                }
+                AsReference(comment);
+                AsReference(reply);
             },
-            Body(), Part("comments.xml"), Part("commentsExtended.xml"), Part("commentsIds.xml"), Part("commentsExtensible.xml"), Part("people.xml")),
+            CommentParts()),
 
-        new Scenario("bookmark", PlanStep.None,
+        new Scenario("bookmark",
             d =>
             {
                 d.Content.InsertAfter("Bookmarked text");
@@ -110,20 +94,19 @@ public class MarkupConformanceTest
             },
             Body()),
 
-        new Scenario("date-field", PlanStep.None, d => d.Fields.Add(d.Range(0, 0), FieldType.Date), Body()),
+        new Scenario("date-field", d => d.Fields.Add(d.Range(0, 0), FieldType.Date), Body()),
 
-        new Scenario("header-footer-text", PlanStep.TablesSectionsCommentsPackage,
+        new Scenario("header-footer-text",
             d =>
             {
                 SectionWrapper section = d.Sections[0];
                 section.Headers[HeaderFooterIndex.Primary].Range.Text = "Header text";
                 section.Footers[HeaderFooterIndex.Primary].Range.Text = "Footer text";
             },
-            Elements("document.xml", "headerReference", "footerReference"),
-            HeaderFooter("header", "default"), HeaderFooter("header", "even"), HeaderFooter("header", "first"),
-            HeaderFooter("footer", "default"), HeaderFooter("footer", "even"), HeaderFooter("footer", "first")),
+            //Word also writes empty headers and footers for even pages and the first page, which say nothing, so the library leaves them out.
+            HeaderFooter("header", "default"), HeaderFooter("footer", "default")),
 
-        new Scenario("section-add", PlanStep.None,
+        new Scenario("section-add",
             d =>
             {
                 d.Content.InsertAfter("First section");
@@ -131,13 +114,13 @@ public class MarkupConformanceTest
             },
             Body()),
 
-        new Scenario("page-borders", PlanStep.TablesSectionsCommentsPackage, d => d.Sections[0].Borders.Enable = true, Elements("document.xml", "pgBorders")),
+        new Scenario("page-borders", d => d.Sections[0].Borders.Enable = true, Elements("document.xml", "pgBorders")),
 
-        new Scenario("protect-read-only", PlanStep.TablesSectionsCommentsPackage,
+        new Scenario("protect-read-only",
             d => d.Protect(ProtectionType.AllowOnlyReading, "password"),
             Elements("settings.xml", "documentProtection")),
 
-        new Scenario("heading-insert-paragraph-after", PlanStep.None,
+        new Scenario("heading-insert-paragraph-after",
             d =>
             {
                 d.Content.InsertAfter("Heading");
@@ -146,9 +129,9 @@ public class MarkupConformanceTest
             },
             Body()),
 
-        new Scenario("built-in-styles", PlanStep.None, ApplyEveryBuiltInStyle, Part("styles.xml")),
+        new Scenario("built-in-styles", ApplyEveryBuiltInStyle, Part("styles.xml")),
 
-        new Scenario("font-properties-on", PlanStep.None,
+        new Scenario("font-properties-on",
             d =>
             {
                 d.Content.InsertAfter(FontWords());
@@ -159,7 +142,7 @@ public class MarkupConformanceTest
             },
             Body()),
 
-        new Scenario("font-properties-on-then-off", PlanStep.None,
+        new Scenario("font-properties-on-then-off",
             d =>
             {
                 d.Content.InsertAfter(FontWords());
@@ -171,7 +154,7 @@ public class MarkupConformanceTest
             },
             Body()),
 
-        new Scenario("bold-off-in-a-bold-style", PlanStep.None,
+        new Scenario("bold-off-in-a-bold-style",
             d =>
             {
                 d.Content.InsertAfter("Strong text");
@@ -180,7 +163,7 @@ public class MarkupConformanceTest
             },
             Body()),
 
-        new Scenario("runs-merge-when-formatting-matches", PlanStep.None,
+        new Scenario("runs-merge-when-formatting-matches",
             d =>
             {
                 d.Content.InsertAfter("One two three");
@@ -189,7 +172,7 @@ public class MarkupConformanceTest
             },
             Body()),
 
-        new Scenario("paragraph-properties-on", PlanStep.None,
+        new Scenario("paragraph-properties-on",
             d =>
             {
                 AddParagraphs(d, 17);
@@ -200,7 +183,7 @@ public class MarkupConformanceTest
             },
             Body()),
 
-        new Scenario("paragraph-properties-on-then-off", PlanStep.None,
+        new Scenario("paragraph-properties-on-then-off",
             d =>
             {
                 AddParagraphs(d, 17);
@@ -212,7 +195,7 @@ public class MarkupConformanceTest
             },
             Body()),
 
-        new Scenario("normal-style-applied", PlanStep.None,
+        new Scenario("normal-style-applied",
             d =>
             {
                 d.Content.InsertAfter("Text");
@@ -221,7 +204,7 @@ public class MarkupConformanceTest
             },
             Body()),
 
-        new Scenario("insert-paragraph-after-formatted", PlanStep.None,
+        new Scenario("insert-paragraph-after-formatted",
             d =>
             {
                 d.Content.InsertAfter("Text");
@@ -231,7 +214,7 @@ public class MarkupConformanceTest
             },
             Body()),
 
-        new Scenario("insert-paragraph-before-formatted", PlanStep.None,
+        new Scenario("insert-paragraph-before-formatted",
             d =>
             {
                 d.Content.InsertAfter("Text");
@@ -241,7 +224,7 @@ public class MarkupConformanceTest
             },
             Body()),
 
-        new Scenario("paragraphs-add", PlanStep.None,
+        new Scenario("paragraphs-add",
             d =>
             {
                 d.Content.InsertAfter("Text");
@@ -250,7 +233,7 @@ public class MarkupConformanceTest
             },
             Body()),
 
-        new Scenario("split-a-formatted-paragraph", PlanStep.None,
+        new Scenario("split-a-formatted-paragraph",
             d =>
             {
                 d.Content.InsertAfter("One two");
@@ -259,7 +242,7 @@ public class MarkupConformanceTest
             },
             Body()),
 
-        new Scenario("insert-paragraph-after-middle", PlanStep.None,
+        new Scenario("insert-paragraph-after-middle",
             d =>
             {
                 d.Content.InsertAfter("One");
@@ -271,7 +254,7 @@ public class MarkupConformanceTest
             },
             Body()),
 
-        new Scenario("heading-with-format-insert-paragraph-after", PlanStep.None,
+        new Scenario("heading-with-format-insert-paragraph-after",
             d =>
             {
                 d.Content.InsertAfter("Heading");
@@ -281,7 +264,7 @@ public class MarkupConformanceTest
             },
             Body()),
 
-        new Scenario("split-a-heading-at-its-end", PlanStep.None,
+        new Scenario("split-a-heading-at-its-end",
             d =>
             {
                 d.Content.InsertAfter("Heading");
@@ -290,7 +273,7 @@ public class MarkupConformanceTest
             },
             Body()),
 
-        new Scenario("split-a-heading-in-the-middle", PlanStep.None,
+        new Scenario("split-a-heading-in-the-middle",
             d =>
             {
                 d.Content.InsertAfter("Heading");
@@ -299,9 +282,9 @@ public class MarkupConformanceTest
             },
             Body()),
 
-        new Scenario("content-text-with-paragraphs", PlanStep.None, d => d.Content.Text = "One\rTwo", Body()),
+        new Scenario("content-text-with-paragraphs", d => d.Content.Text = "One\rTwo", Body()),
 
-        new Scenario("insert-before-with-a-paragraph", PlanStep.None,
+        new Scenario("insert-before-with-a-paragraph",
             d =>
             {
                 d.Content.InsertAfter("Text");
@@ -309,7 +292,7 @@ public class MarkupConformanceTest
             },
             Body()),
 
-        new Scenario("join-formatted-paragraphs", PlanStep.None,
+        new Scenario("join-formatted-paragraphs",
             d =>
             {
                 d.Content.InsertAfter("First");
@@ -322,7 +305,7 @@ public class MarkupConformanceTest
             },
             Body()),
 
-        new Scenario("delete-a-section-break", PlanStep.None,
+        new Scenario("delete-a-section-break",
             d =>
             {
                 d.Content.InsertAfter("First");
@@ -334,7 +317,7 @@ public class MarkupConformanceTest
             },
             WholeBody()),
 
-        new Scenario("breaks", PlanStep.None,
+        new Scenario("breaks",
             d =>
             {
                 d.Content.InsertAfter("Line Page Column");
@@ -344,7 +327,7 @@ public class MarkupConformanceTest
             },
             Body()),
 
-        new Scenario("page-break-at-paragraph-start", PlanStep.None,
+        new Scenario("page-break-at-paragraph-start",
             d =>
             {
                 d.Content.InsertAfter("Text");
@@ -352,7 +335,7 @@ public class MarkupConformanceTest
             },
             Body()),
 
-        new Scenario("page-break-at-paragraph-end", PlanStep.None,
+        new Scenario("page-break-at-paragraph-end",
             d =>
             {
                 d.Content.InsertAfter("Text");
@@ -360,7 +343,7 @@ public class MarkupConformanceTest
             },
             Body()),
 
-        new Scenario("column-break-at-paragraph-start", PlanStep.None,
+        new Scenario("column-break-at-paragraph-start",
             d =>
             {
                 d.Content.InsertAfter("Text");
@@ -368,7 +351,7 @@ public class MarkupConformanceTest
             },
             Body()),
 
-        new Scenario("column-break-at-paragraph-end", PlanStep.None,
+        new Scenario("column-break-at-paragraph-end",
             d =>
             {
                 d.Content.InsertAfter("Text");
@@ -376,7 +359,7 @@ public class MarkupConformanceTest
             },
             Body()),
 
-        new Scenario("line-break-at-paragraph-end", PlanStep.None,
+        new Scenario("line-break-at-paragraph-end",
             d =>
             {
                 d.Content.InsertAfter("Text");
@@ -384,7 +367,7 @@ public class MarkupConformanceTest
             },
             Body()),
 
-        new Scenario("delete-text-within-a-run", PlanStep.None,
+        new Scenario("delete-text-within-a-run",
             d =>
             {
                 d.Content.InsertAfter("One two three");
@@ -392,7 +375,7 @@ public class MarkupConformanceTest
             },
             Body()),
 
-        new Scenario("replace-text-within-a-run", PlanStep.None,
+        new Scenario("replace-text-within-a-run",
             d =>
             {
                 d.Content.InsertAfter("One two three");
@@ -401,15 +384,15 @@ public class MarkupConformanceTest
             Body()),
 
         //The results of these need page layout: Word has worked them out and the library leaves them for Word, so only their code is compared.
-        new Scenario("field-from-code", PlanStep.None, d => d.Fields.Add(d.Range(0, 0), FieldType.Empty, "PAGE", false), Elements("document.xml", "instrText", "fldSimple")),
+        new Scenario("field-from-code", d => d.Fields.Add(d.Range(0, 0), FieldType.Empty, "PAGE", false), Elements("document.xml", "instrText", "fldSimple")),
 
-        new Scenario("field-page-with-merge-format", PlanStep.None, d => d.Fields.Add(d.Range(0, 0), FieldType.Page), Elements("document.xml", "instrText", "fldSimple")),
+        new Scenario("field-page-with-merge-format", d => d.Fields.Add(d.Range(0, 0), FieldType.Page), Elements("document.xml", "instrText", "fldSimple")),
 
-        new Scenario("field-date-without-merge-format", PlanStep.None, d => d.Fields.Add(d.Range(0, 0), FieldType.Date, string.Empty, false), Body()),
+        new Scenario("field-date-without-merge-format", d => d.Fields.Add(d.Range(0, 0), FieldType.Date, string.Empty, false), Body()),
 
-        new Scenario("field-date-from-code", PlanStep.None, d => d.Fields.Add(d.Range(0, 0), FieldType.Empty, "DATE", false), Body()),
+        new Scenario("field-date-from-code", d => d.Fields.Add(d.Range(0, 0), FieldType.Empty, "DATE", false), Body()),
 
-        new Scenario("field-within-text", PlanStep.None,
+        new Scenario("field-within-text",
             d =>
             {
                 d.Content.InsertAfter("Before after");
@@ -417,7 +400,7 @@ public class MarkupConformanceTest
             },
             Body()),
 
-        new Scenario("field-within-bold-text", PlanStep.None,
+        new Scenario("field-within-bold-text",
             d =>
             {
                 d.Content.InsertAfter("Before after");
@@ -426,7 +409,208 @@ public class MarkupConformanceTest
             },
             Body()),
 
-        new Scenario("join-paragraphs", PlanStep.None,
+        new Scenario("table-2x4-word9-behavior", d => d.Tables.Add(d.Range(0, 0), 2, 4, DefaultTableBehavior.Word9TableBehavior, AutoFitBehavior.Fixed), Body()),
+
+        new Scenario("table-autofit-content", d => d.Tables.Add(d.Range(0, 0), 1, 2, DefaultTableBehavior.Word8TableBehavior, AutoFitBehavior.Content), Body()),
+
+        new Scenario("table-autofit-window", d => d.Tables.Add(d.Range(0, 0), 1, 2, DefaultTableBehavior.Word8TableBehavior, AutoFitBehavior.Window), Body()),
+
+        new Scenario("table-word9-autofit-content", d => d.Tables.Add(d.Range(0, 0), 1, 2, DefaultTableBehavior.Word9TableBehavior, AutoFitBehavior.Content), Body()),
+
+        new Scenario("table-word9-autofit-window", d => d.Tables.Add(d.Range(0, 0), 1, 2, DefaultTableBehavior.Word9TableBehavior, AutoFitBehavior.Window), Body()),
+
+        new Scenario("table-nested",
+            d =>
+            {
+                TableWrapper outer = d.Tables.Add(d.Range(0, 0), 1, 2, DefaultTableBehavior.Word9TableBehavior, AutoFitBehavior.Fixed);
+                d.Tables.Add(outer.Cell(0, 0).Range, 1, 2, DefaultTableBehavior.Word9TableBehavior, AutoFitBehavior.Fixed);
+            },
+            Body()),
+
+        new Scenario("table-in-text",
+            d =>
+            {
+                d.Content.InsertAfter("Before after");
+                d.Tables.Add(d.Range(7, 7), 1, 1);
+            },
+            Body()),
+
+        new Scenario("cell-vertical-merge",
+            d =>
+            {
+                TableWrapper table = d.Tables.Add(d.Range(0, 0), 3, 2, DefaultTableBehavior.Word9TableBehavior, AutoFitBehavior.Fixed);
+                table.Cell(0, 0).Merge(table.Cell(1, 0));
+            },
+            Body()),
+
+        new Scenario("cell-merge-block",
+            d =>
+            {
+                TableWrapper table = d.Tables.Add(d.Range(0, 0), 3, 3, DefaultTableBehavior.Word9TableBehavior, AutoFitBehavior.Fixed);
+                table.Cell(0, 0).Merge(table.Cell(1, 1));
+            },
+            Body()),
+
+        new Scenario("cell-split",
+            d =>
+            {
+                TableWrapper table = d.Tables.Add(d.Range(0, 0), 1, 2, DefaultTableBehavior.Word9TableBehavior, AutoFitBehavior.Fixed);
+                table.Cell(0, 0).Split(1, 2);
+            },
+            Body()),
+
+        new Scenario("row-properties",
+            d =>
+            {
+                TableWrapper table = d.Tables.Add(d.Range(0, 0), 4, 1, DefaultTableBehavior.Word9TableBehavior, AutoFitBehavior.Fixed);
+                table.Rows[0].HeightRule = RowHeightRule.AtLeast;
+                table.Rows[0].Height = 20;
+                table.Rows[1].HeightRule = RowHeightRule.Exactly;
+                table.Rows[1].Height = 20;
+                table.Rows[2].HeadingFormat = true;
+                table.Rows[3].AllowBreakAcrossPages = false;
+            },
+            Body()),
+
+        new Scenario("heading-rows-off",
+            d =>
+            {
+                TableWrapper table = d.Tables.Add(d.Range(0, 0), 3, 1, DefaultTableBehavior.Word9TableBehavior, AutoFitBehavior.Fixed);
+                table.Rows[1].HeadingFormat = true;
+                table.Rows[0].HeadingFormat = false;
+            },
+            Body()),
+
+        new Scenario("rows-add",
+            d =>
+            {
+                TableWrapper table = d.Tables.Add(d.Range(0, 0), 1, 2, DefaultTableBehavior.Word9TableBehavior, AutoFitBehavior.Fixed);
+                table.Cell(0, 0).Range.Text = "a";
+                table.Rows.Add();
+            },
+            Body()),
+
+        new Scenario("columns-add",
+            d =>
+            {
+                TableWrapper table = d.Tables.Add(d.Range(0, 0), 1, 2, DefaultTableBehavior.Word9TableBehavior, AutoFitBehavior.Fixed);
+                table.Columns.Add();
+            },
+            Body()),
+
+        new Scenario("column-delete",
+            d =>
+            {
+                TableWrapper table = d.Tables.Add(d.Range(0, 0), 1, 3, DefaultTableBehavior.Word9TableBehavior, AutoFitBehavior.Fixed);
+                table.Columns[1].Delete();
+            },
+            Body()),
+
+        new Scenario("table-borders-enable",
+            d =>
+            {
+                TableWrapper table = d.Tables.Add(d.Range(0, 0), 1, 1);
+                table.Borders.Enable = true;
+            },
+            Body()),
+
+        new Scenario("table-properties",
+            d =>
+            {
+                TableWrapper table = d.Tables.Add(d.Range(0, 0), 1, 2, DefaultTableBehavior.Word9TableBehavior, AutoFitBehavior.Fixed);
+                table.PreferredWidthType = PreferredWidthType.Points;
+                table.PreferredWidth = 200;
+                table.Rows.Alignment = RowAlignment.Center;
+                table.Rows.LeftIndent = 0;
+                table.Cell(0, 0).Shading.BackgroundPatternColor = "FF0000";
+                table.Cell(0, 1).VerticalAlignment = CellVerticalAlignment.Center;
+            },
+            Body()),
+
+        new Scenario("section-properties",
+            d =>
+            {
+                PageSetupWrapper setup = d.Sections[0].PageSetup;
+                setup.Orientation = PageOrientation.Landscape;
+                setup.Orientation = PageOrientation.Portrait;
+                setup.SectionStart = SectionStart.Continuous;
+                setup.SectionStart = SectionStart.NewPage;
+            },
+            WholeBody()),
+
+        new Scenario("section-landscape", d => d.Sections[0].PageSetup.Orientation = PageOrientation.Landscape, WholeBody()),
+
+        new Scenario("section-continuous", d => d.Sections[0].PageSetup.SectionStart = SectionStart.Continuous, WholeBody()),
+
+        new Scenario("line-numbers", d => d.Sections[0].PageSetup.LineNumbering.Active = true, WholeBody()),
+
+        new Scenario("text-columns", d => d.Sections[0].PageSetup.TextColumns.SetCount(2), WholeBody()),
+
+        new Scenario("different-first-page", d => d.Sections[0].PageSetup.DifferentFirstPageHeaderFooter = true, WholeBody()),
+
+        new Scenario("page-numbers-add", d => d.Sections[0].Footers[HeaderFooterIndex.Primary].PageNumbers.Add(), PageNumber()),
+
+        new Scenario("page-numbers-add-left", d => d.Sections[0].Footers[HeaderFooterIndex.Primary].PageNumbers.Add(PageNumberAlignment.Left), PageNumber()),
+
+        new Scenario("page-numbers-add-center", d => d.Sections[0].Footers[HeaderFooterIndex.Primary].PageNumbers.Add(PageNumberAlignment.Center), PageNumber()),
+
+        new Scenario("page-numbers-add-to-text",
+            d =>
+            {
+                HeaderFooterWrapper footer = d.Sections[0].Footers[HeaderFooterIndex.Primary];
+                footer.Range.Text = "Footer";
+                footer.PageNumbers.Add();
+            },
+            PageNumber()),
+
+        new Scenario("two-sections-with-headers",
+            d =>
+            {
+                d.Sections[0].Headers[HeaderFooterIndex.Primary].Range.Text = "Header";
+                d.Content.InsertAfter("First");
+                d.Sections.Add();
+            },
+            BodyWithoutHeaderReferences()),
+
+        new Scenario("header-unlink",
+            d =>
+            {
+                d.Sections[0].Headers[HeaderFooterIndex.Primary].Range.Text = "Header";
+                d.Sections.Add();
+                d.Sections[1].Headers[HeaderFooterIndex.Primary].LinkToPrevious = false;
+            },
+            HeaderFooter("header", "default")),
+
+        new Scenario("comment-only",
+            d =>
+            {
+                d.Content.InsertAfter("Commented text");
+                AsReference(d.Comments.Add(d.Range(0, 9), "A comment"));
+            },
+            CommentParts()),
+
+        new Scenario("comment-on-insertion-point",
+            d =>
+            {
+                d.Content.InsertAfter("Text");
+                AsReference(d.Comments.Add(d.Range(2, 2), "A comment"));
+            },
+            CommentParts()),
+
+        new Scenario("comment-in-empty-paragraph", d => AsReference(d.Comments.Add(d.Range(0, 0), "A comment")), CommentParts()),
+
+        new Scenario("comment-deleted",
+            d =>
+            {
+                d.Content.InsertAfter("Commented text");
+                CommentWrapper comment = d.Comments.Add(d.Range(0, 9), "A comment");
+                AsReference(comment);
+                AsReference(d.Comments.Add(d.Range(10, 14), "Another"));
+                comment.Delete();
+            },
+            CommentParts()),
+
+        new Scenario("join-paragraphs",
             d =>
             {
                 d.Content.InsertAfter("First paragraph");
@@ -437,6 +621,13 @@ public class MarkupConformanceTest
             },
             Body()),
     };
+
+    //Word takes the author from Application.UserName, which the generator sets to Reference; the library takes the user's login name.
+    private static void AsReference(CommentWrapper comment)
+    {
+        comment.Author = "Reference";
+        comment.Initial = "R";
+    }
 
     //Twenty three-letter words, one for each property below, as in scenarios.ps1: word i is at positions 4i to 4i + 3.
     private static string FontWords()
@@ -536,36 +727,18 @@ public class MarkupConformanceTest
         table.Style = "Table Grid";
     }
 
-    public static TheoryData<string> Matching => ScenariosWaitingFor(PlanStep.None);
-
-    public static TheoryData<string> WaitingForStep5 => ScenariosWaitingFor(PlanStep.TablesSectionsCommentsPackage);
-
-    public static TheoryData<string> Waiting
+    //The scenario folders, so that a reference without a case shows up (as a failure) rather than being ignored.
+    public static TheoryData<string> Names
     {
         get
         {
             TheoryData<string> data = new TheoryData<string>();
-            foreach (Scenario scenario in Scenarios.Where(s => s.Step != PlanStep.None))
-            {
-                data.Add(scenario.Name);
-            }
-            return data;
-        }
-    }
-
-    //The scenario folders, so that a reference without a case shows up (as a failure) rather than being ignored.
-    private static TheoryData<string> ScenariosWaitingFor(PlanStep step)
-    {
-        TheoryData<string> data = new TheoryData<string>();
-        foreach (string folder in Directory.GetDirectories(ReferenceFolder).Select(Path.GetFileName).OrderBy(n => n, StringComparer.Ordinal))
-        {
-            Scenario scenario = Scenarios.SingleOrDefault(s => s.Name == folder);
-            if ((scenario == null ? PlanStep.None : scenario.Step) == step)
+            foreach (string folder in Directory.GetDirectories(ReferenceFolder).Select(Path.GetFileName).OrderBy(n => n, StringComparer.Ordinal))
             {
                 data.Add(folder);
             }
+            return data;
         }
-        return data;
     }
 
     [Fact]
@@ -576,8 +749,7 @@ public class MarkupConformanceTest
     }
 
     [Theory]
-    [MemberData(nameof(Matching))]
-    [MemberData(nameof(WaitingForStep5), Skip = Step5Reason)]
+    [MemberData(nameof(Names))]
     public void LibraryWritesWhatWordWrites(string name)
     {
         Scenario scenario = Scenarios.SingleOrDefault(s => s.Name == name);
@@ -589,22 +761,6 @@ public class MarkupConformanceTest
             Assert.Fail(string.Format(CultureInfo.InvariantCulture, "The library's markup for '{0}' differs from Word's (- Word, + library):\n\n{1}", name,
                 string.Join("\n", failures)));
         }
-    }
-
-    /// <summary>
-    /// Keeps the skipped cases honest: each still runs through the library and is compared, and one that now matches Word fails here so that
-    /// it is moved to <see cref="PlanStep.None"/>, where <see cref="LibraryWritesWhatWordWrites"/> then guards it.
-    /// </summary>
-    [Theory]
-    [MemberData(nameof(Waiting))]
-    public void ASkippedScenarioStillDiffersFromWord(string name)
-    {
-        Scenario scenario = Scenarios.Single(s => s.Name == name);
-
-        List<string> failures = Compare(scenario);
-
-        Assert.True(failures.Count > 0, string.Format(CultureInfo.InvariantCulture,
-            "The library's markup for '{0}' now matches Word's: move the scenario from {1} to PlanStep.None.", name, scenario.Step));
     }
 
     private static List<string> Compare(Scenario scenario)
@@ -661,6 +817,36 @@ public class MarkupConformanceTest
         return new Comparison("document.xml body", parts => "document.xml", root => root.Element(W + "body").Elements());
     }
 
+    //The content of the body and all the section properties, without the references to headers and footers, whose ids Word and the library number
+    //differently because the library has no empty parts for even pages and the first page.
+    private static Comparison BodyWithoutHeaderReferences()
+    {
+        return new Comparison("document.xml body", parts => "document.xml", root =>
+        {
+            root.Descendants().Where(e => e.Name == W + "headerReference" || e.Name == W + "footerReference").Remove();
+            return root.Element(W + "body").Elements();
+        });
+    }
+
+    //The paragraph properties and field codes of the default footer. The library leaves the result of the field for Word to work out.
+    private static Comparison PageNumber()
+    {
+        return new Comparison("default footer", parts => FindHeaderFooter(parts, "footer", "default"),
+            root => root.Descendants().Where(e => e.Name == W + "pPr" || e.Name == W + "instrText" || e.Name == W + "t"
+                ? e.Name != W + "t" || !IsFieldResult(e)
+                : false));
+    }
+
+    private static bool IsFieldResult(XElement text)
+    {
+        return text.Parent.Element(W + "rPr")?.Element(W + "noProof") != null;
+    }
+
+    private static Comparison[] CommentParts()
+    {
+        return new[] { Body(), Part("comments.xml"), Part("commentsExtended.xml"), Part("commentsIds.xml"), Part("commentsExtensible.xml"), Part("people.xml") };
+    }
+
     private static Comparison Elements(string part, params string[] localNames)
     {
         return new Comparison(part + " " + string.Join(", ", localNames.Select(n => "w:" + n)), parts => part,
@@ -693,17 +879,14 @@ public class MarkupConformanceTest
 
     private sealed class Scenario
     {
-        public Scenario(string name, PlanStep step, Action<WordprocessingDocumentWrapper> act, params Comparison[] comparisons)
+        public Scenario(string name, Action<WordprocessingDocumentWrapper> act, params Comparison[] comparisons)
         {
             Name = name;
-            Step = step;
             Act = act;
             Comparisons = comparisons;
         }
 
         public string Name { get; }
-
-        public PlanStep Step { get; }
 
         public Action<WordprocessingDocumentWrapper> Act { get; }
 

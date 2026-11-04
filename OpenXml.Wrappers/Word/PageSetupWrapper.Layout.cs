@@ -340,7 +340,8 @@ public class LineNumberingWrapper
             }
             else if (!Active)
             {
-                _setup.GetOrAddProperty<LineNumberType>().Restart = LineNumberRestartValues.NewPage;
+                //Restarting on each page is the default, which Word does not write.
+                _setup.GetOrAddProperty<LineNumberType>().CountBy = 1;
             }
         }
     }
@@ -462,7 +463,8 @@ public class TextColumnsWrapper
             {
                 int count = Count;
                 columns.RemoveAllChildren<Column>();
-                columns.EqualWidth = true;
+                //Equal widths are the default, which Word does not write.
+                columns.EqualWidth = null;
                 columns.ColumnCount = (short)count;
             }
             else if (!columns.Elements<Column>().Any())
@@ -504,11 +506,12 @@ public class TextColumnsWrapper
         }
 
         Columns columns = _setup.GetOrAddProperty<Columns>();
-        bool hadSpace = columns.Space != null;
+        //Half an inch between columns, as Word sets it, in place of the space a single column has in a new document.
+        bool defaultSpace = columns.Space == null || columns.Space.Value == "708";
         columns.RemoveAllChildren<Column>();
-        columns.EqualWidth = true;
+        columns.EqualWidth = null;
         columns.ColumnCount = (short)numColumns;
-        if (!hadSpace)
+        if (defaultSpace)
         {
             columns.Space = "720";
         }
@@ -607,8 +610,9 @@ public class PageNumbersWrapper
     }
 
     /// <summary>
-    /// Adds a page number to the header or footer: a PAGE field in a paragraph of its own at the end, lined up as asked. Without
-    /// <paramref name="firstPage"/> the first page has no number: the section gets a different first page header and footer.
+    /// Adds a page number to the header or footer, as Word does: a PAGE field in a frame at the start, lined up as asked, with the text that was
+    /// there indented to make room for it. Word works out the number when it opens the document. Without <paramref name="firstPage"/> the first
+    /// page has no number: the section gets a different first page header and footer.
     /// </summary>
     /// <exception cref="NotSupportedException">The alignment is Inside or Outside.</exception>
     public FieldWrapper Add(PageNumberAlignment alignment = PageNumberAlignment.Right, bool firstPage = true)
@@ -622,16 +626,65 @@ public class PageNumbersWrapper
             throw new NotSupportedException("Inside and outside page numbers are not supported.");
         }
 
-        RangeWrapper range = _headerFooter.Range;
-        ParagraphWrapper paragraph = range.Paragraphs.Count == 1 && range.Paragraphs[0].Text == "\r" ? range.Paragraphs[0] : range.InsertParagraphAfter();
-        paragraph.Alignment = alignment == PageNumberAlignment.Left ? ParagraphAlignment.Left : alignment == PageNumberAlignment.Center ? ParagraphAlignment.Center : ParagraphAlignment.Right;
-        FieldWrapper field = range.Fields.Add(paragraph.Range, FieldType.Page);
+        //The number is in a frame of its own at the start, lined up as asked, and the text that was there makes room for it.
+        OpenXmlElement root = _headerFooter.Range.StartElement;
+        Paragraph text = root.Elements<Paragraph>().FirstOrDefault();
+        MainDocumentPart main = StyleHelper.GetMainDocumentPart(root);
+        BuiltInStyles.GetOrCreate(main, "PageNumber");
+        string style = root is Header ? "Header" : "Footer";
+        BuiltInStyles.GetOrCreate(main, style);
+        if (text == null)
+        {
+            text = (Paragraph)root.AppendChild(new Paragraph());
+        }
+
+        ParagraphProperties textProperties = text.GetOrAddParagraphProperties();
+        textProperties.ParagraphStyleId = textProperties.ParagraphStyleId ?? new ParagraphStyleId() { Val = style };
+        if (alignment == PageNumberAlignment.Right)
+        {
+            textProperties.Indentation = new Indentation() { Right = "360" };
+        }
+        else if (alignment == PageNumberAlignment.Left)
+        {
+            textProperties.Indentation = new Indentation() { FirstLine = "360" };
+        }
+
+        FrameProperties frame = new FrameProperties() { Wrap = TextWrappingValues.Around, VerticalPosition = VerticalAnchorValues.Text, HorizontalPosition = HorizontalAnchorValues.Margin, Y = "1" };
+        if (alignment == PageNumberAlignment.Right)
+        {
+            frame.XAlign = HorizontalAlignmentValues.Right;
+        }
+        else if (alignment == PageNumberAlignment.Center)
+        {
+            frame.XAlign = HorizontalAlignmentValues.Center;
+        }
+        ParagraphProperties numberProperties = new ParagraphProperties()
+        {
+            ParagraphStyleId = new ParagraphStyleId() { Val = style },
+            FrameProperties = frame,
+            ParagraphMarkRunProperties = new ParagraphMarkRunProperties(new RunStyle() { Val = "PageNumber" })
+        };
+
+        FieldChar begin = new FieldChar() { FieldCharType = FieldCharValues.Begin, Dirty = true };
+        Paragraph number = new Paragraph(
+            numberProperties,
+            PageNumberRun(begin),
+            PageNumberRun(new FieldCode(" PAGE ") { Space = SpaceProcessingModeValues.Preserve }),
+            PageNumberRun(new FieldChar() { FieldCharType = FieldCharValues.Separate }),
+            PageNumberRun(new FieldChar() { FieldCharType = FieldCharValues.End }));
+        text.InsertBeforeSelf(number);
+        FieldWrapper field = new FieldWrapper(begin);
 
         if (!firstPage)
         {
             Setup.DifferentFirstPageHeaderFooter = true;
         }
         return field;
+    }
+
+    private static Run PageNumberRun(OpenXmlElement content)
+    {
+        return new Run(new RunProperties(new RunStyle() { Val = "PageNumber" }), content);
     }
 
     /// <summary>True if the numbering starts again at <see cref="StartingNumber"/> in the section.</summary>

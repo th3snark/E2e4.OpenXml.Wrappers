@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
@@ -155,34 +156,81 @@ public class TableWrapperCollection : IEnumerable<TableWrapper>
             throw new NotSupportedException(string.Format(CultureInfo.InvariantCulture, "Adding a table to a range starting with the type {0} is not currently supported.", range.IsSpan ? "span" : range.StartElement.GetType().Name));
         }
 
-        int totalWidth = GetAvailableWidth(anchor);
-        int columnWidth = totalWidth / numColumns;
-        Table table = new Table(
-            new TableProperties(new TableWidth() { Width = totalWidth.ToString(CultureInfo.InvariantCulture), Type = TableWidthUnitValues.Dxa }),
-            new TableGrid(Enumerable.Range(0, numColumns).Select(i => new GridColumn() { Width = columnWidth.ToString(CultureInfo.InvariantCulture) })));
+        Table table = CreateTable(anchor, numRows, numColumns, defaultTableBehavior == DefaultTableBehavior.Word9TableBehavior, autoFitBehavior);
+        anchor.InsertBeforeSelf(table);
+        return new TableWrapper(table);
+    }
+
+    //The table as Word writes it. With the behaviour of Word 8, which is Tables.Add's default, it has no style and no borders, and fixed
+    //columns whatever is asked for. With that of Word 2000 and later it is in Table Grid and 10 twips narrower than the space it is in, and the
+    //columns can resize. Fitting the window gives it a width of 100%, and fitting the content (Word 2000 and later) leaves the width to the
+    //content.
+    private static Table CreateTable(OpenXmlElement anchor, int numRows, int numColumns, bool word9, AutoFitBehavior autoFit)
+    {
+        int width = GetAvailableWidth(anchor) - (word9 ? 10 : 0);
+        bool window = autoFit == AutoFitBehavior.Window;
+        bool content = word9 && autoFit == AutoFitBehavior.Content;
+        int[] columns = Enumerable.Range(0, numColumns).Select(i => content ? ContentColumnWidth : Share(width, i, numColumns)).ToArray();
+
+        TableProperties properties = new TableProperties();
+        if (word9)
+        {
+            MainDocumentPart mainDocumentPart = StyleHelper.GetMainDocumentPart(anchor);
+            if (mainDocumentPart != null)
+            {
+                BuiltInStyles.GetOrCreate(mainDocumentPart, "TableGrid");
+            }
+            properties.TableStyle = new TableStyle() { Val = "TableGrid" };
+        }
+        properties.TableWidth = window
+            ? new TableWidth() { Width = "5000", Type = TableWidthUnitValues.Pct }
+            : new TableWidth() { Width = "0", Type = TableWidthUnitValues.Auto };
+        if (!word9)
+        {
+            properties.TableLayout = new TableLayout() { Type = TableLayoutValues.Fixed };
+        }
+        properties.TableLook = word9
+            ? new TableLook() { Val = "04A0", FirstRow = OpenXmlExtensions.OnValue(), LastRow = OpenXmlExtensions.OffValue(), FirstColumn = OpenXmlExtensions.OnValue(), LastColumn = OpenXmlExtensions.OffValue(), NoHorizontalBand = OpenXmlExtensions.OffValue(), NoVerticalBand = OpenXmlExtensions.OnValue() }
+            : new TableLook() { Val = "0000", FirstRow = OpenXmlExtensions.OffValue(), LastRow = OpenXmlExtensions.OffValue(), FirstColumn = OpenXmlExtensions.OffValue(), LastColumn = OpenXmlExtensions.OffValue(), NoHorizontalBand = OpenXmlExtensions.OffValue(), NoVerticalBand = OpenXmlExtensions.OffValue() };
+
+        Table table = new Table(properties, new TableGrid(columns.Select(w => new GridColumn() { Width = w.ToString(CultureInfo.InvariantCulture) })));
         for (int row = 0; row < numRows; row++)
         {
-            table.AppendChild(new TableRow(Enumerable.Range(0, numColumns).Select(i => new TableCell(
-                new TableCellProperties(new TableCellWidth() { Width = columnWidth.ToString(CultureInfo.InvariantCulture), Type = TableWidthUnitValues.Dxa }),
-                new Paragraph()))));
+            TableRow tableRow = new TableRow();
+            if (!word9)
+            {
+                tableRow.AppendChild(new TablePropertyExceptions(new TableCellMarginDefault(
+                    new TopMargin() { Width = "0", Type = TableWidthUnitValues.Dxa },
+                    new BottomMargin() { Width = "0", Type = TableWidthUnitValues.Dxa })));
+            }
+            for (int column = 0; column < numColumns; column++)
+            {
+                TableCellWidth cellWidth = window
+                    ? new TableCellWidth() { Width = Share(5000, column, numColumns).ToString(CultureInfo.InvariantCulture), Type = TableWidthUnitValues.Pct }
+                    : content
+                        ? new TableCellWidth() { Width = "0", Type = TableWidthUnitValues.Auto }
+                        : new TableCellWidth() { Width = columns[column].ToString(CultureInfo.InvariantCulture), Type = TableWidthUnitValues.Dxa };
+                tableRow.AppendChild(new TableCell(new TableCellProperties(cellWidth), new Paragraph()));
+            }
+            table.AppendChild(tableRow);
         }
+        return table;
+    }
 
-        anchor.InsertBeforeSelf(table);
-        TableWrapper wrapper = new TableWrapper(table);
-        wrapper.Borders.SetOutside(BorderLineStyle.SingleLine, 0.5, "auto");
-        wrapper.Borders.SetInside(BorderLineStyle.SingleLine, 0.5, "auto");
+    //The width Word gives each column of a table that fits its content, before there is any content.
+    private const int ContentColumnWidth = 222;
 
-        //Fixed column widths unless the table is to resize to its content.
-        wrapper.AllowAutoFit = defaultTableBehavior == DefaultTableBehavior.Word9TableBehavior && autoFitBehavior == AutoFitBehavior.Fixed;
-        if (autoFitBehavior != AutoFitBehavior.Fixed)
-        {
-            wrapper.AutoFitBehavior(autoFitBehavior);
-        }
-        return wrapper;
+    //The left and right cell margins of the default table style, which a nested table has to fit between.
+    private const int DefaultCellMargins = 216;
+
+    //The width of a column when a total is shared out: the columns end at whole numbers, so the later ones take up what is left over.
+    private static int Share(int total, int index, int count)
+    {
+        return (int)(((long)total * (index + 1) / count) - ((long)total * index / count));
     }
 
     /// <summary>
-    /// The width, in twips, between the margins of the page or the width of the table cell that the element is in.
+    /// The width, in twips, between the margins of the page or inside the margins of the table cell that the element is in.
     /// </summary>
     private static int GetAvailableWidth(OpenXmlElement element)
     {
@@ -191,7 +239,7 @@ public class TableWrapperCollection : IEnumerable<TableWrapper>
         if (cell != null && (cellType == null || cellType == TableWidthUnitValues.Dxa)
             && int.TryParse(cell.TableCellProperties?.TableCellWidth?.Width?.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int cellWidth) && cellWidth > 0)
         {
-            return cellWidth;
+            return Math.Max(cellWidth - DefaultCellMargins, 0);
         }
 
         //The section properties at the end of the body are those of the last section; Word's default page is 8.5 x 11 inches with 1 inch margins.

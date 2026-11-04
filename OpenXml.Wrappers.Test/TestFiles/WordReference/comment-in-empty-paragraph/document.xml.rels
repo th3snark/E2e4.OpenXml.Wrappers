@@ -1,0 +1,12 @@
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="{rId1}" Target="/word/commentsExtended.xml" Type="http://schemas.microsoft.com/office/2011/relationships/commentsExtended" />
+  <Relationship Id="{rId2}" Target="/word/people.xml" Type="http://schemas.microsoft.com/office/2011/relationships/people" />
+  <Relationship Id="{rId3}" Target="/word/commentsIds.xml" Type="http://schemas.microsoft.com/office/2016/09/relationships/commentsIds" />
+  <Relationship Id="{rId4}" Target="/word/commentsExtensible.xml" Type="http://schemas.microsoft.com/office/2018/08/relationships/commentsExtensible" />
+  <Relationship Id="{rId5}" Target="/word/comments.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments" />
+  <Relationship Id="{rId6}" Target="/word/fontTable.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/fontTable" />
+  <Relationship Id="{rId7}" Target="/word/settings.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/settings" />
+  <Relationship Id="{rId8}" Target="/word/styles.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" />
+  <Relationship Id="{rId9}" Target="/word/theme/theme1.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme" />
+  <Relationship Id="{rId10}" Target="/word/webSettings.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/webSettings" />
+</Relationships>

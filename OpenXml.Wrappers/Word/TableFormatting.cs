@@ -154,6 +154,35 @@ public partial class TableWrapper
         {
             PreferredWidths.Format(PreferredWidthType == PreferredWidthType.Percent ? PreferredWidthType.Percent : PreferredWidthType.Points, value, out string width, out TableWidthUnitValues type);
             GetOrAddTableProperties().TableWidth = new TableWidth() { Width = width, Type = type };
+            if (type == TableWidthUnitValues.Dxa)
+            {
+                ScaleGrid(int.Parse(width, CultureInfo.InvariantCulture));
+            }
+        }
+    }
+
+    //The columns take up a new width in proportion, as Word lays them out. The widths of the cells stay as what they ask for.
+    private void ScaleGrid(int total)
+    {
+        List<GridColumn> columns = _table.GetFirstChild<TableGrid>()?.Elements<GridColumn>().ToList();
+        if (columns == null || total <= 0)
+        {
+            return;
+        }
+        long[] widths = columns.Select(c => long.TryParse(c.Width?.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out long w) ? w : 0L).ToArray();
+        long sum = widths.Sum();
+        if (sum <= 0)
+        {
+            return;
+        }
+        long running = 0;
+        long used = 0;
+        for (int i = 0; i < columns.Count; i++)
+        {
+            running += widths[i];
+            long end = total * running / sum;
+            columns[i].Width = (end - used).ToString(CultureInfo.InvariantCulture);
+            used = end;
         }
     }
 
@@ -238,6 +267,15 @@ public partial class TableWrapper
             if (double.IsNaN(value) || value < -1584 || value > 1584)
             {
                 throw new ArgumentOutOfRangeException(nameof(value), "The indent must be between -1584 and 1584 points.");
+            }
+            //No indent is what a table has when it says nothing, so Word writes nothing.
+            if (value == 0)
+            {
+                if (ExistingProperties != null)
+                {
+                    ExistingProperties.TableIndentation = null;
+                }
+                return;
             }
             GetOrAddTableProperties().TableIndentation = new TableIndentation() { Width = (int)Math.Round(value * 20, MidpointRounding.AwayFromZero), Type = TableWidthUnitValues.Dxa };
         }
@@ -586,7 +624,12 @@ public partial class TableRowWrapperCollection
     public RowAlignment Alignment
     {
         get { return Parent.Alignment; }
-        set { Parent.Alignment = value; }
+        set
+        {
+            //Word says so both on the table and on each row.
+            Parent.Alignment = value;
+            WriteAll(r => r.Alignment = value);
+        }
     }
 
     /// <summary>The distance in points of the left edge of the table from the margin, as <c>Rows.LeftIndent</c> in Word.</summary>
@@ -874,7 +917,7 @@ public partial class TableCellWrapper
         int span = Span(_tableCell);
         int width = WidthTwips;
         TableRowWrapper rowWrapper = Parent;
-        _tableCell.Remove();
+        RangeWrapper.DeleteElements(new OpenXmlElement[] { _tableCell });
 
         //The grid does not change, so the row is shorter by the cell's columns.
         TableRowProperties properties = rowWrapper.GetOrAddProperties();
@@ -1060,6 +1103,7 @@ public partial class TableColumnWrapperCollection
         GridColumn gridColumn = (GridColumn)before.CloneNode(true);
         before.InsertBeforeSelf(gridColumn);
         int gridWidth = gridColumn.Width == null ? 0 : Convert.ToInt32(gridColumn.Width.Value, CultureInfo.InvariantCulture);
+        SetWidthToGrid(table);
 
         foreach (TableRow row in table.Elements<TableRow>())
         {

@@ -58,7 +58,7 @@ public class CommentWrapperCollection : IEnumerable<CommentWrapper>
     /// </summary>
     /// <remarks>
     /// Supported for a span of characters and for the range of a paragraph, table cell, row, table, bookmark or document. The comment spans the
-    /// text of the range; where the range has no text a space is added to anchor it.
+    /// text of the range. As in Word, a collapsed span in a word takes in the word, and where there is no text the comment marks the place.
     /// </remarks>
     /// <exception cref="NotSupportedException">The range is of a type that cannot take a comment.</exception>
     public CommentWrapper Add(RangeWrapper range, string text)
@@ -83,7 +83,7 @@ public class CommentWrapperCollection : IEnumerable<CommentWrapper>
 
         if (range.IsSpan)
         {
-            range.PlaceMarkers(commentRangeStart, commentRangeEnd);
+            ExpandToWord(range).PlaceMarkers(commentRangeStart, commentRangeEnd);
             commentRangeEnd.InsertAfterSelf(commentReferenceRun);
         }
         else if (start is BookmarkStart)
@@ -94,10 +94,15 @@ public class CommentWrapperCollection : IEnumerable<CommentWrapper>
         }
         else
         {
-            //A paragraph, cell, row, table or the document: the comment spans its first run to its last. If there is no run a single space run
-            //is added to the first paragraph to define the range.
+            //A paragraph, cell, row, table or the document: the comment spans its first run to its last. If there is no run the comment marks
+            //the first paragraph, as Word does with an empty one.
             OpenXmlElement container = start is Document document ? document.Body : start;
-            if (!container.Descendants<Run>().Any())
+            if (container.Descendants<Run>().Any())
+            {
+                container.Descendants<Run>().First().InsertBeforeSelf(commentRangeStart);
+                container.Descendants<Run>().Last().InsertAfterSelf(commentRangeEnd);
+            }
+            else
             {
                 Paragraph firstParagraph = container as Paragraph ?? container.Descendants<Paragraph>().FirstOrDefault();
                 if (firstParagraph == null)
@@ -105,14 +110,32 @@ public class CommentWrapperCollection : IEnumerable<CommentWrapper>
                     firstParagraph = new Paragraph();
                     container.AppendChild(firstParagraph);
                 }
-                firstParagraph.AppendChild(new Run(OpenXmlExtensions.NewText(" ")));
+                firstParagraph.AppendChild(commentRangeStart);
+                firstParagraph.AppendChild(commentRangeEnd);
             }
-            container.Descendants<Run>().First().InsertBeforeSelf(commentRangeStart);
-            container.Descendants<Run>().Last().InsertAfterSelf(commentRangeEnd);
             commentRangeEnd.InsertAfterSelf(commentReferenceRun);
         }
 
         return new CommentWrapper(commentRangeStart);
+    }
+
+    //A collapsed span in a word stands for the word, without the space after it.
+    private static RangeWrapper ExpandToWord(RangeWrapper range)
+    {
+        if (range.Start != range.End)
+        {
+            return range;
+        }
+        RangeWrapper word = range.Duplicate();
+        word.Expand(TextUnit.Word);
+        string text = word.Text;
+        string trimmed = text.TrimEnd();
+        if (trimmed.Length == 0)
+        {
+            return range;
+        }
+        word.SetRange(word.Start, word.End - (text.Length - trimmed.Length));
+        return word;
     }
 
     /// <summary>
@@ -129,7 +152,7 @@ public class CommentWrapperCollection : IEnumerable<CommentWrapper>
         Comments comments = wordprocessingCommentsPart.Comments;
         if (comments == null)
         {
-            comments = new Comments();
+            comments = CommentParts.NewComments();
             wordprocessingCommentsPart.Comments = comments;
         }
 
@@ -147,26 +170,25 @@ public class CommentWrapperCollection : IEnumerable<CommentWrapper>
         }
 
         string author = string.IsNullOrEmpty(Environment.UserName) ? "Unknown" : Environment.UserName;
-        string initials = author.Substring(0, 1);
+        DateTime now = DateTime.Now.Truncate(TimeSpan.TicksPerSecond);
 
-        if (string.IsNullOrEmpty(text))
+        Paragraph paragraph = new Paragraph(
+            new ParagraphProperties(new ParagraphStyleId() { Val = "CommentText" }),
+            new Run(new RunProperties(new RunStyle() { Val = "CommentReference" }), new AnnotationReferenceMark()));
+        if (!string.IsNullOrEmpty(text))
         {
-            text = " ";
+            paragraph.AppendChild(new Run(OpenXmlExtensions.NewText(text)));
         }
-
-        Comment comment = new Comment(
-                    new Paragraph(
-                       new ParagraphProperties(new ParagraphStyleId() { Val = "CommentText" }),
-                       new Run(new RunProperties(new RunStyle() { Val = "CommentReference" }),
-                               new AnnotationReferenceMark()),
-                       new Run(OpenXmlExtensions.NewText(text))))
+        Comment comment = new Comment(paragraph)
         {
             Id = id.ToString(CultureInfo.InvariantCulture),
-            Date = DateTime.UtcNow.Truncate(TimeSpan.TicksPerSecond),
+            //Word writes the local time here, with the time in UTC in the comments extensible part.
+            Date = DateTime.SpecifyKind(now, DateTimeKind.Unspecified),
             Author = author,
-            Initials = initials
+            Initials = CommentParts.GetInitials(author)
         };
         comments.AppendChild(comment);
+        CommentParts.Add(mainDocumentPart, comment);
         return comment;
     }
 

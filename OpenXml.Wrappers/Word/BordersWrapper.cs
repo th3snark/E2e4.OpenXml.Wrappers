@@ -320,7 +320,8 @@ public class BordersWrapper
             PageBorders pageBorders = sectionProperties.GetFirstChild<PageBorders>();
             if (pageBorders == null && create)
             {
-                pageBorders = new PageBorders();
+                //Measured from the edge of the page, as Word sets them.
+                pageBorders = new PageBorders() { OffsetFrom = PageBorderOffsetValues.Page };
                 //It goes before the first of the section properties that come after it in the schema.
                 string[] later = { "lnNumType", "pgNumType", "cols", "formProt", "vAlign", "noEndnote", "titlePg", "textDirection", "bidi", "rtlGutter", "docGrid", "printerSettings" };
                 OpenXmlElement next = sectionProperties.ChildElements.FirstOrDefault(e => Array.IndexOf(later, e.LocalName) >= 0);
