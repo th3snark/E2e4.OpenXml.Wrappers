@@ -311,6 +311,15 @@ internal static class SpanRegistry
     }
 
     /// <summary>
+    /// The text of <paramref name="second"/> was added to the end of <paramref name="first"/>, which had <paramref name="firstLength"/>
+    /// characters, and <paramref name="second"/> is going.
+    /// </summary>
+    public static void TextJoined(Text first, Text second, int firstLength)
+    {
+        Change(first, second, anchor => ReferenceEquals(anchor.Element, second) ? anchor.On(first, firstLength + anchor.Offset) : anchor);
+    }
+
+    /// <summary>
     /// A paragraph was split in two: its paragraph mark, which is at the end of what is now the second paragraph, moved with it.
     /// </summary>
     public static void ParagraphSplit(Paragraph original, Paragraph second)

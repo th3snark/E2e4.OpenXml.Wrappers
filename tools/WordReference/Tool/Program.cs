@@ -111,7 +111,7 @@ internal static class Program
 
         //What changes on every save, or says which program wrote the file: revision ids, document ids, proofing state, the application.
         //Also the statistics, which would go stale because the library does not recount them, and the empty company, so that it reads as not set.
-        root.DescendantsAndSelf().Attributes().Where(a => a.Name.Namespace == W && a.Name.LocalName.StartsWith("rsid", StringComparison.Ordinal)).Remove();
+        root.DescendantsAndSelf().Attributes().Where(a => (a.Name.Namespace == W && a.Name.LocalName.StartsWith("rsid", StringComparison.Ordinal)) || a.Name == W14 + "paraId" || a.Name == W14 + "textId").Remove();
         root.Descendants().Where(e => e.Name == W + "rsids" || e.Name == W + "rsid" || e.Name == W + "proofState" || e.Name == W14 + "docId"
             || e.Name == W15 + "docId" || (e.Name.Namespace == ExtendedProperties && LeftOutProperties.Contains(e.Name.LocalName))).Remove();
         change?.Invoke(root);

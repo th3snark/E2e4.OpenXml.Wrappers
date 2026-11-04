@@ -2,10 +2,7 @@
   <w:body>
     <w:p>
       <w:r>
-        <w:t>Bold</w:t>
-      </w:r>
-      <w:r>
-        <w:t xml:space="preserve"> text</w:t>
+        <w:t>Bold text</w:t>
       </w:r>
     </w:p>
     <w:sectPr>

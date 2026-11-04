@@ -25,13 +25,15 @@ public class RangeWrapperFontTest
         RangeWrapper range = new RangeWrapper(paragraph);
         range.Font.Bold = true;
 
-        Assert.All(paragraph.Elements<Run>(), run => Assert.Equal(new[] { "b", "bCs" }, ChildNames(run.RunProperties)));
-        Assert.Equal(new[] { "b", "bCs" }, ChildNames(paragraph.ParagraphProperties.ParagraphMarkRunProperties));
+        //The two runs now have the same formatting, so they are merged.
+        Assert.Equal("ab", paragraph.Elements<Run>().Single().InnerText);
+        Assert.All(paragraph.Elements<Run>(), run => Assert.Equal(new[] { "b" }, ChildNames(run.RunProperties)));
+        Assert.Equal(new[] { "b" }, ChildNames(paragraph.ParagraphProperties.ParagraphMarkRunProperties));
         Assert.True(range.Font.Bold);
     }
 
     [Fact]
-    public void SettingBoldToFalseSwitchesItOffExplicitly()
+    public void SettingBoldToFalseRemovesItWhereNoStyleTurnsItOn()
     {
         Paragraph paragraph = CreateParagraph("a");
         RangeWrapper range = new RangeWrapper(paragraph);
@@ -39,7 +41,7 @@ public class RangeWrapperFontTest
         range.Font.Bold = false;
 
         Assert.False(range.Font.Bold);
-        Assert.False(paragraph.Elements<Run>().Single().RunProperties.Elements<Bold>().Single().Val.Value);
+        Assert.Null(paragraph.Elements<Run>().Single().RunProperties);
     }
 
     [Fact]
@@ -51,7 +53,7 @@ public class RangeWrapperFontTest
         range.Font.Bold = null;
 
         Assert.Null(paragraph.Elements<Run>().Single().RunProperties);
-        Assert.Null(paragraph.ParagraphProperties.ParagraphMarkRunProperties);
+        Assert.Null(paragraph.ParagraphProperties);
         Assert.False(range.Font.Bold);
     }
 
@@ -71,7 +73,7 @@ public class RangeWrapperFontTest
         Assert.False(new RangeWrapper(paragraph).Font.Italic);
 
         new RangeWrapper(paragraph).Font.Italic = true;
-        paragraph.Elements<Run>().Last().RunProperties.RemoveAllChildren();
+        paragraph.AppendChild(new Run(new Text("c")));
 
         Assert.Null(new RangeWrapper(paragraph).Font.Italic);
     }
@@ -92,7 +94,7 @@ public class RangeWrapperFontTest
 
         font.Underline = UnderlineStyle.None;
         Assert.Equal(UnderlineStyle.None, font.Underline);
-        Assert.Equal(UnderlineValues.None, paragraph.Elements<Run>().Single().RunProperties.Underline.Val.Value);
+        Assert.Null(paragraph.Elements<Run>().Single().RunProperties.Underline);
     }
 
     [Fact]
@@ -116,7 +118,7 @@ public class RangeWrapperFontTest
         Assert.Equal(10.5, font.Size);
         RunProperties properties = paragraph.Elements<Run>().Single().RunProperties;
         Assert.Equal("21", properties.FontSize.Val.Value);
-        Assert.Equal("21", properties.FontSizeComplexScript.Val.Value);
+        Assert.Null(properties.FontSizeComplexScript);
     }
 
     [Theory]
@@ -135,13 +137,13 @@ public class RangeWrapperFontTest
     {
         Paragraph paragraph = CreateParagraph("a", "b");
         new RangeWrapper(paragraph.Elements<Run>().First().Parent).Font.Size = 12;
-        paragraph.Elements<Run>().Last().PrependChild(new RunProperties(new FontSize() { Val = "40" }));
+        paragraph.AppendChild(new Run(new RunProperties(new FontSize() { Val = "40" }), new Text("c")));
 
         Assert.Null(new RangeWrapper(paragraph).Font.Size);
     }
 
     [Fact]
-    public void NameSetsEveryFontSlot()
+    public void NameSetsTheFontOfLatinText()
     {
         Paragraph paragraph = CreateParagraph("a");
         FontWrapper font = new RangeWrapper(paragraph).Font;
@@ -151,8 +153,8 @@ public class RangeWrapperFontTest
         RunFonts fonts = paragraph.Elements<Run>().Single().RunProperties.RunFonts;
         Assert.Equal("Arial", fonts.Ascii.Value);
         Assert.Equal("Arial", fonts.HighAnsi.Value);
-        Assert.Equal("Arial", fonts.EastAsia.Value);
-        Assert.Equal("Arial", fonts.ComplexScript.Value);
+        Assert.Null(fonts.EastAsia);
+        Assert.Null(fonts.ComplexScript);
 
         font.Name = null;
         Assert.Null(font.Direct.Name);
@@ -195,7 +197,7 @@ public class RangeWrapperFontTest
         font.Name = "Arial";
 
         Assert.Equal(
-            new[] { "rStyle", "rFonts", "b", "bCs", "color", "sz", "szCs", "u" },
+            new[] { "rStyle", "rFonts", "b", "color", "sz", "u" },
             ChildNames(paragraph.Elements<Run>().Single().RunProperties));
     }
 
@@ -205,7 +207,7 @@ public class RangeWrapperFontTest
         Paragraph paragraph = new Paragraph(new ParagraphProperties(new ParagraphMarkRunProperties(new Inserted() { Id = "1", Author = "a" })), new Run(new Text("x")));
         new RangeWrapper(paragraph).Font.Bold = true;
 
-        Assert.Equal(new[] { "ins", "b", "bCs" }, ChildNames(paragraph.ParagraphProperties.ParagraphMarkRunProperties));
+        Assert.Equal(new[] { "ins", "b" }, ChildNames(paragraph.ParagraphProperties.ParagraphMarkRunProperties));
     }
 
     [Fact]

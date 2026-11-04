@@ -156,6 +156,8 @@ document.Paragraphs[3].Range.Delete();
 
 `Font` and `ParagraphFormat` properties are `null` when the range has mixed values, and setting one to `null` removes the direct formatting. Reads give what Word reports: the document defaults, the table style, the paragraph style, the character style and the direct formatting, each over the one before (toggle properties such as bold switch on and off between those styles, as in Word). `Font.Direct` and `ParagraphFormat.Direct` read only the direct formatting. The conditional formatting of table styles, the indents of numbering levels and tints and shades of theme colours are not taken into account.
 
+Markup is written as Word writes it: a value the text has anyway from its styles is not written, runs of the same formatting are merged, and a new paragraph takes its formatting by Word's rules.
+
 ## Character ranges
 
 A range is either made of whole elements (a paragraph, table, bookmark and so on) or, as in Word, a span of characters. `range.Start` and `range.End` are integer positions counted from the start of the text, which is the main text of the document or one header, footer or comment (a range in a header counts from the start of that header). A position counts each character, each tab and line break, each end of paragraph (which is also the end of a table cell for the last paragraph of a cell) and each end of table row. Fields, pictures and references count too (see below).

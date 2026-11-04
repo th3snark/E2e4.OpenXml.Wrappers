@@ -192,6 +192,58 @@ public static class MarkupNormalizer
             }
         }
         RemoveFormattingWhitespace(root);
+        MergeRuns(root);
+    }
+
+    //Word keeps runs apart that differ only in their revision ids, which are removed above, so runs of the same formatting that follow one another
+    //are put together here, by the same rules as OpenXmlExtensions.CoalesceRuns. A test on the library's XML checks that it merges them itself.
+    private static void MergeRuns(XElement root)
+    {
+        XName run = W + "r";
+        XName text = W + "t";
+        XName tab = W + "tab";
+        XName breakName = W + "br";
+        XName properties = W + "rPr";
+        XNamespace xml = XNamespace.Xml;
+        foreach (XElement parent in root.Descendants(run).Select(r => r.Parent).Distinct().ToList())
+        {
+            XElement previous = null;
+            foreach (XElement current in parent.Elements().ToList())
+            {
+                if (current.Name != run)
+                {
+                    previous = null;
+                    continue;
+                }
+                if (previous != null)
+                {
+                    List<XElement> first = previous.Elements().Where(e => e.Name != properties).ToList();
+                    List<XElement> second = current.Elements().Where(e => e.Name != properties).ToList();
+                    bool simple = first.Count > 0 && second.Count > 0 && second[0].Name == text
+                        && first.Concat(second).All(e => e.Name == text || e.Name == tab || e.Name == breakName);
+                    XElement lastOfFirst = simple ? first[first.Count - 1] : null;
+                    bool afterBlockBreak = simple && lastOfFirst.Name == breakName && lastOfFirst.Attribute(W + "type") != null;
+                    if (simple && !afterBlockBreak && XNode.DeepEquals(previous.Element(properties), current.Element(properties)))
+                    {
+                        if (lastOfFirst.Name == text)
+                        {
+                            string value = lastOfFirst.Value + second[0].Value;
+                            lastOfFirst.Value = value;
+                            lastOfFirst.SetAttributeValue(xml + "space", value.Length > 0 && (char.IsWhiteSpace(value[0]) || char.IsWhiteSpace(value[value.Length - 1])) ? "preserve" : null);
+                            second.RemoveAt(0);
+                        }
+                        foreach (XElement moved in second)
+                        {
+                            moved.Remove();
+                            previous.Add(moved);
+                        }
+                        current.Remove();
+                        continue;
+                    }
+                }
+                previous = current;
+            }
+        }
     }
 
     private static bool IsRemoved(XElement element, HashSet<string> goBackIds)

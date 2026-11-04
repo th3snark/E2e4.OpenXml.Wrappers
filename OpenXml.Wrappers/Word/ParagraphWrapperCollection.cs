@@ -104,9 +104,7 @@ public class ParagraphWrapperCollection : IEnumerable<ParagraphWrapper>
 
     public ParagraphWrapper Add()
     {
-        Paragraph paragraph = new Paragraph();
-        _range.LastParagraph.Paragraph.InsertAfterSelf(paragraph);
-        return new ParagraphWrapper(paragraph);
+        return new ParagraphWrapper(RangeWrapper.AddParagraphAfter(_range.LastParagraph.Paragraph));
     }
 
     #region IEnumerable Members

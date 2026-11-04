@@ -15,8 +15,16 @@ public partial class RangeWrapper
         get { return new FieldWrapperCollection(this); }
     }
 
+    //Inserts the runs of a field at the end of the range. In a span of characters they have the formatting of the text before them.
     internal void InsertFieldRuns(Func<Paragraph, List<Run>> build)
     {
-        InsertRuns(build, true);
+        if (_isSpan)
+        {
+            GetScoped(false, out StoryMap map, out int start, out int end);
+            RunProperties formatting = FindFormatting(map, end, end);
+            InsertRuns(build, true, formatting);
+            return;
+        }
+        InsertRuns(build, true, null);
     }
 }

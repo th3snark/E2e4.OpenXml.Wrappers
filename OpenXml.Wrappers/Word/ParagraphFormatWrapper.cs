@@ -127,27 +127,7 @@ public class ParagraphFormatWrapper
     {
         get
         {
-            return GetValue<ParagraphAlignment?>(properties =>
-            {
-                JustificationValues? value = properties?.Justification?.Val?.Value;
-                if (value == JustificationValues.Center)
-                {
-                    return ParagraphAlignment.Center;
-                }
-                if (value == JustificationValues.Right || value == JustificationValues.End)
-                {
-                    return ParagraphAlignment.Right;
-                }
-                if (value == JustificationValues.Both)
-                {
-                    return ParagraphAlignment.Justify;
-                }
-                if (value == JustificationValues.Distribute)
-                {
-                    return ParagraphAlignment.Distribute;
-                }
-                return ParagraphAlignment.Left;
-            });
+            return GetValue<ParagraphAlignment?>(ReadAlignment);
         }
         set
         {
@@ -156,67 +136,75 @@ public class ParagraphFormatWrapper
                 throw new ArgumentOutOfRangeException(nameof(value));
             }
 
-            Apply(properties =>
+            ApplyUnlessInherited(properties => properties.RemoveAllChildren<Justification>(), inherited => !value.HasValue || ReadAlignment(inherited) == value, properties =>
             {
-                properties.RemoveAllChildren<Justification>();
-                if (value.HasValue)
-                {
-                    JustificationValues justification = value.Value == ParagraphAlignment.Center ? JustificationValues.Center
-                        : value.Value == ParagraphAlignment.Right ? JustificationValues.Right
-                        : value.Value == ParagraphAlignment.Justify ? JustificationValues.Both
-                        : value.Value == ParagraphAlignment.Distribute ? JustificationValues.Distribute
-                        : JustificationValues.Left;
-                    properties.Justification = new Justification() { Val = justification };
-                }
+                JustificationValues justification = value.Value == ParagraphAlignment.Center ? JustificationValues.Center
+                    : value.Value == ParagraphAlignment.Right ? JustificationValues.Right
+                    : value.Value == ParagraphAlignment.Justify ? JustificationValues.Both
+                    : value.Value == ParagraphAlignment.Distribute ? JustificationValues.Distribute
+                    : JustificationValues.Left;
+                properties.Justification = new Justification() { Val = justification };
             });
         }
+    }
+
+    private static ParagraphAlignment? ReadAlignment(ParagraphProperties properties)
+    {
+        JustificationValues? value = properties?.Justification?.Val?.Value;
+        if (value == JustificationValues.Center)
+        {
+            return ParagraphAlignment.Center;
+        }
+        if (value == JustificationValues.Right || value == JustificationValues.End)
+        {
+            return ParagraphAlignment.Right;
+        }
+        if (value == JustificationValues.Both)
+        {
+            return ParagraphAlignment.Justify;
+        }
+        if (value == JustificationValues.Distribute)
+        {
+            return ParagraphAlignment.Distribute;
+        }
+        return ParagraphAlignment.Left;
     }
 
     /// <summary>The distance in points between the left margin and the left edge of the paragraphs.</summary>
     public double? LeftIndent
     {
-        get { return GetValue<double?>(properties => ToPoints(properties?.Indentation?.Left?.Value ?? properties?.Indentation?.Start?.Value) ?? 0); }
+        get { return GetValue<double?>(ReadLeftIndent); }
         set
         {
             Points(value, -MaximumPoints, nameof(value));
-            Apply(properties =>
+            ApplyUnlessInherited(properties =>
             {
-                Indentation indentation = GetOrAddIndentation(properties);
-                indentation.Start = null;
-                if (value.HasValue)
+                if (properties.Indentation != null)
                 {
-                    indentation.Left = ToTwips(value.Value);
+                    properties.Indentation.Left = null;
+                    properties.Indentation.Start = null;
+                    RemoveIfEmpty(properties.Indentation);
                 }
-                else
-                {
-                    indentation.Left = null;
-                }
-                RemoveIfEmpty(indentation);
-            });
+            }, inherited => !value.HasValue || ReadLeftIndent(inherited) == value, properties => GetOrAddIndentation(properties).Left = ToTwips(value.Value));
         }
     }
 
     /// <summary>The distance in points between the right margin and the right edge of the paragraphs.</summary>
     public double? RightIndent
     {
-        get { return GetValue<double?>(properties => ToPoints(properties?.Indentation?.Right?.Value ?? properties?.Indentation?.End?.Value) ?? 0); }
+        get { return GetValue<double?>(ReadRightIndent); }
         set
         {
             Points(value, -MaximumPoints, nameof(value));
-            Apply(properties =>
+            ApplyUnlessInherited(properties =>
             {
-                Indentation indentation = GetOrAddIndentation(properties);
-                indentation.End = null;
-                if (value.HasValue)
+                if (properties.Indentation != null)
                 {
-                    indentation.Right = ToTwips(value.Value);
+                    properties.Indentation.Right = null;
+                    properties.Indentation.End = null;
+                    RemoveIfEmpty(properties.Indentation);
                 }
-                else
-                {
-                    indentation.Right = null;
-                }
-                RemoveIfEmpty(indentation);
-            });
+            }, inherited => !value.HasValue || ReadRightIndent(inherited) == value, properties => GetOrAddIndentation(properties).Right = ToTwips(value.Value));
         }
     }
 
@@ -228,36 +216,50 @@ public class ParagraphFormatWrapper
     {
         get
         {
-            return GetValue<double?>(properties =>
-            {
-                Indentation indentation = properties?.Indentation;
-                double hanging = ToPoints(indentation?.Hanging?.Value) ?? 0;
-                return hanging != 0 ? -hanging : ToPoints(indentation?.FirstLine?.Value) ?? 0;
-            });
+            return GetValue<double?>(ReadFirstLineIndent);
         }
         set
         {
             Points(value, -MaximumPoints, nameof(value));
-            Apply(properties =>
+            ApplyUnlessInherited(properties =>
             {
-                Indentation indentation = GetOrAddIndentation(properties);
-                indentation.FirstLine = null;
-                indentation.Hanging = null;
-                if (value.HasValue)
+                if (properties.Indentation != null)
                 {
-                    //A hanging indent is stored as a positive amount in its own attribute.
-                    if (value.Value < 0)
-                    {
-                        indentation.Hanging = ToTwips(-value.Value);
-                    }
-                    else
-                    {
-                        indentation.FirstLine = ToTwips(value.Value);
-                    }
+                    properties.Indentation.FirstLine = null;
+                    properties.Indentation.Hanging = null;
+                    RemoveIfEmpty(properties.Indentation);
                 }
-                RemoveIfEmpty(indentation);
+            }, inherited => !value.HasValue || ReadFirstLineIndent(inherited) == value, properties =>
+            {
+                //A hanging indent is stored as a positive amount in its own attribute.
+                Indentation indentation = GetOrAddIndentation(properties);
+                if (value.Value < 0)
+                {
+                    indentation.Hanging = ToTwips(-value.Value);
+                }
+                else
+                {
+                    indentation.FirstLine = ToTwips(value.Value);
+                }
             });
         }
+    }
+
+    private static double? ReadLeftIndent(ParagraphProperties properties)
+    {
+        return ToPoints(properties?.Indentation?.Left?.Value ?? properties?.Indentation?.Start?.Value) ?? 0;
+    }
+
+    private static double? ReadRightIndent(ParagraphProperties properties)
+    {
+        return ToPoints(properties?.Indentation?.Right?.Value ?? properties?.Indentation?.End?.Value) ?? 0;
+    }
+
+    private static double? ReadFirstLineIndent(ParagraphProperties properties)
+    {
+        Indentation indentation = properties?.Indentation;
+        double hanging = ToPoints(indentation?.Hanging?.Value) ?? 0;
+        return hanging != 0 ? -hanging : ToPoints(indentation?.FirstLine?.Value) ?? 0;
     }
 
     /// <summary>The space in points before the paragraphs.</summary>
@@ -267,21 +269,17 @@ public class ParagraphFormatWrapper
         set
         {
             Points(value, 0, nameof(value));
-            Apply(properties =>
+            ApplyUnlessInherited(properties =>
             {
-                SpacingBetweenLines spacing = GetOrAddSpacing(properties);
-                spacing.BeforeLines = null;
-                spacing.BeforeAutoSpacing = null;
-                if (value.HasValue)
+                if (properties.SpacingBetweenLines != null)
                 {
-                    spacing.Before = ToTwips(value.Value);
-                }
-                else
-                {
+                    SpacingBetweenLines spacing = properties.SpacingBetweenLines;
+                    spacing.BeforeLines = null;
+                    spacing.BeforeAutoSpacing = null;
                     spacing.Before = null;
+                    RemoveIfEmpty(spacing);
                 }
-                RemoveIfEmpty(spacing);
-            });
+            }, inherited => !value.HasValue || (ToPoints(inherited?.SpacingBetweenLines?.Before?.Value) ?? 0) == value, properties => GetOrAddSpacing(properties).Before = ToTwips(value.Value));
         }
     }
 
@@ -292,21 +290,17 @@ public class ParagraphFormatWrapper
         set
         {
             Points(value, 0, nameof(value));
-            Apply(properties =>
+            ApplyUnlessInherited(properties =>
             {
-                SpacingBetweenLines spacing = GetOrAddSpacing(properties);
-                spacing.AfterLines = null;
-                spacing.AfterAutoSpacing = null;
-                if (value.HasValue)
+                if (properties.SpacingBetweenLines != null)
                 {
-                    spacing.After = ToTwips(value.Value);
-                }
-                else
-                {
+                    SpacingBetweenLines spacing = properties.SpacingBetweenLines;
+                    spacing.AfterLines = null;
+                    spacing.AfterAutoSpacing = null;
                     spacing.After = null;
+                    RemoveIfEmpty(spacing);
                 }
-                RemoveIfEmpty(spacing);
-            });
+            }, inherited => !value.HasValue || (ToPoints(inherited?.SpacingBetweenLines?.After?.Value) ?? 0) == value, properties => GetOrAddSpacing(properties).After = ToTwips(value.Value));
         }
     }
 
@@ -411,42 +405,57 @@ public class ParagraphFormatWrapper
     public bool? KeepWithNext
     {
         get { return GetOnOff(properties => properties?.KeepNext, e => e.Val); }
-        set { SetOnOff<KeepNext>(value, flag => new KeepNext() { Val = flag }, properties => properties.KeepNext = null, (properties, element) => properties.KeepNext = element); }
+        set { SetOnOff<KeepNext>(value, off => new KeepNext() { Val = off }, properties => properties?.KeepNext, e => e.Val, properties => properties.KeepNext = null, (properties, element) => properties.KeepNext = element); }
     }
 
     /// <summary>True to keep all the lines of the paragraphs on the same page.</summary>
     public bool? KeepTogether
     {
         get { return GetOnOff(properties => properties?.KeepLines, e => e.Val); }
-        set { SetOnOff<KeepLines>(value, flag => new KeepLines() { Val = flag }, properties => properties.KeepLines = null, (properties, element) => properties.KeepLines = element); }
+        set { SetOnOff<KeepLines>(value, off => new KeepLines() { Val = off }, properties => properties?.KeepLines, e => e.Val, properties => properties.KeepLines = null, (properties, element) => properties.KeepLines = element); }
     }
 
     /// <summary>True to start the paragraphs on a new page.</summary>
     public bool? PageBreakBefore
     {
         get { return GetOnOff(properties => properties?.PageBreakBefore, e => e.Val); }
-        set { SetOnOff<PageBreakBefore>(value, flag => new PageBreakBefore() { Val = flag }, properties => properties.PageBreakBefore = null, (properties, element) => properties.PageBreakBefore = element); }
+        set { SetOnOff<PageBreakBefore>(value, off => new PageBreakBefore() { Val = off }, properties => properties?.PageBreakBefore, e => e.Val, properties => properties.PageBreakBefore = null, (properties, element) => properties.PageBreakBefore = element); }
     }
 
     /// <summary>True to stop the first or last line of the paragraphs being left alone on a page.</summary>
     public bool? WidowControl
     {
-        get { return GetOnOff(properties => properties?.WidowControl, e => e.Val); }
-        set { SetOnOff<WidowControl>(value, flag => new WidowControl() { Val = flag }, properties => properties.WidowControl = null, (properties, element) => properties.WidowControl = element); }
+        get
+        {
+            //Word controls widows unless something says otherwise.
+            return GetValue<bool?>(properties =>
+            {
+                WidowControl element = properties?.WidowControl;
+                return element == null ? !_direct : element.Val == null || !element.Val.HasValue || element.Val.Value;
+            });
+        }
+        set
+        {
+            ApplyUnlessInherited(properties => properties.WidowControl = null, inherited =>
+            {
+                WidowControl element = inherited?.WidowControl;
+                return !value.HasValue || (element == null || element.Val == null || !element.Val.HasValue || element.Val.Value) == value.Value;
+            }, properties => properties.WidowControl = new WidowControl() { Val = value.Value ? null : OpenXmlExtensions.OffValue() });
+        }
     }
 
     /// <summary>True to leave out the paragraphs when lines are numbered (<c>ParagraphFormat.LineNumbering</c> suppression in Word).</summary>
     public bool? NoLineNumber
     {
         get { return GetOnOff(properties => properties?.SuppressLineNumbers, e => e.Val); }
-        set { SetOnOff<SuppressLineNumbers>(value, flag => new SuppressLineNumbers() { Val = flag }, properties => properties.SuppressLineNumbers = null, (properties, element) => properties.SuppressLineNumbers = element); }
+        set { SetOnOff<SuppressLineNumbers>(value, off => new SuppressLineNumbers() { Val = off }, properties => properties?.SuppressLineNumbers, e => e.Val, properties => properties.SuppressLineNumbers = null, (properties, element) => properties.SuppressLineNumbers = element); }
     }
 
     /// <summary>True to swap the left and right indents on facing pages.</summary>
     public bool? MirrorIndents
     {
         get { return GetOnOff(properties => properties?.MirrorIndents, e => e.Val); }
-        set { SetOnOff<MirrorIndents>(value, flag => new MirrorIndents() { Val = flag }, properties => properties.MirrorIndents = null, (properties, element) => properties.MirrorIndents = element); }
+        set { SetOnOff<MirrorIndents>(value, off => new MirrorIndents() { Val = off }, properties => properties?.MirrorIndents, e => e.Val, properties => properties.MirrorIndents = null, (properties, element) => properties.MirrorIndents = element); }
     }
 
     /// <summary>
@@ -464,7 +473,7 @@ public class ParagraphFormatWrapper
         }
         set
         {
-            SetOnOff<SuppressAutoHyphens>(value.HasValue ? !value : (bool?)null, flag => new SuppressAutoHyphens() { Val = flag }, properties => properties.SuppressAutoHyphens = null, (properties, element) => properties.SuppressAutoHyphens = element);
+            SetOnOff<SuppressAutoHyphens>(value.HasValue ? !value : (bool?)null, off => new SuppressAutoHyphens() { Val = off }, properties => properties?.SuppressAutoHyphens, e => e.Val, properties => properties.SuppressAutoHyphens = null, (properties, element) => properties.SuppressAutoHyphens = element);
         }
     }
 
@@ -515,11 +524,7 @@ public class ParagraphFormatWrapper
     {
         get
         {
-            return GetValue<ParagraphOutlineLevel?>(properties =>
-            {
-                int? level = properties?.OutlineLevel?.Val?.Value;
-                return level.HasValue && level.Value >= 0 && level.Value <= 8 ? (ParagraphOutlineLevel)(level.Value + 1) : ParagraphOutlineLevel.BodyText;
-            });
+            return GetValue<ParagraphOutlineLevel?>(ReadOutlineLevel);
         }
         set
         {
@@ -528,15 +533,15 @@ public class ParagraphFormatWrapper
                 throw new ArgumentOutOfRangeException(nameof(value));
             }
 
-            Apply(properties =>
-            {
-                properties.OutlineLevel = null;
-                if (value.HasValue)
-                {
-                    properties.OutlineLevel = new OutlineLevel() { Val = value.Value == ParagraphOutlineLevel.BodyText ? 9 : (int)value.Value - 1 };
-                }
-            });
+            ApplyUnlessInherited(properties => properties.OutlineLevel = null, inherited => !value.HasValue || ReadOutlineLevel(inherited) == value,
+                properties => properties.OutlineLevel = new OutlineLevel() { Val = value.Value == ParagraphOutlineLevel.BodyText ? 9 : (int)value.Value - 1 });
         }
+    }
+
+    private static ParagraphOutlineLevel? ReadOutlineLevel(ParagraphProperties properties)
+    {
+        int? level = properties?.OutlineLevel?.Val?.Value;
+        return level.HasValue && level.Value >= 0 && level.Value <= 8 ? (ParagraphOutlineLevel)(level.Value + 1) : ParagraphOutlineLevel.BodyText;
     }
 
     /// <summary>The tab stops of the paragraphs, as <c>ParagraphFormat.TabStops</c> in Word.</summary>
@@ -602,16 +607,16 @@ public class ParagraphFormatWrapper
         });
     }
 
-    private void SetOnOff<T>(bool? value, Func<bool, T> create, Action<ParagraphProperties> remove, Action<ParagraphProperties, T> set) where T : OpenXmlElement
+    //As Word writes them: on is the bare element, and off is nothing unless a style would otherwise turn it on (w:val="0").
+    private void SetOnOff<T>(bool? value, Func<OnOffValue, T> create, Func<ParagraphProperties, T> find, Func<T, OnOffValue> getValue, Action<ParagraphProperties> remove, Action<ParagraphProperties, T> set) where T : OpenXmlElement
     {
-        Apply(properties =>
+        ApplyUnlessInherited(remove, inherited =>
         {
-            remove(properties);
-            if (value.HasValue)
-            {
-                set(properties, create(value.Value));
-            }
-        });
+            T element = find(inherited);
+            OnOffValue on = element == null ? null : getValue(element);
+            bool isOn = element != null && (on == null || !on.HasValue || on.Value);
+            return !value.HasValue || isOn == value.Value;
+        }, properties => set(properties, create(value.Value ? null : OpenXmlExtensions.OffValue())));
     }
 
     private static void Points(double? value, double minimum, string parameterName)
@@ -692,6 +697,40 @@ public class ParagraphFormatWrapper
         Func<Paragraph, ParagraphProperties> properties = p => _direct ? p.ParagraphProperties : resolver.ResolveParagraph(p);
         T first = read(properties(paragraphs[0]));
         return paragraphs.Skip(1).All(p => comparer.Equals(read(properties(p)), first)) ? first : default(T);
+    }
+
+    /// <summary>
+    /// Sets a property as Word does: <paramref name="remove"/> takes away the direct value, and <paramref name="write"/> puts the new one in only
+    /// if the paragraph would not have it anyway from its styles, which <paramref name="inherited"/> says given what they give it.
+    /// </summary>
+    private void ApplyUnlessInherited(Action<ParagraphProperties> remove, Func<ParagraphProperties, bool> inherited, Action<ParagraphProperties> write)
+    {
+        if (_style != null)
+        {
+            ParagraphProperties copy = CopyStyleProperties();
+            remove(copy);
+            StoreStyleProperties(copy);
+            if (!inherited(new FormattingResolver(_style).ResolveStyleParagraph(_style)))
+            {
+                copy = CopyStyleProperties();
+                write(copy);
+                StoreStyleProperties(copy);
+            }
+            return;
+        }
+
+        IList<Paragraph> paragraphs = GetParagraphs();
+        FormattingResolver resolver = paragraphs.Count == 0 ? null : new FormattingResolver(paragraphs[0]);
+        foreach (Paragraph paragraph in paragraphs)
+        {
+            ParagraphProperties properties = paragraph.GetOrAddParagraphProperties();
+            remove(properties);
+            if (!inherited(resolver.ResolveParagraph(paragraph)))
+            {
+                write(properties);
+            }
+            paragraph.RemoveEmptyProperties();
+        }
     }
 
     internal void Apply(Action<ParagraphProperties> change)

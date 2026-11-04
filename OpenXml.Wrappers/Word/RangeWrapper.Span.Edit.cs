@@ -249,6 +249,8 @@ public partial class RangeWrapper
                 at += line.Length;
             }
         }
+        paragraph.CoalesceRuns();
+        current.CoalesceRuns();
         return (current, at);
     }
 
@@ -309,7 +311,9 @@ public partial class RangeWrapper
 
     /// <summary>
     /// Splits the paragraph that holds the position in two, with a paragraph mark at the position. The second paragraph has the same
-    /// properties as the first. Returns the second paragraph.
+    /// properties as the first and keeps the mark, with its formatting; the new mark of the first has the formatting of the character next to
+    /// it. At the very end of a paragraph whose style is followed by another (<c>w:next</c>) the second paragraph is plainly in that style, as
+    /// when Enter is pressed. A section break moves to the second paragraph. Returns the second paragraph.
     /// </summary>
     private static Paragraph SplitParagraphAt(Paragraph paragraph, int position)
     {
@@ -334,17 +338,43 @@ public partial class RangeWrapper
         bool endMarkMoves = first != null;
 
         Paragraph second = new Paragraph();
-        if (paragraph.ParagraphProperties != null)
+        SectionProperties section = paragraph.ParagraphProperties?.GetFirstChild<SectionProperties>();
+        RunProperties firstMoved = (moved.FirstOrDefault() as Run)?.RunProperties;
+        if (endMarkMoves || !ApplyNextStyle(paragraph, second))
         {
-            ParagraphProperties properties = (ParagraphProperties)paragraph.ParagraphProperties.CloneNode(true);
-            //A section break belongs to the end of the paragraph, so it moves to the second paragraph.
-            paragraph.ParagraphProperties.RemoveAllChildren<SectionProperties>();
-            second.AppendChild(properties);
+            if (paragraph.ParagraphProperties != null)
+            {
+                ParagraphProperties properties = (ParagraphProperties)paragraph.ParagraphProperties.CloneNode(true);
+                properties.RemoveAllChildren<SectionProperties>();
+                if (properties.HasChildren)
+                {
+                    second.AppendChild(properties);
+                }
+            }
         }
         foreach (OpenXmlElement element in moved)
         {
             element.Remove();
             second.AppendChild(element);
+        }
+
+        //A section break belongs to the end of the paragraph, so it moves to the second paragraph.
+        if (section != null)
+        {
+            section.Remove();
+            ParagraphProperties secondProperties = second.GetOrAddParagraphProperties();
+            secondProperties.InsertBefore(section, secondProperties.GetFirstChild<ParagraphPropertiesChange>());
+            paragraph.RemoveEmptyProperties();
+        }
+
+        //The new mark of the first paragraph has the formatting of the character before it, or, when it comes first, of the one after it.
+        if (paragraph.Elements<Run>().Any())
+        {
+            SetMarkFromLastRun(paragraph);
+        }
+        else if (firstMoved != null && firstMoved.HasChildren)
+        {
+            paragraph.GetOrAddParagraphProperties().ParagraphMarkRunProperties = firstMoved.ToParagraphMarkProperties();
         }
         paragraph.InsertAfterSelf(second);
         if (endMarkMoves)
@@ -531,9 +561,41 @@ public partial class RangeWrapper
                 element.Remove();
                 head.AppendChild(element);
             }
+            JoinProperties(head, next);
             next.Remove();
             SpanRegistry.ParagraphMerged(next, head);
+            head.CoalesceRuns();
         }
+
+        foreach (OpenXmlElement container in containers.Where(c => c.Parent != null))
+        {
+            container.CoalesceRuns();
+        }
+    }
+
+    //The paragraph that was joined to the next one keeps its own formatting, as in Word, but it is the mark of the next one that is left: its
+    //formatting and any section break it ends go with the joined paragraph, and a section break of the first has gone with its mark.
+    private static void JoinProperties(Paragraph head, Paragraph next)
+    {
+        head.ParagraphProperties?.RemoveAllChildren<SectionProperties>();
+        SectionProperties section = next.ParagraphProperties?.GetFirstChild<SectionProperties>();
+        ParagraphMarkRunProperties mark = next.ParagraphProperties?.ParagraphMarkRunProperties;
+        if (head.ParagraphProperties != null)
+        {
+            head.ParagraphProperties.ParagraphMarkRunProperties = null;
+        }
+        if (mark != null)
+        {
+            mark.Remove();
+            head.GetOrAddParagraphProperties().ParagraphMarkRunProperties = mark;
+        }
+        if (section != null)
+        {
+            section.Remove();
+            ParagraphProperties properties = head.GetOrAddParagraphProperties();
+            properties.InsertBefore(section, properties.GetFirstChild<ParagraphPropertiesChange>());
+        }
+        head.RemoveEmptyProperties();
     }
 
     //The element of a field written as one element (a simple field, a hyperlink or a content control) that an atom is the begin or end of.

@@ -46,6 +46,13 @@ internal static class StyleHelper
             ?? styles.Elements<Style>().FirstOrDefault(s => s.StyleId?.Value == nameOrId);
     }
 
+    /// <summary>Whether the style is the default paragraph style of the document that holds the element.</summary>
+    internal static bool IsDefaultParagraphStyle(OpenXmlElement context, string styleId)
+    {
+        Style style = GetStyles(context)?.Elements<Style>().FirstOrDefault(s => s.StyleId?.Value == styleId);
+        return style != null && style.Type != null && style.Type.Value == StyleValues.Paragraph && style.Default != null && style.Default.Value;
+    }
+
     internal static bool IsCustom(Style style)
     {
         return style.CustomStyle != null && style.CustomStyle.HasValue && style.CustomStyle.Value;

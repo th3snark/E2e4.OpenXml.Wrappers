@@ -49,8 +49,12 @@ public class WordMembersTest : IDisposable
 
         range.InsertBreak(type);
 
-        Assert.Equal("Hello" + character + "world" + "\r", _document.Paragraphs[0].Text);
-        Break inserted = _document.Paragraphs[0].Paragraph.Descendants<Break>().Single();
+        //As in Word: a page break has a paragraph of its own and a column break starts one.
+        string expected = type == BreakType.PageBreak ? "Hello\r" + character + "\rworld\r"
+            : type == BreakType.ColumnBreak ? "Hello\r" + character + "world\r"
+            : "Hello" + character + "world\r";
+        Assert.StartsWith(expected, _document.Content.Text, StringComparison.Ordinal);
+        Break inserted = _document.WordprocessingDocument.MainDocumentPart.Document.Descendants<Break>().Single();
         Assert.Equal(xmlType, inserted.Type?.InnerText);
         AssertValid();
     }
@@ -62,7 +66,7 @@ public class WordMembersTest : IDisposable
 
         range.InsertBreak(BreakType.PageBreak);
 
-        Assert.Equal("Hello\f world\r", _document.Paragraphs[0].Text);
+        Assert.StartsWith("Hello\r\f\r world\r", _document.Content.Text, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -72,7 +76,7 @@ public class WordMembersTest : IDisposable
 
         Assert.Equal(2, _document.Sections.Count);
         Assert.Equal(2, _document.Paragraphs.Count);
-        Assert.Equal("Hello\r", _document.Paragraphs[0].Text);
+        Assert.Equal("Hello\f", _document.Paragraphs[0].Text);
         Assert.Equal(" world\r", _document.Paragraphs[1].Text);
         Assert.NotNull(_document.Paragraphs[0].Paragraph.ParagraphProperties.SectionProperties);
         Assert.Equal(SectionStart.Continuous, _document.Sections[1].PageSetup.SectionStart);
@@ -85,7 +89,7 @@ public class WordMembersTest : IDisposable
         _document.Paragraphs[0].Range.InsertBreak(BreakType.SectionBreakNextPage);
 
         Assert.Equal(2, _document.Sections.Count);
-        Assert.Equal("\r", _document.Paragraphs[0].Text);
+        Assert.Equal("\f", _document.Paragraphs[0].Text);
         Assert.Equal("Hello world\r", _document.Paragraphs[1].Text);
         AssertValid();
     }

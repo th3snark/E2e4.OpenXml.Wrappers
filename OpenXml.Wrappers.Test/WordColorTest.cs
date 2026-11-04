@@ -123,8 +123,10 @@ public class WordColorTest
         range.Font.Color = NamedColor.Blue;
         Assert.Equal("0000FF", range.StartElement.Elements<Run>().First().RunProperties.Color.Val.Value);
 
+        //The automatic colour is what the text has when nothing else says so, so it is not written.
         range.Font.Color = WordColor.Automatic;
-        Assert.Equal("auto", range.StartElement.Elements<Run>().First().RunProperties.Color.Val.Value);
+        Assert.Null(range.StartElement.Elements<Run>().First().RunProperties?.Color);
+        Assert.Equal(WordColor.Automatic, range.Font.Color);
 
         range.Font.Color = null;
         Assert.Null(range.StartElement.Elements<Run>().First().RunProperties?.Color);
@@ -160,7 +162,7 @@ public class WordColorTest
         Paragraph paragraph = new Paragraph(new Run(new Text("one")), new Run(new Text("two")));
         RangeWrapper range = new RangeWrapper(paragraph);
         range.Font.Color = "FF0000";
-        ((Run)paragraph.Elements<Run>().Last()).RunProperties.Color.Val = "00FF00";
+        paragraph.AppendChild(new Run(new RunProperties(new Color() { Val = "00FF00" }), new Text("three")));
 
         Assert.Null(range.Font.Color);
         Assert.Null(range.Font.ColorIndex);

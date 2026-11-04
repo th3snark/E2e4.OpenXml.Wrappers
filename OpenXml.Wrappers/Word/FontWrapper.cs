@@ -62,21 +62,21 @@ public class FontWrapper
     public bool? Bold
     {
         get { return GetOnOff<Bold>(e => e.Val); }
-        set { SetOnOff("b", "bCs", value, flag => new Bold() { Val = flag }, flag => new BoldComplexScript() { Val = flag }); }
+        set { SetOnOff("b", value, off => new Bold() { Val = off }, properties => ReadOnOff<Bold>(properties, e => e.Val)); }
     }
 
     /// <summary>Italic text.</summary>
     public bool? Italic
     {
         get { return GetOnOff<Italic>(e => e.Val); }
-        set { SetOnOff("i", "iCs", value, flag => new Italic() { Val = flag }, flag => new ItalicComplexScript() { Val = flag }); }
+        set { SetOnOff("i", value, off => new Italic() { Val = off }, properties => ReadOnOff<Italic>(properties, e => e.Val)); }
     }
 
     /// <summary>Struck through text.</summary>
     public bool? StrikeThrough
     {
         get { return GetOnOff<Strike>(e => e.Val); }
-        set { SetOnOff("strike", null, value, flag => new Strike() { Val = flag }, null); }
+        set { SetOnOff("strike", value, off => new Strike() { Val = off }, properties => ReadOnOff<Strike>(properties, e => e.Val)); }
     }
 
     /// <summary>The underline of the text, as <c>Font.Underline</c> in Word. <see cref="UnderlineStyle.None"/> when there is none.</summary>
@@ -84,15 +84,7 @@ public class FontWrapper
     {
         get
         {
-            return GetValue<UnderlineStyle?>(properties =>
-            {
-                Underline underline = properties?.Elements<Underline>().FirstOrDefault();
-                if (underline == null)
-                {
-                    return UnderlineStyle.None;
-                }
-                return underline.Val == null || !underline.Val.HasValue ? UnderlineStyle.SingleLine : ToUnderlineStyle(underline.Val.Value);
-            });
+            return GetValue<UnderlineStyle?>(ReadUnderline);
         }
         set
         {
@@ -101,15 +93,16 @@ public class FontWrapper
                 throw new ArgumentOutOfRangeException(nameof(value));
             }
 
-            Apply(properties =>
+            Apply((properties, inherited) =>
             {
                 //Keep the colour of the underline when only its style changes.
                 string color = properties.Elements<Underline>().FirstOrDefault()?.Color?.Value;
                 properties.RemoveRunProperty("u");
-                if (value.HasValue)
+                bool keepColor = color != null && value.HasValue && value.Value != UnderlineStyle.None;
+                if (value.HasValue && (keepColor || ReadUnderline(inherited()) != value))
                 {
                     Underline underline = new Underline() { Val = ToUnderlineValues(value.Value) };
-                    if (color != null && value.Value != UnderlineStyle.None)
+                    if (keepColor)
                     {
                         underline.Color = color;
                     }
@@ -117,6 +110,16 @@ public class FontWrapper
                 }
             });
         }
+    }
+
+    private static UnderlineStyle? ReadUnderline(OpenXmlCompositeElement properties)
+    {
+        Underline underline = properties?.Elements<Underline>().FirstOrDefault();
+        if (underline == null)
+        {
+            return UnderlineStyle.None;
+        }
+        return underline.Val == null || !underline.Val.HasValue ? UnderlineStyle.SingleLine : ToUnderlineStyle(underline.Val.Value);
     }
 
     /// <summary>
@@ -171,21 +174,21 @@ public class FontWrapper
     public bool? AllCaps
     {
         get { return GetOnOff<Caps>(e => e.Val); }
-        set { SetOnOff("caps", null, value, flag => new Caps() { Val = flag }, null); }
+        set { SetOnOff("caps", value, off => new Caps() { Val = off }, properties => ReadOnOff<Caps>(properties, e => e.Val)); }
     }
 
     /// <summary>Small capitals.</summary>
     public bool? SmallCaps
     {
         get { return GetOnOff<SmallCaps>(e => e.Val); }
-        set { SetOnOff("smallCaps", null, value, flag => new SmallCaps() { Val = flag }, null); }
+        set { SetOnOff("smallCaps", value, off => new SmallCaps() { Val = off }, properties => ReadOnOff<SmallCaps>(properties, e => e.Val)); }
     }
 
     /// <summary>Hidden text.</summary>
     public bool? Hidden
     {
         get { return GetOnOff<Vanish>(e => e.Val); }
-        set { SetOnOff("vanish", null, value, flag => new Vanish() { Val = flag }, null); }
+        set { SetOnOff("vanish", value, off => new Vanish() { Val = off }, properties => ReadOnOff<Vanish>(properties, e => e.Val)); }
     }
 
     /// <summary>Text with a double line through it. Setting it to true makes <see cref="StrikeThrough"/> false.</summary>
@@ -198,7 +201,7 @@ public class FontWrapper
             {
                 Apply(properties => properties.RemoveRunProperty("strike"));
             }
-            SetOnOff("dstrike", null, value, flag => new DoubleStrike() { Val = flag }, null);
+            SetOnOff("dstrike", value, off => new DoubleStrike() { Val = off }, properties => ReadOnOff<DoubleStrike>(properties, e => e.Val));
         }
     }
 
@@ -206,28 +209,28 @@ public class FontWrapper
     public bool? Emboss
     {
         get { return GetOnOff<Emboss>(e => e.Val); }
-        set { SetOnOff("emboss", null, value, flag => new Emboss() { Val = flag }, null); }
+        set { SetOnOff("emboss", value, off => new Emboss() { Val = off }, properties => ReadOnOff<Emboss>(properties, e => e.Val)); }
     }
 
     /// <summary>Engraved text.</summary>
     public bool? Engrave
     {
         get { return GetOnOff<Imprint>(e => e.Val); }
-        set { SetOnOff("imprint", null, value, flag => new Imprint() { Val = flag }, null); }
+        set { SetOnOff("imprint", value, off => new Imprint() { Val = off }, properties => ReadOnOff<Imprint>(properties, e => e.Val)); }
     }
 
     /// <summary>Text drawn as an outline.</summary>
     public bool? Outline
     {
         get { return GetOnOff<Outline>(e => e.Val); }
-        set { SetOnOff("outline", null, value, flag => new Outline() { Val = flag }, null); }
+        set { SetOnOff("outline", value, off => new Outline() { Val = off }, properties => ReadOnOff<Outline>(properties, e => e.Val)); }
     }
 
     /// <summary>Text with a shadow.</summary>
     public bool? Shadow
     {
         get { return GetOnOff<Shadow>(e => e.Val); }
-        set { SetOnOff("shadow", null, value, flag => new Shadow() { Val = flag }, null); }
+        set { SetOnOff("shadow", value, off => new Shadow() { Val = off }, properties => ReadOnOff<Shadow>(properties, e => e.Val)); }
     }
 
     /// <summary>The space between the characters in points; negative to condense them (<c>Font.Spacing</c> in Word).</summary>
@@ -235,11 +238,7 @@ public class FontWrapper
     {
         get
         {
-            return GetValue<double?>(properties =>
-            {
-                long? twips = properties?.Elements<Spacing>().FirstOrDefault()?.Val?.Value;
-                return twips.HasValue ? twips.Value / 20.0 : 0;
-            });
+            return GetValue<double?>(ReadSpacing);
         }
         set
         {
@@ -248,14 +247,7 @@ public class FontWrapper
                 throw new ArgumentOutOfRangeException(nameof(value), "The spacing must be between -1584 and 1584 points.");
             }
 
-            Apply(properties =>
-            {
-                properties.RemoveRunProperty("spacing");
-                if (value.HasValue && value.Value != 0)
-                {
-                    properties.SetRunProperty(new Spacing() { Val = (int)Math.Round(value.Value * 20, MidpointRounding.AwayFromZero) });
-                }
-            });
+            SetValue("spacing", value, ReadSpacing, points => new Spacing() { Val = (int)Math.Round(points * 20, MidpointRounding.AwayFromZero) });
         }
     }
 
@@ -264,11 +256,7 @@ public class FontWrapper
     {
         get
         {
-            return GetValue<int?>(properties =>
-            {
-                long? scale = properties?.Elements<CharacterScale>().FirstOrDefault()?.Val?.Value;
-                return (int)(scale ?? 100);
-            });
+            return GetValue<int?>(ReadScaling);
         }
         set
         {
@@ -277,14 +265,7 @@ public class FontWrapper
                 throw new ArgumentOutOfRangeException(nameof(value), "The scaling must be between 1 and 600 percent.");
             }
 
-            Apply(properties =>
-            {
-                properties.RemoveRunProperty("w");
-                if (value.HasValue && value.Value != 100)
-                {
-                    properties.SetRunProperty(new CharacterScale() { Val = value.Value });
-                }
-            });
+            SetValue("w", value, ReadScaling, percent => new CharacterScale() { Val = percent });
         }
     }
 
@@ -293,11 +274,7 @@ public class FontWrapper
     {
         get
         {
-            return GetValue<double?>(properties =>
-            {
-                string value = properties?.Elements<Position>().FirstOrDefault()?.Val?.Value;
-                return int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int halfPoints) ? halfPoints / 2.0 : 0;
-            });
+            return GetValue<double?>(ReadPosition);
         }
         set
         {
@@ -306,14 +283,7 @@ public class FontWrapper
                 throw new ArgumentOutOfRangeException(nameof(value), "The position must be between -1584 and 1584 points.");
             }
 
-            Apply(properties =>
-            {
-                properties.RemoveRunProperty("position");
-                if (value.HasValue && value.Value != 0)
-                {
-                    properties.SetRunProperty(new Position() { Val = ((int)Math.Round(value.Value * 2, MidpointRounding.AwayFromZero)).ToString(CultureInfo.InvariantCulture) });
-                }
-            });
+            SetValue("position", value, ReadPosition, points => new Position() { Val = ((int)Math.Round(points * 2, MidpointRounding.AwayFromZero)).ToString(CultureInfo.InvariantCulture) });
         }
     }
 
@@ -322,11 +292,7 @@ public class FontWrapper
     {
         get
         {
-            return GetValue<double?>(properties =>
-            {
-                uint? halfPoints = properties?.Elements<Kern>().FirstOrDefault()?.Val?.Value;
-                return halfPoints.HasValue ? halfPoints.Value / 2.0 : 0;
-            });
+            return GetValue<double?>(ReadKerning);
         }
         set
         {
@@ -335,14 +301,7 @@ public class FontWrapper
                 throw new ArgumentOutOfRangeException(nameof(value), "The kerning must be between 0 and 1638 points.");
             }
 
-            Apply(properties =>
-            {
-                properties.RemoveRunProperty("kern");
-                if (value.HasValue && value.Value != 0)
-                {
-                    properties.SetRunProperty(new Kern() { Val = (uint)Math.Round(value.Value * 2, MidpointRounding.AwayFromZero) });
-                }
-            });
+            SetValue("kern", value, ReadKerning, points => new Kern() { Val = (uint)Math.Round(points * 2, MidpointRounding.AwayFromZero) });
         }
     }
 
@@ -361,29 +320,64 @@ public class FontWrapper
         });
     }
 
+    private static double? ReadSpacing(OpenXmlCompositeElement properties)
+    {
+        long? twips = properties?.Elements<Spacing>().FirstOrDefault()?.Val?.Value;
+        return twips.HasValue ? twips.Value / 20.0 : 0;
+    }
+
+    private static int? ReadScaling(OpenXmlCompositeElement properties)
+    {
+        long? scale = properties?.Elements<CharacterScale>().FirstOrDefault()?.Val?.Value;
+        return (int)(scale ?? 100);
+    }
+
+    private static double? ReadPosition(OpenXmlCompositeElement properties)
+    {
+        string value = properties?.Elements<Position>().FirstOrDefault()?.Val?.Value;
+        return int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int halfPoints) ? halfPoints / 2.0 : 0;
+    }
+
+    private static double? ReadKerning(OpenXmlCompositeElement properties)
+    {
+        uint? halfPoints = properties?.Elements<Kern>().FirstOrDefault()?.Val?.Value;
+        return halfPoints.HasValue ? halfPoints.Value / 2.0 : 0;
+    }
+
     private bool? GetVerticalAlignment(VerticalPositionValues position)
     {
-        return GetValue<bool?>(properties =>
-        {
-            VerticalTextAlignment alignment = properties?.Elements<VerticalTextAlignment>().FirstOrDefault();
-            return alignment?.Val != null && alignment.Val.HasValue && alignment.Val.Value == position;
-        });
+        return GetValue<bool?>(properties => ReadVerticalAlignment(properties, position));
+    }
+
+    private static bool ReadVerticalAlignment(OpenXmlCompositeElement properties, VerticalPositionValues position)
+    {
+        VerticalTextAlignment alignment = properties?.Elements<VerticalTextAlignment>().FirstOrDefault();
+        return alignment?.Val != null && alignment.Val.HasValue && alignment.Val.Value == position;
     }
 
     private void SetVerticalAlignment(bool? value, VerticalPositionValues position)
     {
-        Apply(properties =>
+        Apply((properties, inherited) =>
         {
             VerticalTextAlignment existing = properties.Elements<VerticalTextAlignment>().FirstOrDefault();
             bool isThis = existing?.Val != null && existing.Val.HasValue && existing.Val.Value == position;
             if (value == true)
             {
-                properties.SetRunProperty(new VerticalTextAlignment() { Val = position });
-            }
-            else if (isThis)
-            {
-                //Setting false (or null) only removes this kind of alignment; the opposite one stays.
                 properties.RemoveRunProperty("vertAlign");
+                if (ReadVerticalAlignment(inherited(), position) != true)
+                {
+                    properties.SetRunProperty(new VerticalTextAlignment() { Val = position });
+                }
+            }
+            else if (isThis || existing == null)
+            {
+                //Setting false (or null) only removes this kind of alignment; the opposite one stays. Text that a style makes this kind of
+                //alignment goes back to the baseline only by saying so.
+                properties.RemoveRunProperty("vertAlign");
+                if (value == false && ReadVerticalAlignment(inherited(), position) == true)
+                {
+                    properties.SetRunProperty(new VerticalTextAlignment() { Val = VerticalPositionValues.Baseline });
+                }
             }
         });
     }
@@ -440,16 +434,7 @@ public class FontWrapper
     {
         get
         {
-            return GetValue<double?>(properties =>
-            {
-                FontSize fontSize = properties?.Elements<FontSize>().FirstOrDefault();
-                if (fontSize?.Val == null)
-                {
-                    //Word uses 10 points when nothing says otherwise.
-                    return _direct ? (double?)null : 10;
-                }
-                return Convert.ToDouble(fontSize.Val.Value, CultureInfo.InvariantCulture) / 2;
-            });
+            return GetValue<double?>(properties => ReadSize(properties) ?? (_direct ? (double?)null : DefaultSize));
         }
         set
         {
@@ -458,19 +443,22 @@ public class FontWrapper
                 throw new ArgumentOutOfRangeException(nameof(value), "The font size must be greater than 0 and no more than 1638 points.");
             }
 
-            Apply(properties =>
+            //The size of complex script text (w:szCs) is a property of its own, Font.SizeBi in Word.
+            SetValue("sz", value, properties => ReadSize(properties) ?? DefaultSize, points => new FontSize()
             {
-                properties.RemoveRunProperty("sz");
-                properties.RemoveRunProperty("szCs");
-                if (value.HasValue)
-                {
-                    //The size is stored in half points.
-                    string halfPoints = Math.Round(value.Value * 2, MidpointRounding.AwayFromZero).ToString(CultureInfo.InvariantCulture);
-                    properties.SetRunProperty(new FontSize() { Val = halfPoints });
-                    properties.SetRunProperty(new FontSizeComplexScript() { Val = halfPoints });
-                }
+                //The size is stored in half points.
+                Val = Math.Round(points * 2, MidpointRounding.AwayFromZero).ToString(CultureInfo.InvariantCulture)
             });
         }
+    }
+
+    //Word uses 10 points when nothing says otherwise.
+    private const double DefaultSize = 10;
+
+    private static double? ReadSize(OpenXmlCompositeElement properties)
+    {
+        FontSize fontSize = properties?.Elements<FontSize>().FirstOrDefault();
+        return fontSize?.Val == null ? (double?)null : Convert.ToDouble(fontSize.Val.Value, CultureInfo.InvariantCulture) / 2;
     }
 
     /// <summary>The name of the font.</summary>
@@ -500,11 +488,23 @@ public class FontWrapper
         {
             Apply(properties =>
             {
-                properties.RemoveRunProperty("rFonts");
-                if (value != null)
+                if (value == null)
                 {
-                    properties.SetRunProperty(new RunFonts() { Ascii = value, HighAnsi = value, EastAsia = value, ComplexScript = value });
+                    properties.RemoveRunProperty("rFonts");
+                    return;
                 }
+
+                //As in Word this is the font of Latin text: the fonts for East Asian and complex script text stay as they are.
+                RunFonts fonts = properties.Elements<RunFonts>().FirstOrDefault();
+                if (fonts == null)
+                {
+                    fonts = new RunFonts();
+                    properties.SetRunProperty(fonts);
+                }
+                fonts.Ascii = value;
+                fonts.HighAnsi = value;
+                fonts.AsciiTheme = null;
+                fonts.HighAnsiTheme = null;
             });
         }
     }
@@ -520,32 +520,48 @@ public class FontWrapper
         {
             return GetValue<WordColor?>((properties, resolver) =>
             {
-                Color color = properties?.Elements<Color>().FirstOrDefault();
-                string value = color?.Val?.Value;
                 if (_direct)
                 {
-                    return value == null ? (WordColor?)null : WordColor.FromStored(value);
+                    string stored = properties?.Elements<Color>().FirstOrDefault()?.Val?.Value;
+                    return stored == null ? (WordColor?)null : WordColor.FromStored(stored);
                 }
-
-                if (value == null || string.Equals(value, "auto", StringComparison.OrdinalIgnoreCase))
-                {
-                    ThemeColorValues? theme = color?.ThemeColor?.Value;
-                    value = theme.HasValue ? resolver.GetThemeColorHex(theme.Value) : null;
-                }
-                return WordColor.FromStored(value);
+                return ReadEffectiveColor(properties, resolver);
             });
         }
         set
         {
-            Apply(properties =>
+            Apply((properties, inherited) =>
             {
                 properties.RemoveRunProperty("color");
-                if (value.HasValue)
+                if (value.HasValue && !value.Equals(ReadEffectiveColor(inherited(), Resolver())))
                 {
                     properties.SetRunProperty(new Color() { Val = value.Value.Hex });
                 }
             });
         }
+    }
+
+    private static WordColor? ReadEffectiveColor(OpenXmlCompositeElement properties, FormattingResolver resolver)
+    {
+        Color color = properties?.Elements<Color>().FirstOrDefault();
+        string value = color?.Val?.Value;
+        if (value == null || string.Equals(value, "auto", StringComparison.OrdinalIgnoreCase))
+        {
+            ThemeColorValues? theme = color?.ThemeColor?.Value;
+            value = theme.HasValue ? resolver?.GetThemeColorHex(theme.Value) : null;
+        }
+        return WordColor.FromStored(value);
+    }
+
+    //A resolver for the theme of the document that the text or style is in.
+    private FormattingResolver Resolver()
+    {
+        if (_style != null)
+        {
+            return new FormattingResolver(_style);
+        }
+        OpenXmlElement context = _range.GetRuns().FirstOrDefault() ?? (OpenXmlElement)_range.GetParagraphs().FirstOrDefault();
+        return context == null ? null : new FormattingResolver(context);
     }
 
     /// <summary>
@@ -560,36 +576,43 @@ public class FontWrapper
 
     private bool? GetOnOff<T>(Func<T, OnOffValue> getValue) where T : OpenXmlElement
     {
-        return GetValue<bool?>(properties =>
-        {
-            T element = properties?.ChildElements.OfType<T>().FirstOrDefault();
-            if (element == null)
-            {
-                return false;
-            }
+        return GetValue<bool?>(properties => ReadOnOff(properties, getValue));
+    }
 
-            OnOffValue value = getValue(element);
-            return value == null || !value.HasValue || value.Value;
+    private static bool ReadOnOff<T>(OpenXmlCompositeElement properties, Func<T, OnOffValue> getValue) where T : OpenXmlElement
+    {
+        T element = properties?.ChildElements.OfType<T>().FirstOrDefault();
+        if (element == null)
+        {
+            return false;
+        }
+
+        OnOffValue value = getValue(element);
+        return value == null || !value.HasValue || value.Value;
+    }
+
+    //As Word writes them: on is the bare element, and off is nothing unless a style would otherwise turn it on (w:val="0").
+    private void SetOnOff(string localName, bool? value, Func<OnOffValue, OpenXmlElement> create, Func<OpenXmlCompositeElement, bool> read)
+    {
+        Apply((properties, inherited) =>
+        {
+            properties.RemoveRunProperty(localName);
+            if (value.HasValue && read(inherited()) != value.Value)
+            {
+                properties.SetRunProperty(create(value.Value ? null : OpenXmlExtensions.OffValue()));
+            }
         });
     }
 
-    private void SetOnOff(string localName, string complexScriptLocalName, bool? value, Func<bool, OpenXmlElement> create, Func<bool, OpenXmlElement> createComplexScript)
+    //Sets a property as Word does: a value that is what the text has anyway, from its styles, is not written.
+    private void SetValue<T>(string localName, T? value, Func<OpenXmlCompositeElement, T?> read, Func<T, OpenXmlElement> create) where T : struct
     {
-        Apply(properties =>
+        Apply((properties, inherited) =>
         {
             properties.RemoveRunProperty(localName);
-            if (complexScriptLocalName != null)
-            {
-                properties.RemoveRunProperty(complexScriptLocalName);
-            }
-
-            if (value.HasValue)
+            if (value.HasValue && !EqualityComparer<T?>.Default.Equals(read(inherited()), value))
             {
                 properties.SetRunProperty(create(value.Value));
-                if (createComplexScript != null)
-                {
-                    properties.SetRunProperty(createComplexScript(value.Value));
-                }
             }
         });
     }
@@ -637,6 +660,16 @@ public class FontWrapper
     /// </summary>
     private void Apply(Action<OpenXmlCompositeElement> change)
     {
+        Apply((properties, inherited) => change(properties));
+    }
+
+    /// <summary>
+    /// Applies a change as <see cref="Apply(Action{OpenXmlCompositeElement})"/> does. The change also gets a way to read the effective formatting
+    /// of the text as it stands, which once it has removed the property is what the text has without it. The runs that end up with the same
+    /// formatting are merged.
+    /// </summary>
+    private void Apply(Action<OpenXmlCompositeElement, Func<OpenXmlCompositeElement>> change)
+    {
         if (_style != null)
         {
             StyleRunProperties styleProperties = _style.StyleRunProperties;
@@ -645,7 +678,8 @@ public class FontWrapper
                 styleProperties = new StyleRunProperties();
                 _style.StyleRunProperties = styleProperties;
             }
-            change(styleProperties);
+            FormattingResolver styleResolver = new FormattingResolver(_style);
+            change(styleProperties, () => styleResolver.ResolveStyleRun(_style));
             if (!styleProperties.HasChildren)
             {
                 styleProperties.Remove();
@@ -653,23 +687,38 @@ public class FontWrapper
             return;
         }
 
-        foreach (Run run in _range.GetRuns())
+        List<Run> runs = _range.GetRuns().ToList();
+        List<Paragraph> paragraphs = _range.GetParagraphs().ToList();
+        OpenXmlElement context = runs.Count > 0 ? runs[0] : (OpenXmlElement)paragraphs.FirstOrDefault();
+        FormattingResolver resolver = context == null ? null : new FormattingResolver(context);
+
+        foreach (Run run in runs)
         {
             RunProperties runProperties = run.GetOrAddRunProperties();
-            change(runProperties);
+            change(runProperties, () => resolver.ResolveRun(run));
             if (!runProperties.HasChildren)
             {
                 runProperties.Remove();
             }
         }
 
-        foreach (Paragraph paragraph in _range.GetParagraphs())
+        foreach (Paragraph paragraph in paragraphs)
         {
             ParagraphMarkRunProperties markProperties = paragraph.GetOrAddParagraphMarkRunProperties();
-            change(markProperties);
+            change(markProperties, () => resolver.ResolveParagraphMark(paragraph));
             if (!markProperties.HasChildren)
             {
                 markProperties.Remove();
+            }
+            paragraph.RemoveEmptyProperties();
+        }
+
+        //A range of one run keeps its run, so its element does not go.
+        if (!(_range.StartElement is Run))
+        {
+            foreach (OpenXmlElement parent in runs.Select(r => r.Parent).Where(p => p != null).Distinct().ToList())
+            {
+                parent.CoalesceRuns();
             }
         }
     }
