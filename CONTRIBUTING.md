@@ -13,3 +13,12 @@ dotnet format E2e4.OpenXml.Wrappers.slnx --verify-no-changes
 - New behaviour needs tests. If it writes new XML, keep the schema element order and make sure the result passes `DocumentIntegrity` and opens in Word. Where Word itself would write the markup, compare with what Word writes: add a scenario to the Word reference harness (`tools/WordReference/README.md`) and regenerate the snapshots on a machine with Word.
 - New examples go in `samples/OpenXml.Wrappers.Samples` and in `Examples.All`; the samples test validates them.
 - Update the README and `CHANGELOG.md` for any change to the public API.
+
+## Releasing (maintainer only)
+
+The version has one source: `<Version>` in `OpenXml.Wrappers/OpenXml.Wrappers.csproj`. The package version, `AssemblyVersion`, `FileVersion` and the release tag all follow it, and `eng/Check-Version.ps1` fails CI or the publish run when they disagree.
+
+1. In a pull request, set `<Version>` (a prerelease is written `1.2.0-preview.1`) and rename `## [Unreleased]` in `CHANGELOG.md` to `## [<Version>] - <date>`. Run `pwsh eng/Check-Version.ps1` locally if you like.
+2. After it is merged, tag the merge commit `v<Version>` and push the tag. `publish.yml` checks the tag against `<Version>`, checks the version is not on nuget.org yet, tests, packs and (after approval in the `nuget` environment) pushes.
+
+nuget.org cannot delete a version, only unlist it, so only the maintainer pushes release tags.
