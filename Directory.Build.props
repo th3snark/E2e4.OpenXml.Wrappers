@@ -10,7 +10,8 @@
     <TreatWarningsAsErrors Condition="'$(CI)' == 'true'">true</TreatWarningsAsErrors>
   </PropertyGroup>
 
-  <!-- Assembly and package identity. These become the assembly attributes (company, product, copyright, versions, neutral language). -->
+  <!-- Assembly and package identity. These become the assembly attributes (company, product, copyright, neutral language).
+       The version is set in each packed project's csproj (<Version>); the SDK derives AssemblyVersion and FileVersion from it. -->
   <PropertyGroup>
     <Company>E2e4</Company>
     <Authors>E2e4</Authors>
@@ -18,9 +19,6 @@
     <!-- A fixed year: the copyright year of a release should not change just because it was built later. -->
     <Copyright>Copyright © 2026 GitHub: th3snark (E2e4). Licensed under the MIT License.</Copyright>
     <NeutralLanguage>en</NeutralLanguage>
-    <VersionPrefix>1.0.1</VersionPrefix>
-    <AssemblyVersion>1.0.1.0</AssemblyVersion>
-    <FileVersion>$(VersionPrefix).0</FileVersion>
   </PropertyGroup>
 
   <!-- Repository, license and source link information shared by everything that is packed. -->

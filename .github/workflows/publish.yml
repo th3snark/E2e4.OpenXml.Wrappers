@@ -1,6 +1,7 @@
 name: Publish
 
 # Publishes E2e4.OpenXml.Wrappers to nuget.org when a version tag is pushed, e.g. `git tag v1.0.2 && git push origin v1.0.2`.
+# The version comes from <Version> in OpenXml.Wrappers/OpenXml.Wrappers.csproj; the tag must be v<Version> (eng/Check-Version.ps1).
 # Only push a tag when the owner says so. Uses nuget.org Trusted Publishing: no API key is stored. The policy on nuget.org must name this workflow file (publish.yml).
 on:
   push:
@@ -21,28 +22,37 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0  # the version check compares with the release tags
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
         with:
           global-json-file: global.json
           dotnet-version: 8.0.x
       - name: Check the tag is the version of the build
         if: github.event_name == 'push'
+        shell: pwsh
+        run: eng/Check-Version.ps1 -Tag $env:GITHUB_REF_NAME
+      - name: Check the version is not on nuget.org yet
+        if: github.event_name == 'push'
+        shell: pwsh
         run: |
-          if ! [[ "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
-            echo "Tag $GITHUB_REF_NAME is not of the form vX.Y.Z"
+          $version = $env:GITHUB_REF_NAME.Substring(1).ToLowerInvariant()
+          try { $published = (Invoke-RestMethod https://api.nuget.org/v3-flatcontainer/e2e4.openxml.wrappers/index.json).versions }
+          catch { if ($_.Exception.Response.StatusCode.value__ -eq 404) { $published = @() } else { throw } }
+          if ($published -contains $version) {
+            Write-Host "::error::E2e4.OpenXml.Wrappers $version is already on nuget.org; bump <Version> in OpenXml.Wrappers/OpenXml.Wrappers.csproj."
             exit 1
-          fi
-          prefix=$(sed -n 's:.*<VersionPrefix>\(.*\)</VersionPrefix>.*:\1:p' Directory.Build.props | tr -d '\r')
-          if [ "${GITHUB_REF_NAME#v}" != "$prefix" ]; then
-            echo "Tag $GITHUB_REF_NAME does not match VersionPrefix $prefix in Directory.Build.props"
-            exit 1
-          fi
+          }
       - name: Test
         if: github.event_name == 'push'
         run: dotnet test E2e4.OpenXml.Wrappers.slnx --configuration Release
       - name: Pack
         if: github.event_name == 'push'
-        run: dotnet pack OpenXml.Wrappers/OpenXml.Wrappers.csproj --configuration Release -p:Version=${GITHUB_REF_NAME#v} --output artifacts
+        run: dotnet pack OpenXml.Wrappers/OpenXml.Wrappers.csproj --configuration Release --output artifacts
+      - name: Check the package version
+        if: github.event_name == 'push'
+        shell: pwsh
+        run: eng/Check-Version.ps1 -Tag $env:GITHUB_REF_NAME -Package artifacts
       # Request the temporary key last: it is valid for one hour.
       - name: NuGet login (OIDC to a temporary API key)
         uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1
@@ -55,4 +65,4 @@ jobs:
       # Pushing the .nupkg also pushes the .snupkg symbol package beside it.
       - name: NuGet push
         if: github.event_name == 'push'
-        run: dotnet nuget push artifacts/*.nupkg --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+        run: dotnet nuget push artifacts/*.nupkg --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json

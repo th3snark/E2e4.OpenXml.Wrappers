@@ -2,6 +2,11 @@
 
 All notable changes are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+- The version now has one source, `<Version>` in the library's csproj; `AssemblyVersion` and `FileVersion` are derived from it, and the published package takes its version from it rather than from the tag. CI and the publish workflow check that the package, the assembly versions, this changelog and the release tag agree (`eng/Check-Version.ps1`), prerelease tags such as `v1.2.0-preview.1` can be published, and publishing a version that is already on nuget.org now fails instead of being skipped. No change to the library itself.
+
 ## [1.0.1] - 2026-10-26
 
 ### Fixed
