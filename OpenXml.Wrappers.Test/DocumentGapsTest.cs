@@ -2,8 +2,8 @@ using System;
 using System.IO;
 using System.Linq;
 using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Validation;
 using DocumentFormat.OpenXml.Wordprocessing;
+using OpenXml.Wrappers.Test.Utils;
 using OpenXml.Wrappers.Word;
 using Xunit;
 
@@ -38,7 +38,7 @@ public class DocumentGapsTest : IDisposable
         using (WordprocessingDocument file = WordprocessingDocument.Open(_path, false))
         {
             Assert.NotNull(file.MainDocumentPart.DocumentSettingsPart.Settings.GetFirstChild<EvenAndOddHeaders>());
-            Assert.Empty(new OpenXmlValidator(DocumentFormat.OpenXml.FileFormatVersions.Microsoft365).Validate(file));
+            Assert.Empty(DocumentIntegrity.SchemaErrors(file));
         }
 
         using (WordprocessingDocumentWrapper document = WordprocessingDocumentWrapper.Open(_path, true))

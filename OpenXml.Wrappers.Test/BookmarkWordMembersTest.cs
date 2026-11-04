@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
-using DocumentFormat.OpenXml.Validation;
+using OpenXml.Wrappers.Test.Utils;
 using OpenXml.Wrappers.Word;
 using Xunit;
 
@@ -75,6 +75,6 @@ public class BookmarkWordMembersTest : IDisposable
         Assert.Equal(2 + 1, _document.Bookmarks.Count);
         Assert.Throws<ArgumentException>(() => bookmark.Copy("1bad"));
         _document.Save();
-        Assert.Empty(new OpenXmlValidator().Validate(_document.WordprocessingDocument).Select(e => e.Description));
+        Assert.Empty(DocumentIntegrity.SchemaErrors(_document.WordprocessingDocument));
     }
 }

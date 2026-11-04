@@ -1,0 +1,4 @@
+<w16cex:commentsExtensible xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:w16cex="http://schemas.microsoft.com/office/word/2018/wordml/cex" mc:Ignorable="w16cex">
+  <w16cex:commentExtensible w16cex:dateUtc="{date}" w16cex:durableId="{durable1}" />
+  <w16cex:commentExtensible w16cex:dateUtc="{date}" w16cex:durableId="{durable2}" />
+</w16cex:commentsExtensible>

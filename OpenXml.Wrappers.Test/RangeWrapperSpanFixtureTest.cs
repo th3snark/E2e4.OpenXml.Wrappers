@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Linq;
 using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Validation;
 using OpenXml.Wrappers.Test.Utils;
 using OpenXml.Wrappers.Word;
 using Xunit;
@@ -78,8 +77,7 @@ public class RangeWrapperSpanFixtureTest : IDisposable
             Assert.Equal(before, document.Content.Text);
             Assert.Equal(length, document.Content.StoryLength);
             Assert.True(document.Range(0, 1).Font.Bold == true || document.Range(0, 1).Text.All(c => c == '\r'));
-            Assert.DoesNotContain(new OpenXmlValidator(DocumentFormat.OpenXml.FileFormatVersions.Microsoft365).Validate(document.WordprocessingDocument)
-, e => !e.Description.Contains("vbaProject", StringComparison.Ordinal));
+            Assert.DoesNotContain(DocumentIntegrity.SchemaErrors(document.WordprocessingDocument), e => !e.Contains("vbaProject", StringComparison.Ordinal));
         }
     }
 
@@ -98,8 +96,7 @@ public class RangeWrapperSpanFixtureTest : IDisposable
 
             Assert.Equal(before.Length + count, document.Content.Text.Length);
             Assert.Equal(before.Replace("e", "ee", StringComparison.OrdinalIgnoreCase).Length, document.Content.Text.Length);
-            Assert.DoesNotContain(new OpenXmlValidator(DocumentFormat.OpenXml.FileFormatVersions.Microsoft365).Validate(document.WordprocessingDocument)
-, e => !e.Description.Contains("vbaProject", StringComparison.Ordinal));
+            Assert.DoesNotContain(DocumentIntegrity.SchemaErrors(document.WordprocessingDocument), e => !e.Contains("vbaProject", StringComparison.Ordinal));
         }
     }
 
@@ -119,7 +116,7 @@ public class RangeWrapperSpanFixtureTest : IDisposable
                 }
             }
 
-            Assert.Empty(new OpenXmlValidator(DocumentFormat.OpenXml.FileFormatVersions.Microsoft365).Validate(document.WordprocessingDocument));
+            Assert.Empty(DocumentIntegrity.SchemaErrors(document.WordprocessingDocument));
         }
     }
 }

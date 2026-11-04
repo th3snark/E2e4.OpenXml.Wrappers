@@ -2,8 +2,8 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using DocumentFormat.OpenXml.Validation;
 using DocumentFormat.OpenXml.Wordprocessing;
+using OpenXml.Wrappers.Test.Utils;
 using OpenXml.Wrappers.Word;
 using Xunit;
 
@@ -44,8 +44,8 @@ public class FieldUpdateTest : IDisposable
     private void AssertValid()
     {
         _document.Save();
-        string[] errors = new OpenXmlValidator().Validate(_document.WordprocessingDocument).Select(e => e.Description + " at " + e.Path?.XPath).ToArray();
-        Assert.True(errors.Length == 0, string.Join("; ", errors));
+        IList<string> errors = DocumentIntegrity.SchemaErrors(_document.WordprocessingDocument);
+        Assert.True(errors.Count == 0, string.Join("; ", errors));
     }
 
     [Fact]

@@ -3,8 +3,8 @@ using System.IO;
 using System.Linq;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Validation;
 using DocumentFormat.OpenXml.Wordprocessing;
+using OpenXml.Wrappers.Test.Utils;
 using OpenXml.Wrappers.Word;
 using Xunit;
 
@@ -34,8 +34,8 @@ public class DocumentWordMembersTest : IDisposable
     private void AssertValid()
     {
         _document.Save();
-        string[] errors = new OpenXmlValidator(DocumentFormat.OpenXml.FileFormatVersions.Office2010).Validate(_document.WordprocessingDocument).Select(e => e.Description + " at " + e.Path?.XPath).ToArray();
-        Assert.True(errors.Length == 0, string.Join("; ", errors));
+        IList<string> errors = DocumentIntegrity.SchemaErrors(_document.WordprocessingDocument);
+        Assert.True(errors.Count == 0, string.Join("; ", errors));
     }
 
     #region Sections
