@@ -140,6 +140,12 @@ public class CommentWrapperCollection : IEnumerable<CommentWrapper>
             id = comments.Elements<Comment>().Max(e => Convert.ToInt32(e.Id.Value, CultureInfo.InvariantCulture)) + 1;
         }
 
+        //The styles a comment uses, which Word adds with the first comment (with the linked styles of Comment Text and Comment Subject).
+        foreach (string style in new[] { "CommentReference", "CommentText", "CommentSubject" })
+        {
+            BuiltInStyles.GetOrCreate(mainDocumentPart, style);
+        }
+
         string author = string.IsNullOrEmpty(Environment.UserName) ? "Unknown" : Environment.UserName;
         string initials = author.Substring(0, 1);
 

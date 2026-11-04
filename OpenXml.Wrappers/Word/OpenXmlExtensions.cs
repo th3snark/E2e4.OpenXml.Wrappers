@@ -108,6 +108,38 @@ internal static class OpenXmlExtensions
         }
     }
 
+    /// <summary>
+    /// Writes the indentation of every <c>w:ind</c> under the root with the attribute names Word writes in a transitional document
+    /// (<c>w:left</c>, <c>w:right</c>, <c>w:leftChars</c>, <c>w:rightChars</c>). The SDK reads those into its <c>Start</c>, <c>End</c>,
+    /// <c>StartCharacters</c> and <c>EndCharacters</c> properties, so an element it has loaded is written back as <c>w:start</c> and so on.
+    /// </summary>
+    public static void UseTransitionalIndentationNames(this OpenXmlElement root)
+    {
+        foreach (Indentation indentation in root.Descendants<Indentation>())
+        {
+            if (indentation.Start != null && indentation.Left == null)
+            {
+                indentation.Left = indentation.Start.Value;
+                indentation.Start = null;
+            }
+            if (indentation.End != null && indentation.Right == null)
+            {
+                indentation.Right = indentation.End.Value;
+                indentation.End = null;
+            }
+            if (indentation.StartCharacters != null && indentation.LeftChars == null)
+            {
+                indentation.LeftChars = indentation.StartCharacters.Value;
+                indentation.StartCharacters = null;
+            }
+            if (indentation.EndCharacters != null && indentation.RightChars == null)
+            {
+                indentation.RightChars = indentation.EndCharacters.Value;
+                indentation.EndCharacters = null;
+            }
+        }
+    }
+
     #endregion
 
     #region GetElements Routines

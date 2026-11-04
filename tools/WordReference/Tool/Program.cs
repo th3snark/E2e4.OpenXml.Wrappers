@@ -1,6 +1,8 @@
 using System.Globalization;
+using System.IO.Compression;
 using System.Text;
 using System.Xml;
+using System.Xml.Linq;
 using DocumentFormat.OpenXml.Packaging;
 using OpenXml.Wrappers.Test.Utils;
 using OpenXml.Wrappers.Word;
@@ -12,6 +14,9 @@ namespace OpenXml.Wrappers.WordReference;
 /// each .docx to <c>&lt;output folder&gt;/&lt;file name&gt;/&lt;part&gt;</c>, replacing what was there.
 /// <c>dotnet run --project tools/WordReference/Tool -- text &lt;docx folder&gt;</c> writes the library's <c>Content.Text</c> of each .docx to
 /// <c>&lt;file name&gt;.library.txt</c> beside it (none for a document the library cannot read).
+/// <c>dotnet run --project tools/WordReference/Tool -- templates &lt;docx folder&gt; &lt;templates folder&gt;</c> writes the parts the library
+/// starts a new document from (from <c>blank-document.docx</c>) and its built-in style definitions (from <c>built-in-styles.docx</c>) to
+/// <c>OpenXml.Wrappers/Word/Templates</c>, as Word wrote them but without revision ids, document ids and proofing state.
 /// </summary>
 internal static class Program
 {
@@ -27,7 +32,12 @@ internal static class Program
             WriteText(args[1]);
             return 0;
         }
-        Console.Error.WriteLine("Usage: normalize <docx folder> <output folder> | text <docx folder>");
+        if (args.Length == 3 && args[0] == "templates")
+        {
+            WriteTemplates(args[1], args[2]);
+            return 0;
+        }
+        Console.Error.WriteLine("Usage: normalize <docx folder> <output folder> | text <docx folder> | templates <docx folder> <templates folder>");
         return 2;
     }
 
@@ -48,6 +58,71 @@ internal static class Program
             }
             Console.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0}: {1} parts", Path.GetFileName(folder), parts.Count));
         }
+    }
+
+    private static readonly XNamespace W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+    private static readonly XNamespace W14 = "http://schemas.microsoft.com/office/word/2010/wordml";
+    private static readonly XNamespace W15 = "http://schemas.microsoft.com/office/word/2012/wordml";
+    private static readonly XNamespace ExtendedProperties = "http://schemas.openxmlformats.org/officeDocument/2006/extended-properties";
+
+    private static readonly string[] LeftOutProperties =
+    {
+        "Application", "AppVersion", "TotalTime", "Pages", "Words", "Characters", "Lines", "Paragraphs", "CharactersWithSpaces", "Company",
+    };
+
+    private static void WriteTemplates(string inputFolder, string templatesFolder)
+    {
+        string blank = Path.Combine(inputFolder, "blank-document.docx");
+        if (File.Exists(blank))
+        {
+            using (ZipArchive package = ZipFile.OpenRead(blank))
+            {
+                WriteTemplate(package, "word/document.xml", templatesFolder, "document.xml");
+                WriteTemplate(package, "word/styles.xml", templatesFolder, "styles.xml");
+                WriteTemplate(package, "word/settings.xml", templatesFolder, "settings.xml");
+                WriteTemplate(package, "word/fontTable.xml", templatesFolder, "fontTable.xml");
+                WriteTemplate(package, "word/webSettings.xml", templatesFolder, "webSettings.xml");
+                WriteTemplate(package, "word/theme/theme1.xml", templatesFolder, "theme1.xml");
+                WriteTemplate(package, "docProps/app.xml", templatesFolder, "app.xml");
+            }
+        }
+        string styles = Path.Combine(inputFolder, "built-in-styles.docx");
+        if (File.Exists(styles))
+        {
+            using (ZipArchive package = ZipFile.OpenRead(styles))
+            {
+                WriteTemplate(package, "word/styles.xml", templatesFolder, "BuiltInStyles.xml", root =>
+                {
+                    //Only the style definitions: the document defaults and latent styles are the new document's.
+                    root.Elements().Where(e => e.Name != W + "style").Remove();
+                });
+            }
+        }
+    }
+
+    private static void WriteTemplate(ZipArchive package, string entryName, string templatesFolder, string fileName, Action<XElement> change = null)
+    {
+        XDocument document;
+        using (Stream stream = package.GetEntry(entryName).Open())
+        {
+            document = XDocument.Load(stream);
+        }
+        XElement root = document.Root;
+
+        //What changes on every save, or says which program wrote the file: revision ids, document ids, proofing state, the application.
+        //Also the statistics, which would go stale because the library does not recount them, and the empty company, so that it reads as not set.
+        root.DescendantsAndSelf().Attributes().Where(a => a.Name.Namespace == W && a.Name.LocalName.StartsWith("rsid", StringComparison.Ordinal)).Remove();
+        root.Descendants().Where(e => e.Name == W + "rsids" || e.Name == W + "rsid" || e.Name == W + "proofState" || e.Name == W14 + "docId"
+            || e.Name == W15 + "docId" || (e.Name.Namespace == ExtendedProperties && LeftOutProperties.Contains(e.Name.LocalName))).Remove();
+        change?.Invoke(root);
+
+        Directory.CreateDirectory(templatesFolder);
+        XmlWriterSettings settings = new XmlWriterSettings() { Encoding = new UTF8Encoding(false), Indent = false };
+        using (XmlWriter writer = XmlWriter.Create(Path.Combine(templatesFolder, fileName), settings))
+        {
+            document.Save(writer);
+        }
+        Console.WriteLine(string.Format(CultureInfo.InvariantCulture, "Template {0} from {1}", fileName, entryName));
     }
 
     private static void WriteText(string folder)

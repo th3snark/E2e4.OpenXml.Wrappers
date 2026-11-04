@@ -43,29 +43,29 @@ public partial class DocumentPropertiesWrapper
     /// <summary>The revision number (<c>Revision Number</c> in Word).</summary>
     public int? Revision
     {
-        get { return ToInt(_document.PackageProperties.Revision); }
-        set { _document.PackageProperties.Revision = FromInt(value); }
+        get { return ToInt(CoreProperties.Revision); }
+        set { CoreProperties.Revision = FromInt(value); }
     }
 
     /// <summary>The language of the document, such as <c>en-US</c>.</summary>
     public string Language
     {
-        get { return _document.PackageProperties.Language; }
-        set { _document.PackageProperties.Language = value; }
+        get { return CoreProperties.Language; }
+        set { CoreProperties.Language = value; }
     }
 
     /// <summary>The status of the content, such as <c>Draft</c>.</summary>
     public string ContentStatus
     {
-        get { return _document.PackageProperties.ContentStatus; }
-        set { _document.PackageProperties.ContentStatus = value; }
+        get { return CoreProperties.ContentStatus; }
+        set { CoreProperties.ContentStatus = value; }
     }
 
     /// <summary>When the document was last printed (UTC).</summary>
     public DateTime? LastPrintDate
     {
-        get { return _document.PackageProperties.LastPrinted; }
-        set { _document.PackageProperties.LastPrinted = value; }
+        get { return CoreProperties.LastPrinted; }
+        set { CoreProperties.LastPrinted = value; }
     }
 
     /// <summary>The template the document is based on, from the extended properties.</summary>

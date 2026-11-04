@@ -14,26 +14,8 @@ namespace OpenXml.Wrappers.Test;
 /// Runs every example and checks the document it writes with each <see cref="DocumentIntegrity"/> check: valid Open XML, references that
 /// resolve and unique ids, which is what Word needs to open it without repairing it.
 /// </summary>
-/// <remarks>
-/// A check that fails today because of a known library bug is listed in <see cref="KnownIssues"/> with the step of the markup plan that fixes
-/// it, and is reported as skipped rather than failed. When the step lands, remove its entries.
-/// </remarks>
 public class SamplesTest : IClassFixture<SamplesTest.SampleDocuments>
 {
-    private const string Step3Reason = "Known issue, fixed by plan step 3 (new documents and styles): the styles the library refers to are not created.";
-
-    //Example file name and check, and the plan step that fixes the problem. Comments refer to the CommentText and CommentReference styles,
-    //which the library does not create.
-    private static readonly Dictionary<string, int> KnownIssues = new Dictionary<string, int>(StringComparer.Ordinal)
-    {
-        [Key("basic-07-comment.docx", DocumentIntegrity.Styles)] = 3,
-        [Key("basic-13-characters.docx", DocumentIntegrity.Styles)] = 3,
-        [Key("intermediate-03-minutes.docx", DocumentIntegrity.Styles)] = 3,
-        [Key("intermediate-05-editing.docx", DocumentIntegrity.Styles)] = 3,
-        [Key("advanced-01-quarterly-report.docx", DocumentIntegrity.Styles)] = 3,
-        [Key("advanced-03-agreement.docx", DocumentIntegrity.Styles)] = 3,
-    };
-
     private readonly SampleDocuments _documents;
 
     public SamplesTest(SampleDocuments documents)
@@ -41,29 +23,20 @@ public class SamplesTest : IClassFixture<SamplesTest.SampleDocuments>
         _documents = documents;
     }
 
-    public static TheoryData<string, string> Clean => Checks(0);
-
-    public static TheoryData<string, string> KnownForStep3 => Checks(3);
-
-    private static TheoryData<string, string> Checks(int step)
+    public static TheoryData<string, string> Checks
     {
-        TheoryData<string, string> data = new TheoryData<string, string>();
-        foreach (Example example in Examples.All)
+        get
         {
-            foreach (string check in DocumentIntegrity.All)
+            TheoryData<string, string> data = new TheoryData<string, string>();
+            foreach (Example example in Examples.All)
             {
-                if ((KnownIssues.TryGetValue(Key(example.FileName, check), out int known) ? known : 0) == step)
+                foreach (string check in DocumentIntegrity.All)
                 {
                     data.Add(example.FileName, check);
                 }
             }
+            return data;
         }
-        return data;
-    }
-
-    private static string Key(string fileName, string check)
-    {
-        return fileName + "/" + check;
     }
 
     [Fact]
@@ -75,17 +48,8 @@ public class SamplesTest : IClassFixture<SamplesTest.SampleDocuments>
         Assert.Equal(Examples.All.Count, Examples.All.Select(e => e.FileName).Distinct().Count());
     }
 
-    [Fact]
-    public void EveryKnownIssueNamesAnExampleAndACheck()
-    {
-        HashSet<string> keys = new HashSet<string>(Examples.All.SelectMany(e => DocumentIntegrity.All.Select(c => Key(e.FileName, c))), StringComparer.Ordinal);
-        Assert.DoesNotContain(KnownIssues.Keys, k => !keys.Contains(k));
-        Assert.All(KnownIssues.Values, step => Assert.Equal(3, step));
-    }
-
     [Theory]
-    [MemberData(nameof(Clean))]
-    [MemberData(nameof(KnownForStep3), Skip = Step3Reason)]
+    [MemberData(nameof(Checks))]
     public void EveryExamplePassesEveryIntegrityCheck(string fileName, string check)
     {
         string path = _documents.Get(fileName);
@@ -96,18 +60,6 @@ public class SamplesTest : IClassFixture<SamplesTest.SampleDocuments>
             IList<string> problems = DocumentIntegrity.Check(document, check);
             Assert.True(problems.Count == 0, string.Format(CultureInfo.InvariantCulture, "{0} fails the {1} check:\n{2}", fileName, check,
                 string.Join("\n", problems.Take(15))));
-        }
-    }
-
-    //Keeps KnownIssues honest: an entry whose check now passes fails here, so that it is removed and the check guards the example again.
-    [Theory]
-    [MemberData(nameof(KnownForStep3))]
-    public void AKnownIssueStillFails(string fileName, string check)
-    {
-        using (WordprocessingDocument document = WordprocessingDocument.Open(_documents.Get(fileName), false))
-        {
-            Assert.True(DocumentIntegrity.Check(document, check).Count > 0, string.Format(CultureInfo.InvariantCulture,
-                "{0} now passes the {1} check: remove it from KnownIssues.", fileName, check));
         }
     }
 

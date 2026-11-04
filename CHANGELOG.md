@@ -4,6 +4,19 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Behaviour changes
+- `Create` (and `InitializeMainDocumentPart`) now make what Word 365 writes for a new blank document, rather than a body and a compatibility setting: styles with document defaults and latent styles (33 styles, among them Normal, Heading 1 to 9, Title and Quote), the current Office theme (Aptos), font table, settings, web settings and document properties. Text in a new document is therefore Aptos 12 point rather than Times New Roman 10 point, and margins are one inch all round.
+- **Code that adds one of these parts itself after `Create` now throws** "Only one instance of the type is allowed for this parent": change the part that is there (`MainDocumentPart.StyleDefinitionsPart`) instead of calling `AddNewPart<StyleDefinitionsPart>()`. Code that counted on a new document having no styles (`Styles.Count`, `Styles.Exists`) sees Word's. A document that was opened rather than created is not affected.
+- A new document takes its paper size, header and footer distance, column spacing, language and decimal and list separators from `CultureInfo.CurrentCulture`, as Word takes them from Windows' regional settings: A4 and 1.25 cm in en-GB, Letter and half an inch in en-US. Set the page up explicitly if a document must not depend on the machine.
+- The built-in styles are Word 365's own definitions, so they look different from 1.0's: Heading 1 is 20 point rather than 16, for instance. Adding a paragraph style also adds its linked character style ("Heading 1 Char"), and applying a style unhides it, as in Word.
+- `Font.Kerning` of unformatted text in a new document reads 1, from Word's document defaults.
+
+### Fixed
+- Comments add the styles they use (Comment Reference, Comment Text and Comment Subject). They used to refer to styles the document did not have.
+- Core properties are written to `/docProps/core.xml`, where Word keeps them, also when they are set on a document that has none. They used to go in a part named by the packaging layer (`/package/services/metadata/core-properties/*.psmdcp`).
+- Indentation keeps Word's attribute names (`w:left`, `w:right`, `w:leftChars`, `w:rightChars`) when a document is saved. The Open XML SDK writes back the ones it has loaded as `w:start` and so on, which is not what Word writes.
+- A default style added to a document with latent styles goes after them, as the schema requires.
+
 ### Changed
 - The version now has one source, `<Version>` in the library's csproj; `AssemblyVersion` and `FileVersion` are derived from it, and the published package takes its version from it rather than from the tag. CI and the publish workflow check that the package, the assembly versions, this changelog and the release tag agree (`eng/Check-Version.ps1`), prerelease tags such as `v1.2.0-preview.1` can be published, and publishing a version that is already on nuget.org now fails instead of being skipped. No change to the library itself.
 

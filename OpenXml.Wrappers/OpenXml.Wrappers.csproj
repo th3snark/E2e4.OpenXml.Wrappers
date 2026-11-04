@@ -27,6 +27,11 @@
     <InternalsVisibleTo Include="OpenXml.Wrappers.Test" />
   </ItemGroup>
 
+  <!-- The parts of a new document and the built-in style definitions, as Word writes them (tools/WordReference writes these files). -->
+  <ItemGroup>
+    <EmbeddedResource Include="Word\Templates\*.xml" LogicalName="OpenXml.Wrappers.Word.Templates.%(Filename)%(Extension)" />
+  </ItemGroup>
+
   <ItemGroup>
     <None Include="..\assets\icon.png" Pack="true" PackagePath="\" Visible="false" />
   </ItemGroup>

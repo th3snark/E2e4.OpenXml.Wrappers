@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using OpenXml.Wrappers.Test.Utils;
 using OpenXml.Wrappers.Word;
@@ -45,6 +46,8 @@ public class BuiltInStylesTest : IDisposable
     [Fact]
     public void AStyleCanBeAppliedByNameToADocumentThatHasNoStyles()
     {
+        MainDocumentPart main = _document.WordprocessingDocument.MainDocumentPart;
+        main.DeletePart(main.StyleDefinitionsPart);
         _document.Content.Text = "Title text";
 
         _document.Paragraphs[0].Range.Style = "Heading 1";
@@ -52,7 +55,7 @@ public class BuiltInStylesTest : IDisposable
         Assert.Equal("Heading 1", _document.Paragraphs[0].Range.Style);
         Assert.Equal("Heading1", _document.Paragraphs[0].Paragraph.ParagraphProperties.ParagraphStyleId.Val.Value);
         Assert.True(_document.Paragraphs[0].Range.Font.Bold == false);
-        Assert.Equal(16, _document.Paragraphs[0].Range.Font.Size);
+        Assert.Equal(20, _document.Paragraphs[0].Range.Font.Size);
         Assert.True(_document.Paragraphs[0].Range.ParagraphFormat.KeepWithNext);
         Assert.Equal("Normal", _document.Styles["Heading 1"].BaseStyle);
     }
@@ -72,8 +75,49 @@ public class BuiltInStylesTest : IDisposable
     [Fact]
     public void AnUnknownNameIsNotAStyle()
     {
+        int count = _document.Styles.Count;
+
         Assert.Null(_document.Styles["No Such Style"]);
-        Assert.Equal(0, _document.Styles.Count);
+        Assert.Equal(count, _document.Styles.Count);
+    }
+
+    [Fact]
+    public void AddingAParagraphStyleAddsItsLinkedStyleAfterIt()
+    {
+        StyleWrapper header = _document.Styles[BuiltInStyle.Header];
+
+        Style[] styles = _document.WordprocessingDocument.MainDocumentPart.StyleDefinitionsPart.Styles.Elements<Style>().ToArray();
+        Assert.Equal("HeaderChar", header.Style.LinkedStyle.Val.Value);
+        Assert.Equal("HeaderChar", styles[Array.IndexOf(styles, header.Style) + 1].StyleId.Value);
+    }
+
+    [Fact]
+    public void ApplyingAStyleUnhidesItAndItsLinkedStyleAsWordDoes()
+    {
+        _document.Content.Text = "Text";
+        Style heading = _document.Styles["Heading 2"].Style;
+        Style linked = _document.Styles["Heading 2 Char"].Style;
+        Assert.NotNull(heading.SemiHidden);
+        Assert.NotNull(linked.SemiHidden);
+
+        _document.Paragraphs[0].Style = "Heading 2";
+
+        Assert.Null(heading.SemiHidden);
+        Assert.Null(linked.SemiHidden);
+    }
+
+    [Fact]
+    public void AddingADefaultStyleKeepsTheOrderTheSchemaRequires()
+    {
+        Styles styles = _document.WordprocessingDocument.MainDocumentPart.StyleDefinitionsPart.Styles;
+        styles.Elements<Style>().Single(s => s.StyleId == "TableNormal").Remove();
+
+        Assert.NotNull(_document.Styles[BuiltInStyle.NormalTable]);
+
+        Assert.IsType<DocDefaults>(styles.ChildElements[0]);
+        Assert.IsType<LatentStyles>(styles.ChildElements[1]);
+        _document.Save();
+        Assert.Empty(DocumentIntegrity.SchemaErrors(_document.WordprocessingDocument));
     }
 
     [Fact]

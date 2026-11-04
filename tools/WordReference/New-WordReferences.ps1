@@ -8,7 +8,7 @@ For the run it sets Application.UserName and UserInitials to 'Reference' and 'R'
 the signed-in account's name) and restores them afterwards. Normal.dotm is backed up first and checked afterwards; the Office user name in
 the registry is checked too.
 
-Each scenario in scenarios.ps1 runs on a new document, which is saved as .docx to a temporary folder. Every XML part of each document is
+Each scenario in scenarios.ps1 runs on a new document with the current Office theme (Aptos) applied, which is saved as .docx to a temporary folder. Every XML part of each document is
 then normalised by MarkupNormalizer (through tools/WordReference/Tool) and written to
 OpenXml.Wrappers.Test/TestFiles/WordReference/<scenario>/<part>. README.md there records the Word build.
 
@@ -35,7 +35,7 @@ $outputRoot = Join-Path $repositoryRoot 'OpenXml.Wrappers.Test\TestFiles\WordRef
 $tool = Join-Path $PSScriptRoot 'Tool\WordReference.Tool.csproj'
 
 $scenarios = & (Join-Path $PSScriptRoot 'scenarios.ps1')
-$names = if ($Scenario) { $Scenario } else { @($scenarios.Keys) }
+$names = @(if ($Scenario) { $Scenario } else { $scenarios.Keys })
 foreach ($name in $names) {
     if (-not $scenarios.Contains($name)) {
         throw ('There is no scenario called {0}.' -f $name)
@@ -44,6 +44,7 @@ foreach ($name in $names) {
 if (-not $WordPath) {
     $WordPath = Get-WordPath
 }
+$theme = Get-OfficeThemePath $WordPath
 
 Write-Host (('This starts Word ({0}) on its own with /a, runs {1} scenario(s), and sets Word''s user name to ''Reference'' for the run ' +
     '(restored afterwards). Normal.dotm is backed up first and checked afterwards.') -f $WordPath, $names.Count)
@@ -76,6 +77,8 @@ try {
             Write-Host ('Running {0}' -f $name)
             $document = $application.Documents.Add()
             try {
+                # A new document as Word 365 makes it: the current Office theme (Aptos), not the /a fallback (see Get-OfficeThemePath).
+                $document.ApplyDocumentTheme($theme)
                 & $scenarios[$name] $document
                 $document.SaveAs2((Join-Path $documents ($name + '.docx')), 16)  # wdFormatDocumentDefault
             }
@@ -114,6 +117,11 @@ New-Item -ItemType Directory -Path $outputRoot -Force | Out-Null
 dotnet run --project $tool --configuration Release --no-build -- normalize $documents $outputRoot
 if ($LASTEXITCODE -ne 0) {
     throw 'Normalising the documents failed.'
+}
+# The parts of a new document and the built-in style definitions that the library embeds, from the blank-document and built-in-styles runs.
+dotnet run --project $tool --configuration Release --no-build -- templates $documents (Join-Path $repositoryRoot 'OpenXml.Wrappers\Word\Templates')
+if ($LASTEXITCODE -ne 0) {
+    throw 'Writing the library''s templates failed.'
 }
 
 $readme = @(

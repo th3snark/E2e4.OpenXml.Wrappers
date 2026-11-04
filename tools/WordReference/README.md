@@ -20,13 +20,16 @@ pwsh tools/WordReference/New-WordReferences.ps1
 
 Close Word first: the script starts its own Word (`WINWORD.EXE /a /automation`) and attaches to it through COM, and refuses to run while
 another Word is open, so that it never drives your documents. `/a` means add-ins and your `Normal.dotm` are not loaded, so the documents
-are what a fresh Word writes. For the run, `Application.UserName` and `UserInitials` are set to `Reference` and `R` (and
+are what a fresh Word writes. That fallback still has the Office 2013 - 2022 theme (Calibri), so each new document gets the current Office
+theme (`Document Themes 16\Office Theme.thmx`, Aptos) applied first, as a new document in Word 365 has it. For the run, `Application.UserName` and `UserInitials` are set to `Reference` and `R` (and
 `Options.UseLocalUserInfo` to true, so that comments do not take the signed-in account's name or address); they are restored afterwards.
 `Normal.dotm` is copied to `%TEMP%\WordReference-<time>\` first and compared afterwards (restored and reported if it changed), and the
 Office user name in the registry is checked too.
 
 Each scenario's document is saved as .docx; every XML part of it is normalised and written to `<scenario>/<part>`, and the Word build goes in
-`TestFiles/WordReference/README.md`. Review the diff before committing: the snapshots reflect the machine's Word build and locale (page size,
+`TestFiles/WordReference/README.md`. The parts of `blank-document` and the styles of `built-in-styles` also go to
+`OpenXml.Wrappers/Word/Templates`, without revision and document ids, statistics or the application's name: these are what the library's
+`Create` and built-in styles write. Review the diff before committing: the snapshots reflect the machine's Word build and locale (page size,
 `w:lang`, `themeFontLang`).
 
 ## Normalisation

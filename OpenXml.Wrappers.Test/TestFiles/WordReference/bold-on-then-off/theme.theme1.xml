@@ -1,6 +1,6 @@
 <a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:thm15="http://schemas.microsoft.com/office/thememl/2012/main" name="Office Theme">
   <a:themeElements>
-    <a:clrScheme name="Office">
+    <a:clrScheme name="Office Theme">
       <a:dk1>
         <a:sysClr lastClr="000000" val="windowText" />
       </a:dk1>
@@ -8,39 +8,39 @@
         <a:sysClr lastClr="FFFFFF" val="window" />
       </a:lt1>
       <a:dk2>
-        <a:srgbClr val="44546A" />
+        <a:srgbClr val="0E2841" />
       </a:dk2>
       <a:lt2>
-        <a:srgbClr val="E7E6E6" />
+        <a:srgbClr val="E8E8E8" />
       </a:lt2>
       <a:accent1>
-        <a:srgbClr val="4472C4" />
+        <a:srgbClr val="156082" />
       </a:accent1>
       <a:accent2>
-        <a:srgbClr val="ED7D31" />
+        <a:srgbClr val="E97132" />
       </a:accent2>
       <a:accent3>
-        <a:srgbClr val="A5A5A5" />
+        <a:srgbClr val="196B24" />
       </a:accent3>
       <a:accent4>
-        <a:srgbClr val="FFC000" />
+        <a:srgbClr val="0F9ED5" />
       </a:accent4>
       <a:accent5>
-        <a:srgbClr val="5B9BD5" />
+        <a:srgbClr val="A02B93" />
       </a:accent5>
       <a:accent6>
-        <a:srgbClr val="70AD47" />
+        <a:srgbClr val="4EA72E" />
       </a:accent6>
       <a:hlink>
-        <a:srgbClr val="0563C1" />
+        <a:srgbClr val="467886" />
       </a:hlink>
       <a:folHlink>
-        <a:srgbClr val="954F72" />
+        <a:srgbClr val="96607D" />
       </a:folHlink>
     </a:clrScheme>
-    <a:fontScheme name="Office">
+    <a:fontScheme name="Office Theme">
       <a:majorFont>
-        <a:latin panose="020F0302020204030204" typeface="Calibri Light" />
+        <a:latin panose="02110004020202020204" typeface="Aptos Display" />
         <a:ea typeface="" />
         <a:cs typeface="" />
         <a:font script="Jpan" typeface="游ゴシック Light" />
@@ -92,10 +92,10 @@
         <a:font script="Tfng" typeface="Ebrima" />
       </a:majorFont>
       <a:minorFont>
-        <a:latin panose="020F0502020204030204" typeface="Calibri" />
+        <a:latin panose="02110004020202020204" typeface="Aptos" />
         <a:ea typeface="" />
         <a:cs typeface="" />
-        <a:font script="Jpan" typeface="游明朝" />
+        <a:font script="Jpan" typeface="游ゴシック" />
         <a:font script="Hang" typeface="맑은 고딕" />
         <a:font script="Hans" typeface="等线" />
         <a:font script="Hant" typeface="新細明體" />
@@ -144,7 +144,7 @@
         <a:font script="Tfng" typeface="Ebrima" />
       </a:minorFont>
     </a:fontScheme>
-    <a:fmtScheme name="Office">
+    <a:fmtScheme name="Office Theme">
       <a:fillStyleLst>
         <a:solidFill>
           <a:schemeClr val="phClr" />
@@ -203,13 +203,6 @@
         </a:gradFill>
       </a:fillStyleLst>
       <a:lnStyleLst>
-        <a:ln algn="ctr" cap="flat" cmpd="sng" w="6350">
-          <a:solidFill>
-            <a:schemeClr val="phClr" />
-          </a:solidFill>
-          <a:prstDash val="solid" />
-          <a:miter lim="800000" />
-        </a:ln>
         <a:ln algn="ctr" cap="flat" cmpd="sng" w="12700">
           <a:solidFill>
             <a:schemeClr val="phClr" />
@@ -218,6 +211,13 @@
           <a:miter lim="800000" />
         </a:ln>
         <a:ln algn="ctr" cap="flat" cmpd="sng" w="19050">
+          <a:solidFill>
+            <a:schemeClr val="phClr" />
+          </a:solidFill>
+          <a:prstDash val="solid" />
+          <a:miter lim="800000" />
+        </a:ln>
+        <a:ln algn="ctr" cap="flat" cmpd="sng" w="25400">
           <a:solidFill>
             <a:schemeClr val="phClr" />
           </a:solidFill>
@@ -282,11 +282,31 @@
       </a:bgFillStyleLst>
     </a:fmtScheme>
   </a:themeElements>
-  <a:objectDefaults />
+  <a:objectDefaults>
+    <a:lnDef>
+      <a:spPr />
+      <a:bodyPr />
+      <a:lstStyle />
+      <a:style>
+        <a:lnRef idx="2">
+          <a:schemeClr val="accent1" />
+        </a:lnRef>
+        <a:fillRef idx="0">
+          <a:schemeClr val="accent1" />
+        </a:fillRef>
+        <a:effectRef idx="1">
+          <a:schemeClr val="accent1" />
+        </a:effectRef>
+        <a:fontRef idx="minor">
+          <a:schemeClr val="tx1" />
+        </a:fontRef>
+      </a:style>
+    </a:lnDef>
+  </a:objectDefaults>
   <a:extraClrSchemeLst />
   <a:extLst>
     <a:ext uri="{05A4C25C-085E-4340-85A3-A5531E510DB2}">
-      <thm15:themeFamily id="{62F939B6-93AF-4DB8-9C6B-D6C7DFDC589F}" name="Office Theme" vid="{4A3C46E8-61CC-4603-A589-7422A47A8E4A}" />
+      <thm15:themeFamily id="{2E142A2C-CD16-42D6-873A-C26D2A0506FA}" name="Office Theme" vid="{1BDDFF52-6CD6-40A5-AB3C-68EB2F1E4D0A}" />
     </a:ext>
   </a:extLst>
 </a:theme>

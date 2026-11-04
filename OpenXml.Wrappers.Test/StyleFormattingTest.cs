@@ -16,7 +16,7 @@ public class StyleFormattingTest : IDisposable
     public StyleFormattingTest()
     {
         _document = WordprocessingDocumentWrapper.Create(_path, true, false);
-        StyleDefinitionsPart part = _document.WordprocessingDocument.MainDocumentPart.AddNewPart<StyleDefinitionsPart>();
+        StyleDefinitionsPart part = _document.WordprocessingDocument.MainDocumentPart.StyleDefinitionsPart;
         part.Styles = new Styles(new Style(new StyleName() { Val = "Normal" }) { Type = StyleValues.Paragraph, StyleId = "Normal", Default = true });
     }
 

@@ -108,7 +108,7 @@ public class RangeWrapperSpanDocumentTest : IDisposable
     {
         using (WordprocessingDocumentWrapper document = CreateDocument("Hello world", "Second"))
         {
-            StyleDefinitionsPart part = document.WordprocessingDocument.MainDocumentPart.AddNewPart<StyleDefinitionsPart>();
+            StyleDefinitionsPart part = document.WordprocessingDocument.MainDocumentPart.StyleDefinitionsPart;
             part.Styles = new Styles(
                 new Style(new StyleName() { Val = "Strong" }) { Type = StyleValues.Character, StyleId = "Strong" },
                 new Style(new StyleName() { Val = "heading 1" }) { Type = StyleValues.Paragraph, StyleId = "Heading1" });

@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 
 using DocumentFormat.OpenXml;
@@ -12,6 +14,11 @@ namespace OpenXml.Wrappers.Word;
 /// The styles that come with Word. A document only holds the ones that have been used, but in Word they can all be asked for by name, so
 /// the definitions are kept here and added to a document when one is asked for or applied.
 /// </summary>
+/// <remarks>
+/// The definitions are the ones Word 365 writes when each style is applied in a new document (<c>Templates/BuiltInStyles.xml</c>, written by
+/// <c>tools/WordReference</c>), so they are the definitions of a style in use: Word drops <c>w:semiHidden</c> from a style once it is used.
+/// Adding a paragraph style adds its linked character style ("Heading 1 Char") too, as Word does.
+/// </remarks>
 internal static class BuiltInStyles
 {
     private sealed class Definition
@@ -20,19 +27,22 @@ internal static class BuiltInStyles
         public string Name;
         public string StoredName;
         public string StyleId;
-        public StyleValues Type = StyleValues.Paragraph;
-        public string BasedOn;
-        public string Next;
-        public bool IsDefault;
-        public bool AutoRedefine;
-        public int UiPriority;
-        public bool SemiHidden;
-        public bool UnhideWhenUsed;
-        public bool QuickFormat;
-        public Func<StyleParagraphProperties> Paragraph;
-        public Func<StyleRunProperties> Run;
-        public Func<StyleTableProperties> Table;
+        public Style Style;
     }
+
+    //The style ids of the BuiltInStyle values whose id is not the name of the value.
+    private static readonly Dictionary<BuiltInStyle, string> StyleIds = new Dictionary<BuiltInStyle, string>()
+    {
+        { BuiltInStyle.Toc1, "TOC1" }, { BuiltInStyle.Toc2, "TOC2" }, { BuiltInStyle.Toc3, "TOC3" }, { BuiltInStyle.Toc4, "TOC4" },
+        { BuiltInStyle.Toc5, "TOC5" }, { BuiltInStyle.Toc6, "TOC6" }, { BuiltInStyle.Toc7, "TOC7" }, { BuiltInStyle.Toc8, "TOC8" },
+        { BuiltInStyle.Toc9, "TOC9" }, { BuiltInStyle.HyperlinkFollowed, "FollowedHyperlink" }, { BuiltInStyle.NormalTable, "TableNormal" },
+    };
+
+    //The names Word shows for built-in styles stored under another name, other than the lower-case ones ("heading 1" shows as "Heading 1").
+    private static readonly Dictionary<string, string> DisplayNames = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        { "annotation text", "Comment Text" }, { "annotation reference", "Comment Reference" }, { "annotation subject", "Comment Subject" }, { "FollowedHyperlink", "Followed Hyperlink" },
+    };
 
     private static readonly List<Definition> Definitions = CreateDefinitions();
     private static readonly Dictionary<BuiltInStyle, Definition> ById = Definitions.Where(d => d.Id.HasValue).ToDictionary(d => d.Id.Value);
@@ -74,11 +84,32 @@ internal static class BuiltInStyles
         return definition == null ? null : Create(mainDocumentPart, definition);
     }
 
+    /// <summary>
+    /// Records that the style is used, as Word does when it is applied: a style with <c>w:unhideWhenUsed</c> loses <c>w:semiHidden</c>, and so
+    /// does its linked style.
+    /// </summary>
+    public static void MarkUsed(MainDocumentPart mainDocumentPart, Style style)
+    {
+        if (style.UnhideWhenUsed == null || style.SemiHidden == null)
+        {
+            return;
+        }
+        style.SemiHidden.Remove();
+        string linkedId = style.LinkedStyle?.Val?.Value;
+        Style linked = linkedId == null ? null : mainDocumentPart.StyleDefinitionsPart?.Styles?.Elements<Style>().FirstOrDefault(s => s.StyleId?.Value == linkedId);
+        linked?.SemiHidden?.Remove();
+    }
+
     private static Definition Find(string nameOrId)
     {
         return Definitions.FirstOrDefault(d => string.Equals(d.Name, nameOrId, StringComparison.OrdinalIgnoreCase)
             || string.Equals(d.StoredName, nameOrId, StringComparison.OrdinalIgnoreCase)
             || string.Equals(d.StyleId, nameOrId, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static Definition FindById(string styleId)
+    {
+        return Definitions.FirstOrDefault(d => d.StyleId == styleId);
     }
 
     private static Style Create(MainDocumentPart mainDocumentPart, Definition definition)
@@ -96,296 +127,117 @@ internal static class BuiltInStyles
         }
 
         //The styles that this one is based on and followed by come first, so that the document never refers to a style it does not have.
-        foreach (string dependency in new[] { definition.BasedOn, definition.Next })
+        foreach (string dependency in new[] { definition.Style.BasedOn?.Val?.Value, definition.Style.NextParagraphStyle?.Val?.Value })
         {
-            Definition other = dependency == null || dependency == definition.StyleId ? null : Find(dependency);
+            Definition other = dependency == null || dependency == definition.StyleId ? null : FindById(dependency);
             if (other != null)
             {
                 Create(mainDocumentPart, other);
             }
         }
 
-        Style style = new Style(new StyleName() { Val = definition.StoredName }) { Type = definition.Type, StyleId = definition.StyleId };
-        if (definition.IsDefault)
+        Style style = (Style)definition.Style.CloneNode(true);
+        if (definition.StyleId == "Header" || definition.StyleId == "Footer")
         {
-            style.Default = true;
-        }
-        if (definition.BasedOn != null)
-        {
-            style.AppendChild(new BasedOn() { Val = definition.BasedOn });
-        }
-        if (definition.Next != null)
-        {
-            style.AppendChild(new NextParagraphStyle() { Val = definition.Next });
-        }
-        if (definition.AutoRedefine)
-        {
-            style.AppendChild(new AutoRedefine());
-        }
-        if (definition.UiPriority > 0)
-        {
-            style.AppendChild(new UIPriority() { Val = definition.UiPriority });
-        }
-        if (definition.SemiHidden)
-        {
-            style.AppendChild(new SemiHidden());
-        }
-        if (definition.UnhideWhenUsed)
-        {
-            style.AppendChild(new UnhideWhenUsed());
-        }
-        if (definition.QuickFormat)
-        {
-            style.AppendChild(new PrimaryStyle());
-        }
-        if (definition.Paragraph != null)
-        {
-            style.AppendChild(definition.Paragraph());
-        }
-        if (definition.Run != null)
-        {
-            style.AppendChild(definition.Run());
-        }
-        if (definition.Table != null)
-        {
-            style.AppendChild(definition.Table());
+            SetTabStopsToTextWidth(style, mainDocumentPart);
         }
 
-        //The default styles go first, as Word writes them.
-        if (definition.IsDefault)
+        //Default styles go before the others, as Word writes them; the rest go at the end, in the order they are added.
+        if (style.Default != null && style.Default.Value)
         {
-            part.Styles.InsertAt(style, part.Styles.Elements<DocDefaults>().Any() ? 1 : 0);
+            OpenXmlElement after = part.Styles.Elements<Style>().LastOrDefault(s => s.Default != null && s.Default.Value)
+                ?? (OpenXmlElement)part.Styles.Elements<LatentStyles>().LastOrDefault()
+                ?? part.Styles.Elements<DocDefaults>().LastOrDefault();
+            if (after == null)
+            {
+                part.Styles.PrependChild(style);
+            }
+            else
+            {
+                after.InsertAfterSelf(style);
+            }
         }
         else
         {
             part.Styles.AppendChild(style);
         }
+
+        //The linked character style of a paragraph style (or the other way round) comes straight after it.
+        Definition linked = style.LinkedStyle?.Val?.Value == null ? null : FindById(style.LinkedStyle.Val.Value);
+        if (linked != null)
+        {
+            Create(mainDocumentPart, linked);
+        }
         return style;
     }
 
-    #region Definitions
-
-    private static StyleRunProperties Run(params OpenXmlElement[] properties)
+    //Word's Header and Footer styles have a centre tab stop in the middle of the text and a right one at its right margin, for the page of a
+    //new document; the definitions are for an A4 page, so they are moved to the text width of the document's last section.
+    private static void SetTabStopsToTextWidth(Style style, MainDocumentPart mainDocumentPart)
     {
-        return new StyleRunProperties(properties);
-    }
-
-    private static StyleParagraphProperties Paragraph(params OpenXmlElement[] properties)
-    {
-        return new StyleParagraphProperties(properties);
-    }
-
-    private static SpacingBetweenLines Spacing(int? before, int? after, int? line)
-    {
-        SpacingBetweenLines spacing = new SpacingBetweenLines();
-        if (before.HasValue)
+        SectionProperties section = mainDocumentPart.Document?.Body?.Elements<SectionProperties>().LastOrDefault();
+        uint? pageWidth = section?.GetFirstChild<PageSize>()?.Width?.Value;
+        PageMargin margin = section?.GetFirstChild<PageMargin>();
+        if (!pageWidth.HasValue || margin?.Left == null || margin.Right == null)
         {
-            spacing.Before = before.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            return;
         }
-        if (after.HasValue)
+        int textWidth = (int)pageWidth.Value - (int)margin.Left.Value - (int)margin.Right.Value - (int)(margin.Gutter?.Value ?? 0);
+        List<TabStop> tabs = style.StyleParagraphProperties?.Tabs?.Elements<TabStop>().ToList();
+        if (textWidth <= 0 || tabs == null || tabs.Count != 2)
         {
-            spacing.After = after.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            return;
         }
-        if (line.HasValue)
-        {
-            spacing.Line = line.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            spacing.LineRule = LineSpacingRuleValues.Auto;
-        }
-        return spacing;
-    }
-
-    private static RunFonts Fonts(string name)
-    {
-        return new RunFonts() { Ascii = name, HighAnsi = name };
-    }
-
-    private static FontSize Size(int halfPoints)
-    {
-        return new FontSize() { Val = halfPoints.ToString(System.Globalization.CultureInfo.InvariantCulture) };
+        tabs[0].Position = textWidth / 2;
+        tabs[1].Position = textWidth;
     }
 
     private static List<Definition> CreateDefinitions()
     {
+        Styles styles;
+        using (Stream stream = NewDocument.OpenTemplate("BuiltInStyles.xml"))
+        using (StreamReader reader = new StreamReader(stream))
+        {
+            string xml = reader.ReadToEnd();
+            styles = new Styles(xml.StartsWith("<?xml", StringComparison.Ordinal) ? xml.Substring(xml.IndexOf("?>", StringComparison.Ordinal) + 2) : xml);
+        }
+
+        Dictionary<string, BuiltInStyle> ids = new Dictionary<string, BuiltInStyle>(StringComparer.Ordinal);
+        //net48 has no generic Enum.GetValues.
+#pragma warning disable CA2263
+        foreach (BuiltInStyle id in Enum.GetValues(typeof(BuiltInStyle)))
+#pragma warning restore CA2263
+        {
+            ids.Add(StyleIds.TryGetValue(id, out string styleId) ? styleId : id.ToString(), id);
+        }
+
         List<Definition> list = new List<Definition>();
-
-        Definition Add(BuiltInStyle? id, string name, string storedName, string styleId, StyleValues type, string basedOn, string next, int priority, bool quick,
-            bool semiHidden = false, bool unhide = false, Func<StyleParagraphProperties> paragraph = null, Func<StyleRunProperties> run = null)
+        foreach (Style style in styles.Elements<Style>())
         {
-            Definition definition = new Definition()
+            string stored = style.StyleName.Val.Value;
+            list.Add(new Definition()
             {
-                Id = id,
-                Name = name,
-                StoredName = storedName,
-                StyleId = styleId,
-                Type = type,
-                BasedOn = basedOn,
-                Next = next,
-                UiPriority = priority,
-                QuickFormat = quick,
-                SemiHidden = semiHidden,
-                UnhideWhenUsed = unhide,
-                Paragraph = paragraph,
-                Run = run
-            };
-            list.Add(definition);
-            return definition;
+                Id = ids.TryGetValue(style.StyleId.Value, out BuiltInStyle id) ? id : (BuiltInStyle?)null,
+                Name = ToDisplayName(stored),
+                StoredName = stored,
+                StyleId = style.StyleId.Value,
+                Style = style,
+            });
         }
-
-        Definition normal = Add(BuiltInStyle.Normal, "Normal", "Normal", "Normal", StyleValues.Paragraph, null, null, 0, true);
-        normal.IsDefault = true;
-        Definition defaultFont = Add(BuiltInStyle.DefaultParagraphFont, "Default Paragraph Font", "Default Paragraph Font", "DefaultParagraphFont", StyleValues.Character, null, null, 1, false, true, true);
-        defaultFont.IsDefault = true;
-        Definition normalTable = Add(BuiltInStyle.NormalTable, "Normal Table", "Normal Table", "TableNormal", StyleValues.Table, null, null, 99, false, true, true);
-        normalTable.IsDefault = true;
-        normalTable.Table = () => new StyleTableProperties(
-            new TableIndentation() { Width = 0, Type = TableWidthUnitValues.Dxa },
-            new TableCellMarginDefault(
-                new TopMargin() { Width = "0", Type = TableWidthUnitValues.Dxa },
-                new TableCellLeftMargin() { Width = 108, Type = TableWidthValues.Dxa },
-                new BottomMargin() { Width = "0", Type = TableWidthUnitValues.Dxa },
-                new TableCellRightMargin() { Width = 108, Type = TableWidthValues.Dxa }));
-        Definition tableGrid = Add(null, "Table Grid", "Table Grid", "TableGrid", StyleValues.Table, "TableNormal", null, 39, false,
-            paragraph: () => Paragraph(Spacing(null, 0, 240)));
-        tableGrid.Table = () => new StyleTableProperties(new TableBorders(
-            new TopBorder() { Val = BorderValues.Single, Color = "auto", Size = 4, Space = 0 },
-            new LeftBorder() { Val = BorderValues.Single, Color = "auto", Size = 4, Space = 0 },
-            new BottomBorder() { Val = BorderValues.Single, Color = "auto", Size = 4, Space = 0 },
-            new RightBorder() { Val = BorderValues.Single, Color = "auto", Size = 4, Space = 0 },
-            new InsideHorizontalBorder() { Val = BorderValues.Single, Color = "auto", Size = 4, Space = 0 },
-            new InsideVerticalBorder() { Val = BorderValues.Single, Color = "auto", Size = 4, Space = 0 }));
-        Definition noList = Add(null, "No List", "No List", "NoList", StyleValues.Numbering, null, null, 99, false, true, true);
-        noList.IsDefault = true;
-
-        //Headings
-        BuiltInStyle[] headings = { BuiltInStyle.Heading1, BuiltInStyle.Heading2, BuiltInStyle.Heading3, BuiltInStyle.Heading4, BuiltInStyle.Heading5, BuiltInStyle.Heading6, BuiltInStyle.Heading7, BuiltInStyle.Heading8, BuiltInStyle.Heading9 };
-        string[] headingColors = { "2F5496", "2F5496", "1F3763", "2F5496", "2F5496", "1F3763", "1F3763", "272727", "272727" };
-        int[] headingSizes = { 32, 26, 24, 0, 0, 0, 0, 21, 21 };
-        for (int i = 0; i < 9; i++)
-        {
-            int level = i;
-            Add(headings[i], "Heading " + (i + 1), "heading " + (i + 1), "Heading" + (i + 1), StyleValues.Paragraph, "Normal", "Normal", 9, true, false, i > 0,
-                () => Paragraph(new KeepNext(), new KeepLines(), Spacing(level == 0 ? 240 : 40, 0, null), new OutlineLevel() { Val = level }),
-                () =>
-                {
-                    StyleRunProperties run = Run(Fonts(level < 3 ? "Calibri Light" : "Calibri"));
-                    if (level == 3 || level == 6 || level == 8)
-                    {
-                        run.AppendChild(new Italic());
-                        run.AppendChild(new ItalicComplexScript());
-                    }
-                    run.AppendChild(new Color() { Val = headingColors[level] });
-                    if (headingSizes[level] > 0)
-                    {
-                        run.AppendChild(Size(headingSizes[level]));
-                        run.AppendChild(new FontSizeComplexScript() { Val = headingSizes[level].ToString(System.Globalization.CultureInfo.InvariantCulture) });
-                    }
-                    return run;
-                });
-        }
-
-        Add(BuiltInStyle.Title, "Title", "Title", "Title", StyleValues.Paragraph, "Normal", "Normal", 10, true, false, false,
-            () => Paragraph(Spacing(null, 0, 240), new ContextualSpacing()),
-            () => Run(Fonts("Calibri Light"), new Spacing() { Val = -10 }, new Kern() { Val = 28 }, Size(56), new FontSizeComplexScript() { Val = "56" }));
-        Add(BuiltInStyle.Subtitle, "Subtitle", "Subtitle", "Subtitle", StyleValues.Paragraph, "Normal", "Normal", 11, true, false, false,
-            () => Paragraph(Spacing(null, 160, null)),
-            () => Run(new Color() { Val = "5A5A5A" }, new Spacing() { Val = 15 }));
-        Add(BuiltInStyle.Quote, "Quote", "Quote", "Quote", StyleValues.Paragraph, "Normal", "Normal", 29, true, false, false,
-            () => Paragraph(Spacing(200, 160, null), new Indentation() { Left = "864", Right = "864" }, new Justification() { Val = JustificationValues.Center }),
-            () => Run(new Italic(), new ItalicComplexScript(), new Color() { Val = "404040" }));
-        Add(BuiltInStyle.IntenseQuote, "Intense Quote", "Intense Quote", "IntenseQuote", StyleValues.Paragraph, "Normal", "Normal", 30, true, false, false,
-            () => Paragraph(
-                new ParagraphBorders(
-                    new TopBorder() { Val = BorderValues.Single, Color = "4472C4", Size = 4, Space = 10 },
-                    new BottomBorder() { Val = BorderValues.Single, Color = "4472C4", Size = 4, Space = 10 }),
-                Spacing(360, 360, null),
-                new Indentation() { Left = "864", Right = "864" },
-                new Justification() { Val = JustificationValues.Center }),
-            () => Run(new Italic(), new ItalicComplexScript(), new Color() { Val = "4472C4" }));
-        Add(BuiltInStyle.ListParagraph, "List Paragraph", "List Paragraph", "ListParagraph", StyleValues.Paragraph, "Normal", null, 34, true, false, false,
-            () => Paragraph(new Indentation() { Left = "720" }, new ContextualSpacing()));
-        Add(BuiltInStyle.Caption, "Caption", "caption", "Caption", StyleValues.Paragraph, "Normal", "Normal", 35, true, false, true,
-            () => Paragraph(Spacing(null, 200, 240)),
-            () => Run(new Italic(), new ItalicComplexScript(), new Color() { Val = "44546A" }, Size(18), new FontSizeComplexScript() { Val = "18" }));
-        Add(BuiltInStyle.BodyText, "Body Text", "Body Text", "BodyText", StyleValues.Paragraph, "Normal", null, 0, false, false, false,
-            () => Paragraph(Spacing(null, 120, null)));
-        Add(BuiltInStyle.BodyText2, "Body Text 2", "Body Text 2", "BodyText2", StyleValues.Paragraph, "Normal", null, 99, false, false, true,
-            () => Paragraph(Spacing(null, 120, 480)));
-        Add(BuiltInStyle.BodyText3, "Body Text 3", "Body Text 3", "BodyText3", StyleValues.Paragraph, "Normal", null, 99, false, false, true,
-            () => Paragraph(Spacing(null, 120, null)),
-            () => Run(Size(16), new FontSizeComplexScript() { Val = "16" }));
-        Add(BuiltInStyle.BodyTextIndent, "Body Text Indent", "Body Text Indent", "BodyTextIndent", StyleValues.Paragraph, "Normal", null, 99, false, false, true,
-            () => Paragraph(Spacing(null, 120, null), new Indentation() { Left = "283" }));
-        Add(BuiltInStyle.PlainText, "Plain Text", "Plain Text", "PlainText", StyleValues.Paragraph, "Normal", null, 99, false, false, true,
-            () => Paragraph(Spacing(null, 0, 240)),
-            () => Run(new RunFonts() { Ascii = "Consolas", HighAnsi = "Consolas" }, Size(21), new FontSizeComplexScript() { Val = "21" }));
-        Add(BuiltInStyle.Closing, "Closing", "Closing", "Closing", StyleValues.Paragraph, "Normal", null, 99, false, false, true,
-            () => Paragraph(Spacing(null, 0, 240), new Indentation() { Left = "4320" }));
-        Add(BuiltInStyle.Signature, "Signature", "Signature", "Signature", StyleValues.Paragraph, "Normal", null, 99, false, false, true,
-            () => Paragraph(Spacing(null, 0, 240), new Indentation() { Left = "4320" }));
-        Add(BuiltInStyle.Salutation, "Salutation", "Salutation", "Salutation", StyleValues.Paragraph, "Normal", "Normal", 99, false, false, true);
-        Add(BuiltInStyle.Date, "Date", "Date", "Date", StyleValues.Paragraph, "Normal", "Normal", 99, false, false, true);
-
-        Definition header = Add(BuiltInStyle.Header, "Header", "header", "Header", StyleValues.Paragraph, "Normal", null, 99, false, false, true,
-            () => Paragraph(new Tabs(new TabStop() { Val = TabStopValues.Center, Position = 4680 }, new TabStop() { Val = TabStopValues.Right, Position = 9360 }), Spacing(null, 0, 240)));
-        header.AutoRedefine = false;
-        Add(BuiltInStyle.Footer, "Footer", "footer", "Footer", StyleValues.Paragraph, "Normal", null, 99, false, false, true,
-            () => Paragraph(new Tabs(new TabStop() { Val = TabStopValues.Center, Position = 4680 }, new TabStop() { Val = TabStopValues.Right, Position = 9360 }), Spacing(null, 0, 240)));
-        Add(BuiltInStyle.FootnoteText, "Footnote Text", "footnote text", "FootnoteText", StyleValues.Paragraph, "Normal", null, 99, false, false, true,
-            () => Paragraph(Spacing(null, 0, 240)),
-            () => Run(Size(20), new FontSizeComplexScript() { Val = "20" }));
-        Add(BuiltInStyle.EndnoteText, "Endnote Text", "endnote text", "EndnoteText", StyleValues.Paragraph, "Normal", null, 99, false, false, true,
-            () => Paragraph(Spacing(null, 0, 240)),
-            () => Run(Size(20), new FontSizeComplexScript() { Val = "20" }));
-        Add(BuiltInStyle.CommentText, "Comment Text", "annotation text", "CommentText", StyleValues.Paragraph, "Normal", null, 99, false, false, true,
-            () => Paragraph(Spacing(null, null, 240)),
-            () => Run(Size(20), new FontSizeComplexScript() { Val = "20" }));
-
-        for (int i = 1; i <= 9; i++)
-        {
-            int level = i;
-            Definition toc = Add((BuiltInStyle)(-19 - i), "TOC " + i, "toc " + i, "TOC" + i, StyleValues.Paragraph, "Normal", "Normal", 39, false, false, true,
-                () =>
-                {
-                    StyleParagraphProperties properties = Paragraph(Spacing(null, 100, null));
-                    if (level > 1)
-                    {
-                        properties.AppendChild(new Indentation() { Left = ((level - 1) * 220).ToString(System.Globalization.CultureInfo.InvariantCulture) });
-                    }
-                    return properties;
-                });
-            toc.AutoRedefine = true;
-        }
-
-        //Character styles
-        Add(BuiltInStyle.Hyperlink, "Hyperlink", "Hyperlink", "Hyperlink", StyleValues.Character, null, null, 99, false, false, true,
-            run: () => Run(new Color() { Val = "0563C1" }, new Underline() { Val = UnderlineValues.Single }));
-        Add(BuiltInStyle.HyperlinkFollowed, "Followed Hyperlink", "FollowedHyperlink", "FollowedHyperlink", StyleValues.Character, null, null, 99, false, false, true,
-            run: () => Run(new Color() { Val = "954F72" }, new Underline() { Val = UnderlineValues.Single }));
-        Add(BuiltInStyle.Strong, "Strong", "Strong", "Strong", StyleValues.Character, null, null, 22, true,
-            run: () => Run(new Bold(), new BoldComplexScript()));
-        Add(BuiltInStyle.Emphasis, "Emphasis", "Emphasis", "Emphasis", StyleValues.Character, null, null, 20, true,
-            run: () => Run(new Italic(), new ItalicComplexScript()));
-        Add(BuiltInStyle.SubtleEmphasis, "Subtle Emphasis", "Subtle Emphasis", "SubtleEmphasis", StyleValues.Character, null, null, 19, true,
-            run: () => Run(new Italic(), new ItalicComplexScript(), new Color() { Val = "404040" }));
-        Add(BuiltInStyle.IntenseEmphasis, "Intense Emphasis", "Intense Emphasis", "IntenseEmphasis", StyleValues.Character, null, null, 21, true,
-            run: () => Run(new Italic(), new ItalicComplexScript(), new Color() { Val = "4472C4" }));
-        Add(BuiltInStyle.SubtleReference, "Subtle Reference", "Subtle Reference", "SubtleReference", StyleValues.Character, null, null, 31, true,
-            run: () => Run(new SmallCaps(), new Color() { Val = "5A5A5A" }));
-        Add(BuiltInStyle.IntenseReference, "Intense Reference", "Intense Reference", "IntenseReference", StyleValues.Character, null, null, 32, true,
-            run: () => Run(new Bold(), new BoldComplexScript(), new SmallCaps(), new Color() { Val = "4472C4" }, new Spacing() { Val = 5 }));
-        Add(BuiltInStyle.BookTitle, "Book Title", "Book Title", "BookTitle", StyleValues.Character, null, null, 33, true,
-            run: () => Run(new Bold(), new BoldComplexScript(), new Italic(), new ItalicComplexScript(), new Spacing() { Val = 5 }));
-        Add(BuiltInStyle.FootnoteReference, "Footnote Reference", "footnote reference", "FootnoteReference", StyleValues.Character, null, null, 99, false, false, true,
-            run: () => Run(new VerticalTextAlignment() { Val = VerticalPositionValues.Superscript }));
-        Add(BuiltInStyle.EndnoteReference, "Endnote Reference", "endnote reference", "EndnoteReference", StyleValues.Character, null, null, 99, false, false, true,
-            run: () => Run(new VerticalTextAlignment() { Val = VerticalPositionValues.Superscript }));
-        Add(BuiltInStyle.CommentReference, "Comment Reference", "annotation reference", "CommentReference", StyleValues.Character, null, null, 99, false, true, true,
-            run: () => Run(Size(16), new FontSizeComplexScript() { Val = "16" }));
-        Add(BuiltInStyle.PageNumber, "Page Number", "page number", "PageNumber", StyleValues.Character, null, null, 0, false);
-        Add(BuiltInStyle.LineNumber, "Line Number", "line number", "LineNumber", StyleValues.Character, null, null, 0, false);
-
         return list;
     }
 
-    #endregion
+    //"heading 1" is shown as "Heading 1" and "toc 1" as "TOC 1"; a few others have a different name altogether.
+    private static string ToDisplayName(string storedName)
+    {
+        if (DisplayNames.TryGetValue(storedName, out string name))
+        {
+            return name;
+        }
+        if (storedName.Any(char.IsUpper))
+        {
+            return storedName;
+        }
+        return string.Join(" ", storedName.Split(' ').Select(w => w == "toc" ? "TOC" : w.Length == 0 ? w : char.ToUpper(w[0], CultureInfo.InvariantCulture) + w.Substring(1)));
+    }
 }

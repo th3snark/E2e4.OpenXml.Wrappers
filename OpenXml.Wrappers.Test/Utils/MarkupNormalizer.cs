@@ -16,7 +16,7 @@ namespace OpenXml.Wrappers.Test.Utils;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Values that change on every save are taken out: revision ids (<c>w:rsid*</c>), <c>w14:paraId</c> and <c>w14:textId</c>, proofing marks,
+/// Values that change on every save are taken out: revision ids (<c>w:rsid*</c>), <c>w14:paraId</c> and <c>w14:textId</c>, proofing marks and state,
 /// <c>w:lastRenderedPageBreak</c> and Word's <c>_GoBack</c> bookmark. Ids (relationship, bookmark, comment, note, comment paragraph and
 /// durable ids, <c>docPr</c> ids) become ordinal placeholders such as <c>{bookmark1}</c>, numbered in order of first use, so that what refers
 /// to what is kept. Dates, document ids, password hashes and salts become fixed placeholders. In <c>comments.xml</c> the <c>w14:paraId</c>
@@ -24,7 +24,8 @@ namespace OpenXml.Wrappers.Test.Utils;
 /// </para>
 /// <para>
 /// Attributes and namespace declarations are sorted, namespace declarations that nothing uses are dropped, <c>mc:Ignorable</c> lists only
-/// the prefixes still used (sorted), relationships and content types are sorted and relationship targets are made absolute. The result is
+/// the prefixes still used (sorted), relationships are sorted, relationship targets are made absolute and
+/// each part is listed with its content type, whether a <c>Default</c> or an <c>Override</c> gives it. The result is
 /// indented XML with LF line ends and no XML declaration.
 /// </para>
 /// <para>
@@ -91,10 +92,12 @@ public static class MarkupNormalizer
     public static SortedDictionary<string, string> NormalizePackage(Stream package)
     {
         Dictionary<string, XDocument> parts = new Dictionary<string, XDocument>(StringComparer.Ordinal);
+        List<string> entryNames = new List<string>();
         using (ZipArchive archive = new ZipArchive(package, ZipArchiveMode.Read, true))
         {
             foreach (ZipArchiveEntry entry in archive.Entries)
             {
+                entryNames.Add(entry.FullName);
                 if (GetPartFileName(entry.FullName) != null)
                 {
                     using (Stream stream = entry.Open())
@@ -120,7 +123,7 @@ public static class MarkupNormalizer
             XElement root = parts[entryName].Root;
             if (entryName == ContentTypesEntry)
             {
-                NormalizeContentTypes(root);
+                NormalizeContentTypes(root, entryNames);
             }
             else if (IsRelationshipsEntry(entryName))
             {
@@ -194,7 +197,8 @@ public static class MarkupNormalizer
     private static bool IsRemoved(XElement element, HashSet<string> goBackIds)
     {
         XName name = element.Name;
-        if (name == W + "proofErr" || name == W + "lastRenderedPageBreak")
+        //w:proofState records how far Word's background spelling and grammar check got before the save.
+        if (name == W + "proofErr" || name == W + "proofState" || name == W + "lastRenderedPageBreak")
         {
             return true;
         }
@@ -344,15 +348,31 @@ public static class MarkupNormalizer
         return "/" + string.Join("/", segments);
     }
 
-    private static void NormalizeContentTypes(XElement root)
+    //The content type of each part, whether it comes from a Default (by extension) or an Override: which of the two a package uses depends on
+    //the order its writer added the parts in, and means the same. Relationship parts keep the Default that gives them their type.
+    private static void NormalizeContentTypes(XElement root, List<string> entryNames)
     {
-        List<XElement> defaults = root.Elements(ContentTypes + "Default")
-            .OrderBy(e => ((string)e.Attribute("Extension") ?? string.Empty).ToUpperInvariant(), StringComparer.Ordinal)
-            .ToList();
-        List<XElement> overrides = root.Elements(ContentTypes + "Override")
-            .OrderBy(e => (string)e.Attribute("PartName"), StringComparer.OrdinalIgnoreCase)
-            .ToList();
-        root.ReplaceNodes(defaults.Concat(overrides));
+        Dictionary<string, string> defaults = root.Elements(ContentTypes + "Default")
+            .ToDictionary(e => ((string)e.Attribute("Extension")).ToUpperInvariant(), e => (string)e.Attribute("ContentType"), StringComparer.Ordinal);
+        Dictionary<string, string> overrides = root.Elements(ContentTypes + "Override")
+            .ToDictionary(e => (string)e.Attribute("PartName"), e => (string)e.Attribute("ContentType"), StringComparer.OrdinalIgnoreCase);
+
+        List<XElement> elements = new List<XElement>();
+        if (defaults.TryGetValue("RELS", out string relationships))
+        {
+            elements.Add(new XElement(ContentTypes + "Default", new XAttribute("Extension", "rels"), new XAttribute("ContentType", relationships)));
+        }
+        foreach (string entryName in entryNames.Where(n => n != ContentTypesEntry && n[n.Length - 1] != '/' && !IsRelationshipsEntry(n))
+            .OrderBy(n => n, StringComparer.OrdinalIgnoreCase))
+        {
+            string partName = "/" + entryName;
+            string extension = Path.GetExtension(entryName).TrimStart('.').ToUpperInvariant();
+            if (overrides.TryGetValue(partName, out string contentType) || defaults.TryGetValue(extension, out contentType))
+            {
+                elements.Add(new XElement(ContentTypes + "Override", new XAttribute("PartName", partName), new XAttribute("ContentType", contentType)));
+            }
+        }
+        root.ReplaceNodes(elements);
     }
 
     //Removes the whitespace between elements (indentation), keeping the text of elements that hold only text, such as w:t.

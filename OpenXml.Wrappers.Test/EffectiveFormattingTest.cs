@@ -16,7 +16,7 @@ public class EffectiveFormattingTest : IDisposable
     public EffectiveFormattingTest()
     {
         _document = WordprocessingDocumentWrapper.Create(_path, true, false);
-        StyleDefinitionsPart part = _document.WordprocessingDocument.MainDocumentPart.AddNewPart<StyleDefinitionsPart>();
+        StyleDefinitionsPart part = _document.WordprocessingDocument.MainDocumentPart.StyleDefinitionsPart;
         part.Styles = new Styles(
             new DocDefaults(
                 new RunPropertiesDefault(new RunPropertiesBaseStyle(new RunFonts() { Ascii = "Calibri", HighAnsi = "Calibri" }, new FontSize() { Val = "22" })),

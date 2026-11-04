@@ -247,7 +247,7 @@ public class WordMembersTest : IDisposable
         Assert.Equal(0, font.Spacing);
         Assert.Equal(100, font.Scaling);
         Assert.Equal(0, font.Position);
-        Assert.Equal(0, font.Kerning);
+        Assert.Equal(1, font.Kerning); //Word's document defaults kern fonts from 1 point.
 
         font.Spacing = 1.5;
         font.Scaling = 150;
