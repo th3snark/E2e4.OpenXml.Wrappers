@@ -164,6 +164,33 @@ public class MarkupConformanceTest
                 d.Range(8, 13).Font.Borders.OutsideLineStyle = BorderLineStyle.DoubleLine;
             },
             Body()),
+        new Scenario("paragraph-outline",
+            d =>
+            {
+                d.Content.InsertAfter("A\rB\rC\rD\rE");
+                d.Paragraphs[0].Style = "Heading 1";
+                d.Paragraphs[1].Style = "Heading 2";
+                d.Paragraphs[4].Style = "Heading 3";
+                d.Paragraphs[3].Format.OutlineLevel = ParagraphOutlineLevel.Level3;
+                d.Paragraphs[0].OutlineDemote();
+                d.Paragraphs[1].OutlinePromote();
+                d.Paragraphs[2].OutlineDemote();
+                d.Paragraphs[3].OutlineDemote();
+                d.Paragraphs[4].OutlineDemoteToBody();
+            },
+            Body()),
+
+        new Scenario("paragraphs-spacing-add",
+            d =>
+            {
+                d.Content.InsertAfter("A\rB\rC");
+                d.Paragraphs.IncreaseSpacing();
+                d.Paragraphs.IncreaseSpacing();
+                d.Paragraphs.DecreaseSpacing();
+                d.Paragraphs.Indent();
+                d.Paragraphs.Add(d.Paragraphs[1].Range);
+            },
+            Body()),
         new Scenario("table-3x3", d => d.Tables.Add(d.Range(0, 0), 3, 3), Body()),
 
         new Scenario("table-3x3-word9-behavior",

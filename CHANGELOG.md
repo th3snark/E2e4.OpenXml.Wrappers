@@ -20,6 +20,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 - `Borders` and `Shading` of paragraphs (`ParagraphFormat`, `Paragraph`) and of characters (`Font`): paragraphs have the four edges, with Word''s distances (1 point above and below, 4 at the sides); characters have one border all round, which is the top border. Direct formatting only for now. Markup from Word 16.
 
+- `Paragraphs` gets the members of the paragraph format that apply to every paragraph (`Alignment`, `LeftIndent`, `Borders`, `Shading`, `OpenUp`, `Space15`, `Indent` and so on), `IncreaseSpacing` and `DecreaseSpacing`, `Add(range)`, and `OutlineDemote`, `OutlinePromote` and `OutlineDemoteToBody` (also on `Paragraph`), which follow Word 16: they change the style only and keep direct formatting.
+
 ### Behaviour changes
 - `Font.Name` also sets the complex script font when that has been set on its own, as Word does.
 - An alignment tab (`w:ptab`) takes one position, as in Word.

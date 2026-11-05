@@ -110,7 +110,8 @@ In Word, `Paragraph` exposes the whole of `ParagraphFormat`; here it forwards on
 | Done | `Next`, `Previous`, `Alignment`, `FirstLineIndent`, `Format`, `KeepTogether`, `KeepWithNext`, `LeftIndent`, `LineSpacing`, `LineSpacingRule`, `PageBreakBefore`, `Parent`, `Range`, `RightIndent`, `SpaceAfter`, `SpaceBefore`, `Style`, `WidowControl` |
 | Done (step 7b) | everything `ParagraphFormat` has that is done, and `Indent` / `Outdent` (to the next or previous default tab stop), `Reset`, `OpenUp`, `CloseUp`, `OpenOrCloseUp`, `Space1`, `Space15`, `Space2`, `TabIndent`, `TabHangingIndent`, `Format` can be assigned |
 | Done (step 7c) | `Borders`, `Shading` |
-| Planned, step 7 | `OutlineDemote`, `OutlineDemoteToBody`, `OutlinePromote`, `CollapseHeadingByDefault`, `IsStyleSeparator` |
+| Done (step 7d) | `OutlineDemote`, `OutlinePromote` and `OutlineDemoteToBody`: they change the style only (direct formatting stays). Heading n moves to n ± 1 within 1 to 9; a paragraph with a level of its own moves that level; body text becomes a heading one level below (demote) or at the level of (promote) the nearest heading before it, Heading 2 or Heading 1 if there is none |
+| Planned, step 7 | `CollapseHeadingByDefault`, `IsStyleSeparator` |
 | Decided against | the character and line unit members and `IndentCharWidth`, `IndentFirstLineCharWidth` (see ParagraphFormat) |
 | Planned, step 13 | `JoinList`, `SeparateList`, `ListAdvanceTo`, `ResetAdvanceTo`, `ListNumberOriginal` |
 | Out of scope | `CollapsedState` (view state), `SelectNumber` (UI), `DropCap` (drop caps are frames) |
@@ -121,8 +122,9 @@ In Word, `Paragraph` exposes the whole of `ParagraphFormat`; here it forwards on
 
 | Status | Members |
 |---|---|
-| Done | `Add` (without Word's optional range; step 7 adds it), `Item`, `Count`, `First`, `Last`, `Format`, `Parent`, `Style` |
-| Planned, step 7 | `CloseUp`, `DecreaseSpacing`, `IncreaseSpacing`, `Indent`, `IndentCharWidth`, `IndentFirstLineCharWidth`, `OpenOrCloseUp`, `OpenUp`, `Outdent`, `OutlineDemote`, `OutlineDemoteToBody`, `OutlinePromote`, `Reset`, `Space1`, `Space15`, `Space2`, `TabHangingIndent`, `TabIndent`, and the collection-level format properties: `AddSpaceBetweenFarEastAndAlpha`, `AddSpaceBetweenFarEastAndDigit`, `Alignment`, `AutoAdjustRightIndent`, `BaseLineAlignment`, `Borders`, `CharacterUnitFirstLineIndent`, `CharacterUnitLeftIndent`, `CharacterUnitRightIndent`, `DisableLineHeightGrid`, `FarEastLineBreakControl`, `FirstLineIndent`, `HalfWidthPunctuationOnTopOfLine`, `HangingPunctuation`, `Hyphenation`, `KeepTogether`, `KeepWithNext`, `LeftIndent`, `LineSpacing`, `LineSpacingRule`, `LineUnitAfter`, `LineUnitBefore`, `NoLineNumber`, `OutlineLevel`, `PageBreakBefore`, `ReadingOrder`, `RightIndent`, `Shading`, `SpaceAfter`, `SpaceAfterAuto`, `SpaceBefore`, `SpaceBeforeAuto`, `TabStops`, `WidowControl`, `WordWrap` |
+| Done | `Add` (also `Add(range)`, step 7d), `Item`, `Count`, `First`, `Last`, `Format`, `Parent`, `Style` |
+| Done (step 7d) | `CloseUp`, `OpenUp`, `OpenOrCloseUp`, `DecreaseSpacing`, `IncreaseSpacing` (6 points before and after, not below 0), `Indent`, `Outdent`, `Reset`, `Space1`, `Space15`, `Space2`, `TabHangingIndent`, `TabIndent`, `OutlineDemote`, `OutlineDemoteToBody`, `OutlinePromote`, and the format properties of the collection (`Alignment`, `LeftIndent`, `KeepWithNext`, `WordWrap`, `Borders`, `Shading` and so on), each reading null where the paragraphs differ |
+| Decided against | `IndentCharWidth`, `IndentFirstLineCharWidth`, `CharacterUnit*` and `LineUnit*` (see ParagraphFormat) |
 
 ### 3.7 Find
 <!-- learn: find -->
