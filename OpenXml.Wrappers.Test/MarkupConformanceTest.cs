@@ -1009,6 +1009,99 @@ public class MarkupConformanceTest
             },
             Body()),
 
+        new Scenario("find-replace-font",
+            d =>
+            {
+                d.Content.InsertAfter("One two three two");
+                RangeWrapper r = d.Content;
+                r.Find.Replacement.Font.Bold = true;
+                r.Find.Replacement.Font.Size = 14;
+                r.Find.Execute("two", format: true, replaceWith: "2", replace: ReplaceMode.All);
+            },
+            Body()),
+
+        new Scenario("find-replace-font-text-unchanged",
+            d =>
+            {
+                d.Content.InsertAfter("One two three two");
+                RangeWrapper r = d.Content;
+                r.Find.Replacement.Font.Italic = true;
+                r.Find.Execute("two", format: true, replaceWith: "^&", replace: ReplaceMode.All);
+            },
+            Body()),
+
+        new Scenario("find-replace-empty-with-format",
+            d =>
+            {
+                d.Content.InsertAfter("One two three");
+                RangeWrapper r = d.Content;
+                r.Find.Replacement.Font.Italic = true;
+                r.Find.Execute("two", format: true, replaceWith: string.Empty, replace: ReplaceMode.All);
+            },
+            Body()),
+
+        new Scenario("find-format-only",
+            d =>
+            {
+                d.Content.InsertAfter("plain bold plain bold");
+                d.Range(6, 10).Font.Bold = true;
+                d.Range(17, 21).Font.Bold = true;
+                RangeWrapper r = d.Content;
+                r.Find.Font.Bold = true;
+                r.Find.Replacement.Font.Italic = true;
+                r.Find.Replacement.Font.Bold = false;
+                r.Find.Execute(string.Empty, format: true, replaceWith: string.Empty, replace: ReplaceMode.All);
+            },
+            Body()),
+
+        new Scenario("find-replace-style",
+            d =>
+            {
+                d.Content.InsertAfter("One");
+                d.Content.InsertParagraphAfter();
+                d.Content.InsertAfter("Two");
+                RangeWrapper r = d.Content;
+                r.Find.Replacement.Style = "Heading 1";
+                r.Find.Execute("One", format: true, replaceWith: "Uno", replace: ReplaceMode.All);
+            },
+            Body()),
+
+        new Scenario("find-style-criteria",
+            d =>
+            {
+                d.Content.InsertAfter("One");
+                d.Content.InsertParagraphAfter();
+                d.Content.InsertAfter("Two");
+                d.Paragraphs[0].Style = "Heading 1";
+                RangeWrapper r = d.Content;
+                r.Find.Style = "Heading 1";
+                r.Find.Replacement.Font.Italic = true;
+                r.Find.Execute(string.Empty, format: true, replaceWith: string.Empty, replace: ReplaceMode.All);
+            },
+            Body()),
+
+        new Scenario("find-replace-paragraphformat",
+            d =>
+            {
+                d.Content.InsertAfter("One");
+                d.Content.InsertParagraphAfter();
+                d.Content.InsertAfter("Two");
+                RangeWrapper r = d.Content;
+                r.Find.Replacement.ParagraphFormat.Alignment = ParagraphAlignment.Center;
+                r.Find.Execute("Two", format: true, replaceWith: "Two", replace: ReplaceMode.All);
+            },
+            Body()),
+
+        new Scenario("find-replace-highlight",
+            d =>
+            {
+                d.Content.InsertAfter("One two three");
+                RangeWrapper r = d.Content;
+                r.Find.Replacement.Highlight = true;
+                r.Find.Execute("two", format: true, replaceWith: "^&", replace: ReplaceMode.All);
+            },
+            Body()),
+
         new Scenario("replace-text-within-a-run",
             d =>
             {

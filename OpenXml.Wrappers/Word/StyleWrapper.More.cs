@@ -214,7 +214,7 @@ public partial class StyleWrapper
     }
 
     //An on/off element is on unless it says val 0, false or off.
-    private static bool IsOn(OpenXmlElement element)
+    internal static bool IsOn(OpenXmlElement element)
     {
         if (element == null)
         {

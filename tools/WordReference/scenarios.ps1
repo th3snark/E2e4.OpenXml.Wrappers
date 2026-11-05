@@ -887,6 +887,101 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         [void]$doc.Range(3, 7).Delete()
     }
 
+    'find-replace-font'               = {
+        param($doc)
+        $doc.Content.InsertAfter('One two three two')
+        $m = [Type]::Missing
+        $f = $doc.Content.Find
+        $f.ClearFormatting()
+        $f.Replacement.ClearFormatting()
+        $f.Replacement.Font.Bold = $true
+        $f.Replacement.Font.Size = 14
+        [void]$f.Execute('two', $m, $m, $m, $m, $m, $m, $m, $true, '2', 2)
+    }
+    'find-replace-font-text-unchanged' = {
+        param($doc)
+        $doc.Content.InsertAfter('One two three two')
+        $m = [Type]::Missing
+        $f = $doc.Content.Find
+        $f.ClearFormatting()
+        $f.Replacement.ClearFormatting()
+        $f.Replacement.Font.Italic = $true
+        [void]$f.Execute('two', $m, $m, $m, $m, $m, $m, $m, $true, '^&', 2)
+    }
+    'find-format-only'                = {
+        param($doc)
+        $doc.Content.InsertAfter('plain bold plain bold')
+        $doc.Range(6, 10).Font.Bold = $true
+        $doc.Range(17, 21).Font.Bold = $true
+        $m = [Type]::Missing
+        $f = $doc.Content.Find
+        $f.ClearFormatting()
+        $f.Replacement.ClearFormatting()
+        $f.Font.Bold = $true
+        $f.Replacement.Font.Italic = $true
+        $f.Replacement.Font.Bold = $false
+        [void]$f.Execute('', $m, $m, $m, $m, $m, $m, $m, $true, '', 2)
+    }
+    'find-replace-style'              = {
+        param($doc)
+        $doc.Content.InsertAfter('One')
+        $doc.Content.InsertParagraphAfter()
+        $doc.Content.InsertAfter('Two')
+        $m = [Type]::Missing
+        $f = $doc.Content.Find
+        $f.ClearFormatting()
+        $f.Replacement.ClearFormatting()
+        $f.Replacement.Style = 'Heading 1'
+        [void]$f.Execute('One', $m, $m, $m, $m, $m, $m, $m, $true, 'Uno', 2)
+    }
+    'find-replace-paragraphformat'    = {
+        param($doc)
+        $doc.Content.InsertAfter('One')
+        $doc.Content.InsertParagraphAfter()
+        $doc.Content.InsertAfter('Two')
+        $m = [Type]::Missing
+        $f = $doc.Content.Find
+        $f.ClearFormatting()
+        $f.Replacement.ClearFormatting()
+        $f.Replacement.ParagraphFormat.Alignment = 1
+        [void]$f.Execute('Two', $m, $m, $m, $m, $m, $m, $m, $true, 'Two', 2)
+    }
+    'find-replace-highlight'          = {
+        param($doc)
+        $doc.Content.InsertAfter('One two three')
+        $m = [Type]::Missing
+        $f = $doc.Content.Find
+        $f.ClearFormatting()
+        $f.Replacement.ClearFormatting()
+        $f.Replacement.Highlight = $true
+        [void]$f.Execute('two', $m, $m, $m, $m, $m, $m, $m, $true, '^&', 2)
+    }
+
+    'find-replace-empty-with-format'  = {
+        param($doc)
+        $doc.Content.InsertAfter('One two three')
+        $m = [Type]::Missing
+        $f = $doc.Content.Find
+        $f.ClearFormatting()
+        $f.Replacement.ClearFormatting()
+        $f.Replacement.Font.Italic = $true
+        [void]$f.Execute('two', $m, $m, $m, $m, $m, $m, $m, $true, '', 2)
+    }
+    'find-style-criteria'             = {
+        param($doc)
+        $doc.Content.InsertAfter('One')
+        $doc.Content.InsertParagraphAfter()
+        $doc.Content.InsertAfter('Two')
+        $doc.Paragraphs(1).Style = 'Heading 1'
+        $m = [Type]::Missing
+        $f = $doc.Content.Find
+        $f.ClearFormatting()
+        $f.Replacement.ClearFormatting()
+        $f.Style = 'Heading 1'
+        $f.Replacement.Font.Italic = $true
+        [void]$f.Execute('', $m, $m, $m, $m, $m, $m, $m, $true, '', 2)
+    }
+
     'replace-text-within-a-run'       = {
         param($doc)
         $doc.Content.InsertAfter('One two three')

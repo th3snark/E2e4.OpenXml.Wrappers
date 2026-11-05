@@ -133,7 +133,8 @@ In Word, `Paragraph` exposes the whole of `ParagraphFormat`; here it forwards on
 | Status | Members |
 |---|---|
 | Done | `ClearFormatting`, `Execute` (Word's parameters in Word's order), `Forward`, `Found`, `MatchCase`, `MatchWholeWord`, `MatchWildcards`, `Replacement`, `Text`, `Wrap` (`FindWrap.Ask` throws) |
-| Planned, step 9 | `Format` (exists; `true` throws until this step), `Font`, `ParagraphFormat`, `Style`, `Highlight`, `MatchPrefix`, `MatchSuffix`, `MatchPhrase`, `IgnorePunct`, `IgnoreSpace`, `NoProofing`, `LanguageID`, `LanguageIDFarEast`, `LanguageIDOther`, `Parent` |
+| Done (step 9b) | `Format`, `Font`, `ParagraphFormat`, `Style` (the name), `Highlight` (true or false; null for either) |
+| Planned, step 9 | `MatchPrefix`, `MatchSuffix`, `MatchPhrase`, `IgnorePunct`, `IgnoreSpace`, `NoProofing`, `LanguageID`, `LanguageIDFarEast`, `LanguageIDOther`, `Parent` |
 | Out of scope | `MatchSoundsLike`, `MatchAllWordForms` (need Word's linguistic data; they exist and throw when set to `true`), `HitHighlight`, `ClearHitHighlight` (UI), `Frame` (frames) |
 | Decided against | `Execute2007` (the same as Execute). Script-specific matching, which needs reference behaviour we cannot test: `MatchFuzzy`, `SetAllFuzzyOptions`, `ClearAllFuzzyOptions`, `MatchByte`, `MatchAlefHamza`, `MatchControl`, `MatchDiacritics`, `MatchKashida`, `CorrectHangulEndings`, `HanjaPhoneticHangul` |
 
@@ -142,8 +143,9 @@ In Word, `Paragraph` exposes the whole of `ParagraphFormat`; here it forwards on
 
 | Status | Members |
 |---|---|
-| Done | `ClearFormatting` (does nothing until step 9 gives it formatting to clear), `Text` |
-| Planned, step 9 | `Font`, `ParagraphFormat`, `Style`, `Highlight`, `LanguageID`, `LanguageIDFarEast`, `NoProofing`, `Parent` |
+| Done | `ClearFormatting`, `Text` |
+| Done (step 9b) | `Font`, `ParagraphFormat`, `Style` (the name), `Highlight` (true, false or null) |
+| Planned, step 9 | `LanguageID`, `LanguageIDFarEast`, `NoProofing`, `Parent` |
 | Out of scope | `Frame` (frames) |
 
 ### 3.9 Style, Styles, TableStyle, ConditionalStyle
@@ -880,7 +882,7 @@ Kept on purpose, because no one or two Word members do the same thing:
 ### 5.3 Behavioural limits of objects that exist
 
 * Track changes: edits are never recorded as revisions, so `TrackRevisions = true` throws (reading it and setting it to false work). Tracked-deleted text is counted in positions but is not exposed as `Revisions`. Recording revisions is out of scope.
-* `Find` cannot search or replace by formatting until step 9, and has no sounds-like or word-forms matching.
+* `Find` has no sounds-like or word-forms matching. Searching by formatting compares only the properties that are set in `Find.Font` and `Find.ParagraphFormat` with what each run and paragraph has (from direct formatting and styles, not the conditional formatting of table styles), and highlighting is matched as on or off, not by colour. `Replacement.Highlight = true` highlights in yellow, not the colour of Word's option. A match of paragraph formatting alone is each whole paragraph with its mark, as in Word.
 * `Cell.Delete` and `Cells.Delete` do not shift up or left on vertically merged cells, or up on cells that span columns.
 * `Range.Text` can be set for cells, paragraphs, bookmarks, headers and footers, the document and spans, but not for rows and tables.
 * `Comments.Add` and `Bookmarks.Add` accept only some range kinds. Adding a table, paragraph or insert inside a hyperlink or other run-holding element, and a paragraph split inside a hyperlink, throw.

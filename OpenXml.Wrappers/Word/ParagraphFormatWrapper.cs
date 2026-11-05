@@ -63,6 +63,9 @@ public partial class ParagraphFormatWrapper
     private readonly Style _style;
     private bool _direct;
 
+    //True for the paragraph format of a find or replacement, which keeps every value it is given.
+    private bool _explicit;
+
     public ParagraphFormatWrapper(RangeWrapper range)
     {
         Guard.ThrowIfNull(range);
@@ -75,6 +78,11 @@ public partial class ParagraphFormatWrapper
     {
         Guard.ThrowIfNull(style);
         _style = style;
+    }
+
+    internal static ParagraphFormatWrapper ForCriteria(RangeWrapper range)
+    {
+        return new ParagraphFormatWrapper(range) { _explicit = true };
     }
 
     private ParagraphFormatWrapper(RangeWrapper range, Style style, bool direct)
@@ -725,12 +733,25 @@ public partial class ParagraphFormatWrapper
         {
             ParagraphProperties properties = paragraph.GetOrAddParagraphProperties();
             remove(properties);
-            if (!inherited(resolver.ResolveParagraph(paragraph)))
+            if (_explicit || !inherited(resolver.ResolveParagraph(paragraph)))
             {
                 write(properties);
             }
             paragraph.RemoveEmptyProperties();
         }
+    }
+
+    //Gives the paragraphs of the range the paragraph properties, as a replacement does.
+    internal void ApplyFrom(IEnumerable<OpenXmlElement> source)
+    {
+        List<OpenXmlElement> elements = source.ToList();
+        Apply(properties =>
+        {
+            foreach (OpenXmlElement element in elements.Where(e => e.LocalName != "pStyle" && e.LocalName != "cnfStyle" && e.LocalName != "sectPr"))
+            {
+                FindFormat.MergeInto(properties, element, copy => FindFormat.SetParagraphProperty(properties, copy));
+            }
+        });
     }
 
     internal void Apply(Action<ParagraphProperties> change)
