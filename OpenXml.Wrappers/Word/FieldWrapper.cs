@@ -303,6 +303,13 @@ public partial class FieldWrapper : System.IEquatable<FieldWrapper>
             return this;
         }
 
+        //Word writes the formulas of table cells in pieces.
+        string codeText = string.Concat(parts.Codes.Select(c => c.Text)).TrimStart();
+        if (codeText.Length > 0 && codeText[0] == '=')
+        {
+            return this;
+        }
+
         Run beginRun = (Run)_begin.Parent;
         SimpleField simple = new SimpleField() { Instruction = string.Concat(parts.Codes.Select(c => c.Text)) };
         foreach (Run result in parts.ResultRuns)

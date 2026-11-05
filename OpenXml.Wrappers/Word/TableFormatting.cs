@@ -174,10 +174,10 @@ public partial class TableWrapper
     /// until the columns no longer fit that space (the whole width between the margins for a table without a style, as measured in Word),
     /// when it too becomes their total.
     /// </summary>
-    internal static void ColumnsChanged(Table table)
+    internal static void ColumnsChanged(Table table, bool resizeCells = true)
     {
         List<int> grid = table.GetFirstChild<TableGrid>().Elements<GridColumn>().Select(c => int.TryParse(c.Width?.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int w) ? w : 0).ToList();
-        foreach (TableRow row in table.Elements<TableRow>())
+        foreach (TableRow row in resizeCells ? table.Elements<TableRow>() : Enumerable.Empty<TableRow>())
         {
             foreach (TableCell cell in row.Elements<TableCell>())
             {

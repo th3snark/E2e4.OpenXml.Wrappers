@@ -315,6 +315,12 @@ internal static class FieldUpdater
         DocumentPropertiesWrapper properties = document == null ? null : new DocumentPropertiesWrapper(document);
         string picture = instruction.GetSwitch("@");
 
+        if (instruction.Name.Length > 0 && instruction.Name[0] == '=')
+        {
+            string expression = instruction.Name + string.Concat(instruction.Arguments);
+            return TableFormulas.Compute(field.Key.Ancestors<TableCell>().FirstOrDefault(), expression, instruction.GetSwitch("#"));
+        }
+
         switch (instruction.Name)
         {
             case "DATE":

@@ -376,6 +376,45 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         foreach ($c in $t.Range.Cells) { $c.Range.Text = $v[$i]; $i++ }
         $t.Sort($true, 2, 1, 1)
     }
+    'cell-formula-sum-above'          = {
+        param($doc)
+        $t = $doc.Tables.Add($doc.Range(0, 0), 3, 2)
+        $t.Cell(1, 1).Range.Text = '1'
+        $t.Cell(2, 1).Range.Text = '2'
+        $t.Cell(3, 1).Formula('=SUM(ABOVE)', '0.00')
+    }
+    'cell-autosum'                    = {
+        param($doc)
+        $t = $doc.Tables.Add($doc.Range(0, 0), 3, 2)
+        $t.Cell(1, 1).Range.Text = '1'
+        $t.Cell(2, 1).Range.Text = '2'
+        $t.Cell(3, 1).Formula()
+    }
+    'row-left-indent'                 = {
+        param($doc)
+        $t = $doc.Tables.Add($doc.Range(0, 0), 3, 3)
+        $t.Rows.Item(2).LeftIndent = 20
+    }
+    'row-set-left-indent'             = {
+        param($doc)
+        $t = $doc.Tables.Add($doc.Range(0, 0), 3, 3)
+        $t.Rows.Item(2).SetLeftIndent(30, 0)
+    }
+    'row-set-left-indent-proportional' = {
+        param($doc)
+        $t = $doc.Tables.Add($doc.Range(0, 0), 3, 3)
+        $t.Rows.Item(2).SetLeftIndent(30, 1)
+    }
+    'row-set-left-indent-first-column' = {
+        param($doc)
+        $t = $doc.Tables.Add($doc.Range(0, 0), 3, 3)
+        $t.Rows.Item(2).SetLeftIndent(30, 2)
+    }
+    'row-set-left-indent-same-width'  = {
+        param($doc)
+        $t = $doc.Tables.Add($doc.Range(0, 0), 3, 3)
+        $t.Rows.Item(2).SetLeftIndent(30, 3)
+    }
     'cell-delete-up'                  = {
         param($doc)
         $t = $doc.Tables.Add($doc.Range(0, 0), 3, 3)

@@ -32,7 +32,10 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 - `Table.ConvertToText`, `Rows.ConvertToText` and `Row.ConvertToText` (with `TableFieldSeparator`, or a separator text), `Range.ConvertToTable`, and `Table.Sort` (with `SortFieldType` and `SortOrder`). The markup of each is Word 16's.
 
+- `Row.LeftIndent` and `Row.SetLeftIndent(indent, RulerStyle)`, `Cell.Formula` and `Cell.AutoSum` (the results of the sums, averages and so on of the numbers above, below, left or right of a cell are worked out, and a field update does it too). Older horizontal merges (`hMerge`) are converted to `gridSpan` when a table is merged, split or loses a column, so those no longer throw for them.
+
 ### Behaviour changes
+- **A grid column is not made of a sliver**: cell edges within 2 twips of each other count as one when a cell is given a width, as in Word.
 - **`Cell.Width` makes the table ragged**, as in Word. It used to set only that cell's width; now the grid is split where cells of any row end, cells span the pieces (`gridSpan`) and a row that ends early gets `gridAfter`/`wAfter`.
 - A table without a style keeps an automatic width (`w:tblW`) until its columns are wider than the space between the margins, as Word does; it used to turn fixed ten twips sooner.
 - `Font.Name` also sets the complex script font when that has been set on its own, as Word does.
