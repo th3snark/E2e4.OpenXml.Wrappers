@@ -14,7 +14,10 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 - `Range.TextRetrievalMode` (`IncludeFieldCodes`, `IncludeHiddenText`, `ViewType`): text with the codes of fields instead of their results (`U+0013`, the code and `U+0015`), or without hidden text, as Word gives it. A range made with `Duplicate` keeps the settings. `Range.Document` and `Range.Parent` give the document a range is in.
 
+- `Font` gets `BoldBi`, `ItalicBi`, `SizeBi`, `ColorIndexBi`, `NameAscii`, `NameOther`, `NameFarEast`, `NameBi`, `EmphasisMark` (`EmphasisMark`), `DisableCharacterSpaceGrid`, `Grow`, `Shrink` (the sizes Word steps through) and `Duplicate`; `Range.Font` can be assigned a font, which gives the range its formatting. Markup and values come from Word 16.
+
 ### Behaviour changes
+- `Font.Name` also sets the complex script font when that has been set on its own, as Word does.
 - An alignment tab (`w:ptab`) takes one position, as in Word.
 - **A sentence takes the paragraph marks after it**, as in Word. `"Second sentence here." + paragraph mark` is one sentence, where it used to be a sentence and a mark on its own, and empty paragraphs after a sentence belong to it. `Sentences`, `Expand(TextUnit.Sentence)` and moves by sentences are affected; a range that touches the last sentence of a paragraph now has its mark in `Text`.
 

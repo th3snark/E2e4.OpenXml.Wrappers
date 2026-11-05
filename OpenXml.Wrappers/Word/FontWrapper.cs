@@ -22,7 +22,7 @@ namespace OpenXml.Wrappers.Word;
 /// formatting so that the style applies again. The characters of a range that starts or ends in the middle of a run are formatted by
 /// splitting the run.</para>
 /// </remarks>
-public class FontWrapper
+public partial class FontWrapper
 {
 
     private readonly RangeWrapper _range;
@@ -494,7 +494,7 @@ public class FontWrapper
                     return;
                 }
 
-                //As in Word this is the font of Latin text: the fonts for East Asian and complex script text stay as they are.
+                //As in Word this is the font of Latin text: the font for East Asian text stays as it is, and so does that for complex script text unless it has been set on its own.
                 RunFonts fonts = properties.Elements<RunFonts>().FirstOrDefault();
                 if (fonts == null)
                 {
@@ -505,6 +505,12 @@ public class FontWrapper
                 fonts.HighAnsi = value;
                 fonts.AsciiTheme = null;
                 fonts.HighAnsiTheme = null;
+                if (fonts.ComplexScript != null)
+                {
+                    //Word changes the font of complex script text too when it has been set on its own.
+                    fonts.ComplexScript = value;
+                    fonts.ComplexScriptTheme = null;
+                }
             });
         }
     }
