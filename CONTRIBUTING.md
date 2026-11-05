@@ -19,6 +19,8 @@ dotnet format E2e4.OpenXml.Wrappers.slnx --verify-no-changes
 The version has one source: `<Version>` in `OpenXml.Wrappers/OpenXml.Wrappers.csproj`. The package version, `AssemblyVersion`, `FileVersion` and the release tag all follow it, and `eng/Check-Version.ps1` fails CI or the publish run when they disagree.
 
 1. In a pull request, set `<Version>` (a prerelease is written `1.2.0-preview.1`) and rename `## [Unreleased]` in `CHANGELOG.md` to `## [<Version>] - <date>`. Run `pwsh eng/Check-Version.ps1` locally if you like.
-2. After it is merged, tag the merge commit `v<Version>` and push the tag. `publish.yml` checks the tag against `<Version>`, checks the version is not on nuget.org yet, tests, packs and (after approval in the `nuget` environment) pushes.
+2. After it is merged, tag the merge commit `v<Version>` and push the tag. `publish.yml` runs CodeQL on the tagged code, and stops if it finds anything. Then, after approval in the `nuget` environment, it checks the tag against `<Version>`, checks the version is not on nuget.org yet, tests, packs and pushes.
+
+CodeQL runs only there (`codeql.yml` is called by `publish.yml`), not on pull requests, on `main` or on a schedule. A finding means a fix and a new commit to tag; nothing has reached nuget.org at that point.
 
 nuget.org cannot delete a version, only unlist it, so only the maintainer pushes release tags.

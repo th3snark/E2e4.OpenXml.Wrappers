@@ -20,7 +20,7 @@ dotnet format E2e4.OpenXml.Wrappers.slnx --verify-no-changes
 - The build must have zero warnings (`AnalysisLevel` is `latest-recommended`; `CI=true` makes warnings errors). `Nullable` is deliberately disabled.
 - Shared settings live in `Directory.Build.props`; there are no `AssemblyInfo.cs` files.
 - The version has one source: `<Version>` in `OpenXml.Wrappers/OpenXml.Wrappers.csproj`. The SDK derives `AssemblyVersion`/`FileVersion` from it; never set them, or pass `-p:Version`, by hand. `eng/Check-Version.ps1` checks the package, assembly versions, `CHANGELOG.md` heading and release tag against it.
-- CI is `.github/workflows/ci.yml` (format check, Release build, tests, pack to an artifact, version check).
+- CI is `.github/workflows/ci.yml` (format check, Release build, tests, pack to an artifact, version check). CodeQL (`codeql.yml`) runs only as the first job of `publish.yml`, and a finding stops the release.
 
 ## Tests
 
