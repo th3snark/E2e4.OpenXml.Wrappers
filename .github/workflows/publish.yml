@@ -10,7 +10,17 @@ on:
   workflow_dispatch:
 
 jobs:
+  codeql:
+    if: github.event_name == 'push'
+    uses: ./.github/workflows/codeql.yml
+    permissions:
+      contents: read
+      security-events: write
+
   publish:
+    needs: codeql
+    # A release needs a clean CodeQL scan. A manual run has no scan, and without !cancelled() a skipped job would skip this one too.
+    if: ${{ !cancelled() && (github.event_name == 'workflow_dispatch' || needs.codeql.result == 'success') }}
     environment: nuget  # waits for the owner's approval before the job (and so the nuget.org login) runs
     runs-on: windows-latest  # the tests include net48
     timeout-minutes: 30
