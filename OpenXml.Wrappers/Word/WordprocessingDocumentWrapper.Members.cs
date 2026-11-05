@@ -203,6 +203,15 @@ public partial class WordprocessingDocumentWrapper
     }
 
     /// <summary>
+    /// The content of the document as a package of Office Open XML in one piece, as <c>Document.WordOpenXML</c> in Word. See
+    /// <see cref="RangeWrapper.WordOpenXML"/>.
+    /// </summary>
+    public string WordOpenXML
+    {
+        get { return Content.WordOpenXML; }
+    }
+
+    /// <summary>
     /// Counts something in the main text of the document, as <c>Document.ComputeStatistics</c> in Word.
     /// </summary>
     /// <exception cref="NotSupportedException">The statistic depends on the layout of the pages (<see cref="Statistic.Lines"/> and <see cref="Statistic.Pages"/>).</exception>
