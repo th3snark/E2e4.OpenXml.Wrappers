@@ -15,9 +15,32 @@ public partial class WordprocessingDocumentWrapper : IDisposable
     private bool _skipSave;
     private bool _disposed;
 
+    //The wrapper a document was first wrapped with, which is the one a range reports as its document.
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<WordprocessingDocument, WordprocessingDocumentWrapper> Wrappers =
+        new System.Runtime.CompilerServices.ConditionalWeakTable<WordprocessingDocument, WordprocessingDocumentWrapper>();
+
     public WordprocessingDocumentWrapper(WordprocessingDocument wordprocessingDocument)
     {
         _wordprocessingDocument = wordprocessingDocument;
+        lock (Wrappers)
+        {
+            if (wordprocessingDocument != null && !Wrappers.TryGetValue(wordprocessingDocument, out _))
+            {
+                Wrappers.Add(wordprocessingDocument, this);
+            }
+        }
+    }
+
+    internal static WordprocessingDocumentWrapper For(WordprocessingDocument document)
+    {
+        if (document == null)
+        {
+            return null;
+        }
+        lock (Wrappers)
+        {
+            return Wrappers.TryGetValue(document, out WordprocessingDocumentWrapper wrapper) ? wrapper : null;
+        }
     }
 
     public WordprocessingDocument WordprocessingDocument

@@ -75,6 +75,11 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
     {
         get
         {
+            if (_retrieval != null && _retrieval.ChangesText)
+            {
+                GetPositions(out StoryMap map, out int start, out int end);
+                return map.GetText(start, end, _retrieval.IncludeFieldCodes, _retrieval.IncludeHiddenText);
+            }
             if (_isSpan)
             {
                 return GetSpanText();
@@ -394,10 +399,11 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
     {
         if (!_isSpan)
         {
-            return new RangeWrapper(_startOpenXmlElement, _endOpenXmlElement);
+            return new RangeWrapper(_startOpenXmlElement, _endOpenXmlElement) { _retrieval = _retrieval?.Duplicate() };
         }
 
         RangeWrapper copy = new RangeWrapper(_startOpenXmlElement ?? _root);
+        copy._retrieval = _retrieval?.Duplicate();
         copy._isSpan = true;
         copy._root = _root;
         copy._startAnchor = _startAnchor;
