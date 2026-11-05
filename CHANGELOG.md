@@ -24,7 +24,11 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 - `Cells`, `Rows` and `Columns` format all their members at once: `Cells` gets `Shading`, `VerticalAlignment`, `Height`, `HeightRule`, `SetHeight`, `PreferredWidth` and `PreferredWidthType`; `Rows` gets `Delete` and `SetHeight`; `Columns` gets `Width`, `PreferredWidth`, `PreferredWidthType`, `Shading`, `Delete` and `NestingLevel`. `Column` gets `Next`, `Previous` and `NestingLevel`, and `Row` and `Cell` get `NestingLevel` and (cell) `SetHeight`. As in Word, shading all the cells of a table shades the table too, and a preferred width in points on whole columns sets the columns (the grid).
 
+- Widths of cells and columns as Word sets them: `Cell.SetWidth`, `Column.SetWidth` and `Cells.SetWidth` (with a `RulerStyle`: `None`, `Proportional`, `FirstColumn`, `SameWidth`), `Cells.Width`, `Cells.DistributeWidth`, and `Columns.DistributeWidth` that now shares whole twips as Word does.
+
 ### Behaviour changes
+- **`Cell.Width` makes the table ragged**, as in Word. It used to set only that cell's width; now the grid is split where cells of any row end, cells span the pieces (`gridSpan`) and a row that ends early gets `gridAfter`/`wAfter`.
+- A table without a style keeps an automatic width (`w:tblW`) until its columns are wider than the space between the margins, as Word does; it used to turn fixed ten twips sooner.
 - `Font.Name` also sets the complex script font when that has been set on its own, as Word does.
 - An alignment tab (`w:ptab`) takes one position, as in Word.
 - **A sentence takes the paragraph marks after it**, as in Word. `"Second sentence here." + paragraph mark` is one sentence, where it used to be a sentence and a mark on its own, and empty paragraphs after a sentence belong to it. `Sentences`, `Expand(TextUnit.Sentence)` and moves by sentences are affected; a range that touches the last sentence of a paragraph now has its mark in `Text`.

@@ -237,7 +237,9 @@ The collections are where tables are thinnest: Word's `Rows`, `Columns` and `Cel
 |---|---|
 | Done | `Add`, `DistributeWidth`, `Item`, `Count`, `First`, `Last`, `Parent` |
 | Done (step 8a) | `Delete`, `NestingLevel`, `PreferredWidth` (in points it is the width of the columns, as in Word), `PreferredWidthType`, `Shading` (also the table's when the columns are all of them), `Width` |
-| Planned, step 8 | `AutoFit`, `SetWidth`, `Borders` |
+| Done (step 8b) | `SetWidth` |
+| Planned, step 8 | `Borders` |
+| Needs layout | `AutoFit` (Word measures the text; on empty cells it changes nothing) |
 | Planned, step 19 | `Select` |
 
 <!-- learn: column -->
@@ -248,7 +250,9 @@ The collections are where tables are thinnest: Word's `Rows`, `Columns` and `Cel
 |---|---|
 | Done | `Delete`, `Borders`, `Cells`, `Index`, `IsFirst`, `IsLast`, `Parent`, `PreferredWidth`, `PreferredWidthType`, `Shading`, `Width` |
 | Done (step 8a) | `NestingLevel`, `Next`, `Previous` |
-| Planned, step 8 | `AutoFit`, `SetWidth`, `Sort` |
+| Done (step 8b) | `SetWidth` |
+| Planned, step 8 | `Sort` |
+| Needs layout | `AutoFit` |
 | Planned, step 19 | `Select` |
 
 <!-- learn: cells -->
@@ -259,9 +263,11 @@ The collections are where tables are thinnest: Word's `Rows`, `Columns` and `Cel
 |---|---|
 | Done | `Item`, `Count`, `NestingLevel`, `Parent` |
 | Done (step 8a) | `SetHeight`, `Height`, `HeightRule`, `PreferredWidth` (in points it also sets the columns the cells are all of), `PreferredWidthType`, `Shading` (also the table's when the cells are all of them), `VerticalAlignment` |
-| Planned, step 8 | `Add`, `AutoFit`, `Delete`, `DistributeHeight` (needs layout), `DistributeWidth`, `Merge`, `SetWidth`, `Split`, `Borders`, `Width` |
+| Done (step 8b) | `DistributeWidth`, `SetWidth`, `Width` |
+| Planned, step 8 | `Add`, `Delete`, `Merge`, `Split`, `Borders` |
+| Needs layout | `AutoFit`, `DistributeHeight` (Word measures the laid-out height) |
 
-`Cell.Width` sets only the width that cell asks for. In Word it also changes the grid and `w:tblW`, as `Column.Width` does; that comes with these members in step 8.
+A cell given a width of its own makes the table ragged, as in Word: the grid gets a column wherever a cell of any row ends, each cell spans the grid columns between its ends (`gridSpan`), and a row that ends before the table does records the unused columns as `gridAfter` and `wAfter`. `SetWidth` with a ruler style also gives the cells after it the difference (`FirstColumn`: the next cell; `Proportional`: all of them in proportion; `SameWidth`: all of them evenly); with nothing after it, as with `RulerStyle.None`, nothing else changes. `DistributeWidth` shares the width of the cells of each row evenly, in whole twips with the remainder in the last cell. All of this is from Word 16. For `Cells.SetWidth` with a ruler style other than `None` the library applies the style to the cells after the last cell of each row; Word has not been checked for it.
 
 <!-- learn: cell -->
 
@@ -271,7 +277,8 @@ The collections are where tables are thinnest: Word's `Rows`, `Columns` and `Cel
 |---|---|
 | Done | `Delete` (shifting left only; step 8 adds up, and vertically merged cells), `Merge`, `Split`, `Borders`, `BottomPadding`, `Column`, `ColumnIndex`, `FitText`, `Height`, `HeightRule`, `LeftPadding`, `Next`, `Parent`, `PreferredWidth`, `PreferredWidthType`, `Previous`, `Range`, `RightPadding`, `Row`, `RowIndex`, `Shading`, `Tables`, `TopPadding`, `VerticalAlignment`, `Width`, `WordWrap` |
 | Done (step 8a) | `SetHeight`, `NestingLevel` |
-| Planned, step 8 | `AutoSum`, `Formula`, `SetWidth` |
+| Done (step 8b) | `SetWidth` |
+| Planned, step 8 | `AutoSum`, `Formula` |
 | Planned, step 19 | `Select` |
 | Decided against | `ID` (an HTML id) |
 

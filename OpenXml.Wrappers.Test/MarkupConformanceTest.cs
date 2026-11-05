@@ -225,6 +225,58 @@ public class MarkupConformanceTest
                 d.Tables[0].Cell(2, 0).SetHeight(25, RowHeightRule.AtLeast);
             },
             Body()),
+        new Scenario("cell-width-ragged",
+            d =>
+            {
+                d.Tables.Add(d.Range(0, 0), 3, 3);
+                d.Tables[0].Cell(1, 1).Width = 100;
+            },
+            Body()),
+        new Scenario("cell-set-width-proportional",
+            d =>
+            {
+                d.Tables.Add(d.Range(0, 0), 3, 3);
+                d.Tables[0].Cell(1, 0).SetWidth(100, RulerStyle.Proportional);
+            },
+            Body()),
+        new Scenario("cell-set-width-first-column",
+            d =>
+            {
+                d.Tables.Add(d.Range(0, 0), 3, 3);
+                d.Tables[0].Cell(1, 0).SetWidth(100, RulerStyle.FirstColumn);
+            },
+            Body()),
+        new Scenario("cells-set-width-row",
+            d =>
+            {
+                d.Tables.Add(d.Range(0, 0), 3, 3);
+                d.Tables[0].Rows[1].Cells.SetWidth(100, RulerStyle.None);
+            },
+            Body()),
+        new Scenario("cells-distribute-width",
+            d =>
+            {
+                d.Tables.Add(d.Range(0, 0), 3, 3);
+                d.Tables[0].Cell(1, 1).Width = 100;
+                d.Tables[0].Range.Cells.DistributeWidth();
+            },
+            Body()),
+        new Scenario("columns-set-width",
+            d =>
+            {
+                d.Tables.Add(d.Range(0, 0), 3, 3);
+                d.Tables[0].Columns[0].SetWidth(100, RulerStyle.FirstColumn);
+                d.Tables[0].Columns[1].SetWidth(120, RulerStyle.Proportional);
+            },
+            Body()),
+        new Scenario("columns-distribute-width",
+            d =>
+            {
+                d.Tables.Add(d.Range(0, 0), 3, 3);
+                d.Tables[0].Columns[0].Width = 100;
+                d.Tables[0].Columns.DistributeWidth();
+            },
+            Body()),
         new Scenario("table-3x3", d => d.Tables.Add(d.Range(0, 0), 3, 3), Body()),
 
         new Scenario("table-3x3-word9-behavior",
