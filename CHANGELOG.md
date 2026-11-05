@@ -12,6 +12,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 - `Range.FormattedText` (assign one range's to another to copy content, within a document or to another), `WordOpenXML` (also on the document), `InsertXML`, `InsertFile`, `ImportFragment` and `ExportFragment`. The rules are Word's, measured in Word: a range that stops inside a paragraph copies only the text in it and its last paragraph joins the text after the target; a range that includes a paragraph mark brings the mark and so the paragraph's properties; bookmarks stay with the original. Styles, links and pictures are copied to another document with what the content uses. Comments are not copied yet, lists are not copied to another document, and a table that is only touched is copied whole.
 
+- `Range.TextRetrievalMode` (`IncludeFieldCodes`, `IncludeHiddenText`, `ViewType`): text with the codes of fields instead of their results (`U+0013`, the code and `U+0015`), or without hidden text, as Word gives it. A range made with `Duplicate` keeps the settings. `Range.Document` and `Range.Parent` give the document a range is in.
+
 ### Behaviour changes
 - An alignment tab (`w:ptab`) takes one position, as in Word.
 - **A sentence takes the paragraph marks after it**, as in Word. `"Second sentence here." + paragraph mark` is one sentence, where it used to be a sentence and a mark on its own, and empty paragraphs after a sentence belong to it. `Sentences`, `Expand(TextUnit.Sentence)` and moves by sentences are affected; a range that touches the last sentence of a paragraph now has its mark in `Text`.

@@ -87,7 +87,7 @@ internal sealed class Atom
 /// A map is a snapshot. Build a new one after the document changes. A field written as a single element (<c>w:fldSimple</c>) keeps its code
 /// in an attribute; its begin, code and separator are one piece (with the field as its element) and its end another (with the last child of the field).
 /// </remarks>
-internal sealed class StoryMap
+internal sealed partial class StoryMap
 {
     private StoryMap(OpenXmlElement root)
         : this(root, null)
@@ -448,6 +448,11 @@ internal sealed class StoryMap
     //The text Word makes up for the code of a hyperlink, which it counts: the address or place, the frame, the tip and the switch for a hyperlink.
     private static int HyperlinkCodeLength(Hyperlink link)
     {
+        return HyperlinkCode(link).Length;
+    }
+
+    private static string HyperlinkCode(Hyperlink link)
+    {
         System.Text.StringBuilder code = new System.Text.StringBuilder(" HYPERLINK ");
         string id = link.Id?.Value;
         if (!string.IsNullOrEmpty(id))
@@ -476,7 +481,7 @@ internal sealed class StoryMap
             code.Append("\\o \"").Append(link.Tooltip.Value).Append("\" ");
         }
         code.Append("\\h");
-        return code.Length;
+        return code.ToString();
     }
 
     /// <summary>
