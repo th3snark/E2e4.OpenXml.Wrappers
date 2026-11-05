@@ -93,7 +93,9 @@ Reads give effective formatting, `Direct` gives direct formatting, and a mixed v
 | Status | Members |
 |---|---|
 | Done | `Reset`, `Alignment`, `FirstLineIndent`, `Hyphenation`, `KeepTogether`, `KeepWithNext`, `LeftIndent`, `LineSpacing`, `LineSpacingRule`, `MirrorIndents`, `NoLineNumber`, `OutlineLevel`, `PageBreakBefore`, `RightIndent`, `SpaceAfter`, `SpaceAfterAuto`, `SpaceBefore`, `SpaceBeforeAuto`, `TabStops`, `WidowControl` |
-| Planned, step 7 | `CloseUp`, `OpenUp`, `OpenOrCloseUp`, `Space1`, `Space15`, `Space2`, `TabHangingIndent`, `TabIndent`, `IndentCharWidth`, `IndentFirstLineCharWidth`, `Borders`, `Shading`, `Duplicate`, `Parent`, `CharacterUnitFirstLineIndent`, `CharacterUnitLeftIndent`, `CharacterUnitRightIndent`, `LineUnitAfter`, `LineUnitBefore`, `ReadingOrder`, `WordWrap`, `AutoAdjustRightIndent`, `CollapsedByDefault`, `TextboxTightWrap`, and the East Asian paragraph switches, each a single element: `AddSpaceBetweenFarEastAndAlpha`, `AddSpaceBetweenFarEastAndDigit`, `BaseLineAlignment`, `DisableLineHeightGrid`, `FarEastLineBreakControl`, `HalfWidthPunctuationOnTopOfLine`, `HangingPunctuation` |
+| Done (step 7b) | `OpenUp`, `CloseUp`, `OpenOrCloseUp` (12 points before), `Space1`, `Space15`, `Space2`, `TabIndent`, `TabHangingIndent` (by default tab stops, which is `Settings.DefaultTabStop`), `Duplicate` (also `Range.ParagraphFormat = format`), `ReadingOrder`, `WordWrap`, `AutoAdjustRightIndent`, `BaseLineAlignment`, `TextboxTightWrap`, and the East Asian switches `AddSpaceBetweenFarEastAndAlpha`, `AddSpaceBetweenFarEastAndDigit`, `DisableLineHeightGrid`, `FarEastLineBreakControl`, `HalfWidthPunctuationOnTopOfLine`, `HangingPunctuation` (each a single element, defaults as Word's) |
+| Planned, step 7 | `Borders`, `Shading`, `Parent`, `CollapsedByDefault` |
+| Decided against | `CharacterUnitFirstLineIndent`, `CharacterUnitLeftIndent`, `CharacterUnitRightIndent`, `LineUnitAfter`, `LineUnitBefore`, `IndentCharWidth`, `IndentFirstLineCharWidth`: they store a count of characters or lines for the East Asian grid and Word 16 is inconsistent about them (`IndentCharWidth(3)` changed nothing, `IndentFirstLineCharWidth(2)` set the indent but not the unit). They need reference behaviour we cannot reproduce |
 | Planned, step 9 | `Style` |
 
 ### 3.5 Paragraph
@@ -104,7 +106,9 @@ In Word, `Paragraph` exposes the whole of `ParagraphFormat`; here it forwards on
 | Status | Members |
 |---|---|
 | Done | `Next`, `Previous`, `Alignment`, `FirstLineIndent`, `Format`, `KeepTogether`, `KeepWithNext`, `LeftIndent`, `LineSpacing`, `LineSpacingRule`, `PageBreakBefore`, `Parent`, `Range`, `RightIndent`, `SpaceAfter`, `SpaceBefore`, `Style`, `WidowControl` |
-| Planned, step 7 | `CloseUp`, `Indent`, `Outdent`, `IndentCharWidth`, `IndentFirstLineCharWidth`, `OpenOrCloseUp`, `OpenUp`, `Reset`, `Space1`, `Space15`, `Space2`, `TabHangingIndent`, `TabIndent`, `OutlineDemote`, `OutlineDemoteToBody`, `OutlinePromote`, `Hyphenation`, `MirrorIndents`, `NoLineNumber`, `OutlineLevel`, `SpaceAfterAuto`, `SpaceBeforeAuto`, `TabStops`, `Borders`, `Shading`, `AddSpaceBetweenFarEastAndAlpha`, `AddSpaceBetweenFarEastAndDigit`, `AutoAdjustRightIndent`, `BaseLineAlignment`, `CharacterUnitFirstLineIndent`, `CharacterUnitLeftIndent`, `CharacterUnitRightIndent`, `DisableLineHeightGrid`, `FarEastLineBreakControl`, `HalfWidthPunctuationOnTopOfLine`, `HangingPunctuation`, `LineUnitAfter`, `LineUnitBefore`, `ReadingOrder`, `TextboxTightWrap`, `WordWrap`, `CollapseHeadingByDefault`, `IsStyleSeparator` |
+| Done (step 7b) | everything `ParagraphFormat` has that is done, and `Indent` / `Outdent` (to the next or previous default tab stop), `Reset`, `OpenUp`, `CloseUp`, `OpenOrCloseUp`, `Space1`, `Space15`, `Space2`, `TabIndent`, `TabHangingIndent`, `Format` can be assigned |
+| Planned, step 7 | `OutlineDemote`, `OutlineDemoteToBody`, `OutlinePromote`, `Borders`, `Shading`, `CollapseHeadingByDefault`, `IsStyleSeparator` |
+| Decided against | the character and line unit members and `IndentCharWidth`, `IndentFirstLineCharWidth` (see ParagraphFormat) |
 | Planned, step 13 | `JoinList`, `SeparateList`, `ListAdvanceTo`, `ResetAdvanceTo`, `ListNumberOriginal` |
 | Out of scope | `CollapsedState` (view state), `SelectNumber` (UI), `DropCap` (drop caps are frames) |
 | Decided against | `ID` (an HTML id) |

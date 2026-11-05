@@ -126,6 +126,37 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $doc.Range(12, 16).Font.Grow()
     }
 
+    'paragraph-spacing-shortcuts'     = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo`rThree`rFour")
+        $call = { param($o, $n, $a) [void][System.__ComObject].InvokeMember($n, [Reflection.BindingFlags]::InvokeMethod, $null, $o, $a) }
+        & $call $doc.Paragraphs.Item(1) 'OpenUp' @()
+        & $call $doc.Paragraphs.Item(2) 'Space15' @()
+        & $call $doc.Paragraphs.Item(3) 'Indent' @()
+        & $call $doc.Paragraphs.Item(4).Format 'TabHangingIndent' @(1)
+    }
+
+    'paragraph-east-asian-switches'   = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo")
+        $format = $doc.Paragraphs.Item(1).Format
+        $format.AddSpaceBetweenFarEastAndAlpha = 0
+        $format.BaseLineAlignment = 1
+        $format.HangingPunctuation = 0
+        $format.FarEastLineBreakControl = 0
+        $format.HalfWidthPunctuationOnTopOfLine = -1
+        $format.DisableLineHeightGrid = -1
+        $format.TextboxTightWrap = 1
+        $format.WordWrap = 0
+        $format.AutoAdjustRightIndent = 0
+        $format.AddSpaceBetweenFarEastAndDigit = 0
+    }
+
+    'paragraph-right-to-left'         = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo")
+        $doc.Paragraphs.Item(1).Format.ReadingOrder = 0
+    }
     'table-3x3'                       = {
         param($doc)
         [void]$doc.Tables.Add($doc.Range(0, 0), 3, 3)

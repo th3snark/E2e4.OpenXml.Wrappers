@@ -7,7 +7,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
 
-public class ParagraphWrapper : System.IEquatable<ParagraphWrapper>
+public partial class ParagraphWrapper : System.IEquatable<ParagraphWrapper>
 {
     Paragraph _paragraph;
 
@@ -40,6 +40,7 @@ public class ParagraphWrapper : System.IEquatable<ParagraphWrapper>
     public ParagraphFormatWrapper Format
     {
         get { return Range.ParagraphFormat; }
+        set { Range.ParagraphFormat = value; }
     }
 
     /// <summary>

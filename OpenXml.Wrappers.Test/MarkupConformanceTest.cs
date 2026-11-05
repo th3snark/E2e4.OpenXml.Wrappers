@@ -103,6 +103,42 @@ public class MarkupConformanceTest
             },
             Body()),
 
+        new Scenario("paragraph-spacing-shortcuts",
+            d =>
+            {
+                d.Content.InsertAfter("One\rTwo\rThree\rFour");
+                d.Paragraphs[0].OpenUp();
+                d.Paragraphs[1].Space15();
+                d.Paragraphs[2].Indent();
+                d.Paragraphs[3].Format.TabHangingIndent(1);
+            },
+            Body()),
+
+        new Scenario("paragraph-east-asian-switches",
+            d =>
+            {
+                d.Content.InsertAfter("One\rTwo");
+                ParagraphFormatWrapper format = d.Paragraphs[0].Format;
+                format.AddSpaceBetweenFarEastAndAlpha = false;
+                format.BaseLineAlignment = BaselineAlignment.Center;
+                format.HangingPunctuation = false;
+                format.FarEastLineBreakControl = false;
+                format.HalfWidthPunctuationOnTopOfLine = true;
+                format.DisableLineHeightGrid = true;
+                format.TextboxTightWrap = TextboxTightWrap.AllLines;
+                format.WordWrap = false;
+                format.AutoAdjustRightIndent = false;
+                format.AddSpaceBetweenFarEastAndDigit = false;
+            },
+            Body()),
+
+        new Scenario("paragraph-right-to-left",
+            d =>
+            {
+                d.Content.InsertAfter("One\rTwo");
+                d.Paragraphs[0].Format.ReadingOrder = ReadingOrder.RightToLeft;
+            },
+            Body()),
         new Scenario("table-3x3", d => d.Tables.Add(d.Range(0, 0), 3, 3), Body()),
 
         new Scenario("table-3x3-word9-behavior",
