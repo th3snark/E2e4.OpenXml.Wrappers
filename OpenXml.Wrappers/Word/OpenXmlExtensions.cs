@@ -3,6 +3,7 @@ using System.Globalization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 using DocumentFormat.OpenXml;
@@ -392,6 +393,75 @@ internal static class OpenXmlExtensions
     internal static OnOffValue OffValue()
     {
         return new OnOffValue() { InnerText = "0" };
+    }
+
+    private sealed class SiblingCursor
+    {
+        public OpenXmlElement Checkpoint;
+    }
+
+    private static readonly ConditionalWeakTable<OpenXmlElement, SiblingCursor> SiblingCursors = new ConditionalWeakTable<OpenXmlElement, SiblingCursor>();
+
+    //Parents with no more children before the element than this are not worth remembering anything about.
+    private const int FewSiblings = 16;
+
+    //How far behind the element last looked for the checkpoint stays, so that the next few looked for, on either side of it, are close by.
+    private const int CheckpointBehind = 32;
+
+    /// <summary>
+    /// The element before this one under the same parent, as <c>PreviousSibling()</c>. Children only link forwards, so that walks from the first
+    /// child, and looking back from each row of a long table in turn takes time that grows with the square of its length. This walks from a
+    /// checkpoint kept for the parent instead, a little before the element last looked for. The checkpoint is only a place to start: a change
+    /// to the children at worst means walking from the first child, as <c>PreviousSibling()</c> does.
+    /// </summary>
+    internal static OpenXmlElement PreviousSiblingNear(this OpenXmlElement element)
+    {
+        OpenXmlElement parent = element.Parent;
+        OpenXmlElement first = parent?.FirstChild;
+        if (first == null || ReferenceEquals(first, element))
+        {
+            return null;
+        }
+
+        OpenXmlElement near = first;
+        for (int i = 0; i < FewSiblings; i++)
+        {
+            OpenXmlElement next = near.NextSibling();
+            if (ReferenceEquals(next, element))
+            {
+                return near;
+            }
+            near = next;
+        }
+
+        SiblingCursor cursor = SiblingCursors.GetOrCreateValue(parent);
+        OpenXmlElement checkpoint = cursor.Checkpoint;
+        OpenXmlElement previous = null;
+        if (checkpoint != null && ReferenceEquals(checkpoint.Parent, parent))
+        {
+            previous = WalkToPrevious(checkpoint, element, cursor);
+        }
+        return previous ?? WalkToPrevious(near, element, cursor);
+    }
+
+    //Walks forward from an element for the one before the given element, or null if the walk comes to the end without finding it.
+    private static OpenXmlElement WalkToPrevious(OpenXmlElement from, OpenXmlElement element, SiblingCursor cursor)
+    {
+        OpenXmlElement behind = from;
+        int walked = 0;
+        for (OpenXmlElement current = from; current != null; current = current.NextSibling())
+        {
+            if (ReferenceEquals(current.NextSibling(), element))
+            {
+                cursor.Checkpoint = behind;
+                return current;
+            }
+            if (++walked > CheckpointBehind)
+            {
+                behind = behind.NextSibling();
+            }
+        }
+        return null;
     }
 
     /// <summary>

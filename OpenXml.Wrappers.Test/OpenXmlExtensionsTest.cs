@@ -1,5 +1,8 @@
+using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Wordprocessing;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Xunit;
 using OpenXml.Wrappers.Test.Utils;
 using OpenXml.Wrappers.Word;
@@ -13,6 +16,54 @@ public class OpenXmlExtensionsTest : System.IDisposable
     public OpenXmlExtensionsTest()
     {
         _document1 = WordprocessingDocumentWrapper.Open(TestFile.Document1);
+    }
+
+    [Theory]
+    [InlineData(5)]
+    [InlineData(200)]
+    public void PreviousSiblingNearAgreesWithPreviousSiblingAsTheChildrenChange(int count)
+    {
+        Body body = new Body();
+        for (int i = 0; i < count; i++)
+        {
+            body.AppendChild(new Paragraph());
+        }
+
+        void AssertAgrees(OpenXmlElement element)
+        {
+            Assert.Same(element.PreviousSibling(), element.PreviousSiblingNear());
+        }
+
+        //Forwards, backwards and jumping about, so that the element looked for is on either side of where the last one was.
+        List<OpenXmlElement> children = body.ChildElements.ToList();
+        children.ForEach(AssertAgrees);
+        Enumerable.Reverse(children).ToList().ForEach(AssertAgrees);
+        for (int i = 0; i < children.Count; i++)
+        {
+            AssertAgrees(children[i * 7 % children.Count]);
+        }
+
+        //The element last looked for and those around it are removed or have others put before them.
+        OpenXmlElement last = children[children.Count - 1];
+        AssertAgrees(last);
+        last.PreviousSibling().Remove();
+        AssertAgrees(last);
+        body.InsertBefore(new Paragraph(), last);
+        AssertAgrees(last);
+        body.PrependChild(new Paragraph());
+        AssertAgrees(last);
+        OpenXmlElement middle = children[children.Count / 2];
+        AssertAgrees(middle);
+        foreach (OpenXmlElement child in children.Take(children.Count / 2))
+        {
+            child.Remove();
+        }
+        AssertAgrees(middle);
+        AssertAgrees(last);
+        body.ChildElements.ToList().ForEach(AssertAgrees);
+
+        Assert.Null(body.FirstChild.PreviousSiblingNear());
+        Assert.Null(new Paragraph().PreviousSiblingNear());
     }
 
     public void Dispose()

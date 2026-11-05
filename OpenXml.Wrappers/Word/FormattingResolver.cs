@@ -310,7 +310,16 @@ internal sealed class FormattingResolver
     private static string GetTableStyleId(Paragraph paragraph)
     {
         Table table = paragraph?.Ancestors<Table>().FirstOrDefault();
-        return table?.GetFirstChild<TableProperties>()?.TableStyle?.Val?.Value;
+
+        //The properties come before the rows, so a table with none is not searched to the end of its rows for each run in it.
+        for (OpenXmlElement child = table?.FirstChild; child != null && !(child is TableRow); child = child.NextSibling())
+        {
+            if (child is TableProperties properties)
+            {
+                return properties.TableStyle?.Val?.Value;
+            }
+        }
+        return null;
     }
 
     private string GetDefaultStyleId(StyleValues type)

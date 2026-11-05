@@ -33,6 +33,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - `Cell.Delete` and `Column.Delete` remove bookmarks and comments in the cells rather than leaving half of them behind.
 - Headers and footers are in the Header and Footer styles. Page borders are measured from the edge of the page, as Word's are; without `w:offsetFrom` they were drawn in the wrong place. Line numbers show, because `w:countBy` is written.
 - Values Word does not write are left out: `w:orient="portrait"`, `w:type="nextPage"`, `w:hRule="atLeast"`, `w:equalWidth`, an empty `w:trPr`, and `w:tblInd` of 0. `w:tcW` and `w:gridSpan` are always in schema order.
+- Working through the cells of a table of thousands of rows no longer slows down with the row number: looking back for the text before a range walked the rows from the first each time, as did looking for the style of a table with no `w:tblPr`.
 - Comments add the styles they use (Comment Reference, Comment Text and Comment Subject). They used to refer to styles the document did not have.
 - Core properties are written to `/docProps/core.xml`, where Word keeps them, also when they are set on a document that has none. They used to go in a part named by the packaging layer (`/package/services/metadata/core-properties/*.psmdcp`).
 - Indentation keeps Word's attribute names (`w:left`, `w:right`, `w:leftChars`, `w:rightChars`) when a document is saved. The Open XML SDK writes back the ones it has loaded as `w:start` and so on, which is not what Word writes.
