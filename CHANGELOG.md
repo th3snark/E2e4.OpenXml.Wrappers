@@ -40,7 +40,10 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 - `Style.Borders` and `Style.Shading` for paragraph styles, and the `Borders` and `Shading` of the `Font` and `ParagraphFormat` of a style, which threw `NotSupportedException` before. The markup, including what Word gives the linked character style, is Word 16's, checked in five new reference scenarios.
 
+- `Style.Table` (`TableStyle`): `Alignment`, `AllowBreakAcrossPage`, `Borders`, `Shading`, `Spacing`, `LeftIndent`, `RowStripe`, `ColumnStripe` and the four paddings of a table style, and `TableStyle.Condition(ConditionCode)` (`ConditionalStyle`: `Font`, `ParagraphFormat`, `Borders`, `Shading` and the paddings of the first row, the bands, the corner cells and so on). The markup is Word 16's, checked in twelve new reference scenarios.
+
 ### Behaviour changes
+- **`Styles.Add` of a table style writes an empty `w:tblPr`**, as Word does.
 - **`Styles.Add` of a paragraph style adds its linked character style too** (`<name> Char`), and a new character or table style is based on the default of its type, as Word writes them. A style written with `w:customStyle="true"` is now written `1`.
 - **A grid column is not made of a sliver**: cell edges within 2 twips of each other count as one when a cell is given a width, as in Word.
 - **`Cell.Width` makes the table ragged**, as in Word. It used to set only that cell's width; now the grid is split where cells of any row end, cells span the pieces (`gridSpan`) and a row that ends early gets `gridAfter`/`wAfter`.

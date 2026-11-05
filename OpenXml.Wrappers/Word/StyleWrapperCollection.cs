@@ -123,6 +123,10 @@ public class StyleWrapperCollection : IEnumerable<StyleWrapper>
                 style.InsertAfter(new BasedOn() { Val = defaultId }, style.StyleName);
             }
         }
+        if (type == StyleType.Table)
+        {
+            style.StyleTableProperties = new StyleTableProperties();
+        }
         part.Styles.AppendChild(style);
 
         //Word gives a paragraph style a character style of its own, linked to it, that carries its character formatting.

@@ -158,7 +158,8 @@ In Word, `Paragraph` exposes the whole of `ParagraphFormat`; here it forwards on
 | Done | `Delete`, `BaseStyle`, `BuiltIn`, `Font`, `NameLocal`, `NextParagraphStyle`, `ParagraphFormat`, `Type` |
 | Done (step 9a) | `AutomaticallyUpdate`, `InUse`, `LanguageID`, `LanguageIDFarEast`, `NoProofing`, `Linked`, `LinkStyle` (read only), `Locked`, `Priority`, `QuickStyle`, `UnhideWhenUsed`, `Visibility`, `NoSpaceBetweenParagraphsOfSameStyle`; `BaseStyle` and `NextParagraphStyle` can be set |
 | Done (step 9c) | `Borders`, `Shading` (paragraph styles; Word gives `Nothing` for a character style, so they are null there. `Font.Borders`, `Font.Shading`, `ParagraphFormat.Borders` and `ParagraphFormat.Shading` of a style work too) |
-| Planned, step 9 | `Table`, `Parent` |
+| Done (step 9d) | `Table` (null for a style that is not a table style) |
+| Planned, step 9 | `Parent` |
 | Planned, step 13 | `ListLevelNumber`, `ListTemplate`, `LinkToListTemplate` |
 | Out of scope | `Frame` (frames) |
 | Decided against | `Description` (the summary Word generates for its UI, such as "Font: Bold, Style: Quick Style") |
@@ -182,7 +183,11 @@ Borders and shading of styles as Word 16 writes them: a paragraph style has `w:p
 
 | Status | Members |
 |---|---|
-| Planned, step 9 | `Condition`, `Alignment`, `AllowBreakAcrossPage`, `AllowPageBreaks`, `Borders`, `BottomPadding`, `ColumnStripe`, `LeftIndent`, `LeftPadding`, `Parent`, `RightPadding`, `RowStripe`, `Shading`, `Spacing`, `TableDirection`, `TopPadding` |
+| Done (step 9d) | `Condition` (`ConditionCode`), `Alignment`, `AllowBreakAcrossPage`, `Borders`, `BottomPadding`, `ColumnStripe`, `LeftIndent`, `LeftPadding`, `RightPadding`, `RowStripe`, `Shading`, `Spacing`, `TopPadding` |
+| Planned, step 9 | `Parent` |
+| Decided against | `AllowPageBreaks` (not measured; `AllowBreakAcrossPage` is the row property), `TableDirection` (setting it through automation changed nothing in Word 16) |
+
+Table styles as Word 16 writes them: `Styles.Add` of a table style writes an empty `w:tblPr`. `Alignment` and `Spacing` are written to the style's table properties and to its row properties, `AllowBreakAcrossPage = false` is `w:cantSplit` in the row properties, `LeftIndent` is `w:tblInd`, the stripes are `w:tblStyleRowBandSize` and `w:tblStyleColBandSize`, and `Borders` are `w:tblBorders`. The paddings and the shading go to the style's cell properties (`w:tcMar` and `w:shd`), not to `w:tblCellMar` or the table properties; a padding that is set writes only its own side. Reading gives only what the style sets itself.
 
 <!-- learn: conditionalstyle -->
 
@@ -190,7 +195,10 @@ Borders and shading of styles as Word 16 writes them: a paragraph style has `w:p
 
 | Status | Members |
 |---|---|
-| Planned, step 9 | `Borders`, `BottomPadding`, `Font`, `LeftPadding`, `ParagraphFormat`, `Parent`, `RightPadding`, `Shading`, `TopPadding` |
+| Done (step 9d) | `Borders`, `BottomPadding`, `Font`, `LeftPadding`, `ParagraphFormat`, `RightPadding`, `Shading`, `TopPadding` (`Font.Borders`, `Font.Shading`, `Font.Duplicate` and the borders and shading of `ParagraphFormat` throw `NotSupportedException`; use `Borders` and `Shading` of the conditional format) |
+| Planned, step 9 | `Parent` |
+
+Conditional formats as Word 16 writes them (`w:tblStylePr`, in the order whole table, first row, last row, first column, last column, vertical bands, horizontal bands, then the corner cells): `Font` is `w:rPr`, `ParagraphFormat` is `w:pPr`, and the shading, the borders and the paddings are in the cell properties with an empty `w:tblPr` beside them. Setting the shading or a border makes the borders that are not set `nil`; setting a padding makes the other three sides `nil`. Word's own results for combinations of several of these in one session were not the sum of the parts (a later border or padding dropped what an earlier one wrote), so only each on its own, and font, paragraph format and shading together, are compared.
 
 ### 3.10 Table and Tables
 <!-- learn: table -->

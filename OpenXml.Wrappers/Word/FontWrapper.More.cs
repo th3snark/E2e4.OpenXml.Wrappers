@@ -224,6 +224,10 @@ public partial class FontWrapper
     {
         get
         {
+            if (_conditional != null)
+            {
+                throw new NotSupportedException("The border of the characters of a conditional format is not supported.");
+            }
             if (_style != null)
             {
                 return new BordersWrapper(_style, true);
@@ -239,6 +243,10 @@ public partial class FontWrapper
     {
         get
         {
+            if (_conditional != null)
+            {
+                throw new NotSupportedException("The shading of the characters of a conditional format is not supported.");
+            }
             if (_style != null)
             {
                 return StyleWrapper.CharacterShading(_style);
@@ -340,6 +348,10 @@ public partial class FontWrapper
     /// </summary>
     public FontWrapper Duplicate()
     {
+        if (_conditional != null)
+        {
+            throw new NotSupportedException("Duplicate is not supported for the font of a conditional format.");
+        }
         List<Run> runs = _style != null ? new List<Run>() : _range.GetRuns().ToList();
         Paragraph holder = new Paragraph();
         if (_style != null)

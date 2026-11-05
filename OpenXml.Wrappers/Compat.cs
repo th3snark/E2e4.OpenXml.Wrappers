@@ -24,6 +24,14 @@ internal static class Guard
         }
     }
 
+    public static void ThrowIfNegative(double value, [CallerArgumentExpression(nameof(value))] string paramName = null)
+    {
+        if (value < 0)
+        {
+            throw new ArgumentOutOfRangeException(paramName, value, "The value must not be negative.");
+        }
+    }
+
     public static void ThrowIfLessThan(int value, int other, [CallerArgumentExpression(nameof(value))] string paramName = null)
     {
         if (value < other)

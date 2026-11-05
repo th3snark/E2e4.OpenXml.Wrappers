@@ -29,6 +29,9 @@ public partial class FontWrapper
     private readonly Style _style;
     private readonly bool _direct;
 
+    //For the font of a conditional format of a table style (the style is the table style): finds that format, making it if asked to.
+    private readonly Func<bool, TableStyleProperties> _conditional;
+
     //True for the font of a find or replacement, which keeps every value it is given (what the text has anyway from its styles is not left out).
     private bool _explicit;
 
@@ -43,6 +46,13 @@ public partial class FontWrapper
     {
         Guard.ThrowIfNull(style);
         _style = style;
+    }
+
+    internal FontWrapper(Style style, Func<bool, TableStyleProperties> conditional)
+    {
+        Guard.ThrowIfNull(style);
+        _style = style;
+        _conditional = conditional;
     }
 
     internal static FontWrapper ForCriteria(RangeWrapper range)
@@ -63,7 +73,7 @@ public partial class FontWrapper
     /// </summary>
     public FontWrapper Direct
     {
-        get { return _direct ? this : new FontWrapper(_range, _style, true); }
+        get { return _direct || _conditional != null ? this : new FontWrapper(_range, _style, true); }
     }
 
     /// <summary>Bold text.</summary>
@@ -642,6 +652,11 @@ public partial class FontWrapper
 
     private T GetValue<T>(Func<OpenXmlCompositeElement, FormattingResolver, T> read)
     {
+        if (_conditional != null)
+        {
+            return read(_conditional(false)?.RunPropertiesBaseStyle, null);
+        }
+
         if (_style != null)
         {
             if (_direct)
@@ -684,6 +699,28 @@ public partial class FontWrapper
     /// </summary>
     private void Apply(Action<OpenXmlCompositeElement, Func<OpenXmlCompositeElement>> change)
     {
+        if (_conditional != null)
+        {
+            TableStyleProperties conditional = _conditional(true);
+            RunPropertiesBaseStyle conditionalProperties = conditional.RunPropertiesBaseStyle;
+            if (conditionalProperties == null)
+            {
+                conditionalProperties = new RunPropertiesBaseStyle();
+                conditional.RunPropertiesBaseStyle = conditionalProperties;
+            }
+            FormattingResolver tableResolver = new FormattingResolver(_style);
+            change(conditionalProperties, () => tableResolver.ResolveStyleRun(_style));
+            if (!conditionalProperties.HasChildren)
+            {
+                conditionalProperties.Remove();
+            }
+            if (!conditional.HasChildren)
+            {
+                conditional.Remove();
+            }
+            return;
+        }
+
         if (_style != null)
         {
             StyleRunProperties styleProperties = _style.StyleRunProperties;
