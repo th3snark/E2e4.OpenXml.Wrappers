@@ -242,6 +242,8 @@ The collections are where tables are thinnest: Word's `Rows`, `Columns` and `Cel
 | Done | `Item`, `Count`, `NestingLevel`, `Parent` |
 | Planned, step 8 | `Add`, `AutoFit`, `Delete`, `DistributeHeight`, `DistributeWidth`, `Merge`, `SetHeight`, `SetWidth`, `Split`, `Borders`, `Height`, `HeightRule`, `PreferredWidth`, `PreferredWidthType`, `Shading`, `VerticalAlignment`, `Width` |
 
+`Cell.Width` sets only the width that cell asks for. In Word it also changes the grid and `w:tblW`, as `Column.Width` does; that comes with these members in step 8.
+
 <!-- learn: cell -->
 
 **Cell.**

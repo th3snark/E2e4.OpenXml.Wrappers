@@ -109,7 +109,11 @@ public class TableWordMembersTest : IDisposable
 
         TableWrapper content = _document.Tables.Add(_document.Range(0, 0), 1, 2, DefaultTableBehavior.Word8TableBehavior, AutoFitBehavior.Content);
         Assert.Equal(PreferredWidthType.Auto, content.PreferredWidthType);
-        Assert.True(content.AllowAutoFit);
+        Assert.False(content.AllowAutoFit);
+
+        TableWrapper word9 = _document.Tables.Add(_document.Range(0, 0), 1, 2, DefaultTableBehavior.Word9TableBehavior, AutoFitBehavior.Content);
+        Assert.Equal(PreferredWidthType.Auto, word9.PreferredWidthType);
+        Assert.True(word9.AllowAutoFit);
         AssertValid();
     }
 
@@ -486,6 +490,10 @@ public class TableWordMembersTest : IDisposable
         BordersWrapper borders = table.Borders;
         Assert.Equal(6, borders.Count);
         Assert.Equal(8, table.Cell(0, 0).Borders.Count);
+
+        //A new table has no borders of its own, as in Word.
+        Assert.False(borders.Enable);
+        borders.Enable = true;
         Assert.True(borders.Enable);
         Assert.Equal(BorderLineStyle.SingleLine, borders.OutsideLineStyle);
         Assert.Equal(0.5, borders.InsideLineWidth);

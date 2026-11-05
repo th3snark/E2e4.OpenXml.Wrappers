@@ -93,6 +93,7 @@ public partial class TableColumnWrapperCollection : IEnumerable<TableColumnWrapp
             lastTableCell.InsertAfterSelf(tableCell);
         }
 
+        TableWrapper.ColumnsChanged(table);
         return new TableColumnWrapper(gridColumn);
     }
 

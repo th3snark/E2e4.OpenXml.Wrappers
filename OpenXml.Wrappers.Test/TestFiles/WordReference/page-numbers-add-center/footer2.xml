@@ -1,0 +1,47 @@
+<w:ftr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:p>
+    <w:pPr>
+      <w:pStyle w:val="Footer" />
+      <w:framePr w:hAnchor="margin" w:vAnchor="text" w:wrap="around" w:xAlign="center" w:y="1" />
+      <w:rPr>
+        <w:rStyle w:val="PageNumber" />
+      </w:rPr>
+    </w:pPr>
+    <w:r>
+      <w:rPr>
+        <w:rStyle w:val="PageNumber" />
+      </w:rPr>
+      <w:fldChar w:fldCharType="begin" />
+    </w:r>
+    <w:r>
+      <w:rPr>
+        <w:rStyle w:val="PageNumber" />
+      </w:rPr>
+      <w:instrText xml:space="preserve"> PAGE </w:instrText>
+    </w:r>
+    <w:r>
+      <w:rPr>
+        <w:rStyle w:val="PageNumber" />
+      </w:rPr>
+      <w:fldChar w:fldCharType="separate" />
+    </w:r>
+    <w:r>
+      <w:rPr>
+        <w:rStyle w:val="PageNumber" />
+        <w:noProof />
+      </w:rPr>
+      <w:t>1</w:t>
+    </w:r>
+    <w:r>
+      <w:rPr>
+        <w:rStyle w:val="PageNumber" />
+      </w:rPr>
+      <w:fldChar w:fldCharType="end" />
+    </w:r>
+  </w:p>
+  <w:p>
+    <w:pPr>
+      <w:pStyle w:val="Footer" />
+    </w:pPr>
+  </w:p>
+</w:ftr>

@@ -3,6 +3,7 @@ using System.Globalization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 using DocumentFormat.OpenXml;
@@ -279,8 +280,70 @@ internal static class OpenXmlExtensions
     /// Removes the bookmark and comment anchors from within the element. This is used on cloned content so that the clone does not
     /// duplicate the ids of the anchors in the original (the ids must be unique in a document).
     /// </summary>
+    private static bool IsIdentity(OpenXmlAttribute attribute)
+    {
+        return (attribute.NamespaceUri == "http://schemas.microsoft.com/office/word/2010/wordml" && (attribute.LocalName == "paraId" || attribute.LocalName == "textId"))
+            || (attribute.NamespaceUri == "http://schemas.openxmlformats.org/wordprocessingml/2006/main" && attribute.LocalName.StartsWith("rsid", StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// The roots of the parts of the document that hold text: the main document, headers and footers, notes and comments.
+    /// </summary>
+    internal static IEnumerable<OpenXmlElement> GetStoryRoots(this MainDocumentPart mainDocumentPart)
+    {
+        yield return mainDocumentPart.Document;
+        foreach (HeaderPart part in mainDocumentPart.HeaderParts)
+        {
+            yield return part.Header;
+        }
+        foreach (FooterPart part in mainDocumentPart.FooterParts)
+        {
+            yield return part.Footer;
+        }
+        if (mainDocumentPart.FootnotesPart?.Footnotes != null)
+        {
+            yield return mainDocumentPart.FootnotesPart.Footnotes;
+        }
+        if (mainDocumentPart.EndnotesPart?.Endnotes != null)
+        {
+            yield return mainDocumentPart.EndnotesPart.Endnotes;
+        }
+        if (mainDocumentPart.WordprocessingCommentsPart?.Comments != null)
+        {
+            yield return mainDocumentPart.WordprocessingCommentsPart.Comments;
+        }
+    }
+
+    /// <summary>
+    /// Gives the drawings under the element new ids, which must be unique across the document, for a copy that has just gone into it.
+    /// </summary>
+    internal static void GiveDrawingsNewIds(this OpenXmlElement element)
+    {
+        List<DocumentFormat.OpenXml.Drawing.Wordprocessing.DocProperties> drawings = element.Descendants<DocumentFormat.OpenXml.Drawing.Wordprocessing.DocProperties>().ToList();
+        MainDocumentPart mainDocumentPart = StyleHelper.GetMainDocumentPart(element);
+        if (drawings.Count == 0 || mainDocumentPart == null)
+        {
+            return;
+        }
+        uint id = mainDocumentPart.GetStoryRoots().Where(r => r != null).SelectMany(r => r.Descendants<DocumentFormat.OpenXml.Drawing.Wordprocessing.DocProperties>())
+            .Select(d => d.Id?.Value ?? 0U).DefaultIfEmpty(0U).Max();
+        foreach (DocumentFormat.OpenXml.Drawing.Wordprocessing.DocProperties drawing in drawings)
+        {
+            drawing.Id = ++id;
+        }
+    }
+
     internal static void RemoveAnchors(this OpenXmlElement openXmlElement)
     {
+        //What makes the original unique in the document does not belong on a copy.
+        foreach (OpenXmlElement element in openXmlElement.Descendants().Concat(new[] { openXmlElement }).ToList())
+        {
+            foreach (OpenXmlAttribute attribute in element.GetAttributes().Where(a => IsIdentity(a)).ToList())
+            {
+                element.RemoveAttribute(attribute.LocalName, attribute.NamespaceUri);
+            }
+        }
+
         IList<OpenXmlElement> anchors = openXmlElement
             .Descendants()
             .Where(e => e is BookmarkStart || e is BookmarkEnd || e is CommentRangeStart || e is CommentRangeEnd || e is CommentReference)
@@ -320,10 +383,85 @@ internal static class OpenXmlExtensions
         text.Space = needed ? SpaceProcessingModeValues.Preserve : (EnumValue<SpaceProcessingModeValues>)null;
     }
 
+    /// <summary>The value of an on and off attribute that is on, as Word writes it (<c>"1"</c>).</summary>
+    internal static OnOffValue OnValue()
+    {
+        return new OnOffValue() { InnerText = "1" };
+    }
+
     /// <summary>The value of an on and off property that is off, as Word writes it (<c>w:val="0"</c>).</summary>
     internal static OnOffValue OffValue()
     {
         return new OnOffValue() { InnerText = "0" };
+    }
+
+    private sealed class SiblingCursor
+    {
+        public OpenXmlElement Checkpoint;
+    }
+
+    private static readonly ConditionalWeakTable<OpenXmlElement, SiblingCursor> SiblingCursors = new ConditionalWeakTable<OpenXmlElement, SiblingCursor>();
+
+    //Parents with no more children before the element than this are not worth remembering anything about.
+    private const int FewSiblings = 16;
+
+    //How far behind the element last looked for the checkpoint stays, so that the next few looked for, on either side of it, are close by.
+    private const int CheckpointBehind = 32;
+
+    /// <summary>
+    /// The element before this one under the same parent, as <c>PreviousSibling()</c>. Children only link forwards, so that walks from the first
+    /// child, and looking back from each row of a long table in turn takes time that grows with the square of its length. This walks from a
+    /// checkpoint kept for the parent instead, a little before the element last looked for. The checkpoint is only a place to start: a change
+    /// to the children at worst means walking from the first child, as <c>PreviousSibling()</c> does.
+    /// </summary>
+    internal static OpenXmlElement PreviousSiblingNear(this OpenXmlElement element)
+    {
+        OpenXmlElement parent = element.Parent;
+        OpenXmlElement first = parent?.FirstChild;
+        if (first == null || ReferenceEquals(first, element))
+        {
+            return null;
+        }
+
+        OpenXmlElement near = first;
+        for (int i = 0; i < FewSiblings; i++)
+        {
+            OpenXmlElement next = near.NextSibling();
+            if (ReferenceEquals(next, element))
+            {
+                return near;
+            }
+            near = next;
+        }
+
+        SiblingCursor cursor = SiblingCursors.GetOrCreateValue(parent);
+        OpenXmlElement checkpoint = cursor.Checkpoint;
+        OpenXmlElement previous = null;
+        if (checkpoint != null && ReferenceEquals(checkpoint.Parent, parent))
+        {
+            previous = WalkToPrevious(checkpoint, element, cursor);
+        }
+        return previous ?? WalkToPrevious(near, element, cursor);
+    }
+
+    //Walks forward from an element for the one before the given element, or null if the walk comes to the end without finding it.
+    private static OpenXmlElement WalkToPrevious(OpenXmlElement from, OpenXmlElement element, SiblingCursor cursor)
+    {
+        OpenXmlElement behind = from;
+        int walked = 0;
+        for (OpenXmlElement current = from; current != null; current = current.NextSibling())
+        {
+            if (ReferenceEquals(current.NextSibling(), element))
+            {
+                cursor.Checkpoint = behind;
+                return current;
+            }
+            if (++walked > CheckpointBehind)
+            {
+                behind = behind.NextSibling();
+            }
+        }
+        return null;
     }
 
     /// <summary>
@@ -414,7 +552,7 @@ internal static class OpenXmlExtensions
         return true;
     }
 
-    private static bool SameAttributes(OpenXmlElement first, OpenXmlElement second)
+    internal static bool SameAttributes(OpenXmlElement first, OpenXmlElement second)
     {
         IList<OpenXmlAttribute> a = first.GetAttributes();
         IList<OpenXmlAttribute> b = second.GetAttributes();
@@ -585,6 +723,11 @@ internal static class OpenXmlExtensions
                 if (widthType == TableWidthUnitValues.Dxa)
                 {
                     width = Convert.ToInt32(tableWidth.Width.Value, CultureInfo.InvariantCulture);
+                }
+                else if (widthType == TableWidthUnitValues.Auto)
+                {
+                    //The columns say how wide the table is.
+                    width = table.GetFirstChild<TableGrid>()?.Elements<GridColumn>().Sum(c => int.TryParse(c.Width?.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int column) ? column : 0) ?? 0;
                 }
                 else if (widthType == TableWidthUnitValues.Pct)
                 {
@@ -838,16 +981,7 @@ internal static class OpenXmlExtensions
             tableCell.PrependChild<TableCellProperties>(tableCellProperties);
         }
 
-        TableCellWidth oldTableCellWidth = tableCellProperties.Elements<TableCellWidth>().FirstOrDefault();
-        if (oldTableCellWidth != null)
-        {
-            oldTableCellWidth.Width = width.ToString(CultureInfo.InvariantCulture);
-            oldTableCellWidth.Type = unit;
-        }
-        else
-        {
-            tableCellProperties.PrependChild<TableCellWidth>(new TableCellWidth() { Width = width.ToString(CultureInfo.InvariantCulture), Type = unit });
-        }
+        tableCellProperties.TableCellWidth = new TableCellWidth() { Width = width.ToString(CultureInfo.InvariantCulture), Type = unit };
     }
 
     internal static void SetGridSpan(this TableCell tableCell, int span)
@@ -881,24 +1015,13 @@ internal static class OpenXmlExtensions
             }
             else
             {
-                //Create a new grid span with the correct value and add it to the table cell properties. It must go after
-                //the table cell width if one exists.
-                GridSpan newGridSpan = new GridSpan() { Val = span };
-
+                //The typed property puts it where the schema requires.
                 if (tableCellProperties == null)
                 {
                     tableCellProperties = new TableCellProperties();
                     tableCell.PrependChild<TableCellProperties>(tableCellProperties);
                 }
-                TableCellWidth oldTableCellWidth = tableCellProperties.Elements<TableCellWidth>().FirstOrDefault();
-                if (oldTableCellWidth != null)
-                {
-                    oldTableCellWidth.InsertAfterSelf<GridSpan>(newGridSpan);
-                }
-                else
-                {
-                    tableCellProperties.AppendChild<GridSpan>(newGridSpan);
-                }
+                tableCellProperties.GridSpan = new GridSpan() { Val = span };
             }
         }
     }

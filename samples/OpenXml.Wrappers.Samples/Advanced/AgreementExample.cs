@@ -37,8 +37,8 @@ internal static class AgreementExample
                 definitions.Cell(i, 0).Range.Font.Bold = true;
                 definitions.Cell(i, 1).Range.Text = terms[i].Meaning;
             }
-            definitions.Columns[0].Width = 1500;
-            definitions.Columns[1].Width = 7000;
+            definitions.Columns[0].Width = 75;
+            definitions.Columns[1].Width = 350;
             TableLook.Grid(definitions, false);
 
             //2 to 5: the clauses. The heading of each is bookmarked so that other clauses can refer to it.

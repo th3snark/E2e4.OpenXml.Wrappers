@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 
 using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
@@ -158,7 +159,7 @@ public partial class RangeWrapper
     {
         //A header or footer keeps one empty paragraph, as Word does.
         DeleteElements(headerOrFooter.ChildElements.ToList());
-        headerOrFooter.AppendChild(new Paragraph());
+        headerOrFooter.AppendChild(HeaderFooterWrapper.NewParagraph(headerOrFooter));
     }
 
     private static void EmptyBody(Body body)
@@ -180,7 +181,7 @@ public partial class RangeWrapper
     /// <summary>
     /// Removes the elements from the tree together with the other half of any bookmark or comment that is only partly inside them.
     /// </summary>
-    private static void DeleteElements(IList<OpenXmlElement> elements)
+    internal static void DeleteElements(IList<OpenXmlElement> elements)
     {
         if (elements.Count == 0)
         {
@@ -232,10 +233,15 @@ public partial class RangeWrapper
             }
         }
 
-        Comments comments = (root as Document)?.MainDocumentPart?.WordprocessingCommentsPart?.Comments;
+        MainDocumentPart mainDocumentPart = (root as Document)?.MainDocumentPart;
+        Comments comments = mainDocumentPart?.WordprocessingCommentsPart?.Comments;
         if (comments != null)
         {
-            RemoveAll(comments.Elements<Comment>().Where(e => e.Id.Value == id));
+            foreach (Comment comment in comments.Elements<Comment>().Where(e => e.Id.Value == id).ToList())
+            {
+                CommentParts.Remove(mainDocumentPart, comment);
+                comment.Remove();
+            }
         }
     }
 

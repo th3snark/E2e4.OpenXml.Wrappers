@@ -8,7 +8,7 @@ run on a developer's machine; the tests and CI only read the snapshots committed
 | --- | --- |
 | `New-WordReferences.ps1` | Runs every scenario in Word and rewrites the snapshots. `-Scenario <name>` runs only some. |
 | `scenarios.ps1` | The scenarios: named scriptblocks of Word object model calls on a new document. |
-| `Test-OpensInWord.ps1` | Opens every sample document in Word; fails on a COM error or a repair and reports `Range.Text` differences. `-Folder` opens other documents. |
+| `Test-OpensInWord.ps1` | Opens every sample document in Word; fails on a COM error, a repair or a failed export to PDF, and reports `Range.Text` differences. `-Folder` opens other documents. |
 | `WordAutomation.ps1` | Shared helpers: starting and quitting Word, guarding `Normal.dotm`. |
 | `Tool/` | A small console program (not in the solution) that links the test project's `MarkupNormalizer.cs`, so that the snapshots and the tests share one normaliser. It also reads a document's text through the library for `Test-OpensInWord.ps1`. |
 
@@ -48,5 +48,5 @@ relationship targets absolute and writes indented XML. Part files are named afte
 
 1. Add a scriptblock to `scenarios.ps1` (Word's indexes are 1-based).
 2. Add a case with the same name to `MarkupConformanceTest`, doing the same through the library (0-based), with the parts or elements to
-   compare and, if the library cannot match Word yet, the plan step that will make it.
+   compare. Word writes some things the library leaves out on purpose, such as empty headers for even pages; compare the rest and say why in a comment.
 3. Run `New-WordReferences.ps1 -Scenario <name>` and commit the new folder.

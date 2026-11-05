@@ -84,6 +84,43 @@ public static class DocumentIntegrity
         return All.SelectMany(c => Check(document, c).Select(p => c + ": " + p)).ToList();
     }
 
+    /// <summary>
+    /// The tables of the body wider than the space they have: the text width of their section, or the width of the cell they are in. That is
+    /// valid, and Word can do it too, so it is not one of <see cref="All"/>, but a document meant to be read should not.
+    /// </summary>
+    public static IList<string> TablesWiderThanTheirSpace(WordprocessingDocument document)
+    {
+        XElement body = XElement.Parse(document.MainDocumentPart.Document.Body.OuterXml);
+        List<string> problems = new List<string>();
+        foreach (XElement table in body.Descendants(W + "tbl"))
+        {
+            int columns = table.Element(W + "tblGrid").Elements(W + "gridCol").Sum(c => (int?)c.Attribute(W + "w") ?? 0);
+            XElement width = table.Element(W + "tblPr")?.Element(W + "tblW");
+            int preferred = (string)width?.Attribute(W + "type") == "dxa" ? (int?)width.Attribute(W + "w") ?? 0 : 0;
+            int space = SpaceForTable(table, body);
+            if (Math.Max(columns, preferred) > space)
+            {
+                problems.Add(string.Format(CultureInfo.InvariantCulture, "a table with columns of {0} twips and a width of {1} has only {2}", columns, preferred, space));
+            }
+        }
+        return problems;
+    }
+
+    private static int SpaceForTable(XElement table, XElement body)
+    {
+        XElement cellWidth = table.Ancestors(W + "tc").FirstOrDefault()?.Element(W + "tcPr")?.Element(W + "tcW");
+        if ((string)cellWidth?.Attribute(W + "type") == "dxa")
+        {
+            return (int)cellWidth.Attribute(W + "w");
+        }
+
+        //A section ends with the paragraph that holds its properties, and those at the end of the body are of the last section.
+        XElement block = table.AncestorsAndSelf().First(e => e.Parent == body);
+        XElement section = block.ElementsAfterSelf(W + "p").Select(p => p.Element(W + "pPr")?.Element(W + "sectPr")).FirstOrDefault(s => s != null) ?? body.Element(W + "sectPr");
+        XElement margins = section.Element(W + "pgMar");
+        return (int)section.Element(W + "pgSz").Attribute(W + "w") - (int)margins.Attribute(W + "left") - (int)margins.Attribute(W + "right") - ((int?)margins.Attribute(W + "gutter") ?? 0);
+    }
+
     /// <summary>The schema errors of the document, as text, with <see cref="FileFormatVersions.Microsoft365"/>.</summary>
     public static IList<string> SchemaErrors(WordprocessingDocument document)
     {

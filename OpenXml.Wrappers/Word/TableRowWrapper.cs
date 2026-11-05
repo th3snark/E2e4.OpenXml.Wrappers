@@ -78,9 +78,15 @@ public partial class TableRowWrapper : System.IEquatable<TableRowWrapper>
         _tableRow.ClearText();
     }
 
+    /// <summary>
+    /// A copy of the row, with its content, that is not yet in a table (see <see cref="TableWrapper.AppendRow"/>). The bookmarks and comments stay
+    /// with the original, because they can only be in one place.
+    /// </summary>
     public TableRowWrapper Copy()
     {
-        return new TableRowWrapper((TableRow)_tableRow.Clone());
+        TableRow copy = (TableRow)_tableRow.Clone();
+        copy.RemoveAnchors();
+        return new TableRowWrapper(copy);
     }
 
     private TableRowProperties GetOrAddTableRowProperties()
@@ -122,7 +128,8 @@ public partial class TableRowWrapper : System.IEquatable<TableRowWrapper>
             TableRowHeight height = properties.GetFirstChild<TableRowHeight>();
             if (height == null)
             {
-                height = new TableRowHeight() { HeightType = HeightRuleValues.AtLeast };
+                //At least is what a height means when no rule is given, so Word writes none.
+                height = new TableRowHeight();
                 properties.AppendChild(height);
             }
             height.Val = (uint)Math.Round(value * 20, MidpointRounding.AwayFromZero);
@@ -153,6 +160,7 @@ public partial class TableRowWrapper : System.IEquatable<TableRowWrapper>
             if (value == RowHeightRule.Auto)
             {
                 _tableRow.TableRowProperties?.RemoveAllChildren<TableRowHeight>();
+                RemoveEmptyProperties();
                 return;
             }
             TableRowProperties properties = GetOrAddTableRowProperties();
@@ -162,7 +170,7 @@ public partial class TableRowWrapper : System.IEquatable<TableRowWrapper>
                 height = new TableRowHeight() { Val = 0 };
                 properties.AppendChild(height);
             }
-            height.HeightType = value == RowHeightRule.Exactly ? HeightRuleValues.Exact : HeightRuleValues.AtLeast;
+            height.HeightType = value == RowHeightRule.Exactly ? HeightRuleValues.Exact : (EnumValue<HeightRuleValues>)null;
         }
     }
 
@@ -176,7 +184,17 @@ public partial class TableRowWrapper : System.IEquatable<TableRowWrapper>
             TableHeader header = _tableRow.TableRowProperties?.GetFirstChild<TableHeader>();
             return header != null && IsOn(header.Val);
         }
-        set { SetToggle<TableHeader>(value, () => new TableHeader()); }
+        set
+        {
+            //As in Word, heading rows are the first rows of a table: a heading row makes the rows above it headings too, and a row that is not
+            //one takes the rows below it with it.
+            TableRow row = _tableRow;
+            while (row != null)
+            {
+                new TableRowWrapper(row).SetToggle<TableHeader>(value, () => new TableHeader());
+                row = value ? row.PreviousSibling<TableRow>() : row.NextSibling<TableRow>();
+            }
+        }
     }
 
     /// <summary>
@@ -209,6 +227,15 @@ public partial class TableRowWrapper : System.IEquatable<TableRowWrapper>
         else
         {
             _tableRow.TableRowProperties?.RemoveAllChildren<T>();
+            RemoveEmptyProperties();
+        }
+    }
+
+    private void RemoveEmptyProperties()
+    {
+        if (_tableRow.TableRowProperties != null && !_tableRow.TableRowProperties.HasChildren)
+        {
+            _tableRow.TableRowProperties.Remove();
         }
     }
 

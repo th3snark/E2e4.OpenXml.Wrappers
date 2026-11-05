@@ -260,14 +260,19 @@ public class ParagraphWrapper : System.IEquatable<ParagraphWrapper>
             sectionProperties.Parent.RemoveChild(sectionProperties);
         }
 
-        //Get the last section properties in the body, clone it and then append it to the paragraph properties of this paragraph.
+        //The section that this paragraph is in is described by the next section properties in the document. The first part of it gets a copy
+        //of them, in the paragraph, before anything that records a tracked change.
         SectionProperties finalSectionProperties = _paragraph.GetDocument().Body.Elements<SectionProperties>().First();
-        SectionProperties newSectionProperties = (SectionProperties)finalSectionProperties.Clone();
-        paragraphProperties.AppendChild(newSectionProperties);
+        System.Collections.Generic.List<SectionProperties> sections = _paragraph.GetRoot().Descendants<SectionProperties>().ToList();
+        SectionProperties following = sections.FirstOrDefault(s => s == finalSectionProperties || _paragraph.IsBefore(s)) ?? finalSectionProperties;
+        SectionProperties newSectionProperties = (SectionProperties)following.Clone();
+        paragraphProperties.InsertBefore(newSectionProperties, paragraphProperties.GetFirstChild<ParagraphPropertiesChange>());
 
-        //The break type belongs to the section that starts after the break: the next section properties in the document.
-        System.Collections.Generic.List<SectionProperties> all = _paragraph.GetRoot().Descendants<SectionProperties>().ToList();
-        SectionProperties following = all[all.IndexOf(newSectionProperties) + 1];
+        //The headers and footers stay with the first part, and the part after the break inherits them, as in Word.
+        following.RemoveAllChildren<HeaderReference>();
+        following.RemoveAllChildren<FooterReference>();
+
+        //The break type belongs to the section that starts after the break.
         SectionType sectionType = following.GetFirstChild<SectionType>();
         if (markType == SectionMarkValues.NextPage)
         {

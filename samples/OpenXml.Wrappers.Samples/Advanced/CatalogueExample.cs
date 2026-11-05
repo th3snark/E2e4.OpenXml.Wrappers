@@ -47,6 +47,9 @@ internal static class CatalogueExample
                 foreach (Product product in products.Where(p => p.Category == categories[c]))
                 {
                     AddProduct(document, builder, product);
+
+                    //Tables with nothing between them are one table in Word.
+                    builder.Paragraph(string.Empty);
                 }
 
                 //Each category, and then the index, is a section of its own.
@@ -101,8 +104,8 @@ internal static class CatalogueExample
     private static void AddProduct(WordprocessingDocumentWrapper document, DocumentBuilder builder, Product product)
     {
         TableWrapper block = builder.Table(1, 2);
-        block.Columns[0].Width = 2600;
-        block.Columns[1].Width = 5900;
+        block.Columns[0].Width = 130;
+        block.Columns[1].Width = 295;
 
         TableCellWrapper left = block.Cell(0, 0);
         left.Range.Text = product.Name + "\n" + product.Price.ToString("C", CultureInfo.GetCultureInfo("en-GB")) + "\n" + product.Sku;
@@ -115,7 +118,7 @@ internal static class CatalogueExample
 
         //A table inside a cell: Tables.Add replaces the range it is given (as in Word) and puts the table before its paragraph, so give it a new, empty paragraph after the description.
         ParagraphWrapper spot = right.Range.Paragraphs[0].Range.InsertParagraphAfter();
-        TableWrapper specs = document.Tables.Add(spot.Range, product.Specs.Length, 2);
+        TableWrapper specs = document.Tables.Add(spot.Range, product.Specs.Length, 2, DefaultTableBehavior.Word9TableBehavior);
         for (int i = 0; i < product.Specs.Length; i++)
         {
             specs.Cell(i, 0).Range.Text = product.Specs[i].Name;
@@ -124,8 +127,8 @@ internal static class CatalogueExample
         }
         specs.Borders.SetOutside(BorderLineStyle.None, 0.5, "auto");
         specs.Borders.SetInside(BorderLineStyle.SingleLine, 0.5, "D9D9D9");
-        specs.Columns[0].Width = 1700;
-        specs.Columns[1].Width = 3900;
+        specs.Columns[0].Width = 85;
+        specs.Columns[1].Width = 195;
 
         block.Borders.SetOutside(BorderLineStyle.SingleLine, 0.75, "808080");
         block.Borders.SetInside(BorderLineStyle.SingleLine, 0.5, "BFBFBF");

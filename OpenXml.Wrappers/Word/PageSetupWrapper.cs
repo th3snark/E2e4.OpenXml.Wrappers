@@ -125,7 +125,8 @@ public partial class PageSetupWrapper
             //A page that has no size yet is given the default one so that it can be swapped.
             pageSize.Width = ToTwips(changed ? height : width);
             pageSize.Height = ToTwips(changed ? width : height);
-            pageSize.Orient = value == PageOrientation.Landscape ? PageOrientationValues.Landscape : PageOrientationValues.Portrait;
+            //Portrait is the default, which Word does not write.
+            pageSize.Orient = value == PageOrientation.Landscape ? PageOrientationValues.Landscape : (EnumValue<PageOrientationValues>)null;
         }
     }
 
@@ -256,7 +257,15 @@ public partial class PageSetupWrapper
                 SectionStart.OddPage => SectionMarkValues.OddPage,
                 _ => SectionMarkValues.NextPage
             };
-            GetOrAdd<SectionType>().Val = type;
+            //A new page is the default, which Word does not write.
+            if (type == SectionMarkValues.NextPage)
+            {
+                Properties.RemoveAllChildren<SectionType>();
+            }
+            else
+            {
+                GetOrAdd<SectionType>().Val = type;
+            }
         }
     }
 

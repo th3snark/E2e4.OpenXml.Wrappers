@@ -160,6 +160,7 @@ public partial class TableWrapper : System.IEquatable<TableWrapper>
     public void AppendRow(TableRowWrapper row)
     {
         _table.AppendChild(row.TableRow);
+        row.TableRow.GiveDrawingsNewIds();
     }
 
     public void MergeTable(TableWrapper reportTable)
@@ -168,7 +169,7 @@ public partial class TableWrapper : System.IEquatable<TableWrapper>
     }
 
     /// <summary>
-    /// The width of the table in points, worked out from the fixed or percentage width it has (0 when it has neither).
+    /// The width of the table in points, worked out from the fixed or percentage width it has, or from its columns when its width is automatic.
     /// </summary>
     public double Width
     {

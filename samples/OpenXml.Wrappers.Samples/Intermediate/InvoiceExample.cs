@@ -89,10 +89,10 @@ internal static class InvoiceExample
                 table.Rows[row].Cells[1].Range.ParagraphFormat.Alignment = ParagraphAlignment.Right;
             }
 
-            table.Columns[0].Width = 4200;
-            table.Columns[1].Width = 1300;
-            table.Columns[2].Width = 1500;
-            table.Columns[3].Width = 1600;
+            table.Columns[0].Width = 210;
+            table.Columns[1].Width = 65;
+            table.Columns[2].Width = 75;
+            table.Columns[3].Width = 80;
             table.Borders.SetOutside(BorderLineStyle.SingleLine, 1, "1F3864");
             table.Borders.SetInside(BorderLineStyle.SingleLine, 0.5, "BFBFBF");
 

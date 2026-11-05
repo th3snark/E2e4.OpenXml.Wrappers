@@ -132,10 +132,10 @@ internal static class QuarterlyReportExample
                 plan.Cell(i + 1, 3).VerticalAlignment = CellVerticalAlignment.Center;
             }
             TableLook.Grid(plan, true);
-            plan.Columns[0].Width = 3600;
-            plan.Columns[1].Width = 1900;
-            plan.Columns[2].Width = 1700;
-            plan.Columns[3].Width = 1300;
+            plan.Columns[0].Width = 180;
+            plan.Columns[1].Width = 95;
+            plan.Columns[2].Width = 85;
+            plan.Columns[3].Width = 65;
 
             //4. Risks.
             builder.Paragraph("4. Risks", "Heading 1");
@@ -152,9 +152,9 @@ internal static class QuarterlyReportExample
                 risk.Rows[i + 1].AllowBreakAcrossPages = false;
             }
             TableLook.Grid(risk, true);
-            risk.Columns[0].Width = 3900;
-            risk.Columns[1].Width = 1100;
-            risk.Columns[2].Width = 3500;
+            risk.Columns[0].Width = 195;
+            risk.Columns[1].Width = 55;
+            risk.Columns[2].Width = 175;
 
             //5. Outlook.
             builder.Paragraph("5. Outlook", "Heading 1");
@@ -163,6 +163,7 @@ internal static class QuarterlyReportExample
 
             //Appendix A: monthly revenue by region, in a section of its own on landscape pages.
             endOfMain.InsertSectionBreak(SectionStart.NewPage);
+            document.Sections[1].PageSetup.Orientation = PageOrientation.Landscape;
             builder.Paragraph("Appendix A: monthly revenue (thousands)", "Heading 1");
             string[] months = { "July", "August", "September" };
             TableWrapper monthly = builder.Table(1 + regions.Length, 1 + months.Length + 1);
@@ -184,8 +185,6 @@ internal static class QuarterlyReportExample
             }
             TableLook.Grid(monthly, true);
             TableLook.AlignRight(monthly, 1, 2, 3, 4);
-
-            document.Sections[1].PageSetup.Orientation = PageOrientation.Landscape;
 
             //Comments from two reviewers.
             CommentWrapper question = document.Comments.Add(figure.Range, "Does this include the one-off licence income from the West region?");

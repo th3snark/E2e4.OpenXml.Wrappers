@@ -207,7 +207,7 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
                 _startOpenXmlElement.RemoveAllChildren();
                 foreach (string line in text.TrimEnd('\r').Split('\r'))
                 {
-                    Paragraph paragraph = new Paragraph();
+                    Paragraph paragraph = HeaderFooterWrapper.NewParagraph(_startOpenXmlElement);
                     foreach (Run run in BuildNewRunListFromText(line, paragraph))
                     {
                         paragraph.AppendChild(run);

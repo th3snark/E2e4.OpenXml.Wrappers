@@ -839,7 +839,7 @@ internal sealed class StoryMap
         OpenXmlElement current = paragraph;
         while (current != null && !ReferenceEquals(current, storyRoot))
         {
-            for (OpenXmlElement sibling = current.PreviousSibling(); sibling != null; sibling = sibling.PreviousSibling())
+            for (OpenXmlElement sibling = current.PreviousSiblingNear(); sibling != null; sibling = sibling.PreviousSiblingNear())
             {
                 Paragraph found = LastParagraphIn(sibling);
                 if (found != null)

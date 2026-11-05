@@ -63,6 +63,29 @@ public class SamplesTest : IClassFixture<SamplesTest.SampleDocuments>
         }
     }
 
+    public static TheoryData<string> FileNames
+    {
+        get
+        {
+            TheoryData<string> data = new TheoryData<string>();
+            foreach (Example example in Examples.All)
+            {
+                data.Add(example.FileName);
+            }
+            return data;
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(FileNames))]
+    public void EveryTableFitsTheSpaceItHas(string fileName)
+    {
+        using (WordprocessingDocument document = WordprocessingDocument.Open(_documents.Get(fileName), false))
+        {
+            Assert.Empty(DocumentIntegrity.TablesWiderThanTheirSpace(document));
+        }
+    }
+
     /// <summary>Writes each example once, the first time a test asks for it, to a temporary folder deleted at the end.</summary>
     public sealed class SampleDocuments : IDisposable
     {

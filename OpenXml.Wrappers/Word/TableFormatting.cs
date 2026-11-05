@@ -72,9 +72,9 @@ internal static class PreferredWidths
         {
             throw new ArgumentOutOfRangeException(nameof(kind));
         }
-        if (double.IsNaN(value) || value < 0 || value > (kind == PreferredWidthType.Percent ? 600 : 31680))
+        if (double.IsNaN(value) || value < 0 || value > (kind == PreferredWidthType.Percent ? 600 : 1584))
         {
-            throw new ArgumentOutOfRangeException(nameof(value), kind == PreferredWidthType.Percent ? "The width must be between 0 and 600 percent." : "The width must be between 0 and 31680 points.");
+            throw new ArgumentOutOfRangeException(nameof(value), kind == PreferredWidthType.Percent ? "The width must be between 0 and 600 percent." : "The width must be between 0 and 1584 points.");
         }
 
         if (kind == PreferredWidthType.Auto)
@@ -154,6 +154,81 @@ public partial class TableWrapper
         {
             PreferredWidths.Format(PreferredWidthType == PreferredWidthType.Percent ? PreferredWidthType.Percent : PreferredWidthType.Points, value, out string width, out TableWidthUnitValues type);
             GetOrAddTableProperties().TableWidth = new TableWidth() { Width = width, Type = type };
+            if (type == TableWidthUnitValues.Dxa)
+            {
+                ScaleGrid(int.Parse(width, CultureInfo.InvariantCulture));
+            }
+            else if (type == TableWidthUnitValues.Pct)
+            {
+                ScaleGrid((int)Math.Round(int.Parse(width, CultureInfo.InvariantCulture) * (double)TableWrapperCollection.GetSpaceForTable(_table) / WholeWidthInFiftieths, MidpointRounding.AwayFromZero));
+            }
+        }
+    }
+
+    //A width of 100%, in the fiftieths of a percent that w:tblW is written in.
+    private const int WholeWidthInFiftieths = 5000;
+
+    /// <summary>
+    /// Brings the table into line with its columns after they change, as Word does. Each cell is as wide as the columns it covers. A fixed
+    /// width becomes the total of the columns and a percentage what they are of the space the table has. An automatic width stays automatic
+    /// until the columns no longer fit that space, when it too becomes their total.
+    /// </summary>
+    internal static void ColumnsChanged(Table table)
+    {
+        List<int> grid = table.GetFirstChild<TableGrid>().Elements<GridColumn>().Select(c => int.TryParse(c.Width?.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int w) ? w : 0).ToList();
+        foreach (TableRow row in table.Elements<TableRow>())
+        {
+            foreach (TableCell cell in row.Elements<TableCell>())
+            {
+                int width = grid.Skip(TableCellWrapper.GetGridStart(cell)).Take(TableCellWrapper.Span(cell)).Sum();
+                if (width > 0)
+                {
+                    cell.SetWidth(width, TableWidthUnitValues.Dxa);
+                }
+            }
+        }
+
+        TableProperties properties = table.GetFirstChild<TableProperties>();
+        if (properties == null)
+        {
+            return;
+        }
+        int total = grid.Sum();
+        int space = TableWrapperCollection.GetSpaceForTable(table);
+        TableWidthUnitValues? type = properties.TableWidth?.Type?.Value;
+        if (type == TableWidthUnitValues.Pct)
+        {
+            int share = (int)Math.Round(total * (double)WholeWidthInFiftieths / space, MidpointRounding.AwayFromZero);
+            properties.TableWidth = new TableWidth() { Width = share.ToString(CultureInfo.InvariantCulture), Type = TableWidthUnitValues.Pct };
+        }
+        else if (type == TableWidthUnitValues.Dxa || total > space)
+        {
+            properties.TableWidth = new TableWidth() { Width = total.ToString(CultureInfo.InvariantCulture), Type = TableWidthUnitValues.Dxa };
+        }
+    }
+
+    //The columns take up a new width in proportion, as Word lays them out. The widths of the cells stay as what they ask for.
+    private void ScaleGrid(int total)
+    {
+        List<GridColumn> columns = _table.GetFirstChild<TableGrid>()?.Elements<GridColumn>().ToList();
+        if (columns == null || total <= 0)
+        {
+            return;
+        }
+        long[] widths = columns.Select(c => long.TryParse(c.Width?.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out long w) ? w : 0L).ToArray();
+        long sum = widths.Sum();
+        if (sum <= 0)
+        {
+            return;
+        }
+        long running = 0;
+        long used = 0;
+        for (int i = 0; i < columns.Count; i++)
+        {
+            running += widths[i];
+            long end = (long)Math.Round((double)total * running / sum);
+            columns[i].Width = (end - used).ToString(CultureInfo.InvariantCulture);
+            used = end;
         }
     }
 
@@ -238,6 +313,15 @@ public partial class TableWrapper
             if (double.IsNaN(value) || value < -1584 || value > 1584)
             {
                 throw new ArgumentOutOfRangeException(nameof(value), "The indent must be between -1584 and 1584 points.");
+            }
+            //No indent is what a table has when it says nothing, so Word writes nothing.
+            if (value == 0)
+            {
+                if (ExistingProperties != null)
+                {
+                    ExistingProperties.TableIndentation = null;
+                }
+                return;
             }
             GetOrAddTableProperties().TableIndentation = new TableIndentation() { Width = (int)Math.Round(value * 20, MidpointRounding.AwayFromZero), Type = TableWidthUnitValues.Dxa };
         }
@@ -586,7 +670,12 @@ public partial class TableRowWrapperCollection
     public RowAlignment Alignment
     {
         get { return Parent.Alignment; }
-        set { Parent.Alignment = value; }
+        set
+        {
+            //Word says so both on the table and on each row.
+            Parent.Alignment = value;
+            WriteAll(r => r.Alignment = value);
+        }
     }
 
     /// <summary>The distance in points of the left edge of the table from the margin, as <c>Rows.LeftIndent</c> in Word.</summary>
@@ -874,7 +963,7 @@ public partial class TableCellWrapper
         int span = Span(_tableCell);
         int width = WidthTwips;
         TableRowWrapper rowWrapper = Parent;
-        _tableCell.Remove();
+        RangeWrapper.DeleteElements(new OpenXmlElement[] { _tableCell });
 
         //The grid does not change, so the row is shorter by the cell's columns.
         TableRowProperties properties = rowWrapper.GetOrAddProperties();
@@ -1087,6 +1176,7 @@ public partial class TableColumnWrapperCollection
             }
             cell.InsertBeforeSelf(added);
         }
+        TableWrapper.ColumnsChanged(table);
 
         return new TableColumnWrapper(gridColumn);
     }

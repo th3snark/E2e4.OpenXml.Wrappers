@@ -34,6 +34,27 @@ public class DocumentIntegrityTest
     }
 
     [Fact]
+    public void ATableWiderThanItsSpaceIsFoundButIsNotAProblemOfIntegrity()
+    {
+        using (MemoryStream stream = new MemoryStream())
+        {
+            using (WordprocessingDocumentWrapper document = WordprocessingDocumentWrapper.Create(stream, true, false))
+            {
+                TableWrapper fits = document.Tables.Add(document.Range(0, 0), 1, 2, DefaultTableBehavior.Word9TableBehavior);
+                Assert.Empty(DocumentIntegrity.TablesWiderThanTheirSpace(document.WordprocessingDocument));
+
+                fits.Columns[0].Width = 400;
+                Assert.Single(DocumentIntegrity.TablesWiderThanTheirSpace(document.WordprocessingDocument));
+            }
+            stream.Position = 0;
+            using (WordprocessingDocument document = WordprocessingDocument.Open(stream, false))
+            {
+                Assert.Empty(DocumentIntegrity.CheckAll(document));
+            }
+        }
+    }
+
+    [Fact]
     public void BrokenReferencesAndRepeatedIdsAreFound()
     {
         IList<string> problems = CheckAfter(d =>

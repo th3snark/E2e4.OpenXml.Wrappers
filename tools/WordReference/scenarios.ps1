@@ -228,6 +228,114 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         }
     }
 
+    'paragraph-style-over-most-of-a-format' = {
+        param($doc)
+        $doc.Content.InsertAfter('0123456789')
+        $doc.Range(0, 6).Font.Italic = 1
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+    }
+
+    'paragraph-style-over-less-of-a-format' = {
+        param($doc)
+        $doc.Content.InsertAfter('0123456789')
+        $doc.Range(0, 5).Font.Italic = 1
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+    }
+
+    'paragraph-style-counts-the-mark' = {
+        param($doc)
+        $doc.Content.InsertAfter('012345678')
+        $doc.Range(0, 4).Font.Italic = 1
+        $doc.Range(9, 10).Font.Italic = 1
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+    }
+
+    'paragraph-style-on-a-new-paragraph' = {
+        param($doc)
+        $doc.Content.InsertAfter('First')
+        $doc.Paragraphs.Item(1).Range.Font.Italic = 1
+        $doc.Content.InsertParagraphAfter()
+        $doc.Paragraphs.Item(2).Range.InsertBefore('Contents')
+        $doc.Paragraphs.Item(2).Style = 'Heading 1'
+    }
+
+    'paragraph-style-by-property'     = {
+        param($doc)
+        $doc.Content.InsertAfter('0123456789')
+        $doc.Range(0, 7).Font.Bold = 1
+        $doc.Range(0, 3).Font.Italic = 1
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+    }
+
+    'paragraph-style-by-value'        = {
+        param($doc)
+        $doc.Content.InsertAfter('0123456789')
+        $doc.Range(0, 3).Font.Size = 30
+        $doc.Range(3, 7).Font.Size = 22
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+    }
+
+    'paragraph-style-first-of-equal-values' = {
+        param($doc)
+        $doc.Content.InsertAfter('0123456789')
+        $doc.Range(0, 3).Font.Size = 30
+        $doc.Range(3, 6).Font.Size = 22
+        $doc.Range(6, 9).Font.Size = 18
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+    }
+
+    'paragraph-style-value-of-the-style-counts' = {
+        param($doc)
+        $doc.Content.InsertAfter('0123456789')
+        $doc.Range(0, 3).Font.Size = 20
+        $doc.Range(3, 7).Font.Size = 22
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+    }
+
+    'paragraph-style-same-value'      = {
+        param($doc)
+        $doc.Content.InsertAfter('0123456789')
+        $doc.Range(0, 3).Font.Size = 28
+        $doc.Range(3, 6).Font.Size = 30
+        $doc.Paragraphs.Item(1).Style = 'Title'
+    }
+
+    'paragraph-style-clears-paragraph-format' = {
+        param($doc)
+        $doc.Content.InsertAfter('0123456789')
+        $paragraph = $doc.Paragraphs.Item(1)
+        $paragraph.Alignment = 1
+        $paragraph.SpaceAfter = 30
+        $paragraph.LeftIndent = 20
+        $paragraph.KeepWithNext = -1
+        $paragraph.PageBreakBefore = -1
+        $paragraph.Style = 'Heading 1'
+    }
+
+    'paragraph-style-keeps-some-format' = {
+        param($doc)
+        $doc.Content.InsertAfter('0123456789')
+        $doc.Range(0, 7).Font.Superscript = 1
+        $doc.Range(0, 7).Font.Scaling = 150
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+    }
+
+    'paragraph-style-underline-color' = {
+        param($doc)
+        $doc.Content.InsertAfter('0123456789')
+        $doc.Range(0, 7).Font.Underline = 1
+        $doc.Range(0, 7).Font.UnderlineColor = 255
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+    }
+
+    'paragraph-style-keeps-a-section' = {
+        param($doc)
+        $doc.Content.InsertAfter('First')
+        [void]$doc.Sections.Add()
+        $doc.Paragraphs.Item(1).Alignment = 1
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+    }
+
     'normal-style-applied'            = {
         param($doc)
         $doc.Content.InsertAfter('Text')
@@ -408,6 +516,268 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
     'field-date-from-code'            = {
         param($doc)
         [void]$doc.Fields.Add($doc.Range(0, 0), -1, 'DATE', $false)  # wdFieldEmpty
+    }
+
+    'table-2x4-word9-behavior'        = {
+        param($doc)
+        [void]$doc.Tables.Add($doc.Range(0, 0), 2, 4, 1, 0)  # wdWord9TableBehavior, wdAutoFitFixed
+    }
+
+    'table-autofit-content'           = {
+        param($doc)
+        [void]$doc.Tables.Add($doc.Range(0, 0), 1, 2, 0, 1)  # wdWord8TableBehavior, wdAutoFitContent
+    }
+
+    'table-autofit-window'            = {
+        param($doc)
+        [void]$doc.Tables.Add($doc.Range(0, 0), 1, 2, 0, 2)  # wdWord8TableBehavior, wdAutoFitWindow
+    }
+
+    'table-word9-autofit-content'     = {
+        param($doc)
+        [void]$doc.Tables.Add($doc.Range(0, 0), 1, 2, 1, 1)
+    }
+
+    'table-word9-autofit-window'      = {
+        param($doc)
+        [void]$doc.Tables.Add($doc.Range(0, 0), 1, 2, 1, 2)
+    }
+
+    'table-nested'                    = {
+        param($doc)
+        $outer = $doc.Tables.Add($doc.Range(0, 0), 1, 2, 1, 0)
+        [void]$doc.Tables.Add($outer.Cell(1, 1).Range, 1, 2, 1, 0)
+    }
+
+    'table-in-text'                   = {
+        param($doc)
+        $doc.Content.InsertAfter('Before after')
+        [void]$doc.Tables.Add($doc.Range(7, 7), 1, 1)
+    }
+
+    'cell-vertical-merge'             = {
+        param($doc)
+        $table = $doc.Tables.Add($doc.Range(0, 0), 3, 2, 1, 0)
+        $table.Cell(1, 1).Merge($table.Cell(2, 1))
+    }
+
+    'cell-merge-block'                = {
+        param($doc)
+        $table = $doc.Tables.Add($doc.Range(0, 0), 3, 3, 1, 0)
+        $table.Cell(1, 1).Merge($table.Cell(2, 2))
+    }
+
+    'cell-split'                      = {
+        param($doc)
+        $table = $doc.Tables.Add($doc.Range(0, 0), 1, 2, 1, 0)
+        $table.Cell(1, 1).Split(1, 2)
+    }
+
+    'row-properties'                  = {
+        param($doc)
+        $table = $doc.Tables.Add($doc.Range(0, 0), 4, 1, 1, 0)
+        $table.Rows.Item(1).HeightRule = 1  # wdRowHeightAtLeast
+        $table.Rows.Item(1).Height = 20
+        $table.Rows.Item(2).HeightRule = 2  # wdRowHeightExactly
+        $table.Rows.Item(2).Height = 20
+        $table.Rows.Item(3).HeadingFormat = $true
+        $table.Rows.Item(4).AllowBreakAcrossPages = $false
+    }
+
+    'rows-add'                        = {
+        param($doc)
+        $table = $doc.Tables.Add($doc.Range(0, 0), 1, 2, 1, 0)
+        $table.Cell(1, 1).Range.Text = 'a'
+        [void]$table.Rows.Add()
+    }
+
+    'columns-add'                     = {
+        param($doc)
+        $table = $doc.Tables.Add($doc.Range(0, 0), 1, 2, 1, 0)
+        [void]$table.Columns.Add()
+    }
+
+    'column-delete'                   = {
+        param($doc)
+        $table = $doc.Tables.Add($doc.Range(0, 0), 1, 3, 1, 0)
+        $table.Columns.Item(2).Delete()
+    }
+
+    'column-width-narrower'           = {
+        param($doc)
+        $table = $doc.Tables.Add($doc.Range(0, 0), 2, 3, 1, 0)
+        $table.Columns.Item(1).Width = 100
+    }
+
+    'column-width-wider'              = {
+        param($doc)
+        $table = $doc.Tables.Add($doc.Range(0, 0), 2, 3, 1, 0)
+        $table.Columns.Item(1).Width = 200
+    }
+
+    'column-width-preferred-points'   = {
+        param($doc)
+        $table = $doc.Tables.Add($doc.Range(0, 0), 2, 3, 1, 0)
+        $table.PreferredWidthType = 3  # wdPreferredWidthPoints
+        $table.PreferredWidth = 300
+        $table.Columns.Item(1).Width = 200
+    }
+
+    'column-width-after-add'          = {
+        param($doc)
+        $table = $doc.Tables.Add($doc.Range(0, 0), 2, 3, 1, 0)
+        [void]$table.Columns.Add()
+        $table.Columns.Item(1).Width = 120
+        $table.Columns.Item(4).Width = 70
+    }
+
+    'columns-add-within-space'        = {
+        param($doc)
+        $table = $doc.Tables.Add($doc.Range(0, 0), 2, 3, 1, 0)
+        $table.Columns.Item(1).Width = 40
+        $table.Columns.Item(2).Width = 40
+        [void]$table.Columns.Add()
+    }
+
+    'columns-add-preferred-points'    = {
+        param($doc)
+        $table = $doc.Tables.Add($doc.Range(0, 0), 2, 3, 1, 0)
+        $table.PreferredWidthType = 3  # wdPreferredWidthPoints
+        $table.PreferredWidth = 300
+        [void]$table.Columns.Add()
+    }
+
+    'column-delete-preferred-points'  = {
+        param($doc)
+        $table = $doc.Tables.Add($doc.Range(0, 0), 2, 3, 1, 0)
+        $table.PreferredWidthType = 3  # wdPreferredWidthPoints
+        $table.PreferredWidth = 300
+        $table.Columns.Item(2).Delete()
+    }
+
+    'table-preferred-percent'         = {
+        param($doc)
+        $table = $doc.Tables.Add($doc.Range(0, 0), 2, 3, 1, 0)
+        $table.PreferredWidthType = 2  # wdPreferredWidthPercent
+        $table.PreferredWidth = 80
+    }
+
+    'table-borders-enable'            = {
+        param($doc)
+        $table = $doc.Tables.Add($doc.Range(0, 0), 1, 1)
+        $table.Borders.Enable = $true
+    }
+
+    'table-properties'                = {
+        param($doc)
+        $table = $doc.Tables.Add($doc.Range(0, 0), 1, 2, 1, 0)
+        $table.PreferredWidthType = 3  # wdPreferredWidthPoints
+        $table.PreferredWidth = 200
+        $table.Rows.Alignment = 1  # wdAlignRowCenter
+        $table.Rows.LeftIndent = 0
+        $table.Cell(1, 1).Shading.BackgroundPatternColor = 255
+        $table.Cell(1, 2).VerticalAlignment = 1  # wdCellAlignVerticalCenter
+    }
+
+    'section-properties'              = {
+        param($doc)
+        $setup = $doc.Sections.Item(1).PageSetup
+        $setup.Orientation = 1  # wdOrientLandscape
+        $setup.Orientation = 0  # wdOrientPortrait
+        $setup.SectionStart = 0  # wdSectionContinuous
+        $setup.SectionStart = 2  # wdSectionNewPage
+    }
+
+    'section-landscape'               = {
+        param($doc)
+        $doc.Sections.Item(1).PageSetup.Orientation = 1
+    }
+
+    'section-continuous'              = {
+        param($doc)
+        $doc.Sections.Item(1).PageSetup.SectionStart = 0
+    }
+
+    'line-numbers'                    = {
+        param($doc)
+        $doc.Sections.Item(1).PageSetup.LineNumbering.Active = $true
+    }
+
+    'text-columns'                    = {
+        param($doc)
+        $doc.Sections.Item(1).PageSetup.TextColumns.SetCount(2)
+    }
+
+    'different-first-page'            = {
+        param($doc)
+        $doc.Sections.Item(1).PageSetup.DifferentFirstPageHeaderFooter = $true
+    }
+
+    'page-numbers-add'                = {
+        param($doc)
+        [void]$doc.Sections.Item(1).Footers.Item(1).PageNumbers.Add()
+    }
+
+    'two-sections-with-headers'       = {
+        param($doc)
+        $doc.Sections.Item(1).Headers.Item(1).Range.Text = 'Header'
+        $doc.Content.InsertAfter('First')
+        [void]$doc.Sections.Add()
+    }
+
+    'header-unlink'                   = {
+        param($doc)
+        $doc.Sections.Item(1).Headers.Item(1).Range.Text = 'Header'
+        [void]$doc.Sections.Add()
+        $doc.Sections.Item(2).Headers.Item(1).LinkToPrevious = $false
+    }
+
+    'comment-only'                    = {
+        param($doc)
+        $doc.Content.InsertAfter('Commented text')
+        [void]$doc.Comments.Add($doc.Range(0, 9), 'A comment')
+    }
+
+    'comment-on-insertion-point'      = {
+        param($doc)
+        $doc.Content.InsertAfter('Text')
+        [void]$doc.Comments.Add($doc.Range(2, 2), 'A comment')
+    }
+
+    'comment-deleted'                 = {
+        param($doc)
+        $doc.Content.InsertAfter('Commented text')
+        $comment = $doc.Comments.Add($doc.Range(0, 9), 'A comment')
+        [void]$doc.Comments.Add($doc.Range(10, 14), 'Another')
+        $comment.DeleteRecursively()
+    }
+
+    'page-numbers-add-left'           = {
+        param($doc)
+        [void]$doc.Sections.Item(1).Footers.Item(1).PageNumbers.Add(0)  # wdAlignPageNumberLeft
+    }
+
+    'page-numbers-add-center'         = {
+        param($doc)
+        [void]$doc.Sections.Item(1).Footers.Item(1).PageNumbers.Add(1)  # wdAlignPageNumberCenter
+    }
+
+    'page-numbers-add-to-text'        = {
+        param($doc)
+        $doc.Sections.Item(1).Footers.Item(1).Range.Text = 'Footer'
+        [void]$doc.Sections.Item(1).Footers.Item(1).PageNumbers.Add()
+    }
+
+    'comment-in-empty-paragraph'      = {
+        param($doc)
+        [void]$doc.Comments.Add($doc.Range(0, 0), 'A comment')
+    }
+
+    'heading-rows-off'                = {
+        param($doc)
+        $table = $doc.Tables.Add($doc.Range(0, 0), 3, 1, 1, 0)
+        $table.Rows.Item(2).HeadingFormat = $true
+        $table.Rows.Item(1).HeadingFormat = $false
     }
 
     'join-paragraphs'                 = {

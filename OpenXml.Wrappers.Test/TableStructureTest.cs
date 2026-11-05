@@ -402,9 +402,11 @@ public class TableStructureTest
         Assert.Equal(6, table.Table.Descendants<TableCell>().Count());
         Assert.All(table.Table.Descendants<TableCell>(), c => Assert.Single(c.Elements<Paragraph>()));
         Assert.Equal(new[] { "3120", "3120", "3120" }, table.Table.GetFirstChild<TableGrid>().Elements<GridColumn>().Select(g => g.Width.Value).ToArray());
-        Assert.Equal(468, table.PreferredWidth);
-        Assert.Equal(BorderLineStyle.SingleLine, table.Borders[BorderPosition.Vertical].LineStyle);
-        Assert.Equal(0.5, table.Borders[BorderPosition.Top].LineWidth);
+        Assert.Equal(468, table.Width);
+
+        //The default behaviour of Tables.Add, as in Word: fixed columns, no style and no borders.
+        Assert.False(table.AllowAutoFit);
+        Assert.Equal(BorderLineStyle.None, table.Borders[BorderPosition.Vertical].LineStyle);
     }
 
     [Fact]
@@ -413,7 +415,7 @@ public class TableStructureTest
         (Body body, Paragraph paragraph) = CreateBody(pageWidth: 11906, left: 1000, right: 906);
         TableWrapper table = new TableWrapperCollection(new RangeWrapper(body)).Add(new RangeWrapper(paragraph), 1, 1);
 
-        Assert.Equal(10000 / 20.0, table.PreferredWidth);
+        Assert.Equal(10000 / 20.0, table.Width);
     }
 
     [Fact]
@@ -450,7 +452,8 @@ public class TableStructureTest
 
         Assert.Same(inner.Table, cell.Elements().First(e => !(e is TableCellProperties)));
         Assert.IsType<Paragraph>(inner.Table.NextSibling());
-        Assert.Equal(200, inner.PreferredWidth);
+        //The width of the cell inside its margins.
+        Assert.Equal((4000 - 216) / 20.0, inner.Width);
         Assert.Equal(new TableWrapper(outer).NestingLevel + 1, inner.NestingLevel);
     }
 

@@ -100,7 +100,7 @@ internal sealed class DocumentBuilder
     public TableWrapper Table(int rows, int columns)
     {
         ParagraphWrapper after = TakeParagraph();
-        TableWrapper table = _document.Tables.Add(after.Range, rows, columns);
+        TableWrapper table = _document.Tables.Add(after.Range, rows, columns, DefaultTableBehavior.Word9TableBehavior);
 
         //The table is inserted before the paragraph, which stays after it as the spare one.
         _spare = after;
