@@ -986,6 +986,68 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $t = $doc.Styles.Add('RefTable', 3).Table
         $t.Condition(0).TopPadding = 3
     }
+    'find-match-prefix'               = {
+        param($doc)
+        $doc.Content.InsertAfter('pre prefix preach unpre repre')
+        $m = [Type]::Missing
+        $f = $doc.Content.Find
+        $f.ClearFormatting()
+        $f.Replacement.ClearFormatting()
+        $f.MatchPrefix = $true
+        [void]$f.Execute('pre', $m, $m, $m, $m, $m, $m, $m, $m, 'X', 2)
+    }
+    'find-match-suffix'               = {
+        param($doc)
+        $doc.Content.InsertAfter('ing sing singing ingot')
+        $m = [Type]::Missing
+        $f = $doc.Content.Find
+        $f.ClearFormatting()
+        $f.Replacement.ClearFormatting()
+        $f.MatchSuffix = $true
+        [void]$f.Execute('ing', $m, $m, $m, $m, $m, $m, $m, $m, 'X', 2)
+    }
+    'find-match-prefix-suffix'        = {
+        param($doc)
+        $doc.Content.InsertAfter('cat concat cats cat')
+        $m = [Type]::Missing
+        $f = $doc.Content.Find
+        $f.ClearFormatting()
+        $f.Replacement.ClearFormatting()
+        $f.MatchPrefix = $true
+        $f.MatchSuffix = $true
+        [void]$f.Execute('cat', $m, $m, $m, $m, $m, $m, $m, $m, 'X', 2)
+    }
+    'find-ignore-punct'               = {
+        param($doc)
+        $doc.Content.InsertAfter('co-op coop co,op co op')
+        $m = [Type]::Missing
+        $f = $doc.Content.Find
+        $f.ClearFormatting()
+        $f.Replacement.ClearFormatting()
+        $f.IgnorePunct = $true
+        [void]$f.Execute('coop', $m, $m, $m, $m, $m, $m, $m, $m, 'X', 2)
+    }
+    'find-ignore-space'               = {
+        param($doc)
+        $doc.Content.InsertAfter('a b ab a  b ab')
+        $m = [Type]::Missing
+        $f = $doc.Content.Find
+        $f.ClearFormatting()
+        $f.Replacement.ClearFormatting()
+        $f.IgnoreSpace = $true
+        [void]$f.Execute('ab', $m, $m, $m, $m, $m, $m, $m, $m, 'X', 2)
+    }
+    'find-replace-language'           = {
+        param($doc)
+        $doc.Content.InsertAfter('One two three')
+        $m = [Type]::Missing
+        $f = $doc.Content.Find
+        $f.ClearFormatting()
+        $f.Replacement.ClearFormatting()
+        $f.Replacement.LanguageID = 1036
+        $f.Replacement.NoProofing = $true
+        [void]$f.Execute('two', $m, $m, $m, $m, $m, $m, $m, $true, '^&', 2)
+    }
     'find-replace-font'               = {
         param($doc)
         $doc.Content.InsertAfter('One two three two')

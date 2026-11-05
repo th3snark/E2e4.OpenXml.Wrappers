@@ -58,6 +58,81 @@ internal sealed class FindFormat
     /// <summary>True for highlighted text, false for text that is not, and null for either.</summary>
     public bool? Highlight { get; set; }
 
+    /// <summary>The language as the number Word uses, 0 when there is none.</summary>
+    public int GetLanguage(bool eastAsia)
+    {
+        Languages languages = RunProperties?.Languages;
+        string name = eastAsia ? languages?.EastAsia?.Value : languages?.Val?.Value;
+        if (string.IsNullOrEmpty(name))
+        {
+            return 0;
+        }
+        try
+        {
+            return System.Globalization.CultureInfo.GetCultureInfo(name).LCID;
+        }
+        catch (System.Globalization.CultureNotFoundException)
+        {
+            return 0;
+        }
+    }
+
+    public void SetLanguage(int id, bool eastAsia)
+    {
+        string name = null;
+        if (id != 0)
+        {
+            try
+            {
+                name = System.Globalization.CultureInfo.GetCultureInfo(id).Name;
+            }
+            catch (System.Globalization.CultureNotFoundException)
+            {
+                throw new ArgumentOutOfRangeException(nameof(id), "The number is not a language Word knows.");
+            }
+        }
+
+        Languages languages = RunProperties?.Languages ?? new Languages();
+        StringValue value = name == null ? null : new StringValue(name);
+        if (eastAsia)
+        {
+            languages.EastAsia = value;
+        }
+        else
+        {
+            languages.Val = value;
+        }
+        RunProperties properties = _run.GetOrAddRunProperties();
+        properties.RemoveRunProperty("lang");
+        if (languages.Val != null || languages.EastAsia != null || languages.Bidi != null)
+        {
+            properties.SetRunProperty(languages);
+        }
+        else if (!properties.HasChildren)
+        {
+            properties.Remove();
+        }
+    }
+
+    /// <summary>True for text that is left out of proofing, false for text that is not, null for either.</summary>
+    public bool? NoProofing
+    {
+        get { return RunProperties?.NoProof == null ? (bool?)null : StyleWrapper.IsOn(RunProperties.NoProof); }
+        set
+        {
+            RunProperties properties = _run.GetOrAddRunProperties();
+            properties.RemoveRunProperty("noProof");
+            if (value.HasValue)
+            {
+                properties.SetRunProperty(new NoProof() { Val = value.Value ? null : OpenXmlExtensions.OffValue() });
+            }
+            else if (!properties.HasChildren)
+            {
+                properties.Remove();
+            }
+        }
+    }
+
     /// <summary>The character properties that are set: the criteria for a run.</summary>
     public RunProperties RunProperties
     {
