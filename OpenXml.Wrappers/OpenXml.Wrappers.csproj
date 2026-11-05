@@ -7,7 +7,7 @@
     <PackageId>E2e4.OpenXml.Wrappers</PackageId>
     <!-- The one source of the version: the package, the assembly and file versions and the release tag (v<Version>) all follow it.
          eng/Check-Version.ps1 checks this in CI and when publishing. A prerelease is written 1.2.0-preview.1. -->
-    <Version>1.0.1</Version>
+    <Version>1.1.0</Version>
     <Title>E2e4 OpenXml Wrappers</Title>
     <AssemblyTitle>E2e4 OpenXml Wrappers</AssemblyTitle>
     <Description>A Word-object-model-like API (Range, Paragraphs, Tables, Bookmarks, Comments, Fields, Sections, Styles and more) over the Open XML SDK, so that code for .docx files reads like the Word VBA macros it replaces.</Description>

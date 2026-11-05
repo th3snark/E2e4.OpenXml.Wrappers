@@ -2,7 +2,9 @@
 
 All notable changes are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/) and the project uses [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.1.0] - 2026-11-05
+
+The markup the library writes now matches what Word 365 writes, checked against documents saved by Word itself. The public API has not changed, but much of what the library writes and how it behaves has, so read the behaviour changes below before upgrading.
 
 ### Behaviour changes
 - `Create` (and `InitializeMainDocumentPart`) now make what Word 365 writes for a new blank document, rather than a body and a compatibility setting: styles with document defaults and latent styles (33 styles, among them Normal, Heading 1 to 9, Title and Quote), the current Office theme (Aptos), font table, settings, web settings and document properties. Text in a new document is therefore Aptos 12 point rather than Times New Roman 10 point, and margins are one inch all round.
