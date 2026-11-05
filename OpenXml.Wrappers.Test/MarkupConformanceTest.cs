@@ -191,6 +191,40 @@ public class MarkupConformanceTest
                 d.Paragraphs.Add(d.Paragraphs[1].Range);
             },
             Body()),
+        new Scenario("cells-collection-format",
+            d =>
+            {
+                d.Tables.Add(d.Range(0, 0), 3, 3);
+                TableCellWrapperCollection cells = d.Tables[0].Range.Cells;
+                cells.Shading.BackgroundPatternColor = ColorHelper.RGB(255, 0, 0);
+                cells.VerticalAlignment = CellVerticalAlignment.Center;
+                cells.Height = 30;
+                cells.PreferredWidthType = PreferredWidthType.Points;
+                cells.PreferredWidth = 80;
+                d.Tables[0].Rows[1].Cells.SetHeight(40, RowHeightRule.Exactly);
+            },
+            Body()),
+
+        new Scenario("columns-collection-format",
+            d =>
+            {
+                d.Tables.Add(d.Range(0, 0), 3, 3);
+                TableColumnWrapperCollection columns = d.Tables[0].Columns;
+                columns.Width = 100;
+                columns.PreferredWidthType = PreferredWidthType.Points;
+                columns.PreferredWidth = 90;
+                columns.Shading.BackgroundPatternColor = ColorHelper.RGB(255, 0, 0);
+            },
+            Body()),
+
+        new Scenario("rows-set-height",
+            d =>
+            {
+                d.Tables.Add(d.Range(0, 0), 3, 3);
+                d.Tables[0].Rows.SetHeight(40, RowHeightRule.Exactly);
+                d.Tables[0].Cell(2, 0).SetHeight(25, RowHeightRule.AtLeast);
+            },
+            Body()),
         new Scenario("table-3x3", d => d.Tables.Add(d.Range(0, 0), 3, 3), Body()),
 
         new Scenario("table-3x3-word9-behavior",

@@ -22,6 +22,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 - `Paragraphs` gets the members of the paragraph format that apply to every paragraph (`Alignment`, `LeftIndent`, `Borders`, `Shading`, `OpenUp`, `Space15`, `Indent` and so on), `IncreaseSpacing` and `DecreaseSpacing`, `Add(range)`, and `OutlineDemote`, `OutlinePromote` and `OutlineDemoteToBody` (also on `Paragraph`), which follow Word 16: they change the style only and keep direct formatting.
 
+- `Cells`, `Rows` and `Columns` format all their members at once: `Cells` gets `Shading`, `VerticalAlignment`, `Height`, `HeightRule`, `SetHeight`, `PreferredWidth` and `PreferredWidthType`; `Rows` gets `Delete` and `SetHeight`; `Columns` gets `Width`, `PreferredWidth`, `PreferredWidthType`, `Shading`, `Delete` and `NestingLevel`. `Column` gets `Next`, `Previous` and `NestingLevel`, and `Row` and `Cell` get `NestingLevel` and (cell) `SetHeight`. As in Word, shading all the cells of a table shades the table too, and a preferred width in points on whole columns sets the columns (the grid).
+
 ### Behaviour changes
 - `Font.Name` also sets the complex script font when that has been set on its own, as Word does.
 - An alignment tab (`w:ptab`) takes one position, as in Word.

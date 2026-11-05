@@ -7,7 +7,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
 
-public class TableCellWrapperCollection : IEnumerable<TableCellWrapper>
+public partial class TableCellWrapperCollection : IEnumerable<TableCellWrapper>
 {
     private RangeWrapper _range;
 

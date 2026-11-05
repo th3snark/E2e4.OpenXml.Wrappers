@@ -203,6 +203,34 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         & $call $doc.Paragraphs 'Indent' @()
         [void]$doc.Paragraphs.Add($doc.Paragraphs.Item(2).Range)
     }
+    'cells-collection-format'         = {
+        param($doc)
+        [void]$doc.Tables.Add($doc.Range(0, 0), 3, 3)
+        $cells = $doc.Tables.Item(1).Range.Cells
+        $cells.Shading.BackgroundPatternColor = 255
+        $cells.VerticalAlignment = 1
+        $cells.Height = 30
+        $cells.PreferredWidthType = 3
+        $cells.PreferredWidth = 80
+        $doc.Tables.Item(1).Rows.Item(2).Cells.SetHeight(40, 2)
+    }
+
+    'columns-collection-format'       = {
+        param($doc)
+        [void]$doc.Tables.Add($doc.Range(0, 0), 3, 3)
+        $columns = $doc.Tables.Item(1).Columns
+        $columns.Width = 100
+        $columns.PreferredWidthType = 3
+        $columns.PreferredWidth = 90
+        $columns.Shading.BackgroundPatternColor = 255
+    }
+
+    'rows-set-height'                 = {
+        param($doc)
+        [void]$doc.Tables.Add($doc.Range(0, 0), 3, 3)
+        $doc.Tables.Item(1).Rows.SetHeight(40, 2)
+        $doc.Tables.Item(1).Cell(3, 1).SetHeight(25, 1)
+    }
     'table-3x3'                       = {
         param($doc)
         [void]$doc.Tables.Add($doc.Range(0, 0), 3, 3)
