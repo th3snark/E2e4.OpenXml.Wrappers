@@ -349,6 +349,36 @@ public class MarkupConformanceTest
             },
             Body()),
 
+        new Scenario("formatted-text-copy-bold-to-end",
+            d =>
+            {
+                d.Content.InsertAfter("abc def ghi");
+                d.Range(4, 7).Font.Bold = true;
+                RangeWrapper target = d.Range(11, 11);
+                target.FormattedText = d.Range(4, 7).FormattedText;
+            },
+            Body()),
+
+        new Scenario("formatted-text-copy-across-paragraphs",
+            d =>
+            {
+                d.Content.InsertAfter("aaa\rbbb\rccc");
+                d.Paragraphs[1].Format.Alignment = ParagraphAlignment.Center;
+                RangeWrapper target = d.Range(11, 11);
+                target.FormattedText = d.Range(2, 6).FormattedText;
+            },
+            Body()),
+
+        new Scenario("formatted-text-copy-paragraph-with-mark",
+            d =>
+            {
+                d.Content.InsertAfter("aaa\rbbb\rccc");
+                d.Paragraphs[1].Style = "Heading 1";
+                RangeWrapper target = d.Range(0, 0);
+                target.FormattedText = d.Paragraphs[1].Range.FormattedText;
+            },
+            Body()),
+
         new Scenario("paragraph-style-same-value",
             d =>
             {

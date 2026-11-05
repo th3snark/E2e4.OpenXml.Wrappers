@@ -348,6 +348,30 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $doc.Range(0, 33).Case = 4
     }
 
+    'formatted-text-copy-bold-to-end' = {
+        param($doc)
+        $doc.Content.InsertAfter('abc def ghi')
+        $doc.Range(4, 7).Font.Bold = $true
+        $target = $doc.Range(11, 11)
+        $target.FormattedText = $doc.Range(4, 7).FormattedText
+    }
+
+    'formatted-text-copy-across-paragraphs' = {
+        param($doc)
+        $doc.Content.InsertAfter("aaa`rbbb`rccc")
+        $doc.Paragraphs.Item(2).Alignment = 1
+        $target = $doc.Range(11, 11)
+        $target.FormattedText = $doc.Range(2, 6).FormattedText
+    }
+
+    'formatted-text-copy-paragraph-with-mark' = {
+        param($doc)
+        $doc.Content.InsertAfter("aaa`rbbb`rccc")
+        $doc.Paragraphs.Item(2).Style = 'Heading 1'
+        $target = $doc.Range(0, 0)
+        $target.FormattedText = $doc.Paragraphs.Item(2).Range.FormattedText
+    }
+
     'paragraph-style-same-value'      = {
         param($doc)
         $doc.Content.InsertAfter('0123456789')
