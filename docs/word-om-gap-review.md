@@ -213,7 +213,8 @@ The collections are where tables are thinnest: Word's `Rows`, `Columns` and `Cel
 | Status | Members |
 |---|---|
 | Done | `Add`, `Item`, `Alignment`, `AllowBreakAcrossPages`, `Count`, `First`, `HeadingFormat`, `Height`, `HeightRule`, `Last`, `LeftIndent`, `NestingLevel`, `Parent`, `Shading` |
-| Planned, step 8 | `ConvertToText`, `Delete`, `DistributeHeight`, `SetHeight`, `SetLeftIndent`, `AllowOverlap`, `Borders`, `DistanceBottom`, `DistanceLeft`, `DistanceRight`, `DistanceTop`, `HorizontalPosition`, `VerticalPosition`, `RelativeHorizontalPosition`, `RelativeVerticalPosition`, `WrapAroundText`, `SpaceBetweenColumns`, `TableDirection` |
+| Done (step 8a) | `Delete`, `SetHeight` |
+| Planned, step 8 | `ConvertToText`, `DistributeHeight` (Word measures the laid-out height, so it needs layout), `SetLeftIndent`, `AllowOverlap`, `Borders`, `DistanceBottom`, `DistanceLeft`, `DistanceRight`, `DistanceTop`, `HorizontalPosition`, `VerticalPosition`, `RelativeHorizontalPosition`, `RelativeVerticalPosition`, `WrapAroundText`, `SpaceBetweenColumns`, `TableDirection` |
 | Planned, step 19 | `Select` |
 
 <!-- learn: row -->
@@ -223,7 +224,8 @@ The collections are where tables are thinnest: Word's `Rows`, `Columns` and `Cel
 | Status | Members |
 |---|---|
 | Done | `Delete`, `SetHeight`, `Alignment`, `AllowBreakAcrossPages`, `Borders`, `Cells`, `HeadingFormat`, `Height`, `HeightRule`, `Index`, `IsFirst`, `IsLast`, `Next`, `Parent`, `Previous`, `Range`, `Shading` |
-| Planned, step 8 | `ConvertToText`, `SetLeftIndent`, `LeftIndent`, `NestingLevel`, `SpaceBetweenColumns` |
+| Done (step 8a) | `NestingLevel` |
+| Planned, step 8 | `ConvertToText`, `SetLeftIndent`, `LeftIndent`, `SpaceBetweenColumns` |
 | Planned, step 19 | `Select` |
 | Decided against | `ID` (an HTML id) |
 
@@ -234,7 +236,8 @@ The collections are where tables are thinnest: Word's `Rows`, `Columns` and `Cel
 | Status | Members |
 |---|---|
 | Done | `Add`, `DistributeWidth`, `Item`, `Count`, `First`, `Last`, `Parent` |
-| Planned, step 8 | `AutoFit`, `Delete`, `SetWidth`, `Borders`, `NestingLevel`, `PreferredWidth`, `PreferredWidthType`, `Shading`, `Width` |
+| Done (step 8a) | `Delete`, `NestingLevel`, `PreferredWidth` (in points it is the width of the columns, as in Word), `PreferredWidthType`, `Shading` (also the table's when the columns are all of them), `Width` |
+| Planned, step 8 | `AutoFit`, `SetWidth`, `Borders` |
 | Planned, step 19 | `Select` |
 
 <!-- learn: column -->
@@ -244,7 +247,8 @@ The collections are where tables are thinnest: Word's `Rows`, `Columns` and `Cel
 | Status | Members |
 |---|---|
 | Done | `Delete`, `Borders`, `Cells`, `Index`, `IsFirst`, `IsLast`, `Parent`, `PreferredWidth`, `PreferredWidthType`, `Shading`, `Width` |
-| Planned, step 8 | `AutoFit`, `SetWidth`, `Sort`, `NestingLevel`, `Next`, `Previous` |
+| Done (step 8a) | `NestingLevel`, `Next`, `Previous` |
+| Planned, step 8 | `AutoFit`, `SetWidth`, `Sort` |
 | Planned, step 19 | `Select` |
 
 <!-- learn: cells -->
@@ -254,7 +258,8 @@ The collections are where tables are thinnest: Word's `Rows`, `Columns` and `Cel
 | Status | Members |
 |---|---|
 | Done | `Item`, `Count`, `NestingLevel`, `Parent` |
-| Planned, step 8 | `Add`, `AutoFit`, `Delete`, `DistributeHeight`, `DistributeWidth`, `Merge`, `SetHeight`, `SetWidth`, `Split`, `Borders`, `Height`, `HeightRule`, `PreferredWidth`, `PreferredWidthType`, `Shading`, `VerticalAlignment`, `Width` |
+| Done (step 8a) | `SetHeight`, `Height`, `HeightRule`, `PreferredWidth` (in points it also sets the columns the cells are all of), `PreferredWidthType`, `Shading` (also the table's when the cells are all of them), `VerticalAlignment` |
+| Planned, step 8 | `Add`, `AutoFit`, `Delete`, `DistributeHeight` (needs layout), `DistributeWidth`, `Merge`, `SetWidth`, `Split`, `Borders`, `Width` |
 
 `Cell.Width` sets only the width that cell asks for. In Word it also changes the grid and `w:tblW`, as `Column.Width` does; that comes with these members in step 8.
 
@@ -265,7 +270,8 @@ The collections are where tables are thinnest: Word's `Rows`, `Columns` and `Cel
 | Status | Members |
 |---|---|
 | Done | `Delete` (shifting left only; step 8 adds up, and vertically merged cells), `Merge`, `Split`, `Borders`, `BottomPadding`, `Column`, `ColumnIndex`, `FitText`, `Height`, `HeightRule`, `LeftPadding`, `Next`, `Parent`, `PreferredWidth`, `PreferredWidthType`, `Previous`, `Range`, `RightPadding`, `Row`, `RowIndex`, `Shading`, `Tables`, `TopPadding`, `VerticalAlignment`, `Width`, `WordWrap` |
-| Planned, step 8 | `AutoSum`, `Formula`, `SetHeight`, `SetWidth`, `NestingLevel` |
+| Done (step 8a) | `SetHeight`, `NestingLevel` |
+| Planned, step 8 | `AutoSum`, `Formula`, `SetWidth` |
 | Planned, step 19 | `Select` |
 | Decided against | `ID` (an HTML id) |
 

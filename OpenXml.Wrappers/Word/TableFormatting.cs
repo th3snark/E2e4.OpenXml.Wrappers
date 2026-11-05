@@ -532,20 +532,19 @@ public partial class TableWrapper
     /// <summary>The shading of the whole table, as <c>Table.Shading</c> in Word.</summary>
     public ShadingWrapper Shading
     {
-        get
+        get { return new ShadingWrapper(create => new List<Shading> { GetTableShading(create) }); }
+    }
+
+    internal Shading GetTableShading(bool create)
+    {
+        TableProperties properties = create ? GetOrAddTableProperties() : ExistingProperties;
+        Shading shading = properties?.GetFirstChild<Shading>();
+        if (shading == null && create)
         {
-            return new ShadingWrapper(create =>
-            {
-                TableProperties properties = create ? GetOrAddTableProperties() : ExistingProperties;
-                Shading shading = properties?.GetFirstChild<Shading>();
-                if (shading == null && create)
-                {
-                    shading = new Shading() { Val = ShadingPatternValues.Clear, Color = "auto", Fill = "auto" };
-                    properties.Shading = shading;
-                }
-                return new List<Shading> { shading };
-            });
+            shading = new Shading() { Val = ShadingPatternValues.Clear, Color = "auto", Fill = "auto" };
+            properties.Shading = shading;
         }
+        return shading;
     }
 
     /// <summary>
