@@ -195,6 +195,140 @@ public class MarkupConformanceTest
             },
             Body()),
 
+        new Scenario("paragraph-style-over-most-of-a-format",
+            d =>
+            {
+                d.Content.InsertAfter("0123456789");
+                d.Range(0, 6).Font.Italic = true;
+                d.Paragraphs[0].Style = "Heading 1";
+            },
+            Body()),
+
+        new Scenario("paragraph-style-over-less-of-a-format",
+            d =>
+            {
+                d.Content.InsertAfter("0123456789");
+                d.Range(0, 5).Font.Italic = true;
+                d.Paragraphs[0].Style = "Heading 1";
+            },
+            Body()),
+
+        new Scenario("paragraph-style-counts-the-mark",
+            d =>
+            {
+                d.Content.InsertAfter("012345678");
+                d.Range(0, 4).Font.Italic = true;
+                d.Range(9, 10).Font.Italic = true;
+                d.Paragraphs[0].Style = "Heading 1";
+            },
+            Body()),
+
+        new Scenario("paragraph-style-on-a-new-paragraph",
+            d =>
+            {
+                d.Content.InsertAfter("First");
+                d.Paragraphs[0].Range.Font.Italic = true;
+                d.Content.InsertParagraphAfter();
+                d.Paragraphs[1].Range.InsertBefore("Contents");
+                d.Paragraphs[1].Style = "Heading 1";
+            },
+            Body()),
+
+        new Scenario("paragraph-style-by-property",
+            d =>
+            {
+                d.Content.InsertAfter("0123456789");
+                d.Range(0, 7).Font.Bold = true;
+                d.Range(0, 3).Font.Italic = true;
+                d.Paragraphs[0].Style = "Heading 1";
+            },
+            Body()),
+
+        new Scenario("paragraph-style-by-value",
+            d =>
+            {
+                d.Content.InsertAfter("0123456789");
+                d.Range(0, 3).Font.Size = 30;
+                d.Range(3, 7).Font.Size = 22;
+                d.Paragraphs[0].Style = "Heading 1";
+            },
+            Body()),
+
+        new Scenario("paragraph-style-first-of-equal-values",
+            d =>
+            {
+                d.Content.InsertAfter("0123456789");
+                d.Range(0, 3).Font.Size = 30;
+                d.Range(3, 6).Font.Size = 22;
+                d.Range(6, 9).Font.Size = 18;
+                d.Paragraphs[0].Style = "Heading 1";
+            },
+            Body()),
+
+        new Scenario("paragraph-style-value-of-the-style-counts",
+            d =>
+            {
+                d.Content.InsertAfter("0123456789");
+                d.Range(0, 3).Font.Size = 20;
+                d.Range(3, 7).Font.Size = 22;
+                d.Paragraphs[0].Style = "Heading 1";
+            },
+            Body()),
+
+        new Scenario("paragraph-style-same-value",
+            d =>
+            {
+                d.Content.InsertAfter("0123456789");
+                d.Range(0, 3).Font.Size = 28;
+                d.Range(3, 6).Font.Size = 30;
+                d.Paragraphs[0].Style = "Title";
+            },
+            Body()),
+
+        new Scenario("paragraph-style-clears-paragraph-format",
+            d =>
+            {
+                d.Content.InsertAfter("0123456789");
+                ParagraphFormatWrapper format = d.Paragraphs[0].Range.ParagraphFormat;
+                format.Alignment = ParagraphAlignment.Center;
+                format.SpaceAfter = 30;
+                format.LeftIndent = 20;
+                format.KeepWithNext = true;
+                format.PageBreakBefore = true;
+                d.Paragraphs[0].Style = "Heading 1";
+            },
+            Body()),
+
+        new Scenario("paragraph-style-keeps-some-format",
+            d =>
+            {
+                d.Content.InsertAfter("0123456789");
+                d.Range(0, 7).Font.Superscript = true;
+                d.Range(0, 7).Font.Scaling = 150;
+                d.Paragraphs[0].Style = "Heading 1";
+            },
+            Body()),
+
+        new Scenario("paragraph-style-underline-color",
+            d =>
+            {
+                d.Content.InsertAfter("0123456789");
+                d.Range(0, 7).Font.Underline = UnderlineStyle.SingleLine;
+                d.Range(0, 7).Font.UnderlineColor = "FF0000";
+                d.Paragraphs[0].Style = "Heading 1";
+            },
+            Body()),
+
+        new Scenario("paragraph-style-keeps-a-section",
+            d =>
+            {
+                d.Content.InsertAfter("First");
+                d.Sections.Add();
+                d.Paragraphs[0].Range.ParagraphFormat.Alignment = ParagraphAlignment.Center;
+                d.Paragraphs[0].Style = "Heading 1";
+            },
+            Body()),
+
         new Scenario("normal-style-applied",
             d =>
             {

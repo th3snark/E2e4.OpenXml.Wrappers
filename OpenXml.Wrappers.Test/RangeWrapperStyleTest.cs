@@ -111,10 +111,10 @@ public class RangeWrapperStyleTest : IDisposable
     public void ThePargraphStyleIsWrittenFirstInTheParagraphProperties()
     {
         Paragraph paragraph = AddParagraph();
-        paragraph.PrependChild(new ParagraphProperties(new KeepNext()));
+        paragraph.PrependChild(new ParagraphProperties(new SectionProperties()));
         new RangeWrapper(paragraph).Style = "Heading 1";
 
-        Assert.Equal(new[] { "pStyle", "keepNext" }, paragraph.ParagraphProperties.ChildElements.Select(e => e.LocalName).ToArray());
+        Assert.Equal(new[] { "pStyle", "sectPr" }, paragraph.ParagraphProperties.ChildElements.Select(e => e.LocalName).ToArray());
     }
 
     [Fact]

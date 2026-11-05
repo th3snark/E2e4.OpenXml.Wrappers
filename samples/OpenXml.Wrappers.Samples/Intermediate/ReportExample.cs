@@ -44,6 +44,9 @@ internal static class ReportExample
             //The appendix has a wide table, so it is on landscape pages in a section of its own.
             ParagraphWrapper endOfBody = builder.Paragraph("This is the end of the main report.");
             endOfBody.InsertSectionBreak(SectionStart.NewPage);
+
+            //The last section is the landscape one, set before the table so that the table fills it. The first section keeps the portrait page the document started with.
+            document.Sections[1].PageSetup.Orientation = PageOrientation.Landscape;
             builder.Paragraph("Appendix: monthly readings", "Heading 1");
             TableWrapper table = builder.Table(13, 6);
             string[] heading = { "Month", "Building A", "Building B", "Building C", "Total (m3)", "Change on 2024" };
@@ -76,10 +79,6 @@ internal static class ReportExample
             }
             table.Borders.SetOutside(BorderLineStyle.SingleLine, 1, "1F3864");
             table.Borders.SetInside(BorderLineStyle.SingleLine, 0.5, "BFBFBF");
-
-            //The last section is the landscape one. The first section keeps the portrait page the document started with.
-            PageSetupWrapper landscape = document.Sections[1].PageSetup;
-            landscape.Orientation = PageOrientation.Landscape;
 
             //Header and footer of the first section: no header or page number on the cover page.
             SectionWrapper first = document.Sections[0];

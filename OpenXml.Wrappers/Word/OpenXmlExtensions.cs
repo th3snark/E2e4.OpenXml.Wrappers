@@ -552,7 +552,7 @@ internal static class OpenXmlExtensions
         return true;
     }
 
-    private static bool SameAttributes(OpenXmlElement first, OpenXmlElement second)
+    internal static bool SameAttributes(OpenXmlElement first, OpenXmlElement second)
     {
         IList<OpenXmlAttribute> a = first.GetAttributes();
         IList<OpenXmlAttribute> b = second.GetAttributes();

@@ -20,6 +20,10 @@ public partial class RangeWrapper
     /// Word shows them as "Heading 1". Names are matched without regard to case when setting, so compare them without regard to case too.</para>
     /// <para>Setting a paragraph style applies it to every paragraph the range touches, and a character style to every run of the range. Setting
     /// null removes the direct style so that the default applies. A table style cannot be set here; use <see cref="TableWrapper.Style"/>.</para>
+    /// <para>As in Word, applying a paragraph style removes the direct paragraph formatting of the paragraph. Of each kind of direct character
+    /// formatting it removes what the style gives the text anyway, and the commonest other value if that covers at least as much of the
+    /// paragraph, counting its mark, as the text with the style's value. Highlighting, superscript and subscript, shading, borders, character
+    /// scale, language and character styles stay.</para>
     /// </remarks>
     /// <exception cref="ArgumentException">There is no style with the name.</exception>
     /// <exception cref="InvalidOperationException">The document does not have any styles.</exception>
@@ -88,11 +92,16 @@ public partial class RangeWrapper
                     if (isDefault)
                     {
                         paragraph.ParagraphProperties?.RemoveAllChildren<ParagraphStyleId>();
-                        paragraph.RemoveEmptyProperties();
                     }
                     else
                     {
                         paragraph.GetOrAddParagraphProperties().ParagraphStyleId = new ParagraphStyleId() { Val = styleId };
+                    }
+                    ClearFormattingUnderParagraphStyle(paragraph);
+                    paragraph.RemoveEmptyProperties();
+                    if (!(_startOpenXmlElement is Run))
+                    {
+                        paragraph.CoalesceRuns();
                     }
                 }
             }
@@ -118,6 +127,63 @@ public partial class RangeWrapper
             else
             {
                 throw new NotSupportedException(string.Format(CultureInfo.InvariantCulture, "Applying a style of the type {0} is not currently supported.", type));
+            }
+        }
+    }
+
+    //What a paragraph style leaves of the direct paragraph formatting: these are not formatting, or are looked after separately.
+    private static readonly string[] KeptUnderParagraphStyle = { "pStyle", "cnfStyle", "rPr", "sectPr", "pPrChange" };
+
+    //The character formatting a paragraph style can take away. Word leaves the rest, such as highlighting and superscript, whatever it covers.
+    private static readonly string[] ClearedByParagraphStyle = { "rFonts", "b", "bCs", "i", "iCs", "caps", "smallCaps", "strike", "dstrike", "outline", "shadow", "emboss", "imprint", "vanish", "color", "spacing", "kern", "position", "sz", "szCs", "u", "em" };
+
+    //Takes off a paragraph what Word takes off when a paragraph style is applied. All of its direct paragraph formatting goes. Of each kind of
+    //direct character formatting, what the style gives the text anyway goes, and so does the commonest other value (the first, of those that
+    //are equal) if it covers at least as much of the paragraph, counting its mark, as the text with the style's value.
+    private static void ClearFormattingUnderParagraphStyle(Paragraph paragraph)
+    {
+        ParagraphProperties properties = paragraph.ParagraphProperties;
+        foreach (OpenXmlElement child in properties?.ChildElements.Where(e => Array.IndexOf(KeptUnderParagraphStyle, e.LocalName) < 0).ToList() ?? new List<OpenXmlElement>())
+        {
+            child.Remove();
+        }
+
+        //The values in the order of the text, each with how much of the paragraph it covers.
+        int total = 0;
+        List<(OpenXmlElement Value, int Length)> values = new List<(OpenXmlElement Value, int Length)>();
+        foreach (Atom atom in StoryMap.Build(paragraph).Atoms)
+        {
+            total += atom.Length;
+            OpenXmlElement holder = atom.IsMark ? properties?.ParagraphMarkRunProperties : (atom.Element.Parent as Run)?.RunProperties;
+            foreach (OpenXmlElement value in holder?.ChildElements.Where(e => Array.IndexOf(ClearedByParagraphStyle, e.LocalName) >= 0) ?? Enumerable.Empty<OpenXmlElement>())
+            {
+                values.Add((value, atom.Length));
+            }
+        }
+
+        RunProperties style = new FormattingResolver(paragraph).ResolveParagraphStyleRun(paragraph);
+        foreach (IGrouping<string, (OpenXmlElement Value, int Length)> kind in values.GroupBy(v => v.Value.LocalName).ToList())
+        {
+            List<(OpenXmlElement Value, int Length)> differing = kind.Where(v => !FormattingResolver.GivesTheSame(v.Value, style)).ToList();
+            int withStyleValue = total - differing.Sum(v => v.Length);
+            string commonest = differing.GroupBy(v => v.Value.OuterXml).OrderByDescending(g => g.Sum(v => v.Length)).FirstOrDefault(g => g.Sum(v => v.Length) >= withStyleValue)?.Key;
+            foreach (OpenXmlElement value in kind.Select(v => v.Value).Distinct().Where(v => FormattingResolver.GivesTheSame(v, style) || v.OuterXml == commonest).ToList())
+            {
+                OpenXmlElement holder = value.Parent;
+
+                //The colour of an underline stays, without the underline.
+                if (value is Underline underline && underline.Color != null)
+                {
+                    underline.Val = null;
+                }
+                else
+                {
+                    value.Remove();
+                }
+                if (!holder.HasChildren)
+                {
+                    holder.Remove();
+                }
             }
         }
     }

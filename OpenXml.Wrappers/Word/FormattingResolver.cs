@@ -49,6 +49,23 @@ internal sealed class FormattingResolver
         return ResolveRun(run.RunProperties, run.Ancestors<Paragraph>().FirstOrDefault(), run.RunProperties?.RunStyle?.Val?.Value);
     }
 
+    /// <summary>The character formatting that a paragraph has from its styles alone.</summary>
+    public RunProperties ResolveParagraphStyleRun(Paragraph paragraph)
+    {
+        return ResolveRun(null, paragraph, null);
+    }
+
+    /// <summary>True if a direct character property gives text what the resolved formatting gives it anyway.</summary>
+    public static bool GivesTheSame(OpenXmlElement direct, RunProperties resolved)
+    {
+        OpenXmlElement inherited = FindByName(resolved, direct.LocalName);
+        if (Array.IndexOf(ToggleNames, direct.LocalName) >= 0)
+        {
+            return IsOn(direct) == (inherited != null && IsOn(inherited));
+        }
+        return inherited != null && OpenXmlExtensions.SameAttributes(direct, inherited);
+    }
+
     /// <summary>The formatting of the paragraph mark of a paragraph.</summary>
     public RunProperties ResolveParagraphMark(Paragraph paragraph)
     {

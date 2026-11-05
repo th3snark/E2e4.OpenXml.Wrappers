@@ -228,6 +228,114 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         }
     }
 
+    'paragraph-style-over-most-of-a-format' = {
+        param($doc)
+        $doc.Content.InsertAfter('0123456789')
+        $doc.Range(0, 6).Font.Italic = 1
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+    }
+
+    'paragraph-style-over-less-of-a-format' = {
+        param($doc)
+        $doc.Content.InsertAfter('0123456789')
+        $doc.Range(0, 5).Font.Italic = 1
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+    }
+
+    'paragraph-style-counts-the-mark' = {
+        param($doc)
+        $doc.Content.InsertAfter('012345678')
+        $doc.Range(0, 4).Font.Italic = 1
+        $doc.Range(9, 10).Font.Italic = 1
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+    }
+
+    'paragraph-style-on-a-new-paragraph' = {
+        param($doc)
+        $doc.Content.InsertAfter('First')
+        $doc.Paragraphs.Item(1).Range.Font.Italic = 1
+        $doc.Content.InsertParagraphAfter()
+        $doc.Paragraphs.Item(2).Range.InsertBefore('Contents')
+        $doc.Paragraphs.Item(2).Style = 'Heading 1'
+    }
+
+    'paragraph-style-by-property'     = {
+        param($doc)
+        $doc.Content.InsertAfter('0123456789')
+        $doc.Range(0, 7).Font.Bold = 1
+        $doc.Range(0, 3).Font.Italic = 1
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+    }
+
+    'paragraph-style-by-value'        = {
+        param($doc)
+        $doc.Content.InsertAfter('0123456789')
+        $doc.Range(0, 3).Font.Size = 30
+        $doc.Range(3, 7).Font.Size = 22
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+    }
+
+    'paragraph-style-first-of-equal-values' = {
+        param($doc)
+        $doc.Content.InsertAfter('0123456789')
+        $doc.Range(0, 3).Font.Size = 30
+        $doc.Range(3, 6).Font.Size = 22
+        $doc.Range(6, 9).Font.Size = 18
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+    }
+
+    'paragraph-style-value-of-the-style-counts' = {
+        param($doc)
+        $doc.Content.InsertAfter('0123456789')
+        $doc.Range(0, 3).Font.Size = 20
+        $doc.Range(3, 7).Font.Size = 22
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+    }
+
+    'paragraph-style-same-value'      = {
+        param($doc)
+        $doc.Content.InsertAfter('0123456789')
+        $doc.Range(0, 3).Font.Size = 28
+        $doc.Range(3, 6).Font.Size = 30
+        $doc.Paragraphs.Item(1).Style = 'Title'
+    }
+
+    'paragraph-style-clears-paragraph-format' = {
+        param($doc)
+        $doc.Content.InsertAfter('0123456789')
+        $paragraph = $doc.Paragraphs.Item(1)
+        $paragraph.Alignment = 1
+        $paragraph.SpaceAfter = 30
+        $paragraph.LeftIndent = 20
+        $paragraph.KeepWithNext = -1
+        $paragraph.PageBreakBefore = -1
+        $paragraph.Style = 'Heading 1'
+    }
+
+    'paragraph-style-keeps-some-format' = {
+        param($doc)
+        $doc.Content.InsertAfter('0123456789')
+        $doc.Range(0, 7).Font.Superscript = 1
+        $doc.Range(0, 7).Font.Scaling = 150
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+    }
+
+    'paragraph-style-underline-color' = {
+        param($doc)
+        $doc.Content.InsertAfter('0123456789')
+        $doc.Range(0, 7).Font.Underline = 1
+        $doc.Range(0, 7).Font.UnderlineColor = 255
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+    }
+
+    'paragraph-style-keeps-a-section' = {
+        param($doc)
+        $doc.Content.InsertAfter('First')
+        [void]$doc.Sections.Add()
+        $doc.Paragraphs.Item(1).Alignment = 1
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+    }
+
     'normal-style-applied'            = {
         param($doc)
         $doc.Content.InsertAfter('Text')

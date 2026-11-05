@@ -163,6 +163,7 @@ internal static class QuarterlyReportExample
 
             //Appendix A: monthly revenue by region, in a section of its own on landscape pages.
             endOfMain.InsertSectionBreak(SectionStart.NewPage);
+            document.Sections[1].PageSetup.Orientation = PageOrientation.Landscape;
             builder.Paragraph("Appendix A: monthly revenue (thousands)", "Heading 1");
             string[] months = { "July", "August", "September" };
             TableWrapper monthly = builder.Table(1 + regions.Length, 1 + months.Length + 1);
@@ -184,8 +185,6 @@ internal static class QuarterlyReportExample
             }
             TableLook.Grid(monthly, true);
             TableLook.AlignRight(monthly, 1, 2, 3, 4);
-
-            document.Sections[1].PageSetup.Orientation = PageOrientation.Landscape;
 
             //Comments from two reviewers.
             CommentWrapper question = document.Comments.Add(figure.Range, "Does this include the one-off licence income from the West region?");
