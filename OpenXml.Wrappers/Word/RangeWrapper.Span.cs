@@ -195,6 +195,10 @@ public partial class RangeWrapper
     /// </summary>
     public int MoveStart(TextUnit unit, int count = 1)
     {
+        if (unit == TextUnit.Story)
+        {
+            return MoveByStory(StoryEnd.Start, count);
+        }
         OpenXmlElement story = StoryMap.FindRoot(AnchorElement);
         Anchor start = CurrentAnchor(true);
         Anchor end = CurrentAnchor(false);
@@ -221,6 +225,10 @@ public partial class RangeWrapper
     /// </summary>
     public int MoveEnd(TextUnit unit, int count = 1)
     {
+        if (unit == TextUnit.Story)
+        {
+            return MoveByStory(StoryEnd.End, count);
+        }
         OpenXmlElement story = StoryMap.FindRoot(AnchorElement);
         Anchor start = CurrentAnchor(true);
         Anchor end = CurrentAnchor(false);
@@ -247,6 +255,10 @@ public partial class RangeWrapper
     /// </summary>
     public int Move(TextUnit unit, int count = 1)
     {
+        if (unit == TextUnit.Story)
+        {
+            return MoveByStory(StoryEnd.Both, count);
+        }
         OpenXmlElement story = StoryMap.FindRoot(AnchorElement);
         if (UnitNavigator.TryMove(CurrentAnchor(false), story, unit, count, out Anchor moved, out int units))
         {
@@ -276,6 +288,11 @@ public partial class RangeWrapper
     /// </summary>
     public void Expand(TextUnit unit)
     {
+        if (unit == TextUnit.Story)
+        {
+            WholeStory();
+            return;
+        }
         //Words, sentences and characters of a range inside one paragraph are all inside that paragraph.
         GetScoped(false, out StoryMap map, out int start, out int end);
         List<int> boundaries = TextUnits.GetBoundaries(map.ToCharacters(), unit);
