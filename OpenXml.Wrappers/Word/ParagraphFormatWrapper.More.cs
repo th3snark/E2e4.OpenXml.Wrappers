@@ -71,14 +71,13 @@ public partial class ParagraphFormatWrapper
     /// The borders of the paragraphs, as <c>ParagraphFormat.Borders</c> in Word: the four edges. It is the direct setting only (the borders a
     /// paragraph style gives are not read).
     /// </summary>
-    /// <exception cref="NotSupportedException">The format is that of a style.</exception>
     public BordersWrapper Borders
     {
         get
         {
             if (_style != null)
             {
-                throw new NotSupportedException("The borders of a style are not supported yet.");
+                return new BordersWrapper(_style, false);
             }
             return new BordersWrapper(() => GetParagraphs().Cast<OpenXmlElement>().ToList(), false);
         }
@@ -87,14 +86,13 @@ public partial class ParagraphFormatWrapper
     /// <summary>
     /// The shading of the paragraphs, as <c>ParagraphFormat.Shading</c> in Word. It is the direct setting only.
     /// </summary>
-    /// <exception cref="NotSupportedException">The format is that of a style.</exception>
     public ShadingWrapper Shading
     {
         get
         {
             if (_style != null)
             {
-                throw new NotSupportedException("The shading of a style is not supported yet.");
+                return StyleWrapper.ParagraphShading(_style);
             }
             return new ShadingWrapper(create => GetParagraphs().Select(paragraph =>
             {

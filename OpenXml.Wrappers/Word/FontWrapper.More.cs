@@ -220,14 +220,13 @@ public partial class FontWrapper
     /// The border round the characters, as <c>Font.Borders</c> in Word: one border, <see cref="BorderPosition.Top"/>, which goes all round the
     /// text. It is the direct setting only.
     /// </summary>
-    /// <exception cref="NotSupportedException">The font is the font of a style.</exception>
     public BordersWrapper Borders
     {
         get
         {
             if (_style != null)
             {
-                throw new NotSupportedException("The border of the characters of a style is not supported yet.");
+                return new BordersWrapper(_style, true);
             }
             return new BordersWrapper(() => _range.GetRuns().Cast<OpenXmlElement>().ToList(), true);
         }
@@ -236,14 +235,13 @@ public partial class FontWrapper
     /// <summary>
     /// The shading behind the characters, as <c>Font.Shading</c> in Word. It is the direct setting only.
     /// </summary>
-    /// <exception cref="NotSupportedException">The font is the font of a style.</exception>
     public ShadingWrapper Shading
     {
         get
         {
             if (_style != null)
             {
-                throw new NotSupportedException("The shading of the characters of a style is not supported yet.");
+                return StyleWrapper.CharacterShading(_style);
             }
             return new ShadingWrapper(create => _range.GetRuns().Select(run =>
             {

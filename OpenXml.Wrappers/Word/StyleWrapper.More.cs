@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
@@ -96,8 +97,87 @@ public partial class StyleWrapper
 
     private Style LinkedStyleElement()
     {
-        string id = _style.LinkedStyle?.Val?.Value;
-        return id == null ? null : StyleHelper.GetStyles(_style)?.Elements<Style>().FirstOrDefault(s => s.StyleId?.Value == id);
+        return LinkedOf(_style);
+    }
+
+    internal static Style LinkedOf(Style style)
+    {
+        string id = style.LinkedStyle?.Val?.Value;
+        return id == null ? null : StyleHelper.GetStyles(style)?.Elements<Style>().FirstOrDefault(s => s.StyleId?.Value == id);
+    }
+
+    /// <summary>
+    /// The borders of a paragraph style (<c>Style.Borders</c>): the four edges, as for a paragraph. Null for a style of another type, as in Word.
+    /// </summary>
+    public BordersWrapper Borders
+    {
+        get { return Type == StyleType.Paragraph ? new BordersWrapper(_style, false) : null; }
+    }
+
+    /// <summary>
+    /// The shading of a paragraph style (<c>Style.Shading</c>). As Word does, it is given to the character style linked to it as well. Null for
+    /// a style of another type.
+    /// </summary>
+    public ShadingWrapper Shading
+    {
+        get { return Type == StyleType.Paragraph ? ParagraphShading(_style) : null; }
+    }
+
+    private static Shading NewShading()
+    {
+        return new Shading() { Val = ShadingPatternValues.Clear, Color = "auto", Fill = "auto" };
+    }
+
+    //The shading of the paragraphs of a style, and of the characters of the style linked to it.
+    internal static ShadingWrapper ParagraphShading(Style style)
+    {
+        return new ShadingWrapper(create =>
+        {
+            List<Shading> shadings = new List<Shading>();
+            StyleParagraphProperties paragraph = style.StyleParagraphProperties;
+            if (paragraph == null && create)
+            {
+                paragraph = new StyleParagraphProperties();
+                style.StyleParagraphProperties = paragraph;
+            }
+            Shading own = paragraph?.Shading;
+            if (own == null && create)
+            {
+                own = NewShading();
+                paragraph.Shading = own;
+            }
+            shadings.Add(own);
+
+            Style linked = LinkedOf(style);
+            if (linked != null)
+            {
+                shadings.Add(CharacterShadingElement(linked, create));
+            }
+            return shadings;
+        });
+    }
+
+    //The shading behind the characters of a style.
+    internal static ShadingWrapper CharacterShading(Style style)
+    {
+        return new ShadingWrapper(create => new List<Shading> { CharacterShadingElement(style, create) });
+    }
+
+    private static Shading CharacterShadingElement(Style style, bool create)
+    {
+        StyleRunProperties properties = style.StyleRunProperties;
+        if (properties == null && create)
+        {
+            properties = new StyleRunProperties();
+            style.StyleRunProperties = properties;
+        }
+        Shading shading = properties?.Shading;
+        if (shading == null && create)
+        {
+            shading = NewShading();
+            properties.Shading = shading;
+        }
+        return shading;
     }
 
     /// <summary>

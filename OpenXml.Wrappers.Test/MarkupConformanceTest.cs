@@ -1009,6 +1009,41 @@ public class MarkupConformanceTest
             },
             Body()),
 
+        new Scenario("style-borders-paragraph",
+            d =>
+            {
+                StyleWrapper s = d.Styles.Add("RefStyle", StyleType.Paragraph);
+                s.Borders.OutsideLineStyle = BorderLineStyle.SingleLine;
+                s.Borders.OutsideColor = ColorHelper.RGB(255, 0, 0);
+            },
+            RefStyles()),
+        new Scenario("style-borders-top",
+            d => d.Styles.Add("RefStyle", StyleType.Paragraph).Borders[BorderPosition.Top].LineStyle = BorderLineStyle.SingleLine,
+            RefStyles()),
+        new Scenario("style-shading-paragraph",
+            d =>
+            {
+                StyleWrapper s = d.Styles.Add("RefStyle", StyleType.Paragraph);
+                s.Shading.BackgroundPatternColor = ColorHelper.RGB(255, 0, 0);
+                s.Shading.Texture = ShadingTexture.Percent10;
+            },
+            RefStyles()),
+        new Scenario("style-borders-shading-character",
+            d =>
+            {
+                StyleWrapper s = d.Styles.Add("RefStyle", StyleType.Character);
+                s.Font.Borders[BorderPosition.Top].LineStyle = BorderLineStyle.SingleLine;
+                s.Font.Shading.BackgroundPatternColor = ColorHelper.RGB(0, 255, 0);
+            },
+            RefStyles()),
+        new Scenario("style-font-borders-shading",
+            d =>
+            {
+                StyleWrapper s = d.Styles.Add("RefStyle", StyleType.Paragraph);
+                s.Font.Borders[BorderPosition.Top].LineStyle = BorderLineStyle.SingleLine;
+                s.Font.Shading.BackgroundPatternColor = ColorHelper.RGB(0, 255, 0);
+            },
+            RefStyles()),
         new Scenario("find-replace-font",
             d =>
             {
