@@ -178,6 +178,31 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $doc.Range(4, 7).Font.Shading.BackgroundPatternColor = 65280
         $doc.Range(8, 13).Font.Borders.OutsideLineStyle = 7
     }
+    'paragraph-outline'               = {
+        param($doc)
+        $doc.Content.InsertAfter("A`rB`rC`rD`rE")
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+        $doc.Paragraphs.Item(2).Style = 'Heading 2'
+        $doc.Paragraphs.Item(5).Style = 'Heading 3'
+        $doc.Paragraphs.Item(4).OutlineLevel = 3
+        $call = { param($o, $n, $a) [void][System.__ComObject].InvokeMember($n, [Reflection.BindingFlags]::InvokeMethod, $null, $o, $a) }
+        & $call $doc.Paragraphs.Item(1) 'OutlineDemote' @()
+        & $call $doc.Paragraphs.Item(2) 'OutlinePromote' @()
+        & $call $doc.Paragraphs.Item(3) 'OutlineDemote' @()
+        & $call $doc.Paragraphs.Item(4) 'OutlineDemote' @()
+        & $call $doc.Paragraphs.Item(5) 'OutlineDemoteToBody' @()
+    }
+
+    'paragraphs-spacing-add'          = {
+        param($doc)
+        $doc.Content.InsertAfter("A`rB`rC")
+        $call = { param($o, $n, $a) [void][System.__ComObject].InvokeMember($n, [Reflection.BindingFlags]::InvokeMethod, $null, $o, $a) }
+        & $call $doc.Paragraphs 'IncreaseSpacing' @()
+        & $call $doc.Paragraphs 'IncreaseSpacing' @()
+        & $call $doc.Paragraphs 'DecreaseSpacing' @()
+        & $call $doc.Paragraphs 'Indent' @()
+        [void]$doc.Paragraphs.Add($doc.Paragraphs.Item(2).Range)
+    }
     'table-3x3'                       = {
         param($doc)
         [void]$doc.Tables.Add($doc.Range(0, 0), 3, 3)

@@ -8,7 +8,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
 
-public class ParagraphWrapperCollection : IEnumerable<ParagraphWrapper>
+public partial class ParagraphWrapperCollection : IEnumerable<ParagraphWrapper>
 {
     private RangeWrapper _range;
 

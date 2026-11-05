@@ -15,7 +15,7 @@ public partial class RangeWrapper
     /// <remarks>
     /// After a paragraph, table or bookmark or comment range it follows the paragraph or table; at the end of a table cell it is the last
     /// paragraph of the cell; and after the document it is the last paragraph of the body. This is the way to append to the end of a document
-    /// that ends in a table, where <see cref="ParagraphWrapperCollection.Add"/> would add the paragraph to the last cell of the table.
+    /// that ends in a table, where <see cref="ParagraphWrapperCollection.Add()"/> would add the paragraph to the last cell of the table.
     /// <para>
     /// The formatting follows Word. A mark inserted after a paragraph is at the start of the next paragraph, so the new paragraph has the
     /// formatting of that one. At the end of a story it continues the paragraph, or takes the style that follows that one's (<c>w:next</c>), as
