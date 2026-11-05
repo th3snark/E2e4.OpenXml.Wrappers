@@ -157,6 +157,27 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $doc.Content.InsertAfter("One`rTwo")
         $doc.Paragraphs.Item(1).Format.ReadingOrder = 0
     }
+    'paragraph-borders-shading'       = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo`rThree`rFour text")
+        $doc.Paragraphs.Item(1).Borders.Item(-1).LineStyle = 1
+        $outside = $doc.Paragraphs.Item(2).Borders
+        $outside.OutsideLineStyle = 1
+        $outside.OutsideLineWidth = 12
+        $outside.OutsideColor = 255
+        $doc.Paragraphs.Item(3).Borders.Item(-1).LineStyle = 1
+        $doc.Paragraphs.Item(3).Borders.Item(-2).LineStyle = 1
+        $doc.Paragraphs.Item(4).Shading.BackgroundPatternColor = 255
+        $doc.Paragraphs.Item(4).Shading.Texture = 100
+    }
+
+    'font-border-shading'             = {
+        param($doc)
+        $doc.Content.InsertAfter('One two three four')
+        $doc.Range(0, 3).Font.Borders.Item(-1).LineStyle = 1
+        $doc.Range(4, 7).Font.Shading.BackgroundPatternColor = 65280
+        $doc.Range(8, 13).Font.Borders.OutsideLineStyle = 7
+    }
     'table-3x3'                       = {
         param($doc)
         [void]$doc.Tables.Add($doc.Range(0, 0), 3, 3)

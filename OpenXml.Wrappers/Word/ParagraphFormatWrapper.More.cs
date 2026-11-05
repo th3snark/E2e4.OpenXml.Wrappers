@@ -67,6 +67,49 @@ public enum TextboxTightWrap
 /// </summary>
 public partial class ParagraphFormatWrapper
 {
+    /// <summary>
+    /// The borders of the paragraphs, as <c>ParagraphFormat.Borders</c> in Word: the four edges. It is the direct setting only (the borders a
+    /// paragraph style gives are not read).
+    /// </summary>
+    /// <exception cref="NotSupportedException">The format is that of a style.</exception>
+    public BordersWrapper Borders
+    {
+        get
+        {
+            if (_style != null)
+            {
+                throw new NotSupportedException("The borders of a style are not supported yet.");
+            }
+            return new BordersWrapper(() => GetParagraphs().Cast<OpenXmlElement>().ToList(), false);
+        }
+    }
+
+    /// <summary>
+    /// The shading of the paragraphs, as <c>ParagraphFormat.Shading</c> in Word. It is the direct setting only.
+    /// </summary>
+    /// <exception cref="NotSupportedException">The format is that of a style.</exception>
+    public ShadingWrapper Shading
+    {
+        get
+        {
+            if (_style != null)
+            {
+                throw new NotSupportedException("The shading of a style is not supported yet.");
+            }
+            return new ShadingWrapper(create => GetParagraphs().Select(paragraph =>
+            {
+                ParagraphProperties properties = create ? paragraph.GetOrAddParagraphProperties() : paragraph.ParagraphProperties;
+                Shading shading = properties?.Shading;
+                if (shading == null && create)
+                {
+                    shading = new Shading() { Val = ShadingPatternValues.Clear, Color = "auto", Fill = "auto" };
+                    properties.Shading = shading;
+                }
+                return shading;
+            }).ToList());
+        }
+    }
+
     //Word opens up a paragraph by a line, 12 points.
     private const double OpenSpace = 12;
 

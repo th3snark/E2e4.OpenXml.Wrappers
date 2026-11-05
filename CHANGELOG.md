@@ -18,6 +18,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 - `ParagraphFormat` and `Paragraph` get `OpenUp`, `CloseUp`, `OpenOrCloseUp`, `Space1`, `Space15`, `Space2`, `TabIndent`, `TabHangingIndent`, `ReadingOrder`, `BaseLineAlignment`, `TextboxTightWrap`, `WordWrap`, `AutoAdjustRightIndent` and the East Asian switches, and `Duplicate`; `Range.ParagraphFormat` and `Paragraph.Format` can be assigned a format. `Paragraph` forwards the rest of the format (`OutlineLevel`, `TabStops`, `Hyphenation` and so on) and has `Indent`, `Outdent` and `Reset`. Numbers and markup come from Word 16.
 
+- `Borders` and `Shading` of paragraphs (`ParagraphFormat`, `Paragraph`) and of characters (`Font`): paragraphs have the four edges, with Word''s distances (1 point above and below, 4 at the sides); characters have one border all round, which is the top border. Direct formatting only for now. Markup from Word 16.
+
 ### Behaviour changes
 - `Font.Name` also sets the complex script font when that has been set on its own, as Word does.
 - An alignment tab (`w:ptab`) takes one position, as in Word.

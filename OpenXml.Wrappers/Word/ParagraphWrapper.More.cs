@@ -130,6 +130,18 @@ public partial class ParagraphWrapper
         set { Format.TextboxTightWrap = value; }
     }
 
+    /// <summary>The borders of the paragraph; the same as <see cref="Format"/>.<c>Borders</c>.</summary>
+    public BordersWrapper Borders
+    {
+        get { return Format.Borders; }
+    }
+
+    /// <summary>The shading of the paragraph; the same as <see cref="Format"/>.<c>Shading</c>.</summary>
+    public ShadingWrapper Shading
+    {
+        get { return Format.Shading; }
+    }
+
     /// <summary>Removes the direct paragraph formatting so that the styles apply; see <see cref="ParagraphFormatWrapper.Reset"/>.</summary>
     public void Reset()
     {

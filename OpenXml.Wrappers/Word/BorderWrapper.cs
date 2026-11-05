@@ -65,7 +65,7 @@ public class BorderWrapper
                     //The defaults of Word: half a point, automatic colour.
                     border.Size = 4;
                     border.Color = "auto";
-                    border.Space = borders.DefaultSpace;
+                    border.Space = borders.DefaultSpaceFor(position);
                 }
             }
         }
@@ -97,7 +97,7 @@ public class BorderWrapper
                     border = borders.GetOrAdd(position);
                     border.Val = BorderValues.Single;
                     border.Color = "auto";
-                    border.Space = borders.DefaultSpace;
+                    border.Space = borders.DefaultSpaceFor(position);
                 }
                 border.Size = value.EighthPoints;
             }
@@ -134,7 +134,7 @@ public class BorderWrapper
                     border = borders.GetOrAdd(position);
                     border.Val = BorderValues.Single;
                     border.Size = 4;
-                    border.Space = borders.DefaultSpace;
+                    border.Space = borders.DefaultSpaceFor(position);
                 }
                 border.Color = hex;
             }
