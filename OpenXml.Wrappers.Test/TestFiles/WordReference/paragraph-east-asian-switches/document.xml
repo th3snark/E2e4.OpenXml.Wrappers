@@ -1,0 +1,32 @@
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:body>
+    <w:p>
+      <w:pPr>
+        <w:kinsoku w:val="0" />
+        <w:wordWrap w:val="0" />
+        <w:overflowPunct w:val="0" />
+        <w:topLinePunct />
+        <w:autoSpaceDE w:val="0" />
+        <w:autoSpaceDN w:val="0" />
+        <w:adjustRightInd w:val="0" />
+        <w:snapToGrid w:val="0" />
+        <w:textAlignment w:val="center" />
+        <w:textboxTightWrap w:val="allLines" />
+      </w:pPr>
+      <w:r>
+        <w:t>One</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t>Two</w:t>
+      </w:r>
+    </w:p>
+    <w:sectPr>
+      <w:pgSz w:h="16838" w:w="11906" />
+      <w:pgMar w:bottom="1440" w:footer="708" w:gutter="0" w:header="708" w:left="1440" w:right="1440" w:top="1440" />
+      <w:cols w:space="708" />
+      <w:docGrid w:linePitch="360" />
+    </w:sectPr>
+  </w:body>
+</w:document>

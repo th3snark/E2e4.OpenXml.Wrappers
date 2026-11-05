@@ -55,13 +55,13 @@ public enum LineSpacingRule
 /// <para>As in Word, measurements are in points. (<see cref="ParagraphWrapper.SpaceBefore"/> and <see cref="ParagraphWrapper.SpaceAfter"/> are
 /// the raw twentieths of a point.)</para>
 /// </remarks>
-public class ParagraphFormatWrapper
+public partial class ParagraphFormatWrapper
 {
     private const double MaximumPoints = 1584;
 
     private readonly RangeWrapper _range;
     private readonly Style _style;
-    private readonly bool _direct;
+    private bool _direct;
 
     public ParagraphFormatWrapper(RangeWrapper range)
     {
