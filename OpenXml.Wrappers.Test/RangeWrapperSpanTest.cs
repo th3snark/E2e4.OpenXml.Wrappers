@@ -347,7 +347,7 @@ public class RangeWrapperSpanTest
         Assert.Equal(18, range.Characters.Count);
         Assert.Equal("H", range.Characters[0].Text);
         Assert.Equal(new[] { "Hi ", "there", ". ", "Bye ", "now", "." }, range.Words.Take(6).Select(w => w.Text).ToArray());
-        Assert.Equal(new[] { "Hi there. ", "Bye now." }, range.Sentences.Select(s => s.Text).ToArray());
+        Assert.Equal(new[] { "Hi there. ", "Bye now.\r" }, range.Sentences.Select(s => s.Text).ToArray());
 
         range.Words[1].Font.Italic = true;
         Assert.True(Range(body, 3, 8).Font.Italic);

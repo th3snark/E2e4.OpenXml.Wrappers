@@ -14,7 +14,25 @@ public enum TextUnit
     Character = 1,
     Word = 2,
     Sentence = 3,
-    Paragraph = 4
+    Paragraph = 4,
+
+    /// <summary>
+    /// The whole story (the body, a header, a footer, a comment). A range can be moved, extended and expanded by it, and it has one unit only:
+    /// it cannot be counted by <see cref="RangeWrapper.Next"/> and <see cref="RangeWrapper.Previous"/>.
+    /// </summary>
+    Story = 6
+}
+
+/// <summary>
+/// Whether the start or end of a range is moved with the other end, or extended, as <c>WdMovement</c> in Word.
+/// </summary>
+public enum Movement
+{
+    /// <summary>The range is collapsed to the point it is moved to.</summary>
+    Move = 0,
+
+    /// <summary>Only the end that is named moves, so the range grows.</summary>
+    Extend = 1
 }
 
 /// <summary>
@@ -34,7 +52,7 @@ internal static class TextUnits
     /// <summary>
     /// The positions at which a unit begins, in order, followed by the length of the text so that each unit runs from one entry to the next.
     /// A word includes the spaces after it; a sentence ends at a full stop, question mark or exclamation mark and the spaces after it, or at
-    /// the end of a paragraph. The end of a paragraph and the end of a table row are units of their own in words.
+    /// the end of a paragraph, and takes the paragraph marks that follow it. The end of a paragraph and the end of a table row are units of their own in words.
     /// </summary>
     public static List<int> GetBoundaries(char[] text, TextUnit unit)
     {
@@ -188,6 +206,12 @@ internal static class TextUnits
                     }
                 }
             }
+
+            //The paragraph marks that follow a sentence belong to it, as in Word, even when there are several of them.
+            while (i < n && text[i] == '\r')
+            {
+                i++;
+            }
         }
     }
 }
@@ -260,6 +284,32 @@ public class TextUnitCollection : IEnumerable<RangeWrapper>
     public int Count
     {
         get { return GetUnits(out _).Count; }
+    }
+
+    /// <summary>
+    /// The first item, as <c>First</c> in Word.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">There are no items.</exception>
+    public RangeWrapper First
+    {
+        get { return this[0]; }
+    }
+
+    /// <summary>
+    /// The last item, as <c>Last</c> in Word.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">There are no items.</exception>
+    public RangeWrapper Last
+    {
+        get
+        {
+            List<(int Start, int End)> units = GetUnits(out StoryMap map);
+            if (units.Count == 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(units), "The collection has no members.");
+            }
+            return RangeWrapper.FromMap(map, units[units.Count - 1].Start, units[units.Count - 1].End);
+        }
     }
 
     public IEnumerator<RangeWrapper> GetEnumerator()

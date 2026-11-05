@@ -34,6 +34,12 @@ internal static class UnitNavigator
 
         public StoryMap Map { get; }
 
+        /// <summary>An empty paragraph: a mark with no text, which belongs to the sentence before it.</summary>
+        public bool IsEmptyParagraph
+        {
+            get { return Map != null && Characters.Length == 1 && Characters[0] == '\r'; }
+        }
+
         public char[] Characters { get; }
 
         public int Length
@@ -61,13 +67,19 @@ internal static class UnitNavigator
 
     /// <summary>
     /// Moves an anchor by <paramref name="count"/> units (backwards when negative). False when the anchor is not on text that can be found
-    /// in the story. The number of units moved is less than asked at the start or end of the story.
+    /// in the story, or when a sentence move meets an empty paragraph, which joins the sentence before it (so a sentence can run across
+    /// blocks and the whole story has to be looked at). The number of units moved is less than asked at the start or end of the story.
     /// </summary>
     public static bool TryMove(Anchor from, OpenXmlElement story, TextUnit unit, int count, out Anchor result, out int moved)
     {
         result = null;
         moved = 0;
         if (!TryBlockOf(from, story, out Block block, out int position))
+        {
+            return false;
+        }
+
+        if (unit == TextUnit.Sentence && block.IsEmptyParagraph)
         {
             return false;
         }
@@ -96,6 +108,10 @@ internal static class UnitNavigator
                     }
                     block = next;
                     position = 0;
+                    if (unit == TextUnit.Sentence && block.IsEmptyParagraph)
+                    {
+                        return false;
+                    }
                 }
             }
             else
@@ -109,6 +125,10 @@ internal static class UnitNavigator
                     }
                     block = previous;
                     position = block.Length;
+                    if (unit == TextUnit.Sentence && block.IsEmptyParagraph)
+                    {
+                        return false;
+                    }
                 }
                 List<int> boundaries = block.Boundaries(unit);
                 position = boundaries[boundaries.FindLastIndex(b => b < position)];
