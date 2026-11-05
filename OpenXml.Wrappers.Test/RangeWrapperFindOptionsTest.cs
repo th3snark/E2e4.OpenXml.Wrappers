@@ -77,13 +77,12 @@ public class RangeWrapperFindOptionsTest
     }
 
     [Fact]
-    public void SoundsLikeAllWordFormsAndFormatAreNotSupported()
+    public void SoundsLikeAndAllWordFormsAreNotSupported()
     {
         FindWrapper find = new RangeWrapper(CreateBody("cat")).Find;
 
         Assert.Throws<NotSupportedException>(() => find.MatchSoundsLike = true);
         Assert.Throws<NotSupportedException>(() => find.MatchAllWordForms = true);
-        Assert.Throws<NotSupportedException>(() => find.Format = true);
         Assert.Throws<NotSupportedException>(() => find.Execute("cat", matchSoundsLike: true));
         find.MatchSoundsLike = false;
         find.ClearFormatting();

@@ -368,6 +368,35 @@ public partial class FontWrapper
         return new FontWrapper(new RangeWrapper(new Body(holder)), null, _direct);
     }
 
+    //Gives the text of the range the properties of the run properties, as a replacement does, and takes away those named. A property that turns
+    //something on or off is written only if the text would not have it anyway.
+    internal void ApplyFrom(RunProperties source, IEnumerable<string> remove)
+    {
+        Apply((properties, inherited) =>
+        {
+            foreach (string name in remove)
+            {
+                properties.RemoveRunProperty(name);
+            }
+            foreach (OpenXmlElement element in source.ChildElements.ToList())
+            {
+                if (FindFormat.IsOnOff(element.LocalName))
+                {
+                    properties.RemoveRunProperty(element.LocalName);
+                    OpenXmlElement has = inherited()?.ChildElements.FirstOrDefault(e => e.LocalName == element.LocalName);
+                    if (StyleWrapper.IsOn(element) != (has != null && StyleWrapper.IsOn(has)))
+                    {
+                        properties.SetRunProperty(element.CloneNode(true));
+                    }
+                }
+                else
+                {
+                    FindFormat.MergeInto(properties, element, properties.SetRunProperty);
+                }
+            }
+        });
+    }
+
     private RunProperties StyledProperties()
     {
         FormattingResolver resolver = new FormattingResolver(_style);

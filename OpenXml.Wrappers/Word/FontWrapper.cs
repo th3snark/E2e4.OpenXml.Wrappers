@@ -29,6 +29,9 @@ public partial class FontWrapper
     private readonly Style _style;
     private readonly bool _direct;
 
+    //True for the font of a find or replacement, which keeps every value it is given (what the text has anyway from its styles is not left out).
+    private bool _explicit;
+
     public FontWrapper(RangeWrapper range)
     {
         Guard.ThrowIfNull(range);
@@ -40,6 +43,11 @@ public partial class FontWrapper
     {
         Guard.ThrowIfNull(style);
         _style = style;
+    }
+
+    internal static FontWrapper ForCriteria(RangeWrapper range)
+    {
+        return new FontWrapper(range) { _explicit = true };
     }
 
     private FontWrapper(RangeWrapper range, Style style, bool direct)
@@ -603,7 +611,7 @@ public partial class FontWrapper
         Apply((properties, inherited) =>
         {
             properties.RemoveRunProperty(localName);
-            if (value.HasValue && read(inherited()) != value.Value)
+            if (value.HasValue && (_explicit || read(inherited()) != value.Value))
             {
                 properties.SetRunProperty(create(value.Value ? null : OpenXmlExtensions.OffValue()));
             }
@@ -616,7 +624,7 @@ public partial class FontWrapper
         Apply((properties, inherited) =>
         {
             properties.RemoveRunProperty(localName);
-            if (value.HasValue && !EqualityComparer<T?>.Default.Equals(read(inherited()), value))
+            if (value.HasValue && (_explicit || !EqualityComparer<T?>.Default.Equals(read(inherited()), value)))
             {
                 properties.SetRunProperty(create(value.Value));
             }

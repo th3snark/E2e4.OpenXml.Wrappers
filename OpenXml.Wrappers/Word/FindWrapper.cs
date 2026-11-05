@@ -41,15 +41,51 @@ public enum FindWrap
 }
 
 /// <summary>
-/// The replacement text of a find, as <c>Find.Replacement</c> in Word.
+/// The replacement of a find, as <c>Find.Replacement</c> in Word: the text and the formatting to give it.
 /// </summary>
+/// <remarks>
+/// The formatting is the <see cref="Font"/>, <see cref="ParagraphFormat"/>, <see cref="Style"/> and <see cref="Highlight"/> that have been set,
+/// and is given to the replaced text when <see cref="FindWrapper.Format"/> is on (it is, unless it has been set to false). A property of the
+/// font or paragraph format that is not set leaves the formatting of the text as it is. When the replacement has formatting but no text the found
+/// text is kept and formatted, as in Word.
+/// </remarks>
 public class ReplacementWrapper
 {
+    internal FindFormat Formatting { get; } = new FindFormat();
+
+    /// <summary>The text to replace what is found with.</summary>
     public string Text { get; set; }
 
-    /// <summary>Does nothing: the formatting of the replacement cannot be set, so there is none to clear. It is here so that code written for Word runs.</summary>
+    /// <summary>The character formatting to give the replaced text. A property that is not set leaves the text as it is.</summary>
+    public FontWrapper Font
+    {
+        get { return Formatting.Font; }
+    }
+
+    /// <summary>The paragraph formatting to give the paragraphs of the replaced text. A property that is not set leaves them as they are.</summary>
+    public ParagraphFormatWrapper ParagraphFormat
+    {
+        get { return Formatting.ParagraphFormat; }
+    }
+
+    /// <summary>The name of the style to give the replaced text: a paragraph style is given to its paragraphs and a character style to the text. Null for none.</summary>
+    public string Style
+    {
+        get { return Formatting.Style; }
+        set { Formatting.Style = value; }
+    }
+
+    /// <summary>True to highlight the replaced text (yellow) and false to take highlighting away. Null leaves it as it is.</summary>
+    public bool? Highlight
+    {
+        get { return Formatting.Highlight; }
+        set { Formatting.Highlight = value; }
+    }
+
+    /// <summary>Takes away the formatting that has been set, so that the replacement is text alone.</summary>
     public void ClearFormatting()
     {
+        Formatting.Clear();
     }
 }
 
@@ -71,7 +107,9 @@ public class ReplacementWrapper
 /// <c>[a-z]</c> and <c>[!abc]</c> sets, <c>&lt;</c> and <c>&gt;</c> the start and end of a word, <c>@</c> one or more of the previous
 /// character or group, <c>{n}</c>, <c>{n,}</c>, <c>{n,m}</c> and <c>{,m}</c> repeats, <c>(...)</c> groups that the replacement uses as
 /// <c>\1</c> to <c>\9</c> (so can the pattern itself), and <c>\</c> to find a character that has a meaning. Matching the sound or the forms of a
-/// word, and searching for formatting, are not supported.</para>
+/// word are not supported. With formatting set in <see cref="Font"/>, <see cref="ParagraphFormat"/>, <see cref="Style"/> or <see cref="Highlight"/>
+/// a match must have it, and with no text the stretches of text that have it are found; the formatting of <see cref="Replacement"/> is given to what
+/// is replaced.</para>
 /// <para>A search for text that does not include a paragraph mark goes through the paragraphs one at a time from where it starts, so looking
 /// for the next match in a large document costs only as much as the distance to it. A search with <see cref="MatchWildcards"/> looks at the
 /// whole story.</para>
@@ -90,6 +128,14 @@ public class FindWrapper
     //What the Execute that is running looks for and replaces with.
     private Pattern _pattern;
     private Replacer _replacer;
+    private bool _useFormat;
+    private bool _formatReplacement;
+    private bool _keepText;
+    private FormattingResolver _resolver;
+
+    //What to look for in the formatting of the text, and whether Format has been set (null when it has not been).
+    private readonly FindFormat _criteria = new FindFormat();
+    private bool? _formatFlag;
 
     public FindWrapper(RangeWrapper range)
     {
@@ -132,19 +178,55 @@ public class FindWrapper
         set { ThrowIfSet(value, nameof(MatchAllWordForms)); }
     }
 
-    /// <summary>Searching for formatting is not supported: setting this to true throws <see cref="NotSupportedException"/>.</summary>
+    /// <summary>
+    /// True to look for text with the formatting of <see cref="Font"/>, <see cref="ParagraphFormat"/>, <see cref="Style"/> and <see cref="Highlight"/>
+    /// and to give the replacement the formatting of those of <see cref="Replacement"/>; false to ignore them. Until it is set it is true when
+    /// any of them has been set (in Word it is set by the caller). <see cref="ClearFormatting"/> puts it back.
+    /// </summary>
     public bool Format
     {
-        get { return false; }
-        set { ThrowIfSet(value, nameof(Format)); }
+        get { return _formatFlag ?? (_criteria.HasFormatting || Replacement.Formatting.HasFormatting); }
+        set { _formatFlag = value; }
+    }
+
+    /// <summary>
+    /// The character formatting to look for. A property that is not set matches any text. Text that is searched for with formatting is found
+    /// when it all has what is asked for; with no <see cref="Text"/> the runs of text that have it are found.
+    /// </summary>
+    public FontWrapper Font
+    {
+        get { return _criteria.Font; }
+    }
+
+    /// <summary>The paragraph formatting to look for: the text found is in paragraphs that all have it. A property that is not set matches any paragraph.</summary>
+    public ParagraphFormatWrapper ParagraphFormat
+    {
+        get { return _criteria.ParagraphFormat; }
+    }
+
+    /// <summary>The name of the style to look for: text in a paragraph style, or in a character style. Null for any.</summary>
+    /// <exception cref="ArgumentException">(when searching) The document has no such style.</exception>
+    public string Style
+    {
+        get { return _criteria.Style; }
+        set { _criteria.Style = value; }
+    }
+
+    /// <summary>True to look for highlighted text, false for text that is not highlighted. Null for either.</summary>
+    public bool? Highlight
+    {
+        get { return _criteria.Highlight; }
+        set { _criteria.Highlight = value; }
     }
 
     /// <summary>True if the last <c>Execute</c> found the text.</summary>
     public bool Found { get; private set; }
 
-    /// <summary>Does nothing: formatting cannot be searched for, so there is none to clear. It is here so that code written for Word runs.</summary>
+    /// <summary>Takes away the formatting that has been set to look for, and puts <see cref="Format"/> back to what it is when nothing has set it.</summary>
     public void ClearFormatting()
     {
+        _criteria.Clear();
+        _formatFlag = null;
     }
 
     private static void ThrowIfSet(bool value, string name)
@@ -163,7 +245,10 @@ public class FindWrapper
     public bool Execute(ReplaceMode replace = ReplaceMode.None)
     {
         Found = false;
-        if (string.IsNullOrEmpty(Text))
+        bool format = _formatFlag ?? (_criteria.HasFormatting || Replacement.Formatting.HasFormatting);
+        _useFormat = format && _criteria.HasFormatting;
+        _formatReplacement = format && Replacement.Formatting.HasFormatting;
+        if (string.IsNullOrEmpty(Text) && !_useFormat)
         {
             return false;
         }
@@ -172,12 +257,24 @@ public class FindWrapper
             throw new NotSupportedException("FindWrap.Ask is not supported: there is no user to ask.");
         }
 
-        _pattern = Pattern.Create(Text, MatchWildcards, MatchCase);
+        _pattern = Pattern.Create(Text ?? string.Empty, MatchWildcards, MatchCase);
         _replacer = new Replacer(Replacement.Text ?? string.Empty, MatchWildcards);
 
         //Where the search starts and ends. Looking for the same thing again from the match carries on from its end.
         _range.GetScoped(false, out StoryMap scopeMap, out int scopeStart, out int scopeEnd);
         OpenXmlElement story = StoryMap.FindRoot(_range.AnchorElement);
+
+        //The formatting is checked before anything is changed. With formatting and no text for the replacement the text found stays.
+        _resolver = null;
+        _keepText = _formatReplacement && string.IsNullOrEmpty(Replacement.Text);
+        if (_useFormat)
+        {
+            _criteria.ResolveStyle(story);
+        }
+        if (_formatReplacement && Replacement.Style != null)
+        {
+            StyleHelper.FindStyleId(story, Replacement.Style, out StyleValues _);
+        }
         Anchor start = _range.IsSpan ? _range.StartAnchor : Anchor.At(scopeMap, scopeStart);
         Anchor end = _range.IsSpan ? _range.EndAnchor : Anchor.At(scopeMap, scopeEnd);
         bool continuing = _lastMatch != null && start.SameAs(_lastMatch.StartAnchor) && end.SameAs(_lastMatch.EndAnchor);
@@ -224,13 +321,12 @@ public class FindWrapper
     /// <c>Find.Execute</c>.
     /// </summary>
     /// <returns>True if the text was found.</returns>
-    /// <exception cref="NotSupportedException"><paramref name="matchSoundsLike"/>, <paramref name="matchAllWordForms"/> or <paramref name="format"/> is true.</exception>
+    /// <exception cref="NotSupportedException"><paramref name="matchSoundsLike"/> or <paramref name="matchAllWordForms"/> is true.</exception>
     public bool Execute(string findText, bool? matchCase = null, bool? matchWholeWord = null, bool? matchWildcards = null, bool? matchSoundsLike = null,
         bool? matchAllWordForms = null, bool? forward = null, FindWrap? wrap = null, bool? format = null, string replaceWith = null, ReplaceMode replace = ReplaceMode.None)
     {
         ThrowIfSet(matchSoundsLike == true, nameof(MatchSoundsLike));
         ThrowIfSet(matchAllWordForms == true, nameof(MatchAllWordForms));
-        ThrowIfSet(format == true, nameof(Format));
 
         //An argument that is left out leaves the property as it is, as in Word.
         Text = findText;
@@ -239,6 +335,10 @@ public class FindWrapper
         MatchWildcards = matchWildcards ?? MatchWildcards;
         Forward = forward ?? Forward;
         Wrap = wrap ?? Wrap;
+        if (format.HasValue)
+        {
+            Format = format.Value;
+        }
         if (replaceWith != null)
         {
             Replacement.Text = replaceWith;
@@ -286,7 +386,7 @@ public class FindWrapper
             return;
         }
 
-        int length = Replace(map, match.Start, match.Length, _replacer.For(match));
+        int length = ReplaceMatch(map, paragraph, match);
         Remember(StoryMap.Build(paragraph), match.Start, match.Start + length);
     }
 
@@ -355,7 +455,11 @@ public class FindWrapper
                         }
                         for (int i = matches.Count - 1; i >= 0; i--)
                         {
-                            Replace(map, matches[i].Start, matches[i].Length, _replacer.For(matches[i]));
+                            ReplaceMatch(map, paragraph, matches[i]);
+                            if (_formatReplacement)
+                            {
+                                map = StoryMap.Build(paragraph);
+                            }
                         }
                     }
                 }
@@ -447,7 +551,7 @@ public class FindWrapper
                     }
 
                     RangeWrapper replaced = RangeWrapper.FromMap(map, match.Start, match.Start + match.Length);
-                    replaced.ReplaceSpanText(_replacer.For(match));
+                    ReplaceRange(replaced, match);
                     if (replace == ReplaceMode.One)
                     {
                         _range.MakeSpanAnchors(replaced.StartAnchor, replaced.EndAnchor);
@@ -484,7 +588,7 @@ public class FindWrapper
             else
             {
                 RangeWrapper replaced = RangeWrapper.FromMap(bestMap, best.Start, best.Start + best.Length);
-                replaced.ReplaceSpanText(_replacer.For(best));
+                ReplaceRange(replaced, best);
                 _range.MakeSpanAnchors(replaced.StartAnchor, replaced.EndAnchor);
                 _lastMatch = _range.Duplicate();
             }
@@ -533,7 +637,7 @@ public class FindWrapper
         if (replace == ReplaceMode.One)
         {
             FoundMatch match = Pick(matches);
-            int length = Replace(map, match.Start, match.Length, _replacer.For(match));
+            int length = ReplaceMatch(map, story, match);
             Remember(StoryMap.Build(story), match.Start, match.Start + length);
             return true;
         }
@@ -546,13 +650,42 @@ public class FindWrapper
         //Replace from the end so that the positions of the matches that are still to be replaced stay valid.
         for (int i = matches.Count - 1; i >= 0; i--)
         {
-            Replace(map, matches[i].Start, matches[i].Length, _replacer.For(matches[i]));
+            ReplaceMatch(map, story, matches[i]);
+            if (_formatReplacement)
+            {
+                map = StoryMap.Build(story);
+            }
         }
         _lastMatch = null;
         return true;
     }
 
     #endregion
+
+    //Replaces the match with the replacement text and gives it the formatting of the replacement. A match whose text stays (the replacement has
+    //formatting but no text) is only formatted. Returns the length of what is there now. The container is what the map was made from.
+    private int ReplaceMatch(StoryMap map, OpenXmlElement container, FoundMatch match)
+    {
+        int length = _keepText ? match.Length : Replace(map, match.Start, match.Length, _replacer.For(match));
+        if (_formatReplacement && length > 0)
+        {
+            Replacement.Formatting.ApplyTo(RangeWrapper.FromMap(StoryMap.Build(container), match.Start, match.Start + length));
+        }
+        return length;
+    }
+
+    //The same for a match that is a range of its own, which is left covering what is there now.
+    private void ReplaceRange(RangeWrapper replaced, FoundMatch match)
+    {
+        if (!_keepText)
+        {
+            replaced.ReplaceSpanText(_replacer.For(match));
+        }
+        if (_formatReplacement)
+        {
+            Replacement.Formatting.ApplyTo(replaced);
+        }
+    }
 
     //Replaces the match. A match inside one piece of text, replaced by plain text, is done in place; anything else goes through the range.
     //The map is the one made before any replacement; replacing from the end means the text before the match is as it was.
@@ -567,7 +700,7 @@ public class FindWrapper
             string current = text.Text ?? string.Empty;
             int offset = start - atom.Start;
             text.Text = string.Concat(current.Substring(0, offset), replacement, current.Substring(offset + length));
-            text.Space = SpaceProcessingModeValues.Preserve;
+            OpenXmlExtensions.SetSpacePreservation(text);
             SpanRegistry.TextEdited(text, offset, length, replacement.Length);
             return replacement.Length;
         }
@@ -585,6 +718,11 @@ public class FindWrapper
     //so a match can run across them; each match is given as the position it starts at and the number of positions it takes up.
     private List<FoundMatch> FindMatches(StoryMap map, int windowStart, int windowEnd, bool all, int maxStart = int.MaxValue)
     {
+        if (_pattern.Regex == null && _pattern.Literal.Length == 0)
+        {
+            return FindFormatted(map, windowStart, windowEnd, all, maxStart);
+        }
+
         char[] characters = map.ToCharacters();
         List<int> positions = null;
         string haystack;
@@ -631,7 +769,14 @@ public class FindWrapper
                     continue;
                 }
 
-                matches.Add(CreateMatch(positions, match.Index, match.Length, match.Value, match.Groups.Cast<Group>().Select(g => g.Value).ToArray()));
+                FoundMatch found = CreateMatch(positions, match.Index, match.Length, match.Value, match.Groups.Cast<Group>().Select(g => g.Value).ToArray());
+                if (!AcceptsFormat(map, found))
+                {
+                    position = match.Index + 1;
+                    continue;
+                }
+
+                matches.Add(found);
                 position = match.Index + match.Length;
                 if (!all)
                 {
@@ -651,9 +796,12 @@ public class FindWrapper
                 break;
             }
 
-            if (!MatchWholeWord || IsWholeWord(haystack, index, find.Length))
+            FoundMatch candidate = !MatchWholeWord || IsWholeWord(haystack, index, find.Length)
+                ? CreateMatch(positions, index, find.Length, haystack.Substring(index, find.Length), null)
+                : null;
+            if (candidate != null && AcceptsFormat(map, candidate))
             {
-                matches.Add(CreateMatch(positions, index, find.Length, haystack.Substring(index, find.Length), null));
+                matches.Add(candidate);
                 position = index + find.Length;
                 if (!all)
                 {
@@ -667,6 +815,133 @@ public class FindWrapper
         }
         return matches;
     }
+
+    #region Formatting
+
+    private FormattingResolver Resolver(OpenXmlElement context)
+    {
+        if (_resolver == null)
+        {
+            _resolver = new FormattingResolver(context);
+        }
+        return _resolver;
+    }
+
+    //Whether the text of the match has the formatting that is looked for: every run, and every paragraph it touches.
+    private bool AcceptsFormat(StoryMap map, FoundMatch match)
+    {
+        if (!_useFormat)
+        {
+            return true;
+        }
+
+        int end = match.Start + match.Length;
+        Paragraph last = null;
+        bool lastOk = false;
+        for (int i = map.IndexAt(match.Start); i >= 0 && i < map.Atoms.Count && map.Atoms[i].Start < end; i++)
+        {
+            if (!AtomAccepted(map.Atoms[i], ref last, ref lastOk))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    //Whether the atom has the formatting that is looked for. A paragraph is checked when the first atom of it is looked at.
+    private bool AtomAccepted(Atom atom, ref Paragraph last, ref bool lastOk)
+    {
+        Paragraph paragraph = atom.Kind == AtomKind.ParagraphMark ? atom.Element as Paragraph : atom.Element?.Ancestors<Paragraph>().FirstOrDefault();
+        if (paragraph != null)
+        {
+            if (paragraph != last)
+            {
+                last = paragraph;
+                lastOk = _criteria.MatchesParagraph(paragraph, Resolver(paragraph));
+            }
+            if (!lastOk)
+            {
+                return false;
+            }
+        }
+
+        if (atom.Kind == AtomKind.Text || atom.Kind == AtomKind.Tab || atom.Kind == AtomKind.Break)
+        {
+            Run run = atom.Element.Ancestors<Run>().FirstOrDefault();
+            return run == null || _criteria.MatchesRun(run, Resolver(run));
+        }
+        return true;
+    }
+
+    //The matches when only formatting is looked for: the stretches of text that all have it, within a paragraph. When it is about paragraphs
+    //alone each paragraph that has it is a match, with its mark.
+    private List<FoundMatch> FindFormatted(StoryMap map, int windowStart, int windowEnd, bool all, int maxStart)
+    {
+        List<FoundMatch> matches = new List<FoundMatch>();
+        bool paragraphOnly = _criteria.IsParagraphOnly;
+        StringBuilder text = new StringBuilder();
+        int groupStart = -1;
+        int groupEnd = -1;
+        Paragraph last = null;
+        bool lastOk = false;
+
+        void Flush()
+        {
+            if (groupStart >= 0)
+            {
+                matches.Add(new FoundMatch(groupStart, groupEnd - groupStart, text.ToString(), null));
+                groupStart = -1;
+                text.Clear();
+            }
+        }
+
+        for (int i = Math.Max(map.IndexAt(windowStart), 0); i < map.Atoms.Count; i++)
+        {
+            Atom atom = map.Atoms[i];
+            bool markReached = paragraphOnly && atom.Kind == AtomKind.ParagraphMark && atom.Start <= windowEnd;
+            if (atom.Start >= maxStart || (atom.Start >= windowEnd && !markReached))
+            {
+                break;
+            }
+
+            int start = Math.Max(atom.Start, windowStart);
+            int end = atom.Kind == AtomKind.ParagraphMark ? atom.End : Math.Min(atom.End, windowEnd);
+            bool accepted = end > start && !atom.IsHidden && atom.Kind != AtomKind.RowMark
+                && (atom.Kind != AtomKind.ParagraphMark || paragraphOnly) && AtomAccepted(atom, ref last, ref lastOk);
+            if (groupStart >= 0 && !(accepted && start == groupEnd))
+            {
+                Flush();
+                if (!all)
+                {
+                    return matches;
+                }
+            }
+            if (accepted)
+            {
+                if (groupStart < 0)
+                {
+                    groupStart = start;
+                }
+                groupEnd = end;
+                text.Append(atom.Text);
+            }
+
+            //A paragraph mark ends the match that it is in.
+            if (atom.Kind == AtomKind.ParagraphMark && groupStart >= 0)
+            {
+                Flush();
+                if (!all)
+                {
+                    return matches;
+                }
+            }
+        }
+
+        Flush();
+        return matches;
+    }
+
+    #endregion
 
     private static FoundMatch CreateMatch(List<int> positions, int index, int length, string text, string[] groups)
     {
