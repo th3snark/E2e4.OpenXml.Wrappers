@@ -277,6 +277,39 @@ public class MarkupConformanceTest
                 d.Tables[0].Columns.DistributeWidth();
             },
             Body()),
+        new Scenario("cells-borders-table",
+            d =>
+            {
+                d.Tables.Add(d.Range(0, 0), 3, 3);
+                d.Tables[0].Range.Cells.Borders.Enable = true;
+            },
+            Body()),
+        new Scenario("cells-borders-row",
+            d =>
+            {
+                TableWrapper t = d.Tables.Add(d.Range(0, 0), 3, 3);
+                BordersWrapper borders = t.Rows[1].Cells.Borders;
+                borders.OutsideLineStyle = BorderLineStyle.SingleLine;
+                borders.InsideLineStyle = BorderLineStyle.SingleLine;
+            },
+            Body()),
+
+        new Scenario("rows-borders",
+            d =>
+            {
+                TableWrapper t = d.Tables.Add(d.Range(0, 0), 3, 3);
+                t.Rows.Borders.OutsideLineStyle = BorderLineStyle.SingleLine;
+                t.Rows.Borders.InsideLineStyle = BorderLineStyle.SingleLine;
+            },
+            Body()),
+        new Scenario("columns-borders",
+            d =>
+            {
+                TableWrapper t = d.Tables.Add(d.Range(0, 0), 3, 3);
+                t.Columns.Borders.OutsideLineStyle = BorderLineStyle.SingleLine;
+                t.Columns.Borders.InsideLineStyle = BorderLineStyle.SingleLine;
+            },
+            Body()),
         new Scenario("table-3x3", d => d.Tables.Add(d.Range(0, 0), 3, 3), Body()),
 
         new Scenario("table-3x3-word9-behavior",

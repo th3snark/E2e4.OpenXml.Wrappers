@@ -269,6 +269,31 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $doc.Tables.Item(1).Columns.Item(1).Width = 100
         $doc.Tables.Item(1).Columns.DistributeWidth()
     }
+    'cells-borders-table'             = {
+        param($doc)
+        [void]$doc.Tables.Add($doc.Range(0, 0), 3, 3)
+        $doc.Tables.Item(1).Range.Cells.Borders.Enable = $true
+    }
+    'cells-borders-row'               = {
+        param($doc)
+        $t = $doc.Tables.Add($doc.Range(0, 0), 3, 3)
+        $cells = $t.Rows.Item(2).Range.Cells
+        $cells.Borders.OutsideLineStyle = 1
+        $cells.Borders.InsideLineStyle = 1
+    }
+
+    'rows-borders'                    = {
+        param($doc)
+        $t = $doc.Tables.Add($doc.Range(0, 0), 3, 3)
+        $t.Rows.Borders.OutsideLineStyle = 1
+        $t.Rows.Borders.InsideLineStyle = 1
+    }
+    'columns-borders'                 = {
+        param($doc)
+        $t = $doc.Tables.Add($doc.Range(0, 0), 3, 3)
+        $t.Columns.Borders.OutsideLineStyle = 1
+        $t.Columns.Borders.InsideLineStyle = 1
+    }
     'table-3x3'                       = {
         param($doc)
         [void]$doc.Tables.Add($doc.Range(0, 0), 3, 3)

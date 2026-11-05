@@ -25,6 +25,7 @@ public class BordersWrapper
     private readonly bool _isTable;
     private readonly Func<IList<OpenXmlElement>> _group;
     private readonly bool _character;
+    private readonly Func<IList<TableCell>> _cells;
 
     internal BordersWrapper(OpenXmlElement owner, bool isTable)
     {
@@ -38,6 +39,13 @@ public class BordersWrapper
     {
         _group = group;
         _character = character;
+    }
+
+    //The borders of a block of cells, found each time they are used: the edges of the block are the outside borders, and the lines between its
+    //cells the inside ones.
+    internal BordersWrapper(Func<IList<TableCell>> cells)
+    {
+        _cells = cells;
     }
 
     /// <summary>
@@ -95,6 +103,14 @@ public class BordersWrapper
             {
                 throw new NotSupportedException("A paragraph has the four outside borders only.");
             }
+            if (_cells != null)
+            {
+                if (position == BorderPosition.DiagonalDown || position == BorderPosition.DiagonalUp)
+                {
+                    throw new NotSupportedException("Only a cell has diagonal borders.");
+                }
+                return new BorderWrapper(GetCellTargets(_cells(), position));
+            }
             if (_group != null)
             {
                 return new BorderWrapper(_group().Select(o => (new BordersWrapper(o, false), position)).ToList());
@@ -121,6 +137,86 @@ public class BordersWrapper
             }
             return new BorderWrapper(this, position);
         }
+    }
+
+    //The borders of a block of cells: an edge of the block is the border of the cells on that edge, and a line between cells is the bottom border
+    //of the one above and the top border of the one below (the right and the left for cells side by side).
+    private static List<(BordersWrapper Borders, BorderPosition Position)> GetCellTargets(IList<TableCell> cells, BorderPosition position)
+    {
+        List<(BordersWrapper, BorderPosition)> targets = new List<(BordersWrapper, BorderPosition)>();
+
+        //The cells of a whole table are given the borders of the table, as Word does, and nothing is written on the cells.
+        List<TableCell> rest = new List<TableCell>();
+        foreach (IGrouping<Table, TableCell> group in cells.GroupBy(c => (Table)c.Parent.Parent))
+        {
+            if (group.Count() == group.Key.Elements<TableRow>().Sum(r => r.Elements<TableCell>().Count()))
+            {
+                targets.Add((new BordersWrapper(group.Key, true), position));
+            }
+            else
+            {
+                rest.AddRange(group);
+            }
+        }
+        foreach (TableCell cell in rest)
+        {
+            TableRow row = (TableRow)cell.Parent;
+            Table table = (Table)row.Parent;
+            List<TableRow> rows = table.Elements<TableRow>().ToList();
+            int index = rows.IndexOf(row);
+            int start = TableCellWrapper.GetGridStart(cell);
+            int end = start + TableCellWrapper.Span(cell) - 1;
+            TableCell cellAbove = index > 0 ? TableCellWrapper.CellAtGridColumn(rows[index - 1], start) : null;
+            TableCell cellBelow = index < rows.Count - 1 ? TableCellWrapper.CellAtGridColumn(rows[index + 1], start) : null;
+            TableCell cellBefore = start > 0 ? TableCellWrapper.CellAtGridColumn(row, start - 1) : null;
+            TableCell cellAfter = TableCellWrapper.CellAtGridColumn(row, end + 1);
+            bool above = Selected(cells, cellAbove);
+            bool below = Selected(cells, cellBelow);
+            bool before = Selected(cells, cellBefore);
+            bool after = Selected(cells, cellAfter);
+            BordersWrapper borders = new BordersWrapper(cell, false);
+            if ((position == BorderPosition.Top && !above) || (position == BorderPosition.Bottom && !below)
+                || (position == BorderPosition.Left && !before) || (position == BorderPosition.Right && !after))
+            {
+                targets.Add((borders, position));
+
+                //The line is also the border of the cell on its other side, as Word writes it.
+                TableCell outside = position == BorderPosition.Top ? cellAbove : position == BorderPosition.Bottom ? cellBelow : position == BorderPosition.Left ? cellBefore : cellAfter;
+                if (outside != null)
+                {
+                    BorderPosition opposite = position == BorderPosition.Top ? BorderPosition.Bottom : position == BorderPosition.Bottom ? BorderPosition.Top : position == BorderPosition.Left ? BorderPosition.Right : BorderPosition.Left;
+                    targets.Add((new BordersWrapper(outside, false), opposite));
+                }
+            }
+            else if (position == BorderPosition.Horizontal)
+            {
+                if (above)
+                {
+                    targets.Add((borders, BorderPosition.Top));
+                }
+                if (below)
+                {
+                    targets.Add((borders, BorderPosition.Bottom));
+                }
+            }
+            else if (position == BorderPosition.Vertical)
+            {
+                if (before)
+                {
+                    targets.Add((borders, BorderPosition.Left));
+                }
+                if (after)
+                {
+                    targets.Add((borders, BorderPosition.Right));
+                }
+            }
+        }
+        return targets;
+    }
+
+    private static bool Selected(IList<TableCell> cells, TableCell cell)
+    {
+        return cell != null && cells.Any(c => ReferenceEquals(c, cell));
     }
 
     //The borders of a row are those of its cells: top and bottom on all of them, left on the first, right on the last, and the line between
@@ -219,6 +315,14 @@ public class BordersWrapper
             return;
         }
 
+        if (_cells != null)
+        {
+            foreach (TableCell cell in _cells())
+            {
+                new BordersWrapper(cell, false).Clear();
+            }
+            return;
+        }
         if (_group != null)
         {
             foreach (OpenXmlElement owner in _group())

@@ -58,6 +58,15 @@ public partial class TableCellWrapperCollection
         return shadings;
     }
 
+    /// <summary>
+    /// The borders of the block of cells, as <c>Cells.Borders</c> in Word: the outside borders are the edges of the block and the inside
+    /// ones the lines between its cells.
+    /// </summary>
+    public BordersWrapper Borders
+    {
+        get { return new BordersWrapper(() => Items.Select(c => c.TableCell).ToList()); }
+    }
+
     /// <summary>The vertical alignment of the text in the cells; null when they differ.</summary>
     public CellVerticalAlignment? VerticalAlignment
     {
@@ -228,6 +237,15 @@ public partial class TableRowWrapper
 
 public partial class TableRowWrapperCollection
 {
+    /// <summary>
+    /// The borders of the rows, as <c>Rows.Borders</c> in Word: the outside borders are the edges of the block of rows and the inside ones
+    /// the lines between its cells.
+    /// </summary>
+    public BordersWrapper Borders
+    {
+        get { return new BordersWrapper(() => Items.SelectMany(r => r.Cells).Select(c => c.TableCell).ToList()); }
+    }
+
     /// <summary>Deletes all the rows, as <c>Rows.Delete</c> in Word; deleting every row of a table deletes the table.</summary>
     public void Delete()
     {
@@ -351,6 +369,15 @@ public partial class TableColumnWrapperCollection
     public ShadingWrapper Shading
     {
         get { return new ShadingWrapper(create => TableCellWrapperCollection.ShadingOf(Items.SelectMany(c => c.Cells).ToList(), create)); }
+    }
+
+    /// <summary>
+    /// The borders of the columns, as <c>Columns.Borders</c> in Word: the outside borders are the edges of the block of columns and the
+    /// inside ones the lines between its cells.
+    /// </summary>
+    public BordersWrapper Borders
+    {
+        get { return new BordersWrapper(() => Items.SelectMany(c => c.Cells).Select(c => c.TableCell).ToList()); }
     }
 
     /// <summary>Deletes all the columns, as <c>Columns.Delete</c> in Word; deleting every column deletes the table.</summary>
