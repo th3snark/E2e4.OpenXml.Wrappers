@@ -48,7 +48,8 @@ These cut across objects and are not repeated in the tables.
 | Done (step 6, fourth part) | `Document` (the wrapper the document was opened or created with; null for elements that are not in a document), `Parent` (the same), `TextRetrievalMode` (`IncludeFieldCodes`, `IncludeHiddenText`, `ViewType`, `Duplicate`) |
 | Not yet | `InsertCaption` and `InsertCrossReference` (see the note under Range) |
 | Planned, step 7 | `Bold`, `Italic`, `Underline`, `BoldBi`, `ItalicBi`, `HighlightColorIndex`, `Borders`, `Shading`, `LanguageID`, `LanguageIDFarEast`, `LanguageIDOther`, `NoProofing`, `EmphasisMark`, `FitTextWidth`, `DisableCharacterSpaceGrid` |
-| Planned, step 8 | `ConvertToTable`, `Sort`, `SortAscending`, `SortDescending`, `Columns`, `TopLevelTables`, `IsEndOfRowMark`, `Orientation` |
+| Done (step 8e) | `ConvertToTable` |
+| Planned, step 8 | `Sort`, `SortAscending`, `SortDescending` (paragraphs; the table `Sort` is done), `Columns`, `TopLevelTables`, `IsEndOfRowMark`, `Orientation` |
 | Planned, step 9 | `CharacterStyle`, `ParagraphStyle`, `TableStyle` |
 | Planned, step 10 | `PageSetup` |
 | Planned, step 11 | `StoryType`, `NextStoryRange` |
@@ -191,7 +192,8 @@ In Word, `Paragraph` exposes the whole of `ParagraphFormat`; here it forwards on
 | Status | Members |
 |---|---|
 | Done | `AutoFitBehavior`, `Cell`, `Delete`, `Split`, `AllowAutoFit`, `ApplyStyleColumnBands`, `ApplyStyleFirstColumn`, `ApplyStyleHeadingRows`, `ApplyStyleLastColumn`, `ApplyStyleLastRow`, `ApplyStyleRowBands`, `Borders`, `BottomPadding`, `Columns`, `Descr`, `LeftPadding`, `NestingLevel`, `Parent`, `PreferredWidth`, `PreferredWidthType`, `Range`, `RightPadding`, `Rows`, `Shading`, `Spacing`, `Style`, `Tables`, `Title`, `TopPadding`, `Uniform` |
-| Planned, step 8 | `ConvertToText`, `Sort`, `SortAscending`, `SortDescending`, `TableDirection`, `ApplyStyleDirectFormatting` |
+| Done (step 8e) | `ConvertToText`, `Sort` |
+| Planned, step 8 | `SortAscending`, `SortDescending` (Word sorts by the column of the selection, which the library does not have; use `Sort`), `TableDirection`, `ApplyStyleDirectFormatting` |
 | Planned, step 19 | `Select` |
 | Decided against | `AutoFormat`, `AutoFormatType`, `UpdateAutoFormat` (Word 97 table AutoFormat; table styles replace it), `ID` (an HTML id) |
 
@@ -215,7 +217,8 @@ The collections are where tables are thinnest: Word's `Rows`, `Columns` and `Cel
 | Done | `Add`, `Item`, `Alignment`, `AllowBreakAcrossPages`, `Count`, `First`, `HeadingFormat`, `Height`, `HeightRule`, `Last`, `LeftIndent`, `NestingLevel`, `Parent`, `Shading` |
 | Done (step 8a) | `Delete`, `SetHeight` |
 | Done (step 8c) | `Borders` |
-| Planned, step 8 | `ConvertToText`, `DistributeHeight` (Word measures the laid-out height, so it needs layout), `SetLeftIndent`, `AllowOverlap`, `DistanceBottom`, `DistanceLeft`, `DistanceRight`, `DistanceTop`, `HorizontalPosition`, `VerticalPosition`, `RelativeHorizontalPosition`, `RelativeVerticalPosition`, `WrapAroundText`, `SpaceBetweenColumns`, `TableDirection` |
+| Done (step 8e) | `ConvertToText` |
+| Planned, step 8 | `DistributeHeight` (Word measures the laid-out height, so it needs layout), `SetLeftIndent`, `AllowOverlap`, `DistanceBottom`, `DistanceLeft`, `DistanceRight`, `DistanceTop`, `HorizontalPosition`, `VerticalPosition`, `RelativeHorizontalPosition`, `RelativeVerticalPosition`, `WrapAroundText`, `SpaceBetweenColumns`, `TableDirection` |
 | Planned, step 19 | `Select` |
 
 <!-- learn: row -->
@@ -226,7 +229,8 @@ The collections are where tables are thinnest: Word's `Rows`, `Columns` and `Cel
 |---|---|
 | Done | `Delete`, `SetHeight`, `Alignment`, `AllowBreakAcrossPages`, `Borders`, `Cells`, `HeadingFormat`, `Height`, `HeightRule`, `Index`, `IsFirst`, `IsLast`, `Next`, `Parent`, `Previous`, `Range`, `Shading` |
 | Done (step 8a) | `NestingLevel` |
-| Planned, step 8 | `ConvertToText`, `SetLeftIndent`, `LeftIndent`, `SpaceBetweenColumns` |
+| Done (step 8e) | `ConvertToText` |
+| Planned, step 8 | `SetLeftIndent`, `LeftIndent`, `SpaceBetweenColumns` |
 | Planned, step 19 | `Select` |
 | Decided against | `ID` (an HTML id) |
 
@@ -268,6 +272,8 @@ The collections are where tables are thinnest: Word's `Rows`, `Columns` and `Cel
 | Done (step 8c) | `Borders` |
 | Done (step 8d) | `Add`, `Delete`, `Merge`, `Split` |
 | Needs layout | `AutoFit`, `DistributeHeight` (Word measures the laid-out height) |
+
+`Table.ConvertToText`, `Rows.ConvertToText` and `Row.ConvertToText` follow Word 16: each cell paragraph is a paragraph for `Paragraphs`; otherwise each row is a paragraph with its cells' text divided by the separator (a tab, a comma and a space, a hyphen for `Default`, or the text given), with left tab stops at the edge of each cell after the first, and a left indent of the cell margin, when tabs separate. A row split out of a table leaves the table in two around the paragraph. Cells with several paragraphs are joined with a space (not checked in Word), and tables inside cells are not converted (the library throws). `Range.ConvertToTable` makes a row of each paragraph and a cell of each field, or fills rows of `NumColumns` cells with paragraphs; the new table is the one `Tables.Add` makes, and the cells hold the text only: the formatting of the text is not kept. `Default` as the separator for `ConvertToTable` is assumed to be the hyphen too. `Table.Sort(excludeHeader, fieldNumber, type, order)` sorts the rows by one column (0-based), keeping equal rows in order and the header row if asked; text is compared by the current culture without regard to case, numbers by the first number in the text, and dates; a table with merged cells throws.
 
 `Cells.Merge` merges the rectangle that holds all the cells. `Cells.Add` adds a cell to a row, before a cell or at the end, like the cell it goes before (or the last), and the grid grows by its width with the other rows left short (`gridAfter`). `Cells.Delete` with `ShiftCells.Left` deletes the columns when the cells are all of them; with `Up` the cells below move up and the bottom one is left empty (also `Cell.Delete(ShiftCells.Up)`); a cell that is merged vertically or spans columns throws. `Cells.Split(rows, columns, mergeBeforeSplit)` splits each cell; whole rows split into rows are new rows, which Word gives the row height it measured: the library writes 252 twips, one line of the default 11 point font. Differences: Word turns a merge of a whole table into one row and one column with a measured height, where the library keeps the merged cell in the table's grid and rows; and `mergeBeforeSplit` can only split into a number of columns that divides the columns the merged cell spans, as `Cell.Split` does. The Word scenarios cover each operation on a row or a 2 by 2 block.
 

@@ -308,6 +308,74 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         foreach ($c in $t.Range.Cells) { $c.Range.Text = "c$i"; $i++ }
         $t.Cell(1, 1).Merge($t.Cell(2, 2))
     }
+    'table-convert-to-text-tabs'      = {
+        param($doc)
+        $t = $doc.Tables.Add($doc.Range(0, 0), 3, 3)
+        $i = 1
+        foreach ($c in $t.Range.Cells) { $c.Range.Text = "c$i"; $i++ }
+        [void]$t.ConvertToText(1)
+    }
+    'table-convert-to-text-paragraphs' = {
+        param($doc)
+        $t = $doc.Tables.Add($doc.Range(0, 0), 3, 3)
+        $i = 1
+        foreach ($c in $t.Range.Cells) { $c.Range.Text = "c$i"; $i++ }
+        [void]$t.ConvertToText(0)
+    }
+    'table-convert-to-text-commas'    = {
+        param($doc)
+        $t = $doc.Tables.Add($doc.Range(0, 0), 3, 3)
+        $i = 1
+        foreach ($c in $t.Range.Cells) { $c.Range.Text = "c$i"; $i++ }
+        [void]$t.ConvertToText(';')
+    }
+    'table-convert-to-text-commas-enum' = {
+        param($doc)
+        $t = $doc.Tables.Add($doc.Range(0, 0), 3, 3)
+        $i = 1
+        foreach ($c in $t.Range.Cells) { $c.Range.Text = "c$i"; $i++ }
+        [void]$t.ConvertToText(2)
+    }
+    'table-convert-to-text-default'   = {
+        param($doc)
+        $t = $doc.Tables.Add($doc.Range(0, 0), 3, 3)
+        $i = 1
+        foreach ($c in $t.Range.Cells) { $c.Range.Text = "c$i"; $i++ }
+        [void]$t.ConvertToText(3)
+    }
+    'row-convert-to-text'             = {
+        param($doc)
+        $t = $doc.Tables.Add($doc.Range(0, 0), 3, 3)
+        $i = 1
+        foreach ($c in $t.Range.Cells) { $c.Range.Text = "c$i"; $i++ }
+        [void]$t.Rows.Item(2).ConvertToText(1)
+    }
+    'range-convert-to-table-tabs'     = {
+        param($doc)
+        $doc.Content.InsertAfter("a`tb`tc`rd`te`tf")
+        [void]$doc.Content.ConvertToTable(1)
+    }
+    'range-convert-to-table-paragraphs' = {
+        param($doc)
+        $doc.Content.InsertAfter("a`rb`rc`rd")
+        [void]$doc.Content.ConvertToTable(0, [Type]::Missing, 2)
+    }
+    'table-sort-text'                 = {
+        param($doc)
+        $t = $doc.Tables.Add($doc.Range(0, 0), 4, 2)
+        $v = @('b', '10', 'c', '2', 'a', '1', 'd', '20')
+        $i = 0
+        foreach ($c in $t.Range.Cells) { $c.Range.Text = $v[$i]; $i++ }
+        $t.Sort($false, 1)
+    }
+    'table-sort-numeric-header'       = {
+        param($doc)
+        $t = $doc.Tables.Add($doc.Range(0, 0), 4, 2)
+        $v = @('h', 'n', 'c', '10', 'b', '2', 'a', '1')
+        $i = 0
+        foreach ($c in $t.Range.Cells) { $c.Range.Text = $v[$i]; $i++ }
+        $t.Sort($true, 2, 1, 1)
+    }
     'cell-delete-up'                  = {
         param($doc)
         $t = $doc.Tables.Add($doc.Range(0, 0), 3, 3)

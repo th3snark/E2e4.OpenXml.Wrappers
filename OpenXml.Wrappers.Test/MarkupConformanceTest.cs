@@ -331,6 +331,52 @@ public class MarkupConformanceTest
             },
             Body()),
         new Scenario("cells-merge-block", d => NumberedTable(d).Cell(0, 0).Merge(d.Tables[0].Cell(1, 1)), Body()),
+        new Scenario("table-convert-to-text-tabs", d => NumberedTable(d).ConvertToText(TableFieldSeparator.Tabs), Body()),
+        new Scenario("table-convert-to-text-paragraphs", d => NumberedTable(d).ConvertToText(TableFieldSeparator.Paragraphs), Body()),
+        new Scenario("table-convert-to-text-commas", d => NumberedTable(d).ConvertToText(";"), Body()),
+        new Scenario("table-convert-to-text-commas-enum", d => NumberedTable(d).ConvertToText(TableFieldSeparator.Commas), Body()),
+        new Scenario("table-convert-to-text-default", d => NumberedTable(d).ConvertToText(TableFieldSeparator.Default), Body()),
+        new Scenario("row-convert-to-text", d => NumberedTable(d).Rows[1].ConvertToText(TableFieldSeparator.Tabs), Body()),
+        new Scenario("range-convert-to-table-tabs",
+            d =>
+            {
+                d.Content.InsertAfter("a\tb\tc\rd\te\tf");
+                d.Content.ConvertToTable(TableFieldSeparator.Tabs);
+            },
+            Body()),
+        new Scenario("range-convert-to-table-paragraphs",
+            d =>
+            {
+                d.Content.InsertAfter("a\rb\rc\rd");
+                d.Content.ConvertToTable(TableFieldSeparator.Paragraphs, null, 2);
+            },
+            Body()),
+        new Scenario("table-sort-text",
+            d =>
+            {
+                TableWrapper t = d.Tables.Add(d.Range(0, 0), 4, 2);
+                string[] values = { "b", "10", "c", "2", "a", "1", "d", "20" };
+                int index = 0;
+                foreach (TableCellWrapper cell in t.Range.Cells)
+                {
+                    cell.Range.Text = values[index++];
+                }
+                t.Sort(false, 0);
+            },
+            Body()),
+        new Scenario("table-sort-numeric-header",
+            d =>
+            {
+                TableWrapper t = d.Tables.Add(d.Range(0, 0), 4, 2);
+                string[] values = { "h", "n", "c", "10", "b", "2", "a", "1" };
+                int index = 0;
+                foreach (TableCellWrapper cell in t.Range.Cells)
+                {
+                    cell.Range.Text = values[index++];
+                }
+                t.Sort(true, 1, SortFieldType.Numeric, SortOrder.Descending);
+            },
+            Body()),
         new Scenario("cell-delete-up",
             d =>
             {
