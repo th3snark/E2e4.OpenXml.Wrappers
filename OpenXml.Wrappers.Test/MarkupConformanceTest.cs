@@ -275,6 +275,80 @@ public class MarkupConformanceTest
             },
             Body()),
 
+        new Scenario("insert-symbol-ansi",
+            d =>
+            {
+                d.Content.InsertAfter("ab");
+                d.Range(1, 1).InsertSymbol(171, "Symbol", false);
+            },
+            Body()),
+
+        new Scenario("insert-symbol-unicode",
+            d =>
+            {
+                d.Content.InsertAfter("ab");
+                d.Range(1, 1).InsertSymbol(8364, "Calibri", true);
+            },
+            Body()),
+
+        new Scenario("insert-symbol-unicode-in-bold-text",
+            d =>
+            {
+                d.Content.InsertAfter("ab");
+                d.Range(0, 2).Font.Bold = true;
+                d.Range(1, 1).InsertSymbol(169, "Arial", true);
+            },
+            Body()),
+
+        new Scenario("insert-symbol-replaces-range",
+            d =>
+            {
+                d.Content.InsertAfter("ab");
+                d.Range(0, 1).InsertSymbol(169, "Times New Roman", true);
+            },
+            Body()),
+
+        new Scenario("insert-alignment-tab-right-margin",
+            d =>
+            {
+                d.Content.InsertAfter("ab");
+                d.Range(1, 1).InsertAlignmentTab(AlignmentTabAlignment.Right, AlignmentTabRelative.Margin);
+            },
+            Body()),
+
+        new Scenario("insert-alignment-tab-center-indent",
+            d =>
+            {
+                d.Content.InsertAfter("ab");
+                d.Range(1, 1).InsertAlignmentTab(AlignmentTabAlignment.Center, AlignmentTabRelative.Indent);
+            },
+            Body()),
+
+        new Scenario("case-upper-part-of-bold-run",
+            d =>
+            {
+                d.Content.InsertAfter("abc DEF");
+                d.Range(0, 3).Font.Bold = true;
+                d.Range(0, 3).Case = CharacterCase.UpperCase;
+            },
+            Body()),
+
+        new Scenario("case-upper-inside-a-run",
+            d =>
+            {
+                d.Content.InsertAfter("abcdef");
+                d.Range(2, 4).Case = CharacterCase.UpperCase;
+            },
+            Body()),
+
+        new Scenario("case-title-sentence",
+            d =>
+            {
+                d.Content.InsertAfter("hello wORLD. second sentence here");
+                d.Range(0, 33).Case = CharacterCase.TitleSentence;
+            },
+            Body()),
+
         new Scenario("paragraph-style-same-value",
             d =>
             {

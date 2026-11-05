@@ -253,6 +253,24 @@ internal sealed class FormattingResolver
         return string.IsNullOrEmpty(typeface) ? null : typeface;
     }
 
+    /// <summary>
+    /// The name of the complex script font that a theme font setting such as <c>minorBidi</c> refers to. A theme that leaves it empty, as
+    /// Word's own do, has Arial in Word.
+    /// </summary>
+    public string GetThemeComplexScriptFontName(ThemeFontValues themeFont)
+    {
+        DocumentFormat.OpenXml.Drawing.FontScheme scheme = _mainDocumentPart?.ThemePart?.Theme?.ThemeElements?.FontScheme;
+        if (scheme == null)
+        {
+            return null;
+        }
+
+        bool major = themeFont == ThemeFontValues.MajorAscii || themeFont == ThemeFontValues.MajorHighAnsi
+            || themeFont == ThemeFontValues.MajorEastAsia || themeFont == ThemeFontValues.MajorBidi;
+        string typeface = major ? scheme.MajorFont?.ComplexScriptFont?.Typeface?.Value : scheme.MinorFont?.ComplexScriptFont?.Typeface?.Value;
+        return string.IsNullOrEmpty(typeface) ? "Arial" : typeface;
+    }
+
     /// <summary>The red, green and blue value of a theme colour, or null. Tints and shades are not applied.</summary>
     public string GetThemeColorHex(ThemeColorValues themeColor)
     {
