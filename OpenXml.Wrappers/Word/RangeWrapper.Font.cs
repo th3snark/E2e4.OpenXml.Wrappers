@@ -8,11 +8,17 @@ namespace OpenXml.Wrappers.Word;
 public partial class RangeWrapper
 {
     /// <summary>
-    /// The character formatting of the range.
+    /// The character formatting of the range. Assigning a font (usually a <c>Duplicate</c> of one) gives the range the formatting that the font has;
+    /// properties that the font has no single value for are left as they are.
     /// </summary>
     public FontWrapper Font
     {
         get { return new FontWrapper(this); }
+        set
+        {
+            Guard.ThrowIfNull(value, nameof(value));
+            value.CopyTo(new FontWrapper(this));
+        }
     }
 
     /// <summary>

@@ -1,0 +1,43 @@
+<w:fonts xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:font w:name="Aptos">
+    <w:charset w:val="00" />
+    <w:family w:val="swiss" />
+    <w:pitch w:val="variable" />
+    <w:sig w:csb0="0000019F" w:csb1="00000000" w:usb0="20000287" w:usb1="00000003" w:usb2="00000000" w:usb3="00000000" />
+  </w:font>
+  <w:font w:name="Times New Roman">
+    <w:panose1 w:val="02020603050405020304" />
+    <w:charset w:val="00" />
+    <w:family w:val="roman" />
+    <w:pitch w:val="variable" />
+    <w:sig w:csb0="000001FF" w:csb1="00000000" w:usb0="E0002EFF" w:usb1="C000785B" w:usb2="00000009" w:usb3="00000000" />
+  </w:font>
+  <w:font w:name="Aptos Display">
+    <w:charset w:val="00" />
+    <w:family w:val="swiss" />
+    <w:pitch w:val="variable" />
+    <w:sig w:csb0="0000019F" w:csb1="00000000" w:usb0="20000287" w:usb1="00000003" w:usb2="00000000" w:usb3="00000000" />
+  </w:font>
+  <w:font w:name="MS Gothic">
+    <w:altName w:val="ＭＳ ゴシック" />
+    <w:panose1 w:val="020B0609070205080204" />
+    <w:charset w:val="80" />
+    <w:family w:val="modern" />
+    <w:pitch w:val="fixed" />
+    <w:sig w:csb0="0002009F" w:csb1="00000000" w:usb0="E00002FF" w:usb1="6AC7FDFB" w:usb2="08000012" w:usb3="00000000" />
+  </w:font>
+  <w:font w:name="Verdana">
+    <w:panose1 w:val="020B0604030504040204" />
+    <w:charset w:val="00" />
+    <w:family w:val="swiss" />
+    <w:pitch w:val="variable" />
+    <w:sig w:csb0="0000019F" w:csb1="00000000" w:usb0="A00006FF" w:usb1="4000205B" w:usb2="00000010" w:usb3="00000000" />
+  </w:font>
+  <w:font w:name="Tahoma">
+    <w:panose1 w:val="00000000000000000000" />
+    <w:charset w:val="00" />
+    <w:family w:val="roman" />
+    <w:notTrueType />
+    <w:pitch w:val="default" />
+  </w:font>
+</w:fonts>

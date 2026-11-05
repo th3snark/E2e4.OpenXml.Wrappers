@@ -90,6 +90,41 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $doc.Content.InsertAfter('Arial text')
         $doc.Range(0, 5).Font.Name = 'Arial'
     }
+    'font-complex-script'             = {
+        param($doc)
+        $doc.Content.InsertAfter('Complex text here')
+        $font = $doc.Range(0, 7).Font
+        $font.BoldBi = $true
+        $font.ItalicBi = $true
+        $font.SizeBi = 14
+        $font.NameBi = 'Tahoma'
+        $font.NameFarEast = 'MS Gothic'
+        $font.NameOther = 'Verdana'
+    }
+
+    'font-emphasis-grid'              = {
+        param($doc)
+        $doc.Content.InsertAfter('Mark text here')
+        $doc.Range(0, 4).Font.EmphasisMark = 1
+        $doc.Range(5, 9).Font.EmphasisMark = 4
+        $doc.Range(10, 14).Font.DisableCharacterSpaceGrid = $true
+    }
+
+    'font-name-after-complex'         = {
+        param($doc)
+        $doc.Content.InsertAfter('Name text here')
+        $doc.Range(0, 4).Font.NameBi = 'Tahoma'
+        $doc.Range(0, 4).Font.Name = 'Calibri'
+    }
+
+    'font-grow-shrink'                = {
+        param($doc)
+        $doc.Content.InsertAfter('Grow shrink text')
+        $doc.Range(0, 4).Font.Grow()
+        $doc.Range(5, 11).Font.Shrink()
+        $doc.Range(12, 16).Font.Grow()
+        $doc.Range(12, 16).Font.Grow()
+    }
 
     'table-3x3'                       = {
         param($doc)

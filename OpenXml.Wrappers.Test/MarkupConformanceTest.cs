@@ -59,6 +59,49 @@ public class MarkupConformanceTest
                 d.Range(0, 5).Font.Name = "Arial";
             },
             Body()),
+        new Scenario("font-complex-script",
+            d =>
+            {
+                d.Content.InsertAfter("Complex text here");
+                FontWrapper font = d.Range(0, 7).Font;
+                font.BoldBi = true;
+                font.ItalicBi = true;
+                font.SizeBi = 14;
+                font.NameBi = "Tahoma";
+                font.NameFarEast = "MS Gothic";
+                font.NameOther = "Verdana";
+            },
+            Body()),
+
+        new Scenario("font-emphasis-grid",
+            d =>
+            {
+                d.Content.InsertAfter("Mark text here");
+                d.Range(0, 4).Font.EmphasisMark = EmphasisMark.OverSolid;
+                d.Range(5, 9).Font.EmphasisMark = EmphasisMark.UnderSolid;
+                d.Range(10, 14).Font.DisableCharacterSpaceGrid = true;
+            },
+            Body()),
+
+        new Scenario("font-name-after-complex",
+            d =>
+            {
+                d.Content.InsertAfter("Name text here");
+                d.Range(0, 4).Font.NameBi = "Tahoma";
+                d.Range(0, 4).Font.Name = "Calibri";
+            },
+            Body()),
+
+        new Scenario("font-grow-shrink",
+            d =>
+            {
+                d.Content.InsertAfter("Grow shrink text");
+                d.Range(0, 4).Font.Grow();
+                d.Range(5, 11).Font.Shrink();
+                d.Range(12, 16).Font.Grow();
+                d.Range(12, 16).Font.Grow();
+            },
+            Body()),
 
         new Scenario("table-3x3", d => d.Tables.Add(d.Range(0, 0), 3, 3), Body()),
 

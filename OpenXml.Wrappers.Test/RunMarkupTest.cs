@@ -353,7 +353,7 @@ public class RunMarkupTest : IDisposable
     }
 
     [Fact]
-    public void AFontNameLeavesTheOtherFontsAlone()
+    public void AFontNameLeavesTheEastAsianFontAlone_AndChangesAComplexScriptOneThatWasSet()
     {
         _document.Content.InsertAfter("Text");
         Run run = FirstParagraph.Elements<Run>().Single();
@@ -366,6 +366,7 @@ public class RunMarkupTest : IDisposable
         Assert.Equal("Courier New", fonts.HighAnsi.Value);
         Assert.Null(fonts.AsciiTheme);
         Assert.Equal("MS Gothic", fonts.EastAsia.Value);
-        Assert.Equal("Arial", fonts.ComplexScript.Value);
+        //Word changes the complex script font too when it was set on its own (the font-name-after-complex reference).
+        Assert.Equal("Courier New", fonts.ComplexScript.Value);
     }
 }

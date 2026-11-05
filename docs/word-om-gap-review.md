@@ -82,8 +82,8 @@ Reads give effective formatting, `Direct` gives direct formatting, and a mixed v
 
 | Status | Members |
 |---|---|
-| Done | `Reset`, `AllCaps`, `Bold`, `ColorIndex`, `DoubleStrikeThrough`, `Emboss`, `Engrave`, `Hidden`, `Italic`, `Kerning`, `Name`, `Outline`, `Position`, `Scaling`, `Shadow`, `Size`, `SmallCaps`, `Spacing`, `StrikeThrough`, `Subscript`, `Superscript`, `Underline`, `UnderlineColor` |
-| Planned, step 7 | `Grow`, `Shrink`, `Duplicate`, `Parent`, `BoldBi`, `ItalicBi`, `SizeBi`, `ColorIndexBi`, `NameAscii`, `NameBi`, `NameFarEast`, `NameOther`, `TextColor`, `Borders`, `Shading`, `EmphasisMark`, `DisableCharacterSpaceGrid`, and the OpenType features stored as single `w14` elements: `Ligatures`, `NumberForm`, `NumberSpacing`, `StylisticSet`, `ContextualAlternates` |
+| Done | `Reset`, `AllCaps`, `Bold`, `ColorIndex`, `DoubleStrikeThrough`, `Emboss`, `Engrave`, `Hidden`, `Italic`, `Kerning`, `Name`, `Outline`, `Position`, `Scaling`, `Shadow`, `Size`, `SmallCaps`, `Spacing`, `StrikeThrough`, `Subscript`, `Superscript`, `Underline`, `UnderlineColor`, and from step 7: `Grow` and `Shrink` (Word's sizes; the complex script size follows), `Duplicate` (also `Range.Font = font`), `BoldBi`, `ItalicBi`, `SizeBi`, `ColorIndexBi` (the same as `ColorIndex`: Word keeps one colour), `NameAscii`, `NameOther`, `NameFarEast`, `NameBi` (theme fonts read `+Body`, `+Headings` and `+Body CS`), `EmphasisMark`, `DisableCharacterSpaceGrid`. `Name` also changes the complex script font when that was set on its own, as Word does |
+| Planned, step 7 | `Parent`, `TextColor`, `Borders`, `Shading`, and the OpenType features stored as single `w14` elements: `Ligatures`, `NumberForm`, `NumberSpacing`, `StylisticSet`, `ContextualAlternates` |
 | Out of scope | `SetAsTemplateDefault` (writes the attached template) |
 | Decided against | The 2010 text effects, each an object of its own in `w14` markup: `Fill`, `Glow`, `Line`, `Reflection`, `TextShadow`, `ThreeD`. `DiacriticColor` (complex-script only) |
 
