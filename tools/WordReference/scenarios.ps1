@@ -916,6 +916,76 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $s.Font.Borders.Item(-1).LineStyle = 1
         $s.Font.Shading.BackgroundPatternColor = 65280
     }
+    'table-style-add'                 = {
+        param($doc)
+        [void]$doc.Styles.Add('RefTable', 3)
+    }
+    'table-style-members'             = {
+        param($doc)
+        $t = $doc.Styles.Add('RefTable', 3).Table
+        $t.Alignment = 1
+        $t.AllowBreakAcrossPage = 0
+        $t.TopPadding = 5
+        $t.BottomPadding = 6
+        $t.LeftPadding = 7
+        $t.RightPadding = 8
+        $t.RowStripe = 2
+        $t.ColumnStripe = 3
+        $t.Spacing = 2
+        $t.LeftIndent = 10
+    }
+    'table-style-borders-shading'     = {
+        param($doc)
+        $t = $doc.Styles.Add('RefTable', 3).Table
+        $t.Borders.OutsideLineStyle = 1
+        $t.Borders.InsideLineStyle = 1
+        $t.Shading.BackgroundPatternColor = 255
+    }
+    'table-style-conditional-mixed'   = {
+        param($doc)
+        $t = $doc.Styles.Add('RefTable', 3).Table
+        $c = $t.Condition(0)
+        $c.Font.Bold = $true
+        $c.ParagraphFormat.Alignment = 1
+        $c.Shading.BackgroundPatternColor = 65280
+    }
+    'table-style-padding-top'         = {
+        param($doc)
+        $t = $doc.Styles.Add('RefTable', 3).Table
+        $t.TopPadding = 5
+    }
+    'table-style-conditional-banding' = {
+        param($doc)
+        $t = $doc.Styles.Add('RefTable', 3).Table
+        $t.Condition(2).Shading.BackgroundPatternColor = 255
+        $t.Condition(5).Font.Italic = $true
+        $t.Condition(11).Font.Bold = $true
+    }
+    'table-style-cond-shading-first'  = {
+        param($doc)
+        $t = $doc.Styles.Add('RefTable', 3).Table
+        $t.Condition(0).Shading.BackgroundPatternColor = 65280
+    }
+    'table-style-cond-shading-band2'  = {
+        param($doc)
+        $t = $doc.Styles.Add('RefTable', 3).Table
+        $t.Condition(3).Shading.BackgroundPatternColor = 65280
+    }
+    'table-style-cond-shading-vband'  = {
+        param($doc)
+        $t = $doc.Styles.Add('RefTable', 3).Table
+        $t.Condition(6).Shading.BackgroundPatternColor = 65280
+    }
+    'table-style-cond-borders-band'   = {
+        param($doc)
+        $t = $doc.Styles.Add('RefTable', 3).Table
+        $t.Condition(2).Borders.Item(-3).LineStyle = 1
+    }
+    'table-style-cond-padding-only'   = {
+        param($doc)
+        $t = $doc.Styles.Add('RefTable', 3).Table
+        $t.Condition(0).TopPadding = 3
+    }
     'find-replace-font'               = {
         param($doc)
         $doc.Content.InsertAfter('One two three two')

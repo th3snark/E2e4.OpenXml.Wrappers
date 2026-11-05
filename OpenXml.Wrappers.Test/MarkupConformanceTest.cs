@@ -1044,6 +1044,56 @@ public class MarkupConformanceTest
                 s.Font.Shading.BackgroundPatternColor = ColorHelper.RGB(0, 255, 0);
             },
             RefStyles()),
+        new Scenario("table-style-add", d => d.Styles.Add("RefTable", StyleType.Table), RefStyles()),
+        new Scenario("table-style-members",
+            d =>
+            {
+                TableStyleWrapper t = d.Styles.Add("RefTable", StyleType.Table).Table;
+                t.Alignment = RowAlignment.Center;
+                t.AllowBreakAcrossPage = false;
+                t.TopPadding = 5;
+                t.BottomPadding = 6;
+                t.LeftPadding = 7;
+                t.RightPadding = 8;
+                t.RowStripe = 2;
+                t.ColumnStripe = 3;
+                t.Spacing = 2;
+                t.LeftIndent = 10;
+            },
+            RefStyles()),
+        new Scenario("table-style-padding-top", d => d.Styles.Add("RefTable", StyleType.Table).Table.TopPadding = 5, RefStyles()),
+        new Scenario("table-style-borders-shading",
+            d =>
+            {
+                TableStyleWrapper t = d.Styles.Add("RefTable", StyleType.Table).Table;
+                t.Borders.OutsideLineStyle = BorderLineStyle.SingleLine;
+                t.Borders.InsideLineStyle = BorderLineStyle.SingleLine;
+                t.Shading.BackgroundPatternColor = ColorHelper.RGB(255, 0, 0);
+            },
+            RefStyles()),
+        new Scenario("table-style-conditional-mixed",
+            d =>
+            {
+                ConditionalStyleWrapper c = d.Styles.Add("RefTable", StyleType.Table).Table.Condition(ConditionCode.FirstRow);
+                c.Font.Bold = true;
+                c.ParagraphFormat.Alignment = ParagraphAlignment.Center;
+                c.Shading.BackgroundPatternColor = ColorHelper.RGB(0, 255, 0);
+            },
+            RefStyles()),
+        new Scenario("table-style-conditional-banding",
+            d =>
+            {
+                TableStyleWrapper t = d.Styles.Add("RefTable", StyleType.Table).Table;
+                t.Condition(ConditionCode.OddRowBanding).Shading.BackgroundPatternColor = ColorHelper.RGB(255, 0, 0);
+                t.Condition(ConditionCode.LastColumn).Font.Italic = true;
+                t.Condition(ConditionCode.SouthWestCell).Font.Bold = true;
+            },
+            RefStyles()),
+        new Scenario("table-style-cond-shading-first", d => d.Styles.Add("RefTable", StyleType.Table).Table.Condition(ConditionCode.FirstRow).Shading.BackgroundPatternColor = ColorHelper.RGB(0, 255, 0), RefStyles()),
+        new Scenario("table-style-cond-shading-band2", d => d.Styles.Add("RefTable", StyleType.Table).Table.Condition(ConditionCode.EvenRowBanding).Shading.BackgroundPatternColor = ColorHelper.RGB(0, 255, 0), RefStyles()),
+        new Scenario("table-style-cond-shading-vband", d => d.Styles.Add("RefTable", StyleType.Table).Table.Condition(ConditionCode.OddColumnBanding).Shading.BackgroundPatternColor = ColorHelper.RGB(0, 255, 0), RefStyles()),
+        new Scenario("table-style-cond-borders-band", d => d.Styles.Add("RefTable", StyleType.Table).Table.Condition(ConditionCode.OddRowBanding).Borders[BorderPosition.Bottom].LineStyle = BorderLineStyle.SingleLine, RefStyles()),
+        new Scenario("table-style-cond-padding-only", d => d.Styles.Add("RefTable", StyleType.Table).Table.Condition(ConditionCode.FirstRow).TopPadding = 3, RefStyles()),
         new Scenario("find-replace-font",
             d =>
             {

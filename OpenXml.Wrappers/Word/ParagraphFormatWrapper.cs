@@ -66,6 +66,16 @@ public partial class ParagraphFormatWrapper
     //True for the paragraph format of a find or replacement, which keeps every value it is given.
     private bool _explicit;
 
+    //For the paragraph format of a conditional format of a table style (the style is the table style): finds that format, making it if asked to.
+    private readonly Func<bool, TableStyleProperties> _conditional;
+
+    internal ParagraphFormatWrapper(Style style, Func<bool, TableStyleProperties> conditional)
+    {
+        Guard.ThrowIfNull(style);
+        _style = style;
+        _conditional = conditional;
+    }
+
     public ParagraphFormatWrapper(RangeWrapper range)
     {
         Guard.ThrowIfNull(range);
@@ -98,7 +108,7 @@ public partial class ParagraphFormatWrapper
     /// </summary>
     public ParagraphFormatWrapper Direct
     {
-        get { return _direct ? this : new ParagraphFormatWrapper(_range, _style, true); }
+        get { return _direct || _conditional != null ? this : new ParagraphFormatWrapper(_range, _style, true); }
     }
 
     //The properties of a style are a different type to those of a paragraph, with the same children. They are edited as a copy of those of
@@ -106,9 +116,10 @@ public partial class ParagraphFormatWrapper
     private ParagraphProperties CopyStyleProperties()
     {
         ParagraphProperties copy = new ParagraphProperties();
-        if (_style.StyleParagraphProperties != null)
+        StyleParagraphProperties existing = _conditional != null ? _conditional(false)?.StyleParagraphProperties : _style.StyleParagraphProperties;
+        if (existing != null)
         {
-            foreach (OpenXmlElement child in _style.StyleParagraphProperties.ChildElements)
+            foreach (OpenXmlElement child in existing.ChildElements)
             {
                 copy.AppendChild(child.CloneNode(true));
             }
@@ -118,6 +129,30 @@ public partial class ParagraphFormatWrapper
 
     private void StoreStyleProperties(ParagraphProperties copy)
     {
+        if (_conditional != null)
+        {
+            TableStyleProperties conditional = _conditional(copy.HasChildren);
+            if (conditional == null)
+            {
+                return;
+            }
+            conditional.StyleParagraphProperties?.Remove();
+            if (copy.HasChildren)
+            {
+                StyleParagraphProperties made = new StyleParagraphProperties();
+                foreach (OpenXmlElement child in copy.ChildElements.ToList())
+                {
+                    made.AppendChild(child.CloneNode(true));
+                }
+                conditional.StyleParagraphProperties = made;
+            }
+            else if (!conditional.HasChildren)
+            {
+                conditional.Remove();
+            }
+            return;
+        }
+
         _style.StyleParagraphProperties?.Remove();
         if (copy.HasChildren)
         {
@@ -692,7 +727,7 @@ public partial class ParagraphFormatWrapper
     {
         if (_style != null)
         {
-            return read(_direct ? CopyStyleProperties() : new FormattingResolver(_style).ResolveStyleParagraph(_style));
+            return read(_direct || _conditional != null ? CopyStyleProperties() : new FormattingResolver(_style).ResolveStyleParagraph(_style));
         }
 
         IList<Paragraph> paragraphs = GetParagraphs();

@@ -123,6 +123,12 @@ public partial class StyleWrapper
         get { return Type == StyleType.Paragraph ? ParagraphShading(_style) : null; }
     }
 
+    /// <summary>The table properties of a table style (<c>Style.Table</c>). Null for a style of another type.</summary>
+    public TableStyleWrapper Table
+    {
+        get { return Type == StyleType.Table ? new TableStyleWrapper(_style) : null; }
+    }
+
     private static Shading NewShading()
     {
         return new Shading() { Val = ShadingPatternValues.Clear, Color = "auto", Fill = "auto" };

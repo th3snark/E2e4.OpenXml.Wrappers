@@ -26,12 +26,37 @@ public class BordersWrapper
     private readonly Func<IList<OpenXmlElement>> _group;
     private readonly bool _character;
     private readonly Func<IList<TableCell>> _cells;
+    private readonly Func<bool, TableStyleConditionalFormattingTableCellProperties> _conditionalCells;
 
     internal BordersWrapper(OpenXmlElement owner, bool isTable)
     {
         _owner = owner;
         _isTable = isTable;
         _character = owner is Run;
+    }
+
+    private BordersWrapper(Style style, bool character, bool table)
+    {
+        _owner = style;
+        _character = character;
+        _isTable = table;
+    }
+
+    private BordersWrapper(Func<bool, TableStyleConditionalFormattingTableCellProperties> cells)
+    {
+        _conditionalCells = cells;
+    }
+
+    /// <summary>The borders of the tables of a table style.</summary>
+    internal static BordersWrapper ForTableStyle(Style style)
+    {
+        return new BordersWrapper(style, false, true);
+    }
+
+    /// <summary>The borders of the cells of a conditional format of a table style, which Word makes with the borders that are not set none.</summary>
+    internal static BordersWrapper ForConditionalStyle(Func<bool, TableStyleConditionalFormattingTableCellProperties> cells)
+    {
+        return new BordersWrapper(cells);
     }
 
     //The borders of a style: those of a paragraph style, or when character the border round the characters (of a character style, or of the
@@ -69,7 +94,7 @@ public class BordersWrapper
 
     private bool IsParagraph
     {
-        get { return _owner is Paragraph || (_owner is Style && !_character) || (_group != null && !_character); }
+        get { return _owner is Paragraph || (_owner is Style && !_character && !_isTable) || (_group != null && !_character); }
     }
 
     /// <summary>The space between a border and the text it surrounds, in points: that of Word for a page border (24), a paragraph (1 above and below, 4 at the sides) and none for a table or a character.</summary>
@@ -79,7 +104,7 @@ public class BordersWrapper
         {
             return 24u;
         }
-        if (_owner is Paragraph || (_owner is Style && !_character))
+        if (_owner is Paragraph || (_owner is Style && !_character && !_isTable))
         {
             return position == BorderPosition.Top || position == BorderPosition.Bottom ? 1u : 4u;
         }
@@ -99,7 +124,7 @@ public class BordersWrapper
             {
                 throw new ArgumentOutOfRangeException(nameof(position));
             }
-            if ((_isTable || _owner is TableRow || _owner is GridColumn) && (position == BorderPosition.DiagonalDown || position == BorderPosition.DiagonalUp))
+            if ((_isTable || _conditionalCells != null || _owner is TableRow || _owner is GridColumn) && (position == BorderPosition.DiagonalDown || position == BorderPosition.DiagonalUp))
             {
                 throw new NotSupportedException("Only a cell has diagonal borders.");
             }
@@ -519,6 +544,35 @@ public class BordersWrapper
             return pageBorders;
         }
 
+        if (_conditionalCells != null)
+        {
+            TableStyleConditionalFormattingTableCellProperties conditionalCells = _conditionalCells(create);
+            if (conditionalCells == null)
+            {
+                return null;
+            }
+            if (conditionalCells.TableCellBorders == null && create)
+            {
+                conditionalCells.TableCellBorders = ConditionalStyleWrapper.NoBorders();
+            }
+            return conditionalCells.TableCellBorders;
+        }
+
+        if (_owner is Style tableStyle && _isTable)
+        {
+            StyleTableProperties tableProperties = tableStyle.StyleTableProperties;
+            if (tableProperties == null && create)
+            {
+                tableProperties = new StyleTableProperties();
+                tableStyle.StyleTableProperties = tableProperties;
+            }
+            if (tableProperties?.TableBorders == null && create)
+            {
+                tableProperties.TableBorders = new TableBorders();
+            }
+            return tableProperties?.TableBorders;
+        }
+
         if (_owner is Style paragraphStyle)
         {
             StyleParagraphProperties styleProperties = paragraphStyle.StyleParagraphProperties;
@@ -788,6 +842,13 @@ public class BordersWrapper
         }
 
         OpenXmlCompositeElement container = GetContainer(true);
+
+        //A container that is made with borders in it (the conditional format of a table style) has this one.
+        border = Find(position);
+        if (border != null)
+        {
+            return border;
+        }
         border = position switch
         {
             BorderPosition.Top => new TopBorder(),

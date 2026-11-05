@@ -75,6 +75,10 @@ public partial class ParagraphFormatWrapper
     {
         get
         {
+            if (_conditional != null)
+            {
+                throw new NotSupportedException("The borders of a conditional format are those of its cells: use ConditionalStyle.Borders.");
+            }
             if (_style != null)
             {
                 return new BordersWrapper(_style, false);
@@ -90,6 +94,10 @@ public partial class ParagraphFormatWrapper
     {
         get
         {
+            if (_conditional != null)
+            {
+                throw new NotSupportedException("The shading of a conditional format is that of its cells: use ConditionalStyle.Shading.");
+            }
             if (_style != null)
             {
                 return StyleWrapper.ParagraphShading(_style);
@@ -386,7 +394,7 @@ public partial class ParagraphFormatWrapper
         List<Paragraph> holders = new List<Paragraph>();
         if (_style != null)
         {
-            holders.Add(Holder(_direct ? CopyStyleProperties() : new FormattingResolver(_style).ResolveStyleParagraph(_style)));
+            holders.Add(Holder(_direct || _conditional != null ? CopyStyleProperties() : new FormattingResolver(_style).ResolveStyleParagraph(_style)));
         }
         else
         {
