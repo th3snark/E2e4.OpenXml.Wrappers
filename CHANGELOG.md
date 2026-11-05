@@ -34,7 +34,10 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 - `Row.LeftIndent` and `Row.SetLeftIndent(indent, RulerStyle)`, `Cell.Formula` and `Cell.AutoSum` (the results of the sums, averages and so on of the numbers above, below, left or right of a cell are worked out, and a field update does it too). Older horizontal merges (`hMerge`) are converted to `gridSpan` when a table is merged, split or loses a column, so those no longer throw for them.
 
+- `Style` gets `AutomaticallyUpdate`, `Locked`, `QuickStyle`, `UnhideWhenUsed`, `Visibility`, `Priority`, `InUse`, `Linked`, `LinkStyle`, `NoSpaceBetweenParagraphsOfSameStyle`, `LanguageID`, `LanguageIDFarEast` and `NoProofing`, and `BaseStyle` and `NextParagraphStyle` can be set. The markup and values are Word 16's.
+
 ### Behaviour changes
+- **`Styles.Add` of a paragraph style adds its linked character style too** (`<name> Char`), and a new character or table style is based on the default of its type, as Word writes them. A style written with `w:customStyle="true"` is now written `1`.
 - **A grid column is not made of a sliver**: cell edges within 2 twips of each other count as one when a cell is given a width, as in Word.
 - **`Cell.Width` makes the table ragged**, as in Word. It used to set only that cell's width; now the grid is split where cells of any row end, cells span the pieces (`gridSpan`) and a row that ends early gets `gridAfter`/`wAfter`.
 - A table without a style keeps an automatic width (`w:tblW`) until its columns are wider than the space between the margins, as Word does; it used to turn fixed ten twips sooner.

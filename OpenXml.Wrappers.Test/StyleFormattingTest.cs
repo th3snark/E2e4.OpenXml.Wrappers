@@ -99,7 +99,7 @@ public class StyleFormattingTest : IDisposable
         style.ParagraphFormat.Alignment = ParagraphAlignment.Right;
 
         string[] names = style.Style.ChildElements.Select(e => e.LocalName).ToArray();
-        Assert.Equal(new[] { "name", "basedOn", "pPr", "rPr" }, names);
+        Assert.Equal(new[] { "name", "basedOn", "link", "pPr", "rPr" }, names);
     }
 
     [Fact]

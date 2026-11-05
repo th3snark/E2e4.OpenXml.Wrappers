@@ -400,6 +400,38 @@ public class MarkupConformanceTest
         new Scenario("row-set-left-indent-proportional", d => d.Tables.Add(d.Range(0, 0), 3, 3).Rows[1].SetLeftIndent(30, RulerStyle.Proportional), Body()),
         new Scenario("row-set-left-indent-first-column", d => d.Tables.Add(d.Range(0, 0), 3, 3).Rows[1].SetLeftIndent(30, RulerStyle.FirstColumn), Body()),
         new Scenario("row-set-left-indent-same-width", d => d.Tables.Add(d.Range(0, 0), 3, 3).Rows[1].SetLeftIndent(30, RulerStyle.SameWidth), Body()),
+        new Scenario("style-add-paragraph", d => d.Styles.Add("RefStyle", StyleType.Paragraph), RefStyles()),
+        new Scenario("style-add-character", d => d.Styles.Add("RefStyle", StyleType.Character), RefStyles()),
+        new Scenario("style-flags",
+            d =>
+            {
+                StyleWrapper s = d.Styles.Add("RefStyle", StyleType.Paragraph);
+                s.QuickStyle = true;
+                s.Priority = 5;
+                s.Locked = true;
+                s.UnhideWhenUsed = true;
+                s.AutomaticallyUpdate = true;
+                s.NoSpaceBetweenParagraphsOfSameStyle = true;
+                s.Visibility = false;
+            },
+            RefStyles()),
+        new Scenario("style-based-next",
+            d =>
+            {
+                StyleWrapper s = d.Styles.Add("RefStyle", StyleType.Paragraph);
+                s.BaseStyle = "Heading 1";
+                s.NextParagraphStyle = "Heading 2";
+            },
+            RefStyles()),
+        new Scenario("style-language",
+            d =>
+            {
+                StyleWrapper s = d.Styles.Add("RefStyle", StyleType.Paragraph);
+                s.LanguageID = 1033;
+                s.LanguageIDFarEast = 1041;
+                s.NoProofing = true;
+            },
+            RefStyles()),
         new Scenario("cell-delete-up",
             d =>
             {
@@ -1522,6 +1554,13 @@ public class MarkupConformanceTest
     private static Comparison[] CommentParts()
     {
         return new[] { Body(), Part("comments.xml"), Part("commentsExtended.xml"), Part("commentsIds.xml"), Part("commentsExtensible.xml"), Part("people.xml") };
+    }
+
+    //The styles that the scenarios add, whose ids start with Ref.
+    private static Comparison RefStyles()
+    {
+        return new Comparison("styles.xml Ref styles", parts => "styles.xml",
+            root => root.Elements(W + "style").Where(e => ((string)e.Attribute(W + "styleId") ?? string.Empty).StartsWith("Ref", StringComparison.Ordinal)));
     }
 
     private static Comparison Elements(string part, params string[] localNames)

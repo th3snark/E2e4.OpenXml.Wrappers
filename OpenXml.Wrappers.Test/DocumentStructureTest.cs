@@ -288,7 +288,7 @@ public class DocumentStructureTest : IDisposable
         Assert.Equal("MyNote", added.StyleId);
         Assert.False(added.BuiltIn);
         Assert.Equal("Normal", added.BaseStyle);
-        Assert.Equal(4, _document.Styles.Count);
+        Assert.Equal(5, _document.Styles.Count);   //The new style and the character style linked to it.
 
         Paragraph paragraph = new Paragraph(new Run(new Text("x")));
         _body.InsertAt(paragraph, 0);
