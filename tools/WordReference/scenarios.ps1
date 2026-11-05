@@ -231,6 +231,44 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $doc.Tables.Item(1).Rows.SetHeight(40, 2)
         $doc.Tables.Item(1).Cell(3, 1).SetHeight(25, 1)
     }
+    'cell-width-ragged'               = {
+        param($doc)
+        [void]$doc.Tables.Add($doc.Range(0, 0), 3, 3)
+        $doc.Tables.Item(1).Cell(2, 2).Width = 100
+    }
+    'cell-set-width-proportional'     = {
+        param($doc)
+        [void]$doc.Tables.Add($doc.Range(0, 0), 3, 3)
+        $doc.Tables.Item(1).Cell(2, 1).SetWidth(100, 1)
+    }
+    'cell-set-width-first-column'     = {
+        param($doc)
+        [void]$doc.Tables.Add($doc.Range(0, 0), 3, 3)
+        $doc.Tables.Item(1).Cell(2, 1).SetWidth(100, 2)
+    }
+    'cells-set-width-row'             = {
+        param($doc)
+        [void]$doc.Tables.Add($doc.Range(0, 0), 3, 3)
+        $doc.Tables.Item(1).Rows.Item(2).Cells.SetWidth(100, 0)
+    }
+    'cells-distribute-width'          = {
+        param($doc)
+        [void]$doc.Tables.Add($doc.Range(0, 0), 3, 3)
+        $doc.Tables.Item(1).Cell(2, 2).Width = 100
+        $doc.Tables.Item(1).Range.Cells.DistributeWidth()
+    }
+    'columns-set-width'               = {
+        param($doc)
+        [void]$doc.Tables.Add($doc.Range(0, 0), 3, 3)
+        $doc.Tables.Item(1).Columns.Item(1).SetWidth(100, 2)
+        $doc.Tables.Item(1).Columns.Item(2).SetWidth(120, 1)
+    }
+    'columns-distribute-width'        = {
+        param($doc)
+        [void]$doc.Tables.Add($doc.Range(0, 0), 3, 3)
+        $doc.Tables.Item(1).Columns.Item(1).Width = 100
+        $doc.Tables.Item(1).Columns.DistributeWidth()
+    }
     'table-3x3'                       = {
         param($doc)
         [void]$doc.Tables.Add($doc.Range(0, 0), 3, 3)

@@ -77,13 +77,14 @@ public partial class TableCellWrapper : System.IEquatable<TableCellWrapper>
     }
 
     /// <summary>
-    /// The preferred width of the cell in points, 0 when none is set.
+    /// The preferred width of the cell in points, 0 when none is set. Giving a cell a width that differs from the cells above and below it
+    /// makes the table ragged, as in Word: the grid is split where the cells end, and the cells span the pieces.
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException">The value is negative, not a number or more than 1584 points, the most Word allows.</exception>
     public double Width
     {
         get { return ConversionHelper.TwipsToPoints(WidthTwips); }
-        set { WidthTwips = ConversionHelper.PointsToTwips(value, nameof(value)); }
+        set { SetWidth(value, RulerStyle.None); }
     }
 
     internal int WidthTwips

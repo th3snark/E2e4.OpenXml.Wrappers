@@ -171,7 +171,8 @@ public partial class TableWrapper
     /// <summary>
     /// Brings the table into line with its columns after they change, as Word does. Each cell is as wide as the columns it covers. A fixed
     /// width becomes the total of the columns and a percentage what they are of the space the table has. An automatic width stays automatic
-    /// until the columns no longer fit that space, when it too becomes their total.
+    /// until the columns no longer fit that space (the whole width between the margins for a table without a style, as measured in Word),
+    /// when it too becomes their total.
     /// </summary>
     internal static void ColumnsChanged(Table table)
     {
@@ -201,7 +202,7 @@ public partial class TableWrapper
             int share = (int)Math.Round(total * (double)WholeWidthInFiftieths / space, MidpointRounding.AwayFromZero);
             properties.TableWidth = new TableWidth() { Width = share.ToString(CultureInfo.InvariantCulture), Type = TableWidthUnitValues.Pct };
         }
-        else if (type == TableWidthUnitValues.Dxa || total > space)
+        else if (type == TableWidthUnitValues.Dxa || total > (properties.TableStyle == null ? space + 10 : space))
         {
             properties.TableWidth = new TableWidth() { Width = total.ToString(CultureInfo.InvariantCulture), Type = TableWidthUnitValues.Dxa };
         }
@@ -1191,11 +1192,10 @@ public partial class TableColumnWrapperCollection
             return;
         }
 
-        double total = columns.Sum(c => c.Width);
-        double each = Math.Round(total * 20 / columns.Count, MidpointRounding.AwayFromZero) / 20;
-        foreach (TableColumnWrapper column in columns)
+        int[] widths = TableWidths.Share(columns.Sum(c => c.WidthTwips), columns.Select(_ => 1).ToList());
+        for (int index = 0; index < columns.Count; index++)
         {
-            column.Width = each;
+            columns[index].WidthTwips = widths[index];
         }
     }
 }
