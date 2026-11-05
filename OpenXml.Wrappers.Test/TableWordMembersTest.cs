@@ -387,6 +387,9 @@ public class TableWordMembersTest : IDisposable
         Assert.Equal(2, table.Rows.Count);
         table.Cell(0, 0).Delete(ShiftCells.EntireColumn);
         Assert.Equal(2, table.Columns.Count);
+        table.Cell(0, 0).Delete(ShiftCells.Up);
+        Assert.Equal(2, table.Rows.Count);
+        table.Cell(0, 0).Merge(table.Cell(1, 0));
         Assert.Throws<NotSupportedException>(() => table.Cell(0, 0).Delete(ShiftCells.Up));
         AssertValid();
     }

@@ -27,6 +27,19 @@ public class MarkupConformanceTest
 
     private static readonly string ReferenceFolder = Path.Combine(AppContext.BaseDirectory, "TestFiles", "WordReference");
 
+    //A 3x3 table whose cells hold c1 to c9.
+    private static TableWrapper NumberedTable(WordprocessingDocumentWrapper d)
+    {
+        TableWrapper table = d.Tables.Add(d.Range(0, 0), 3, 3);
+        int number = 1;
+        foreach (TableCellWrapper cell in table.Range.Cells)
+        {
+            cell.Range.Text = "c" + number.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            number++;
+        }
+        return table;
+    }
+
     private static readonly Scenario[] Scenarios = new[]
     {
         new Scenario("blank-document", d => { }, AllParts()),
@@ -310,6 +323,38 @@ public class MarkupConformanceTest
                 t.Columns.Borders.InsideLineStyle = BorderLineStyle.SingleLine;
             },
             Body()),
+        new Scenario("cells-merge-row",
+            d =>
+            {
+                TableWrapper t = NumberedTable(d);
+                t.Rows[1].Cells.Merge();
+            },
+            Body()),
+        new Scenario("cells-merge-block", d => NumberedTable(d).Cell(0, 0).Merge(d.Tables[0].Cell(1, 1)), Body()),
+        new Scenario("cell-delete-up",
+            d =>
+            {
+                TableWrapper t = NumberedTable(d);
+                t.Cell(1, 1).Delete(ShiftCells.Up);
+            },
+            Body()),
+        new Scenario("cells-delete-row-up",
+            d =>
+            {
+                TableWrapper t = NumberedTable(d);
+                t.Rows[1].Cells.Delete(ShiftCells.Up);
+            },
+            Body()),
+        new Scenario("cells-add-end", d => d.Tables.Add(d.Range(0, 0), 3, 3).Rows[1].Cells.Add(), Body()),
+        new Scenario("cells-add-before",
+            d =>
+            {
+                TableWrapper t = d.Tables.Add(d.Range(0, 0), 3, 3);
+                t.Rows[1].Cells.Add(t.Cell(1, 1));
+            },
+            Body()),
+        new Scenario("cells-split-columns", d => d.Tables.Add(d.Range(0, 0), 3, 3).Rows[1].Cells.Split(1, 2), Body()),
+        new Scenario("cells-split-rows", d => d.Tables.Add(d.Range(0, 0), 3, 3).Rows[1].Cells.Split(2, 1, false), Body()),
         new Scenario("table-3x3", d => d.Tables.Add(d.Range(0, 0), 3, 3), Body()),
 
         new Scenario("table-3x3-word9-behavior",

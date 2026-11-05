@@ -17,7 +17,7 @@ public enum ShiftCells
     /// <summary>The cells to the right move left, leaving a gap at the end of the row.</summary>
     Left = 0,
 
-    /// <summary>The cells below move up. This is not supported.</summary>
+    /// <summary>The cells below move up in the column, and the one at the bottom is left empty.</summary>
     Up = 1,
 
     /// <summary>The whole row is deleted.</summary>
@@ -927,7 +927,7 @@ public partial class TableCellWrapper
     /// Deletes the cell, as <c>Cell.Delete</c> in Word. With <see cref="ShiftCells.Left"/> the cells after it in the row move left and the row is
     /// left short; deleting the only cell of a row deletes the row.
     /// </summary>
-    /// <exception cref="NotSupportedException"><see cref="ShiftCells.Up"/>, or a cell that is part of a vertical merge.</exception>
+    /// <exception cref="NotSupportedException">A cell that is part of a vertical merge, or <see cref="ShiftCells.Up"/> in a column with merged cells.</exception>
     public void Delete(ShiftCells shiftCells = ShiftCells.Left)
     {
         if (!EnumCompat.IsDefined(shiftCells))
@@ -946,7 +946,8 @@ public partial class TableCellWrapper
         }
         if (shiftCells == ShiftCells.Up)
         {
-            throw new NotSupportedException("Shifting cells up is not supported.");
+            ShiftUp(new[] { this });
+            return;
         }
         if (_tableCell.TableCellProperties?.VerticalMerge != null)
         {
