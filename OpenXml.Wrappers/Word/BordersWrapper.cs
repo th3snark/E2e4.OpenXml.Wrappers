@@ -34,6 +34,14 @@ public class BordersWrapper
         _character = owner is Run;
     }
 
+    //The borders of a style: those of a paragraph style, or when character the border round the characters (of a character style, or of the
+    //font of a paragraph style).
+    internal BordersWrapper(Style style, bool character)
+    {
+        _owner = style;
+        _character = character;
+    }
+
     //The borders of several paragraphs, or when character the border of several runs, found each time they are used so that runs split since are covered.
     internal BordersWrapper(Func<IList<OpenXmlElement>> group, bool character)
     {
@@ -61,7 +69,7 @@ public class BordersWrapper
 
     private bool IsParagraph
     {
-        get { return _owner is Paragraph || (_group != null && !_character); }
+        get { return _owner is Paragraph || (_owner is Style && !_character) || (_group != null && !_character); }
     }
 
     /// <summary>The space between a border and the text it surrounds, in points: that of Word for a page border (24), a paragraph (1 above and below, 4 at the sides) and none for a table or a character.</summary>
@@ -71,7 +79,7 @@ public class BordersWrapper
         {
             return 24u;
         }
-        if (_owner is Paragraph)
+        if (_owner is Paragraph || (_owner is Style && !_character))
         {
             return position == BorderPosition.Top || position == BorderPosition.Bottom ? 1u : 4u;
         }
@@ -134,6 +142,16 @@ public class BordersWrapper
                     throw new NotSupportedException("A row has no horizontal inside border.");
                 }
                 return new BorderWrapper(GetRowTargets(row, position));
+            }
+
+            //Word gives the border round the characters of a paragraph style to the character style linked to it as well.
+            if (_owner is Style style && _character)
+            {
+                Style linked = style.Type?.Value == StyleValues.Paragraph ? StyleWrapper.LinkedOf(style) : null;
+                if (linked != null)
+                {
+                    return new BorderWrapper(new List<(BordersWrapper, BorderPosition)> { (this, position), (new BordersWrapper(linked, true), position) });
+                }
             }
             return new BorderWrapper(this, position);
         }
@@ -336,6 +354,11 @@ public class BordersWrapper
             run.RunProperties?.Border?.Remove();
             return;
         }
+        if (_owner is Style characterStyle && _character)
+        {
+            characterStyle.StyleRunProperties?.Border?.Remove();
+            return;
+        }
 
         OpenXmlCompositeElement container = GetContainer(false);
         container?.Remove();
@@ -496,6 +519,21 @@ public class BordersWrapper
             return pageBorders;
         }
 
+        if (_owner is Style paragraphStyle)
+        {
+            StyleParagraphProperties styleProperties = paragraphStyle.StyleParagraphProperties;
+            if (styleProperties == null && create)
+            {
+                styleProperties = new StyleParagraphProperties();
+                paragraphStyle.StyleParagraphProperties = styleProperties;
+            }
+            if (styleProperties?.ParagraphBorders == null && create)
+            {
+                styleProperties.ParagraphBorders = new ParagraphBorders();
+            }
+            return styleProperties?.ParagraphBorders;
+        }
+
         if (_owner is Paragraph paragraph)
         {
             ParagraphProperties paragraphProperties = create ? paragraph.GetOrAddParagraphProperties() : paragraph.ParagraphProperties;
@@ -556,6 +594,10 @@ public class BordersWrapper
         if (_owner is Run characters)
         {
             return characters.RunProperties?.Border;
+        }
+        if (_owner is Style characterStyle && _character)
+        {
+            return characterStyle.StyleRunProperties?.Border;
         }
         string[] names = GetNames(position);
         return GetContainer(false)?.Elements<BorderType>().FirstOrDefault(e => names.Contains(e.LocalName));
@@ -732,6 +774,16 @@ public class BordersWrapper
         {
             Border characterBorder = new Border();
             run.GetOrAddRunProperties().Border = characterBorder;
+            return characterBorder;
+        }
+        if (_owner is Style styleOwner && _character)
+        {
+            Border characterBorder = new Border();
+            if (styleOwner.StyleRunProperties == null)
+            {
+                styleOwner.StyleRunProperties = new StyleRunProperties();
+            }
+            styleOwner.StyleRunProperties.SetRunProperty(characterBorder);
             return characterBorder;
         }
 

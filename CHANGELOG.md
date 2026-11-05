@@ -38,6 +38,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 - `Find` and `Replacement` get `Font`, `ParagraphFormat`, `Style` and `Highlight`, and `Format` and `ClearFormatting()` now do something. A find with formatting finds text that has it (the runs of text that have it when there is no text to find, whole paragraphs for a paragraph format or paragraph style alone), and a replacement gives what it replaces the formatting; with formatting but no replacement text the text found stays and is formatted. The markup is Word's, checked in nine new reference scenarios.
 
+- `Style.Borders` and `Style.Shading` for paragraph styles, and the `Borders` and `Shading` of the `Font` and `ParagraphFormat` of a style, which threw `NotSupportedException` before. The markup, including what Word gives the linked character style, is Word 16's, checked in five new reference scenarios.
+
 ### Behaviour changes
 - **`Styles.Add` of a paragraph style adds its linked character style too** (`<name> Char`), and a new character or table style is based on the default of its type, as Word writes them. A style written with `w:customStyle="true"` is now written `1`.
 - **A grid column is not made of a sliver**: cell edges within 2 twips of each other count as one when a cell is given a width, as in Word.

@@ -887,6 +887,35 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         [void]$doc.Range(3, 7).Delete()
     }
 
+    'style-borders-paragraph'         = {
+        param($doc)
+        $s = $doc.Styles.Add('RefStyle', 1)
+        $s.Borders.OutsideLineStyle = 1
+        $s.Borders.OutsideColor = 255
+    }
+    'style-borders-top'               = {
+        param($doc)
+        $s = $doc.Styles.Add('RefStyle', 1)
+        $s.Borders.Item(-1).LineStyle = 1
+    }
+    'style-shading-paragraph'         = {
+        param($doc)
+        $s = $doc.Styles.Add('RefStyle', 1)
+        $s.Shading.BackgroundPatternColor = 255
+        $s.Shading.Texture = 100
+    }
+    'style-borders-shading-character' = {
+        param($doc)
+        $s = $doc.Styles.Add('RefStyle', 2)
+        $s.Font.Borders.Item(-1).LineStyle = 1
+        $s.Font.Shading.BackgroundPatternColor = 65280
+    }
+    'style-font-borders-shading'      = {
+        param($doc)
+        $s = $doc.Styles.Add('RefStyle', 1)
+        $s.Font.Borders.Item(-1).LineStyle = 1
+        $s.Font.Shading.BackgroundPatternColor = 65280
+    }
     'find-replace-font'               = {
         param($doc)
         $doc.Content.InsertAfter('One two three two')

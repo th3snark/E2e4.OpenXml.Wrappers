@@ -178,17 +178,6 @@ public class ParagraphBordersTest : IDisposable
     }
 
     [Fact]
-    public void AStyleHasNoBordersYet()
-    {
-        StyleWrapper style = _document.Styles.First(s => s.NameLocal == "Normal");
-
-        Assert.Throws<NotSupportedException>(() => style.ParagraphFormat.Borders);
-        Assert.Throws<NotSupportedException>(() => style.ParagraphFormat.Shading);
-        Assert.Throws<NotSupportedException>(() => style.Font.Borders);
-        Assert.Throws<NotSupportedException>(() => style.Font.Shading);
-    }
-
-    [Fact]
     public void ACharacterBorder_IsOneBorderAllRoundTheText()
     {
         BordersWrapper borders = _document.Range(0, 3).Font.Borders;
