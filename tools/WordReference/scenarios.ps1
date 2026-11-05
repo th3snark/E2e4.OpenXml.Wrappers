@@ -292,6 +292,62 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $doc.Paragraphs.Item(1).Style = 'Heading 1'
     }
 
+    'insert-symbol-ansi' = {
+        param($doc)
+        $doc.Content.InsertAfter('ab')
+        $doc.Range(1, 1).InsertSymbol(171, 'Symbol', $false)
+    }
+
+    'insert-symbol-unicode' = {
+        param($doc)
+        $doc.Content.InsertAfter('ab')
+        $doc.Range(1, 1).InsertSymbol(8364, 'Calibri', $true)
+    }
+
+    'insert-symbol-unicode-in-bold-text' = {
+        param($doc)
+        $doc.Content.InsertAfter('ab')
+        $doc.Range(0, 2).Font.Bold = $true
+        $doc.Range(1, 1).InsertSymbol(169, 'Arial', $true)
+    }
+
+    'insert-symbol-replaces-range' = {
+        param($doc)
+        $doc.Content.InsertAfter('ab')
+        $doc.Range(0, 1).InsertSymbol(169, 'Times New Roman', $true)
+    }
+
+    'insert-alignment-tab-right-margin' = {
+        param($doc)
+        $doc.Content.InsertAfter('ab')
+        $doc.Range(1, 1).InsertAlignmentTab(2, 0)
+    }
+
+    'insert-alignment-tab-center-indent' = {
+        param($doc)
+        $doc.Content.InsertAfter('ab')
+        $doc.Range(1, 1).InsertAlignmentTab(1, 1)
+    }
+
+    'case-upper-part-of-bold-run' = {
+        param($doc)
+        $doc.Content.InsertAfter('abc DEF')
+        $doc.Range(0, 3).Font.Bold = $true
+        $doc.Range(0, 3).Case = 1
+    }
+
+    'case-upper-inside-a-run' = {
+        param($doc)
+        $doc.Content.InsertAfter('abcdef')
+        $doc.Range(2, 4).Case = 1
+    }
+
+    'case-title-sentence' = {
+        param($doc)
+        $doc.Content.InsertAfter('hello wORLD. second sentence here')
+        $doc.Range(0, 33).Case = 4
+    }
+
     'paragraph-style-same-value'      = {
         param($doc)
         $doc.Content.InsertAfter('0123456789')

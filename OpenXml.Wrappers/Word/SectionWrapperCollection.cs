@@ -14,11 +14,21 @@ namespace OpenXml.Wrappers.Word;
 public class SectionWrapperCollection : IEnumerable<SectionWrapper>
 {
     private readonly Body _body;
+    private readonly int _first;
+    private readonly int _last;
 
     public SectionWrapperCollection(Body body)
+        : this(body, 0, int.MaxValue)
+    {
+    }
+
+    //The sections from the first to the last, counting from 0, which is how a range has the sections it is in.
+    internal SectionWrapperCollection(Body body, int first, int last)
     {
         Guard.ThrowIfNull(body);
         _body = body;
+        _first = first;
+        _last = last;
     }
 
     /// <summary>
@@ -104,6 +114,10 @@ public class SectionWrapperCollection : IEnumerable<SectionWrapper>
 
         //The last section always exists, whether or not its properties have been written.
         sections.Add(new SectionWrapper(_body, null));
+        if (_first > 0 || _last < sections.Count - 1)
+        {
+            return sections.Skip(_first).Take(_last - _first + 1).ToList();
+        }
         return sections;
     }
 

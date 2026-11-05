@@ -8,7 +8,10 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - `Range` moves and measures as Word does, with the numbers Word gives checked in Word itself: `StartOf` and `EndOf` (with the new `Movement` enum, `Move` or `Extend`), `Next` and `Previous` (the unit after or before a range, or null), `MoveUntil`, `MoveWhile`, `MoveStartUntil`, `MoveStartWhile`, `MoveEndUntil` and `MoveEndWhile`, `IsEqual`, `InRange`, `InStory`, `WholeStory`, `InsertParagraph` and `ComputeStatistics` (words, characters, characters with spaces and paragraphs).
 - `TextUnit.Story`, to move, extend or expand a range to the start or end of its story: `Move`, `MoveStart`, `MoveEnd`, `Expand`, `StartOf` and `EndOf` take it. `First` and `Last` on `Characters`, `Words` and `Sentences`.
 
+- `Range.Case` (`CharacterCase`: lower, upper, title word, title sentence, toggle), `InsertSymbol`, `InsertAlignmentTab` (`AlignmentTabAlignment`, `AlignmentTabRelative`), `InsertDateTime` (a `DATE` field, or text), `Information` (`InformationType`: tables, header or footer, comment, footnote), `BookmarkID`, `PreviousBookmarkID` and `Sections`. The markup of symbols, alignment tabs and case changes is the markup Word writes, checked in nine new reference scenarios. Case changes keep Word's habits: an acronym in capitals inside other text is kept, and `McDonald` becomes `Mcdonald` when it is made a title.
+
 ### Behaviour changes
+- An alignment tab (`w:ptab`) takes one position, as in Word.
 - **A sentence takes the paragraph marks after it**, as in Word. `"Second sentence here." + paragraph mark` is one sentence, where it used to be a sentence and a mark on its own, and empty paragraphs after a sentence belong to it. `Sentences`, `Expand(TextUnit.Sentence)` and moves by sentences are affected; a range that touches the last sentence of a paragraph now has its mark in `Text`.
 
 ## [1.1.0] - 2026-11-05

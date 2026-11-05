@@ -538,6 +538,7 @@ internal sealed class StoryMap
             case AnnotationReferenceMark:
             case CommentReference:
             case SymbolChar:
+            case PositionalTab:
                 info = new AtomInfo(AtomKind.Object, part, 1, string.Empty);
                 return true;
             default:
