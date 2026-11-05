@@ -83,7 +83,8 @@ Reads give effective formatting, `Direct` gives direct formatting, and a mixed v
 | Status | Members |
 |---|---|
 | Done | `Reset`, `AllCaps`, `Bold`, `ColorIndex`, `DoubleStrikeThrough`, `Emboss`, `Engrave`, `Hidden`, `Italic`, `Kerning`, `Name`, `Outline`, `Position`, `Scaling`, `Shadow`, `Size`, `SmallCaps`, `Spacing`, `StrikeThrough`, `Subscript`, `Superscript`, `Underline`, `UnderlineColor`, and from step 7: `Grow` and `Shrink` (Word's sizes; the complex script size follows), `Duplicate` (also `Range.Font = font`), `BoldBi`, `ItalicBi`, `SizeBi`, `ColorIndexBi` (the same as `ColorIndex`: Word keeps one colour), `NameAscii`, `NameOther`, `NameFarEast`, `NameBi` (theme fonts read `+Body`, `+Headings` and `+Body CS`), `EmphasisMark`, `DisableCharacterSpaceGrid`. `Name` also changes the complex script font when that was set on its own, as Word does |
-| Planned, step 7 | `Parent`, `TextColor`, `Borders`, `Shading`, and the OpenType features stored as single `w14` elements: `Ligatures`, `NumberForm`, `NumberSpacing`, `StylisticSet`, `ContextualAlternates` |
+| Done (step 7c) | `Borders` (one border all round the text: only `Top`) and `Shading` of characters, direct formatting only |
+| Planned, step 7 | `Parent`, `TextColor`, and the OpenType features stored as single `w14` elements: `Ligatures`, `NumberForm`, `NumberSpacing`, `StylisticSet`, `ContextualAlternates` |
 | Out of scope | `SetAsTemplateDefault` (writes the attached template) |
 | Decided against | The 2010 text effects, each an object of its own in `w14` markup: `Fill`, `Glow`, `Line`, `Reflection`, `TextShadow`, `ThreeD`. `DiacriticColor` (complex-script only) |
 
@@ -94,7 +95,8 @@ Reads give effective formatting, `Direct` gives direct formatting, and a mixed v
 |---|---|
 | Done | `Reset`, `Alignment`, `FirstLineIndent`, `Hyphenation`, `KeepTogether`, `KeepWithNext`, `LeftIndent`, `LineSpacing`, `LineSpacingRule`, `MirrorIndents`, `NoLineNumber`, `OutlineLevel`, `PageBreakBefore`, `RightIndent`, `SpaceAfter`, `SpaceAfterAuto`, `SpaceBefore`, `SpaceBeforeAuto`, `TabStops`, `WidowControl` |
 | Done (step 7b) | `OpenUp`, `CloseUp`, `OpenOrCloseUp` (12 points before), `Space1`, `Space15`, `Space2`, `TabIndent`, `TabHangingIndent` (by default tab stops, which is `Settings.DefaultTabStop`), `Duplicate` (also `Range.ParagraphFormat = format`), `ReadingOrder`, `WordWrap`, `AutoAdjustRightIndent`, `BaseLineAlignment`, `TextboxTightWrap`, and the East Asian switches `AddSpaceBetweenFarEastAndAlpha`, `AddSpaceBetweenFarEastAndDigit`, `DisableLineHeightGrid`, `FarEastLineBreakControl`, `HalfWidthPunctuationOnTopOfLine`, `HangingPunctuation` (each a single element, defaults as Word's) |
-| Planned, step 7 | `Borders`, `Shading`, `Parent`, `CollapsedByDefault` |
+| Done (step 7c) | `Borders` (the four edges) and `Shading` of paragraphs, direct formatting only (a style's borders are not read, and a style's `ParagraphFormat.Borders` throws) |
+| Planned, step 7 | `Parent`, `CollapsedByDefault` |
 | Decided against | `CharacterUnitFirstLineIndent`, `CharacterUnitLeftIndent`, `CharacterUnitRightIndent`, `LineUnitAfter`, `LineUnitBefore`, `IndentCharWidth`, `IndentFirstLineCharWidth`: they store a count of characters or lines for the East Asian grid and Word 16 is inconsistent about them (`IndentCharWidth(3)` changed nothing, `IndentFirstLineCharWidth(2)` set the indent but not the unit). They need reference behaviour we cannot reproduce |
 | Planned, step 9 | `Style` |
 
@@ -107,7 +109,8 @@ In Word, `Paragraph` exposes the whole of `ParagraphFormat`; here it forwards on
 |---|---|
 | Done | `Next`, `Previous`, `Alignment`, `FirstLineIndent`, `Format`, `KeepTogether`, `KeepWithNext`, `LeftIndent`, `LineSpacing`, `LineSpacingRule`, `PageBreakBefore`, `Parent`, `Range`, `RightIndent`, `SpaceAfter`, `SpaceBefore`, `Style`, `WidowControl` |
 | Done (step 7b) | everything `ParagraphFormat` has that is done, and `Indent` / `Outdent` (to the next or previous default tab stop), `Reset`, `OpenUp`, `CloseUp`, `OpenOrCloseUp`, `Space1`, `Space15`, `Space2`, `TabIndent`, `TabHangingIndent`, `Format` can be assigned |
-| Planned, step 7 | `OutlineDemote`, `OutlineDemoteToBody`, `OutlinePromote`, `Borders`, `Shading`, `CollapseHeadingByDefault`, `IsStyleSeparator` |
+| Done (step 7c) | `Borders`, `Shading` |
+| Planned, step 7 | `OutlineDemote`, `OutlineDemoteToBody`, `OutlinePromote`, `CollapseHeadingByDefault`, `IsStyleSeparator` |
 | Decided against | the character and line unit members and `IndentCharWidth`, `IndentFirstLineCharWidth` (see ParagraphFormat) |
 | Planned, step 13 | `JoinList`, `SeparateList`, `ListAdvanceTo`, `ResetAdvanceTo`, `ListNumberOriginal` |
 | Out of scope | `CollapsedState` (view state), `SelectNumber` (UI), `DropCap` (drop caps are frames) |

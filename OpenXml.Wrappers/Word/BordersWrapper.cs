@@ -23,27 +23,56 @@ public class BordersWrapper
 
     private readonly OpenXmlElement _owner;
     private readonly bool _isTable;
+    private readonly Func<IList<OpenXmlElement>> _group;
+    private readonly bool _character;
 
     internal BordersWrapper(OpenXmlElement owner, bool isTable)
     {
         _owner = owner;
         _isTable = isTable;
+        _character = owner is Run;
+    }
+
+    //The borders of several paragraphs, or when character the border of several runs, found each time they are used so that runs split since are covered.
+    internal BordersWrapper(Func<IList<OpenXmlElement>> group, bool character)
+    {
+        _group = group;
+        _character = character;
     }
 
     /// <summary>
     /// The positions of the outside borders: the four edges.
     /// </summary>
-    private static readonly BorderPosition[] OutsidePositions = { BorderPosition.Top, BorderPosition.Left, BorderPosition.Bottom, BorderPosition.Right };
+    private static readonly BorderPosition[] FourEdges = { BorderPosition.Top, BorderPosition.Left, BorderPosition.Bottom, BorderPosition.Right };
 
-    /// <summary>The space between a border and the text it surrounds, in points: that of Word for a page border (24) and none for a table.</summary>
-    internal uint DefaultSpace
+    //A character has one border, all round the text.
+    private BorderPosition[] OutsidePositions
     {
-        get { return _owner is SectionProperties ? 24u : 0u; }
+        get { return _character ? new[] { BorderPosition.Top } : FourEdges; }
+    }
+
+    private bool IsParagraph
+    {
+        get { return _owner is Paragraph || (_group != null && !_character); }
+    }
+
+    /// <summary>The space between a border and the text it surrounds, in points: that of Word for a page border (24), a paragraph (1 above and below, 4 at the sides) and none for a table or a character.</summary>
+    internal uint DefaultSpaceFor(BorderPosition position)
+    {
+        if (_owner is SectionProperties)
+        {
+            return 24u;
+        }
+        if (_owner is Paragraph)
+        {
+            return position == BorderPosition.Top || position == BorderPosition.Bottom ? 1u : 4u;
+        }
+        return 0u;
     }
 
     private BorderPosition[] InsidePositions
     {
-        get { return _owner is SectionProperties ? Array.Empty<BorderPosition>() : _owner is TableRow ? new[] { BorderPosition.Vertical } : _owner is GridColumn ? new[] { BorderPosition.Horizontal } : new[] { BorderPosition.Horizontal, BorderPosition.Vertical }; }
+        get { return _owner is SectionProperties || _character || IsParagraph ? Array.Empty<BorderPosition>() : _owner is TableRow ? new[] { BorderPosition.Vertical } : _owner is GridColumn ? new[] { BorderPosition.Horizontal } : new[] { BorderPosition.Horizontal, BorderPosition.Vertical }; }
     }
 
     public BorderWrapper this[BorderPosition position]
@@ -57,6 +86,18 @@ public class BordersWrapper
             if ((_isTable || _owner is TableRow || _owner is GridColumn) && (position == BorderPosition.DiagonalDown || position == BorderPosition.DiagonalUp))
             {
                 throw new NotSupportedException("Only a cell has diagonal borders.");
+            }
+            if (_character && position != BorderPosition.Top)
+            {
+                throw new NotSupportedException("Text has one border, all round it: use the top border.");
+            }
+            if ((_owner is Paragraph || IsParagraph) && position != BorderPosition.Top && position != BorderPosition.Left && position != BorderPosition.Bottom && position != BorderPosition.Right)
+            {
+                throw new NotSupportedException("A paragraph has the four outside borders only.");
+            }
+            if (_group != null)
+            {
+                return new BorderWrapper(_group().Select(o => (new BordersWrapper(o, false), position)).ToList());
             }
             if (_owner is SectionProperties && position != BorderPosition.Top && position != BorderPosition.Left && position != BorderPosition.Bottom && position != BorderPosition.Right)
             {
@@ -175,6 +216,20 @@ public class BordersWrapper
             {
                 cell.Borders.Clear();
             }
+            return;
+        }
+
+        if (_group != null)
+        {
+            foreach (OpenXmlElement owner in _group())
+            {
+                new BordersWrapper(owner, false).Clear();
+            }
+            return;
+        }
+        if (_owner is Run run)
+        {
+            run.RunProperties?.Border?.Remove();
             return;
         }
 
@@ -337,6 +392,16 @@ public class BordersWrapper
             return pageBorders;
         }
 
+        if (_owner is Paragraph paragraph)
+        {
+            ParagraphProperties paragraphProperties = create ? paragraph.GetOrAddParagraphProperties() : paragraph.ParagraphProperties;
+            if (paragraphProperties?.ParagraphBorders == null && create)
+            {
+                paragraphProperties.ParagraphBorders = new ParagraphBorders();
+            }
+            return paragraphProperties?.ParagraphBorders;
+        }
+
         if (_isTable)
         {
             Table table = (Table)_owner;
@@ -384,6 +449,10 @@ public class BordersWrapper
 
     internal BorderType Find(BorderPosition position)
     {
+        if (_owner is Run characters)
+        {
+            return characters.RunProperties?.Border;
+        }
         string[] names = GetNames(position);
         return GetContainer(false)?.Elements<BorderType>().FirstOrDefault(e => names.Contains(e.LocalName));
     }
@@ -553,6 +622,13 @@ public class BordersWrapper
         if (border != null)
         {
             return border;
+        }
+
+        if (_owner is Run run)
+        {
+            Border characterBorder = new Border();
+            run.GetOrAddRunProperties().Border = characterBorder;
+            return characterBorder;
         }
 
         OpenXmlCompositeElement container = GetContainer(true);

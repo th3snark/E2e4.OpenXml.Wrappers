@@ -139,6 +139,31 @@ public class MarkupConformanceTest
                 d.Paragraphs[0].Format.ReadingOrder = ReadingOrder.RightToLeft;
             },
             Body()),
+        new Scenario("paragraph-borders-shading",
+            d =>
+            {
+                d.Content.InsertAfter("One\rTwo\rThree\rFour text");
+                d.Paragraphs[0].Borders[BorderPosition.Top].LineStyle = BorderLineStyle.SingleLine;
+                BordersWrapper outside = d.Paragraphs[1].Borders;
+                outside.OutsideLineStyle = BorderLineStyle.SingleLine;
+                outside.OutsideLineWidth = 1.5;
+                outside.OutsideColor = ColorHelper.RGB(255, 0, 0);
+                d.Paragraphs[2].Borders[BorderPosition.Top].LineStyle = BorderLineStyle.SingleLine;
+                d.Paragraphs[2].Borders[BorderPosition.Left].LineStyle = BorderLineStyle.SingleLine;
+                d.Paragraphs[3].Shading.BackgroundPatternColor = ColorHelper.RGB(255, 0, 0);
+                d.Paragraphs[3].Shading.Texture = ShadingTexture.Percent10;
+            },
+            Body()),
+
+        new Scenario("font-border-shading",
+            d =>
+            {
+                d.Content.InsertAfter("One two three four");
+                d.Range(0, 3).Font.Borders[BorderPosition.Top].LineStyle = BorderLineStyle.SingleLine;
+                d.Range(4, 7).Font.Shading.BackgroundPatternColor = ColorHelper.RGB(0, 255, 0);
+                d.Range(8, 13).Font.Borders.OutsideLineStyle = BorderLineStyle.DoubleLine;
+            },
+            Body()),
         new Scenario("table-3x3", d => d.Tables.Add(d.Range(0, 0), 3, 3), Body()),
 
         new Scenario("table-3x3-word9-behavior",

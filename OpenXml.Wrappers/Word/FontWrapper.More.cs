@@ -216,6 +216,49 @@ public partial class FontWrapper
         return grid != null && grid.Val != null && grid.Val.HasValue && !grid.Val.Value;
     }
 
+    /// <summary>
+    /// The border round the characters, as <c>Font.Borders</c> in Word: one border, <see cref="BorderPosition.Top"/>, which goes all round the
+    /// text. It is the direct setting only.
+    /// </summary>
+    /// <exception cref="NotSupportedException">The font is the font of a style.</exception>
+    public BordersWrapper Borders
+    {
+        get
+        {
+            if (_style != null)
+            {
+                throw new NotSupportedException("The border of the characters of a style is not supported yet.");
+            }
+            return new BordersWrapper(() => _range.GetRuns().Cast<OpenXmlElement>().ToList(), true);
+        }
+    }
+
+    /// <summary>
+    /// The shading behind the characters, as <c>Font.Shading</c> in Word. It is the direct setting only.
+    /// </summary>
+    /// <exception cref="NotSupportedException">The font is the font of a style.</exception>
+    public ShadingWrapper Shading
+    {
+        get
+        {
+            if (_style != null)
+            {
+                throw new NotSupportedException("The shading of the characters of a style is not supported yet.");
+            }
+            return new ShadingWrapper(create => _range.GetRuns().Select(run =>
+            {
+                RunProperties properties = create ? run.GetOrAddRunProperties() : run.RunProperties;
+                Shading shading = properties?.Shading;
+                if (shading == null && create)
+                {
+                    shading = new Shading() { Val = ShadingPatternValues.Clear, Color = "auto", Fill = "auto" };
+                    properties.Shading = shading;
+                }
+                return shading;
+            }).ToList());
+        }
+    }
+
     //The sizes that Grow and Shrink step through above 8 points, as Word does; above 80 points they go in steps of 10.
     private static readonly double[] SizeSteps = { 8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 28, 36, 48, 72, 80 };
 
