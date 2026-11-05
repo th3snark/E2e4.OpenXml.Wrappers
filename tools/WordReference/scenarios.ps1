@@ -495,6 +495,65 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $table.Columns.Item(2).Delete()
     }
 
+    'column-width-narrower'           = {
+        param($doc)
+        $table = $doc.Tables.Add($doc.Range(0, 0), 2, 3, 1, 0)
+        $table.Columns.Item(1).Width = 100
+    }
+
+    'column-width-wider'              = {
+        param($doc)
+        $table = $doc.Tables.Add($doc.Range(0, 0), 2, 3, 1, 0)
+        $table.Columns.Item(1).Width = 200
+    }
+
+    'column-width-preferred-points'   = {
+        param($doc)
+        $table = $doc.Tables.Add($doc.Range(0, 0), 2, 3, 1, 0)
+        $table.PreferredWidthType = 3  # wdPreferredWidthPoints
+        $table.PreferredWidth = 300
+        $table.Columns.Item(1).Width = 200
+    }
+
+    'column-width-after-add'          = {
+        param($doc)
+        $table = $doc.Tables.Add($doc.Range(0, 0), 2, 3, 1, 0)
+        [void]$table.Columns.Add()
+        $table.Columns.Item(1).Width = 120
+        $table.Columns.Item(4).Width = 70
+    }
+
+    'columns-add-within-space'        = {
+        param($doc)
+        $table = $doc.Tables.Add($doc.Range(0, 0), 2, 3, 1, 0)
+        $table.Columns.Item(1).Width = 40
+        $table.Columns.Item(2).Width = 40
+        [void]$table.Columns.Add()
+    }
+
+    'columns-add-preferred-points'    = {
+        param($doc)
+        $table = $doc.Tables.Add($doc.Range(0, 0), 2, 3, 1, 0)
+        $table.PreferredWidthType = 3  # wdPreferredWidthPoints
+        $table.PreferredWidth = 300
+        [void]$table.Columns.Add()
+    }
+
+    'column-delete-preferred-points'  = {
+        param($doc)
+        $table = $doc.Tables.Add($doc.Range(0, 0), 2, 3, 1, 0)
+        $table.PreferredWidthType = 3  # wdPreferredWidthPoints
+        $table.PreferredWidth = 300
+        $table.Columns.Item(2).Delete()
+    }
+
+    'table-preferred-percent'         = {
+        param($doc)
+        $table = $doc.Tables.Add($doc.Range(0, 0), 2, 3, 1, 0)
+        $table.PreferredWidthType = 2  # wdPreferredWidthPercent
+        $table.PreferredWidth = 80
+    }
+
     'table-borders-enable'            = {
         param($doc)
         $table = $doc.Tables.Add($doc.Range(0, 0), 1, 1)

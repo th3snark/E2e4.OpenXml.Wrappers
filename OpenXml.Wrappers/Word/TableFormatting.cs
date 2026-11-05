@@ -72,9 +72,9 @@ internal static class PreferredWidths
         {
             throw new ArgumentOutOfRangeException(nameof(kind));
         }
-        if (double.IsNaN(value) || value < 0 || value > (kind == PreferredWidthType.Percent ? 600 : 31680))
+        if (double.IsNaN(value) || value < 0 || value > (kind == PreferredWidthType.Percent ? 600 : 1584))
         {
-            throw new ArgumentOutOfRangeException(nameof(value), kind == PreferredWidthType.Percent ? "The width must be between 0 and 600 percent." : "The width must be between 0 and 31680 points.");
+            throw new ArgumentOutOfRangeException(nameof(value), kind == PreferredWidthType.Percent ? "The width must be between 0 and 600 percent." : "The width must be between 0 and 1584 points.");
         }
 
         if (kind == PreferredWidthType.Auto)
@@ -158,6 +158,52 @@ public partial class TableWrapper
             {
                 ScaleGrid(int.Parse(width, CultureInfo.InvariantCulture));
             }
+            else if (type == TableWidthUnitValues.Pct)
+            {
+                ScaleGrid((int)Math.Round(int.Parse(width, CultureInfo.InvariantCulture) * (double)TableWrapperCollection.GetSpaceForTable(_table) / WholeWidthInFiftieths, MidpointRounding.AwayFromZero));
+            }
+        }
+    }
+
+    //A width of 100%, in the fiftieths of a percent that w:tblW is written in.
+    private const int WholeWidthInFiftieths = 5000;
+
+    /// <summary>
+    /// Brings the table into line with its columns after they change, as Word does. Each cell is as wide as the columns it covers. A fixed
+    /// width becomes the total of the columns and a percentage what they are of the space the table has. An automatic width stays automatic
+    /// until the columns no longer fit that space, when it too becomes their total.
+    /// </summary>
+    internal static void ColumnsChanged(Table table)
+    {
+        List<int> grid = table.GetFirstChild<TableGrid>().Elements<GridColumn>().Select(c => int.TryParse(c.Width?.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int w) ? w : 0).ToList();
+        foreach (TableRow row in table.Elements<TableRow>())
+        {
+            foreach (TableCell cell in row.Elements<TableCell>())
+            {
+                int width = grid.Skip(TableCellWrapper.GetGridStart(cell)).Take(TableCellWrapper.Span(cell)).Sum();
+                if (width > 0)
+                {
+                    cell.SetWidth(width, TableWidthUnitValues.Dxa);
+                }
+            }
+        }
+
+        TableProperties properties = table.GetFirstChild<TableProperties>();
+        if (properties == null)
+        {
+            return;
+        }
+        int total = grid.Sum();
+        int space = TableWrapperCollection.GetSpaceForTable(table);
+        TableWidthUnitValues? type = properties.TableWidth?.Type?.Value;
+        if (type == TableWidthUnitValues.Pct)
+        {
+            int share = (int)Math.Round(total * (double)WholeWidthInFiftieths / space, MidpointRounding.AwayFromZero);
+            properties.TableWidth = new TableWidth() { Width = share.ToString(CultureInfo.InvariantCulture), Type = TableWidthUnitValues.Pct };
+        }
+        else if (type == TableWidthUnitValues.Dxa || total > space)
+        {
+            properties.TableWidth = new TableWidth() { Width = total.ToString(CultureInfo.InvariantCulture), Type = TableWidthUnitValues.Dxa };
         }
     }
 
@@ -180,7 +226,7 @@ public partial class TableWrapper
         for (int i = 0; i < columns.Count; i++)
         {
             running += widths[i];
-            long end = total * running / sum;
+            long end = (long)Math.Round((double)total * running / sum);
             columns[i].Width = (end - used).ToString(CultureInfo.InvariantCulture);
             used = end;
         }
@@ -1103,7 +1149,6 @@ public partial class TableColumnWrapperCollection
         GridColumn gridColumn = (GridColumn)before.CloneNode(true);
         before.InsertBeforeSelf(gridColumn);
         int gridWidth = gridColumn.Width == null ? 0 : Convert.ToInt32(gridColumn.Width.Value, CultureInfo.InvariantCulture);
-        SetWidthToGrid(table);
 
         foreach (TableRow row in table.Elements<TableRow>())
         {
@@ -1131,6 +1176,7 @@ public partial class TableColumnWrapperCollection
             }
             cell.InsertBeforeSelf(added);
         }
+        TableWrapper.ColumnsChanged(table);
 
         return new TableColumnWrapper(gridColumn);
     }

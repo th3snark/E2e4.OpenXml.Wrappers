@@ -33,7 +33,7 @@ internal static class TableExample
                 table.Cell(row + 1, 2).Range.Text = sales[row][1].ToString(CultureInfo.InvariantCulture);
             }
 
-            //A column is added at the right, and a row at the bottom.
+            //A column is added at the right, and a row at the bottom. As in Word, the new column makes the table wider, here wider than the page.
             TableColumnWrapper change = table.Columns.Add();
             table.Cell(0, 3).Range.Text = "Change";
             for (int row = 0; row < regions.Length; row++)
@@ -52,9 +52,11 @@ internal static class TableExample
             table.Rows[0].Range.Font.Bold = true;
             table.Rows[4].Range.Font.Bold = true;
 
-            //Column widths are in twentieths of a point; the table alignment uses Word's names.
-            table.Columns[0].Width = 2400;
-            change.Width = 1400;
+            //So the columns are given widths that fit between the margins. Widths are in points; the table alignment uses Word's names.
+            table.Columns[0].Width = 120;
+            table.Columns[1].Width = 110;
+            table.Columns[2].Width = 110;
+            change.Width = 110;
             table.Alignment = RowAlignment.Center;
 
             //Borders work as in Word: set the outside and the inside lines separately.

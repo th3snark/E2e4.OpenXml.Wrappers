@@ -52,18 +52,6 @@ public partial class TableColumnWrapperCollection : IEnumerable<TableColumnWrapp
         return grid == null ? new List<GridColumn>() : grid.Elements<GridColumn>().ToList();
     }
 
-    //A column added to a table makes it wider, so Word writes the width it now has, unless it is a percentage of the page.
-    private static void SetWidthToGrid(Table table)
-    {
-        TableProperties properties = table.GetFirstChild<TableProperties>();
-        if (properties?.TableWidth?.Type?.Value == TableWidthUnitValues.Pct || properties == null)
-        {
-            return;
-        }
-        long total = table.GetFirstChild<TableGrid>().Elements<GridColumn>().Sum(c => long.TryParse(c.Width?.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out long w) ? w : 0L);
-        properties.TableWidth = new TableWidth() { Width = total.ToString(CultureInfo.InvariantCulture), Type = TableWidthUnitValues.Dxa };
-    }
-
     public TableColumnWrapper Add()
     {
         Table table = _range.StartElement as Table;
@@ -83,7 +71,6 @@ public partial class TableColumnWrapperCollection : IEnumerable<TableColumnWrapp
         GridColumn gridColumn = (GridColumn)tableGrid.LastChild.Clone();
         tableGrid.Append(gridColumn);
         int gridWidth = gridColumn.Width == null ? 0 : Convert.ToInt32(gridColumn.Width.Value, CultureInfo.InvariantCulture);
-        SetWidthToGrid(table);
 
         //Add an empty copy of the last table cell in each table row to the end of each table row. The new cell spans just the new grid
         //column, has the width of that column, and does not carry over the text or the bookmark and comment anchors of the original.
@@ -106,6 +93,7 @@ public partial class TableColumnWrapperCollection : IEnumerable<TableColumnWrapp
             lastTableCell.InsertAfterSelf(tableCell);
         }
 
+        TableWrapper.ColumnsChanged(table);
         return new TableColumnWrapper(gridColumn);
     }
 

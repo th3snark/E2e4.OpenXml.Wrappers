@@ -79,7 +79,7 @@ public partial class TableCellWrapper : System.IEquatable<TableCellWrapper>
     /// <summary>
     /// The preferred width of the cell in points, 0 when none is set.
     /// </summary>
-    /// <exception cref="ArgumentOutOfRangeException">The value is negative, not a number or more than 31680 points.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">The value is negative, not a number or more than 1584 points, the most Word allows.</exception>
     public double Width
     {
         get { return ConversionHelper.TwipsToPoints(WidthTwips); }

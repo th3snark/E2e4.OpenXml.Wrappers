@@ -8,7 +8,7 @@ run on a developer's machine; the tests and CI only read the snapshots committed
 | --- | --- |
 | `New-WordReferences.ps1` | Runs every scenario in Word and rewrites the snapshots. `-Scenario <name>` runs only some. |
 | `scenarios.ps1` | The scenarios: named scriptblocks of Word object model calls on a new document. |
-| `Test-OpensInWord.ps1` | Opens every sample document in Word; fails on a COM error or a repair and reports `Range.Text` differences. `-Folder` opens other documents. |
+| `Test-OpensInWord.ps1` | Opens every sample document in Word; fails on a COM error, a repair or a failed export to PDF, and reports `Range.Text` differences. `-Folder` opens other documents. |
 | `WordAutomation.ps1` | Shared helpers: starting and quitting Word, guarding `Normal.dotm`. |
 | `Tool/` | A small console program (not in the solution) that links the test project's `MarkupNormalizer.cs`, so that the snapshots and the tests share one normaliser. It also reads a document's text through the library for `Test-OpensInWord.ps1`. |
 

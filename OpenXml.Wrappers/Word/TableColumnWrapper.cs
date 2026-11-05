@@ -72,8 +72,6 @@ public partial class TableColumnWrapper : System.IEquatable<TableColumnWrapper>
             if (span > 1)
             {
                 cell.TableCellProperties.GridSpan = new GridSpan() { Val = span - 1 };
-                TableCellWrapper wrapper = new TableCellWrapper(cell);
-                wrapper.WidthTwips = Math.Max(0, wrapper.WidthTwips - WidthTwips);
                 continue;
             }
 
@@ -89,12 +87,13 @@ public partial class TableColumnWrapper : System.IEquatable<TableColumnWrapper>
             RangeWrapper.DeleteElements(new OpenXmlElement[] { cell });
         }
         _gridColumn.Remove();
+        TableWrapper.ColumnsChanged(table);
     }
 
     /// <summary>
-    /// The width of the column in points, 0 when none is set. Setting it also sets the width of the cells in the column.
+    /// The width of the column in points, 0 when none is set. Setting it also brings the cells and the width of the table into line, as Word does.
     /// </summary>
-    /// <exception cref="ArgumentOutOfRangeException">The value is negative, not a number or more than 31680 points.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">The value is negative, not a number or more than 1584 points, the most Word allows.</exception>
     public double Width
     {
         get { return ConversionHelper.TwipsToPoints(WidthOrZero); }
@@ -107,24 +106,7 @@ public partial class TableColumnWrapper : System.IEquatable<TableColumnWrapper>
         set
         {
             _gridColumn.Width = value.ToString(CultureInfo.InvariantCulture);
-            Table table = _gridColumn.Ancestors<Table>().First();
-            List<GridColumn> grid = table.GetFirstChild<TableGrid>().Elements<GridColumn>().ToList();
-            int index = Index;
-            foreach (TableRow tableRow in table.Elements<TableRow>())
-            {
-                //The cell in this grid column is as wide as the grid columns it covers; rows that are too short for the grid are skipped.
-                TableCell tableCell = TableCellWrapper.CellAtGridColumn(tableRow, index);
-                if (tableCell != null)
-                {
-                    int start = TableCellWrapper.GetGridStart(tableCell);
-                    int width = 0;
-                    for (int i = start; i < start + TableCellWrapper.Span(tableCell) && i < grid.Count; i++)
-                    {
-                        width += new TableColumnWrapper(grid[i]).WidthOrZero;
-                    }
-                    tableCell.SetWidth(width, TableWidthUnitValues.Dxa);
-                }
-            }
+            TableWrapper.ColumnsChanged(_gridColumn.Ancestors<Table>().First());
         }
     }
 

@@ -506,6 +506,81 @@ public class MarkupConformanceTest
             },
             Body()),
 
+        new Scenario("column-width-narrower",
+            d =>
+            {
+                TableWrapper table = d.Tables.Add(d.Range(0, 0), 2, 3, DefaultTableBehavior.Word9TableBehavior, AutoFitBehavior.Fixed);
+                table.Columns[0].Width = 100;
+            },
+            Body()),
+
+        new Scenario("column-width-wider",
+            d =>
+            {
+                TableWrapper table = d.Tables.Add(d.Range(0, 0), 2, 3, DefaultTableBehavior.Word9TableBehavior, AutoFitBehavior.Fixed);
+                table.Columns[0].Width = 200;
+            },
+            Body()),
+
+        new Scenario("column-width-preferred-points",
+            d =>
+            {
+                TableWrapper table = d.Tables.Add(d.Range(0, 0), 2, 3, DefaultTableBehavior.Word9TableBehavior, AutoFitBehavior.Fixed);
+                table.PreferredWidthType = PreferredWidthType.Points;
+                table.PreferredWidth = 300;
+                table.Columns[0].Width = 200;
+            },
+            Body()),
+
+        new Scenario("column-width-after-add",
+            d =>
+            {
+                TableWrapper table = d.Tables.Add(d.Range(0, 0), 2, 3, DefaultTableBehavior.Word9TableBehavior, AutoFitBehavior.Fixed);
+                table.Columns.Add();
+                table.Columns[0].Width = 120;
+                table.Columns[3].Width = 70;
+            },
+            Body()),
+
+        new Scenario("columns-add-within-space",
+            d =>
+            {
+                TableWrapper table = d.Tables.Add(d.Range(0, 0), 2, 3, DefaultTableBehavior.Word9TableBehavior, AutoFitBehavior.Fixed);
+                table.Columns[0].Width = 40;
+                table.Columns[1].Width = 40;
+                table.Columns.Add();
+            },
+            Body()),
+
+        new Scenario("columns-add-preferred-points",
+            d =>
+            {
+                TableWrapper table = d.Tables.Add(d.Range(0, 0), 2, 3, DefaultTableBehavior.Word9TableBehavior, AutoFitBehavior.Fixed);
+                table.PreferredWidthType = PreferredWidthType.Points;
+                table.PreferredWidth = 300;
+                table.Columns.Add();
+            },
+            Body()),
+
+        new Scenario("column-delete-preferred-points",
+            d =>
+            {
+                TableWrapper table = d.Tables.Add(d.Range(0, 0), 2, 3, DefaultTableBehavior.Word9TableBehavior, AutoFitBehavior.Fixed);
+                table.PreferredWidthType = PreferredWidthType.Points;
+                table.PreferredWidth = 300;
+                table.Columns[1].Delete();
+            },
+            Body()),
+
+        new Scenario("table-preferred-percent",
+            d =>
+            {
+                TableWrapper table = d.Tables.Add(d.Range(0, 0), 2, 3, DefaultTableBehavior.Word9TableBehavior, AutoFitBehavior.Fixed);
+                table.PreferredWidthType = PreferredWidthType.Percent;
+                table.PreferredWidth = 80;
+            },
+            Body()),
+
         new Scenario("table-borders-enable",
             d =>
             {

@@ -29,8 +29,8 @@ internal static class MinutesExample
                 details.Cell(row, 0).Shading.BackgroundPatternColor = "D9E2F3";
                 details.Cell(row, 1).Range.Text = facts[row, 1];
             }
-            details.Columns[0].Width = 1500;
-            details.Columns[1].Width = 7000;
+            details.Columns[0].Width = 75;
+            details.Columns[1].Width = 350;
             details.Borders.SetOutside(BorderLineStyle.SingleLine, 0.75, "808080");
             details.Borders.SetInside(BorderLineStyle.SingleLine, 0.5, "BFBFBF");
 

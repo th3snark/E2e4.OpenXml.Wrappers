@@ -1,11 +1,12 @@
 #Requires -Version 7
 <#
 .SYNOPSIS
-Opens every sample document in the installed Word and fails if Word cannot open one or has to repair it.
+Opens every sample document in the installed Word and fails if Word cannot open one, has to repair it or cannot export it to PDF.
 .DESCRIPTION
 Writes the sample documents (dotnet run --project samples/OpenXml.Wrappers.Samples) to a temporary folder, or takes the .docx files in
--Folder, then opens each read-only in a Word of its own (WINWORD.EXE /a /automation, DisplayAlerts off). A COM error while opening or a
-document that Word reports as repaired is a failure. Differences between Word's Content.Text and the library's (through
+-Folder, then opens each read-only in a Word of its own (WINWORD.EXE /a /automation, DisplayAlerts off). A COM error while opening, a
+document that Word reports as repaired and one that Word cannot export are failures: exporting needs the whole document laid out, which
+opening does not, and a table far wider than the page can fail it. Differences between Word's Content.Text and the library's (through
 tools/WordReference/Tool) are reported but do not fail the run. Normal.dotm is backed up first and checked afterwards.
 
 Word is needed, so this runs on a developer's machine, not in CI.
@@ -65,6 +66,9 @@ function Get-Difference([string] $Word, [string] $Library) {
         (Format-Text $Library.Substring($start, [Math]::Min(60, $Library.Length - $start))))
 }
 
+$exportFolder = Join-Path ([IO.Path]::GetTempPath()) ('WordReference-export-' + [IO.Path]::GetRandomFileName())
+New-Item -ItemType Directory -Path $exportFolder | Out-Null
+
 $failures = [Collections.Generic.List[string]]::new()
 $differences = [Collections.Generic.List[string]]::new()
 $template = Backup-NormalTemplate
@@ -94,6 +98,12 @@ try {
             elseif ($wordText -cne ($libraryText = [IO.File]::ReadAllText($libraryTextPath))) {
                 $differences.Add(('{0}: {1}' -f $file.Name, (Get-Difference $wordText $libraryText)))
             }
+            try {
+                $document.ExportAsFixedFormat((Join-Path $exportFolder ([IO.Path]::ChangeExtension($file.Name, '.pdf'))), 17)  # wdExportFormatPDF
+            }
+            catch {
+                $failures.Add(('{0}: Word could not export it: {1}' -f $file.Name, $_.Exception.Message))
+            }
             Write-Host ('Opened {0}' -f $file.Name)
         }
         finally {
@@ -105,6 +115,7 @@ finally {
     Stop-Word $word
 }
 Assert-NormalTemplateUnchanged $template
+Remove-Item -LiteralPath $exportFolder -Recurse -Force
 
 if ($ownFolder) {
     Remove-Item -LiteralPath $Folder -Recurse -Force
@@ -121,6 +132,6 @@ if ($differences.Count -gt 0) {
 if ($failures.Count -gt 0) {
     Write-Host ''
     $failures | ForEach-Object { Write-Host ('  ' + $_) -ForegroundColor Red }
-    throw ('Word could not open {0} of {1} document(s) cleanly.' -f $failures.Count, $files.Count)
+    throw ('Word had {0} problem(s) with {1} document(s).' -f $failures.Count, $files.Count)
 }
-Write-Host ('Word opened all {0} document(s) without repairing them.' -f $files.Count)
+Write-Host ('Word opened and exported all {0} document(s) without repairing them.' -f $files.Count)

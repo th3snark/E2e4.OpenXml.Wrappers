@@ -167,7 +167,7 @@ public class TableWrapperCollection : IEnumerable<TableWrapper>
     //content.
     private static Table CreateTable(OpenXmlElement anchor, int numRows, int numColumns, bool word9, AutoFitBehavior autoFit)
     {
-        int width = GetAvailableWidth(anchor) - (word9 ? 10 : 0);
+        int width = word9 ? GetSpaceForTable(anchor) : GetAvailableWidth(anchor);
         bool window = autoFit == AutoFitBehavior.Window;
         bool content = word9 && autoFit == AutoFitBehavior.Content;
         int[] columns = Enumerable.Range(0, numColumns).Select(i => content ? ContentColumnWidth : Share(width, i, numColumns)).ToArray();
@@ -230,6 +230,14 @@ public class TableWrapperCollection : IEnumerable<TableWrapper>
     }
 
     /// <summary>
+    /// The width, in twips, that Word gives a table at the element and measures its columns against: 10 less than <see cref="GetAvailableWidth"/>.
+    /// </summary>
+    internal static int GetSpaceForTable(OpenXmlElement element)
+    {
+        return Math.Max(GetAvailableWidth(element) - 10, 1);
+    }
+
+    /// <summary>
     /// The width, in twips, between the margins of the page or inside the margins of the table cell that the element is in.
     /// </summary>
     private static int GetAvailableWidth(OpenXmlElement element)
@@ -242,8 +250,16 @@ public class TableWrapperCollection : IEnumerable<TableWrapper>
             return Math.Max(cellWidth - DefaultCellMargins, 0);
         }
 
-        //The section properties at the end of the body are those of the last section; Word's default page is 8.5 x 11 inches with 1 inch margins.
-        SectionProperties sectionProperties = element.Ancestors<Body>().LastOrDefault()?.Elements<SectionProperties>().LastOrDefault();
+        //A section ends with the paragraph that holds its properties, and those at the end of the body are of the last section. Word's default
+        //page is 8.5 x 11 inches with 1 inch margins.
+        Body body = element.Ancestors<Body>().LastOrDefault();
+        OpenXmlElement block = element.Parent is Body ? element : element.Ancestors().FirstOrDefault(e => e.Parent is Body);
+        SectionProperties sectionProperties = null;
+        for (OpenXmlElement next = block; next != null && sectionProperties == null; next = next.NextSibling())
+        {
+            sectionProperties = (next as Paragraph)?.ParagraphProperties?.GetFirstChild<SectionProperties>();
+        }
+        sectionProperties = sectionProperties ?? body?.Elements<SectionProperties>().LastOrDefault();
         uint pageWidth = sectionProperties?.GetFirstChild<PageSize>()?.Width?.Value ?? 12240;
         PageMargin margin = sectionProperties?.GetFirstChild<PageMargin>();
         long left = margin?.Left?.Value ?? 1440;
