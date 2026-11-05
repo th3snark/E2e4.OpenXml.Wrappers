@@ -154,10 +154,13 @@ In Word, `Paragraph` exposes the whole of `ParagraphFormat`; here it forwards on
 | Status | Members |
 |---|---|
 | Done | `Delete`, `BaseStyle`, `BuiltIn`, `Font`, `NameLocal`, `NextParagraphStyle`, `ParagraphFormat`, `Type` |
-| Planned, step 9 | `AutomaticallyUpdate`, `Borders`, `Shading`, `InUse`, `LanguageID`, `LanguageIDFarEast`, `NoProofing`, `Linked`, `LinkStyle`, `Locked`, `Priority`, `QuickStyle`, `UnhideWhenUsed`, `Visibility`, `NoSpaceBetweenParagraphsOfSameStyle`, `Table`, `Parent` |
+| Done (step 9a) | `AutomaticallyUpdate`, `InUse`, `LanguageID`, `LanguageIDFarEast`, `NoProofing`, `Linked`, `LinkStyle` (read only), `Locked`, `Priority`, `QuickStyle`, `UnhideWhenUsed`, `Visibility`, `NoSpaceBetweenParagraphsOfSameStyle`; `BaseStyle` and `NextParagraphStyle` can be set |
+| Planned, step 9 | `Borders`, `Shading`, `Table`, `Parent` |
 | Planned, step 13 | `ListLevelNumber`, `ListTemplate`, `LinkToListTemplate` |
 | Out of scope | `Frame` (frames) |
 | Decided against | `Description` (the summary Word generates for its UI, such as "Font: Bold, Style: Quick Style") |
+
+Style members as Word 16 behaves, measured: `Styles.Add` of a paragraph style also adds the character style linked to it (`<name> Char`, based on Default Paragraph Font), and a character or table style is based on the default of its type. `Priority` is one more than `w:uiPriority` (which is left out for 1). `Visibility` is true when the style is hidden (`w:semiHidden`): Word 16 reads false for Normal and Heading 1 and true for Heading 5. Language and no-proofing set on a paragraph style are also written to the linked style, and setting `BaseStyle` gives the linked style the character formatting of the new base (its own, not what it inherits), and so does `Priority` for the priority. Word does not mirror other changes by the library's `Font` of a style to the linked style, which it does for those it writes itself (not compared). `LinkStyle` is read only: Word refused to link a paragraph style to a character style that was made on its own.
 
 <!-- learn: styles -->
 

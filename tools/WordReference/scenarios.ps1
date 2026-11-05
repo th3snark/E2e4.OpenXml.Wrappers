@@ -586,6 +586,38 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         }
     }
 
+    'style-flags'                     = {
+        param($doc)
+        $s = $doc.Styles.Add('RefStyle', 1)
+        $s.QuickStyle = $true
+        $s.Priority = 5
+        $s.Locked = $true
+        $s.UnhideWhenUsed = $true
+        $s.AutomaticallyUpdate = $true
+        $s.NoSpaceBetweenParagraphsOfSameStyle = $true
+        $s.Visibility = $false
+    }
+    'style-based-next'                = {
+        param($doc)
+        $s = $doc.Styles.Add('RefStyle', 1)
+        $s.BaseStyle = 'Heading 1'
+        $s.NextParagraphStyle = 'Heading 2'
+    }
+    'style-language'                  = {
+        param($doc)
+        $s = $doc.Styles.Add('RefStyle', 1)
+        $s.LanguageID = 1033
+        $s.LanguageIDFarEast = 1041
+        $s.NoProofing = $true
+    }
+    'style-add-paragraph'             = {
+        param($doc)
+        [void]$doc.Styles.Add('RefStyle', 1)
+    }
+    'style-add-character'             = {
+        param($doc)
+        [void]$doc.Styles.Add('RefStyle', 2)
+    }
     'paragraph-style-over-most-of-a-format' = {
         param($doc)
         $doc.Content.InsertAfter('0123456789')

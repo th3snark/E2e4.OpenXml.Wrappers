@@ -105,7 +105,7 @@ public class StyleWrapperCollection : IEnumerable<StyleWrapper>
         Style style = new Style(new StyleName() { Val = name })
         {
             StyleId = styleId,
-            CustomStyle = true,
+            CustomStyle = OpenXmlExtensions.OnValue(),
             Type = type switch
             {
                 StyleType.Character => StyleValues.Character,
@@ -114,15 +114,35 @@ public class StyleWrapperCollection : IEnumerable<StyleWrapper>
                 _ => StyleValues.Paragraph
             }
         };
-        if (type == StyleType.Paragraph)
+        if (type != StyleType.List)
         {
-            string defaultId = part.Styles.Elements<Style>().FirstOrDefault(s => s.Type != null && s.Type.HasValue && s.Type.Value == StyleValues.Paragraph && s.Default != null && s.Default.HasValue && s.Default.Value)?.StyleId?.Value;
+            StyleValues basedOnType = type == StyleType.Character ? StyleValues.Character : type == StyleType.Table ? StyleValues.Table : StyleValues.Paragraph;
+            string defaultId = part.Styles.Elements<Style>().FirstOrDefault(s => s.Type != null && s.Type.HasValue && s.Type.Value == basedOnType && s.Default != null && s.Default.HasValue && s.Default.Value)?.StyleId?.Value;
             if (defaultId != null)
             {
                 style.InsertAfter(new BasedOn() { Val = defaultId }, style.StyleName);
             }
         }
         part.Styles.AppendChild(style);
+
+        //Word gives a paragraph style a character style of its own, linked to it, that carries its character formatting.
+        if (type == StyleType.Paragraph && !Exists(name + " Char") && !Exists(styleId + "Char"))
+        {
+            string characterBase = part.Styles.Elements<Style>().FirstOrDefault(s => s.Type != null && s.Type.HasValue && s.Type.Value == StyleValues.Character && s.Default != null && s.Default.HasValue && s.Default.Value)?.StyleId?.Value;
+            Style linked = new Style(new StyleName() { Val = name + " Char" })
+            {
+                StyleId = styleId + "Char",
+                CustomStyle = OpenXmlExtensions.OnValue(),
+                Type = StyleValues.Character
+            };
+            if (characterBase != null)
+            {
+                linked.AppendChild(new BasedOn() { Val = characterBase });
+            }
+            linked.AppendChild(new LinkedStyle() { Val = style.StyleId.Value });
+            part.Styles.AppendChild(linked);
+            style.LinkedStyle = new LinkedStyle() { Val = linked.StyleId.Value };
+        }
         return new StyleWrapper(style);
     }
 

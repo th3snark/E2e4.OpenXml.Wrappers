@@ -13,7 +13,7 @@ namespace OpenXml.Wrappers.Word;
 /// <see cref="Name"/> is the name Word shows for a built-in style ("Heading 1"), whatever the document stores ("heading 1"). The formatting of a
 /// style is read and set through <see cref="Font"/> and <see cref="ParagraphFormat"/>.
 /// </remarks>
-public class StyleWrapper : System.IEquatable<StyleWrapper>
+public partial class StyleWrapper : System.IEquatable<StyleWrapper>
 {
     private readonly Style _style;
 
@@ -53,6 +53,7 @@ public class StyleWrapper : System.IEquatable<StyleWrapper>
     {
         Styles styles = _style.Parent as Styles;
         MainDocumentPart mainDocumentPart = StyleHelper.GetMainDocumentPart(_style);
+
         if (styles == null || mainDocumentPart == null)
         {
             throw new InvalidOperationException("The style is not a style of a document.");
@@ -132,19 +133,25 @@ public class StyleWrapper : System.IEquatable<StyleWrapper>
     }
 
     /// <summary>
-    /// The name of the style this style is based on, or null.
+    /// The name of the style this style is based on, or null. Setting it gives the style the new base (a built-in style is added to the
+    /// document), and gives the character style it is linked to the character formatting of the base, as Word does; null removes the base.
     /// </summary>
+    /// <exception cref="ArgumentException">There is no style with that name.</exception>
     public string BaseStyle
     {
         get { return GetName(_style.BasedOn?.Val?.Value); }
+        set { SetBaseStyle(value); }
     }
 
     /// <summary>
-    /// The name of the style applied to the paragraph after one in this style, or null when it is the same style.
+    /// The name of the style applied to the paragraph after one in this style, or null when it is the same style. Setting null makes it the
+    /// same style.
     /// </summary>
+    /// <exception cref="ArgumentException">There is no style with that name.</exception>
     public string NextParagraphStyle
     {
         get { return GetName(_style.NextParagraphStyle?.Val?.Value); }
+        set { SetNextParagraphStyle(value); }
     }
 
     /// <summary>
