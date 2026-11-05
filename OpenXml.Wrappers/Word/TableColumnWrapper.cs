@@ -43,14 +43,10 @@ public partial class TableColumnWrapper : System.IEquatable<TableColumnWrapper>
     /// instead, and when the cell removed was the top of a vertical merge the next cell down takes its place. Deleting the only column
     /// deletes the table.
     /// </summary>
-    /// <exception cref="NotSupportedException">The table uses the older horizontal merge (<c>hMerge</c>).</exception>
     public void Delete()
     {
         Table table = _gridColumn.Ancestors<Table>().First();
-        if (table.Descendants<HorizontalMerge>().Any())
-        {
-            throw new NotSupportedException("Deleting a column of a table with horizontally merged cells of the older kind is not supported.");
-        }
+        TableWidths.NormaliseHorizontalMerges(table);
 
         List<GridColumn> grid = table.GetFirstChild<TableGrid>().Elements<GridColumn>().ToList();
         if (grid.Count == 1)

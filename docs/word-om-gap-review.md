@@ -193,7 +193,8 @@ In Word, `Paragraph` exposes the whole of `ParagraphFormat`; here it forwards on
 |---|---|
 | Done | `AutoFitBehavior`, `Cell`, `Delete`, `Split`, `AllowAutoFit`, `ApplyStyleColumnBands`, `ApplyStyleFirstColumn`, `ApplyStyleHeadingRows`, `ApplyStyleLastColumn`, `ApplyStyleLastRow`, `ApplyStyleRowBands`, `Borders`, `BottomPadding`, `Columns`, `Descr`, `LeftPadding`, `NestingLevel`, `Parent`, `PreferredWidth`, `PreferredWidthType`, `Range`, `RightPadding`, `Rows`, `Shading`, `Spacing`, `Style`, `Tables`, `Title`, `TopPadding`, `Uniform` |
 | Done (step 8e) | `ConvertToText`, `Sort` |
-| Planned, step 8 | `SortAscending`, `SortDescending` (Word sorts by the column of the selection, which the library does not have; use `Sort`), `TableDirection`, `ApplyStyleDirectFormatting` |
+| Planned, step 8 | `SortAscending`, `SortDescending` (Word sorts by the column of the selection, which the library does not have; use `Sort`), `ApplyStyleDirectFormatting` |
+| Not done | `TableDirection`: set through automation Word 16 changed nothing in the table, so there is no markup to follow |
 | Planned, step 19 | `Select` |
 | Decided against | `AutoFormat`, `AutoFormatType`, `UpdateAutoFormat` (Word 97 table AutoFormat; table styles replace it), `ID` (an HTML id) |
 
@@ -208,7 +209,7 @@ In Word, `Paragraph` exposes the whole of `ParagraphFormat`; here it forwards on
 ### 3.11 Rows, Row, Columns, Column, Cells, Cell
 <!-- learn: rows -->
 
-The collections are where tables are thinnest: Word's `Rows`, `Columns` and `Cells` format the whole set, and `Range.Cells` is the common way to format a block. Step 8 also adds a pass at open that turns legacy `hMerge` merges into `gridSpan`, so merge, split and column delete stop throwing for them.
+The collections are where tables are thinnest: Word's `Rows`, `Columns` and `Cells` format the whole set, and `Range.Cells` is the common way to format a block. Older `hMerge` merges are turned into `gridSpan` the first time a table is merged, split or loses a column (step 8f), so those no longer throw for them.
 
 **Rows.**
 
@@ -218,7 +219,7 @@ The collections are where tables are thinnest: Word's `Rows`, `Columns` and `Cel
 | Done (step 8a) | `Delete`, `SetHeight` |
 | Done (step 8c) | `Borders` |
 | Done (step 8e) | `ConvertToText` |
-| Planned, step 8 | `DistributeHeight` (Word measures the laid-out height, so it needs layout), `SetLeftIndent`, `AllowOverlap`, `DistanceBottom`, `DistanceLeft`, `DistanceRight`, `DistanceTop`, `HorizontalPosition`, `VerticalPosition`, `RelativeHorizontalPosition`, `RelativeVerticalPosition`, `WrapAroundText`, `SpaceBetweenColumns`, `TableDirection` |
+| Planned, step 8 | `DistributeHeight` (Word measures the laid-out height, so it needs layout), `SetLeftIndent` (for all the rows: Word also sets the table indent; each `Row.SetLeftIndent` is done), `AllowOverlap`, `DistanceBottom`, `DistanceLeft`, `DistanceRight`, `DistanceTop`, `HorizontalPosition`, `VerticalPosition`, `RelativeHorizontalPosition`, `RelativeVerticalPosition`, `WrapAroundText`, `SpaceBetweenColumns`, `TableDirection` |
 | Planned, step 19 | `Select` |
 
 <!-- learn: row -->
@@ -230,7 +231,8 @@ The collections are where tables are thinnest: Word's `Rows`, `Columns` and `Cel
 | Done | `Delete`, `SetHeight`, `Alignment`, `AllowBreakAcrossPages`, `Borders`, `Cells`, `HeadingFormat`, `Height`, `HeightRule`, `Index`, `IsFirst`, `IsLast`, `Next`, `Parent`, `Previous`, `Range`, `Shading` |
 | Done (step 8a) | `NestingLevel` |
 | Done (step 8e) | `ConvertToText` |
-| Planned, step 8 | `SetLeftIndent`, `LeftIndent`, `SpaceBetweenColumns` |
+| Done (step 8f) | `LeftIndent`, `SetLeftIndent` |
+| Planned, step 8 | `SpaceBetweenColumns` |
 | Planned, step 19 | `Select` |
 | Decided against | `ID` (an HTML id) |
 
@@ -273,6 +275,8 @@ The collections are where tables are thinnest: Word's `Rows`, `Columns` and `Cel
 | Done (step 8d) | `Add`, `Delete`, `Merge`, `Split` |
 | Needs layout | `AutoFit`, `DistributeHeight` (Word measures the laid-out height) |
 
+`Row.SetLeftIndent(indent, ruler style)` leaves space before the first cell of one row, as Word writes it: `gridBefore` and `wBefore` on the row, a grid column where the row starts, and `gridAfter` on the rows that now end earlier. With a ruler style other than `None` the cells give up the indent so that the row ends where it did (`FirstColumn`: the first cell; `Proportional`: in proportion; `SameWidth`: every cell the same whole number of twips). `Row.LeftIndent` reads the space before the row (not the table indent) and sets it as `RulerStyle.None`. A grid column is never made of an edge that is within 2 twips of another, as Word does. `Cell.Formula(formula, numFormat)` puts a formula field at the start of the cell, written in pieces as Word writes it; the result is worked out for `SUM`, `AVERAGE`, `COUNT`, `MIN`, `MAX` and `PRODUCT` of `ABOVE`, `BELOW`, `LEFT` or `RIGHT`, which take the numbers up to the first cell that is empty or has no number, and `\#` pictures follow .NET custom formats. Other formulas (cell references, arithmetic) are left for Word to work out. `AutoSum` is the sum of the numbers above or, when there are none directly above, to the left; with neither, Word's result `!Unexpected End of Formula`.
+
 `Table.ConvertToText`, `Rows.ConvertToText` and `Row.ConvertToText` follow Word 16: each cell paragraph is a paragraph for `Paragraphs`; otherwise each row is a paragraph with its cells' text divided by the separator (a tab, a comma and a space, a hyphen for `Default`, or the text given), with left tab stops at the edge of each cell after the first, and a left indent of the cell margin, when tabs separate. A row split out of a table leaves the table in two around the paragraph. Cells with several paragraphs are joined with a space (not checked in Word), and tables inside cells are not converted (the library throws). `Range.ConvertToTable` makes a row of each paragraph and a cell of each field, or fills rows of `NumColumns` cells with paragraphs; the new table is the one `Tables.Add` makes, and the cells hold the text only: the formatting of the text is not kept. `Default` as the separator for `ConvertToTable` is assumed to be the hyphen too. `Table.Sort(excludeHeader, fieldNumber, type, order)` sorts the rows by one column (0-based), keeping equal rows in order and the header row if asked; text is compared by the current culture without regard to case, numbers by the first number in the text, and dates; a table with merged cells throws.
 
 `Cells.Merge` merges the rectangle that holds all the cells. `Cells.Add` adds a cell to a row, before a cell or at the end, like the cell it goes before (or the last), and the grid grows by its width with the other rows left short (`gridAfter`). `Cells.Delete` with `ShiftCells.Left` deletes the columns when the cells are all of them; with `Up` the cells below move up and the bottom one is left empty (also `Cell.Delete(ShiftCells.Up)`); a cell that is merged vertically or spans columns throws. `Cells.Split(rows, columns, mergeBeforeSplit)` splits each cell; whole rows split into rows are new rows, which Word gives the row height it measured: the library writes 252 twips, one line of the default 11 point font. Differences: Word turns a merge of a whole table into one row and one column with a measured height, where the library keeps the merged cell in the table's grid and rows; and `mergeBeforeSplit` can only split into a number of columns that divides the columns the merged cell spans, as `Cell.Split` does. The Word scenarios cover each operation on a row or a 2 by 2 block.
@@ -290,7 +294,7 @@ A cell given a width of its own makes the table ragged, as in Word: the grid get
 | Done | `Delete` (left, entire row and column; up since step 8d; vertically merged cells still throw), `Merge`, `Split`, `Borders`, `BottomPadding`, `Column`, `ColumnIndex`, `FitText`, `Height`, `HeightRule`, `LeftPadding`, `Next`, `Parent`, `PreferredWidth`, `PreferredWidthType`, `Previous`, `Range`, `RightPadding`, `Row`, `RowIndex`, `Shading`, `Tables`, `TopPadding`, `VerticalAlignment`, `Width`, `WordWrap` |
 | Done (step 8a) | `SetHeight`, `NestingLevel` |
 | Done (step 8b) | `SetWidth` |
-| Planned, step 8 | `AutoSum`, `Formula` |
+| Done (step 8f) | `AutoSum`, `Formula` |
 | Planned, step 19 | `Select` |
 | Decided against | `ID` (an HTML id) |
 
@@ -874,7 +878,7 @@ Kept on purpose, because no one or two Word members do the same thing:
 
 * Track changes: edits are never recorded as revisions, so `TrackRevisions = true` throws (reading it and setting it to false work). Tracked-deleted text is counted in positions but is not exposed as `Revisions`. Recording revisions is out of scope.
 * `Find` cannot search or replace by formatting until step 9, and has no sounds-like or word-forms matching.
-* Legacy `hMerge` tables are rejected by merge, split and column delete until step 8. `Cell.Delete` shifts left only and not on vertically merged cells.
+* `Cell.Delete` and `Cells.Delete` do not shift up or left on vertically merged cells, or up on cells that span columns.
 * `Range.Text` can be set for cells, paragraphs, bookmarks, headers and footers, the document and spans, but not for rows and tables.
 * `Comments.Add` and `Bookmarks.Add` accept only some range kinds. Adding a table, paragraph or insert inside a hyperlink or other run-holding element, and a paragraph split inside a hyperlink, throw.
 * Field results are computed for a fixed set of field types.

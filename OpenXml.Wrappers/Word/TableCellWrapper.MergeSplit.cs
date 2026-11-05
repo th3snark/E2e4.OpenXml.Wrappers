@@ -15,7 +15,7 @@ public partial class TableCellWrapper
     /// <c>Cell.Merge</c> in Word. The text of the other cells is added to the end of this rectangle's first cell.
     /// </summary>
     /// <exception cref="ArgumentException">The cells are not in the same table.</exception>
-    /// <exception cref="NotSupportedException">The rectangle cuts through a cell that is merged horizontally, or contains older horizontal merges (<c>hMerge</c>).</exception>
+    /// <exception cref="NotSupportedException">The rectangle cuts through a cell that is merged horizontally.</exception>
     public void Merge(TableCellWrapper mergeTo)
     {
         Guard.ThrowIfNull(mergeTo);
@@ -29,6 +29,7 @@ public partial class TableCellWrapper
             return;
         }
 
+        TableWidths.NormaliseHorizontalMerges(table);
         List<TableRow> rows = table.Elements<TableRow>().ToList();
         int firstRow = Math.Min(rows.IndexOf((TableRow)_tableCell.Parent), rows.IndexOf((TableRow)mergeTo._tableCell.Parent));
         int lastRow = Math.Max(rows.IndexOf((TableRow)_tableCell.Parent), rows.IndexOf((TableRow)mergeTo._tableCell.Parent));
@@ -55,10 +56,7 @@ public partial class TableCellWrapper
                 {
                     throw new NotSupportedException("The cells to merge cut through a cell that is already merged.");
                 }
-                if (cell.TableCellProperties?.HorizontalMerge != null)
-                {
-                    throw new NotSupportedException("Merging cells that use the older horizontal merge is not supported.");
-                }
+
                 if (cell.TableCellProperties?.VerticalMerge != null)
                 {
                     GetVerticalExtent(rows, i, start, out int top, out int bottom);
@@ -141,12 +139,9 @@ public partial class TableCellWrapper
             return;
         }
 
-        TableRow row = (TableRow)_tableCell.Parent;
         Table table = _tableCell.Ancestors<Table>().First();
-        if (_tableCell.TableCellProperties?.HorizontalMerge != null)
-        {
-            throw new NotSupportedException("Splitting a cell that uses the older horizontal merge is not supported.");
-        }
+        TableWidths.NormaliseHorizontalMerges(table);
+        TableRow row = (TableRow)_tableCell.Parent;
 
         //A cell that is merged vertically is split in every row of the merge, so that the pieces line up.
         List<TableCell> group = new List<TableCell>() { _tableCell };
@@ -171,10 +166,7 @@ public partial class TableCellWrapper
         {
             throw new NotSupportedException("A cell that spans columns can only be split into a number of columns that divides the span.");
         }
-        if (numRows > 1 && row.Elements<TableCell>().Any(c => c != _tableCell && c.TableCellProperties?.HorizontalMerge != null))
-        {
-            throw new NotSupportedException("Splitting a cell into rows is not supported when another cell in its row uses the older horizontal merge.");
-        }
+
         List<TableCell> pieces = new List<TableCell>() { _tableCell };
         if (numColumns > 1)
         {

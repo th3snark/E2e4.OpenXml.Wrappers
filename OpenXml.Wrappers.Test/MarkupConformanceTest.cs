@@ -377,6 +377,29 @@ public class MarkupConformanceTest
                 t.Sort(true, 1, SortFieldType.Numeric, SortOrder.Descending);
             },
             Body()),
+        new Scenario("cell-formula-sum-above",
+            d =>
+            {
+                TableWrapper t = d.Tables.Add(d.Range(0, 0), 3, 2);
+                t.Cell(0, 0).Range.Text = "1";
+                t.Cell(1, 0).Range.Text = "2";
+                t.Cell(2, 0).Formula("=SUM(ABOVE)", "0.00");
+            },
+            Body()),
+        new Scenario("cell-autosum",
+            d =>
+            {
+                TableWrapper t = d.Tables.Add(d.Range(0, 0), 3, 2);
+                t.Cell(0, 0).Range.Text = "1";
+                t.Cell(1, 0).Range.Text = "2";
+                t.Cell(2, 0).Formula();
+            },
+            Body()),
+        new Scenario("row-left-indent", d => d.Tables.Add(d.Range(0, 0), 3, 3).Rows[1].LeftIndent = 20, Body()),
+        new Scenario("row-set-left-indent", d => d.Tables.Add(d.Range(0, 0), 3, 3).Rows[1].SetLeftIndent(30, RulerStyle.None), Body()),
+        new Scenario("row-set-left-indent-proportional", d => d.Tables.Add(d.Range(0, 0), 3, 3).Rows[1].SetLeftIndent(30, RulerStyle.Proportional), Body()),
+        new Scenario("row-set-left-indent-first-column", d => d.Tables.Add(d.Range(0, 0), 3, 3).Rows[1].SetLeftIndent(30, RulerStyle.FirstColumn), Body()),
+        new Scenario("row-set-left-indent-same-width", d => d.Tables.Add(d.Range(0, 0), 3, 3).Rows[1].SetLeftIndent(30, RulerStyle.SameWidth), Body()),
         new Scenario("cell-delete-up",
             d =>
             {

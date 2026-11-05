@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
+using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Wordprocessing;
 using OpenXml.Wrappers.Helpers;
 
@@ -50,6 +51,60 @@ internal static class TableWidths
     /// Makes the grid fit the cells, as Word does when a cell is given a width of its own: every place where a cell of any row ends is the end of
     /// a grid column, and each cell spans the grid columns between its own ends.
     /// </summary>
+    /// <summary>
+    /// Turns the older horizontal merges (<c>hMerge</c>, a cell that starts a merge and the cells after it that continue it) into cells that
+    /// span columns (<c>gridSpan</c>), which is what Word writes now. The text of the continuing cells goes to the end of the first.
+    /// </summary>
+    internal static void NormaliseHorizontalMerges(Table table)
+    {
+        if (!table.Descendants<HorizontalMerge>().Any())
+        {
+            return;
+        }
+        List<int> grid = ReadGrid(table);
+        foreach (TableRow row in table.Elements<TableRow>())
+        {
+            List<TableCell> cells = row.Elements<TableCell>().ToList();
+            for (int index = 0; index < cells.Count; index++)
+            {
+                TableCell cell = cells[index];
+                HorizontalMerge merge = cell.TableCellProperties?.HorizontalMerge;
+                if (merge == null)
+                {
+                    continue;
+                }
+                merge.Remove();
+                if (merge.Val?.Value != MergedCellValues.Restart)
+                {
+                    //A continuation with nothing to continue is an ordinary cell.
+                    continue;
+                }
+
+                int span = TableCellWrapper.Span(cell);
+                int width = EffectiveWidth(cell, grid);
+                while (index + 1 < cells.Count && cells[index + 1].TableCellProperties?.HorizontalMerge is HorizontalMerge next && next.Val?.Value != MergedCellValues.Restart)
+                {
+                    TableCell continued = cells[++index];
+                    span += TableCellWrapper.Span(continued);
+                    width += EffectiveWidth(continued, grid);
+                    foreach (Paragraph paragraph in continued.Elements<Paragraph>().Where(p => p.Descendants<Run>().Any()).ToList())
+                    {
+                        paragraph.Remove();
+                        cell.AppendChild(paragraph);
+                    }
+                    RangeWrapper.DeleteElements(new OpenXmlElement[] { continued });
+                }
+                if (span > 1)
+                {
+                    cell.TableCellProperties.GridSpan = new GridSpan() { Val = span };
+                }
+                new TableCellWrapper(cell).WidthTwips = width;
+            }
+        }
+    }
+
+    private const int SliverTwips = 2;
+
     internal static void FitGridToCells(Table table)
     {
         TableGrid tableGrid = table?.GetFirstChild<TableGrid>();
@@ -58,17 +113,20 @@ internal static class TableWidths
             return;
         }
         List<TableRow> rows = table.Elements<TableRow>().ToList();
-        if (rows.Any(r => r.TableRowProperties?.GetFirstChild<GridBefore>() != null))
-        {
-            return;
-        }
 
         List<int> grid = ReadGrid(table);
         SortedSet<int> ends = new SortedSet<int>();
         Dictionary<TableCell, int[]> extents = new Dictionary<TableCell, int[]>();
+        Dictionary<TableRow, int> starts = new Dictionary<TableRow, int>();
         foreach (TableRow row in rows)
         {
-            int position = 0;
+            //A row may start after some grid columns that it leaves unused.
+            int position = int.TryParse(row.TableRowProperties?.GetFirstChild<WidthBeforeTableRow>()?.Width?.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int before) && row.TableRowProperties.GetFirstChild<GridBefore>() != null ? before : 0;
+            starts[row] = position;
+            if (position > 0)
+            {
+                ends.Add(position);
+            }
             foreach (TableCell cell in row.Elements<TableCell>())
             {
                 int start = position;
@@ -82,10 +140,23 @@ internal static class TableWidths
             return;
         }
 
-        List<int> boundaries = ends.ToList();
+        //Word does not make a grid column of a sliver: ends that are within a couple of twips of each other are one end, the furthest.
+        List<int> boundaries = new List<int>();
+        foreach (int end in ends)
+        {
+            if (boundaries.Count > 0 && end - boundaries[boundaries.Count - 1] <= SliverTwips)
+            {
+                boundaries[boundaries.Count - 1] = end;
+            }
+            else
+            {
+                boundaries.Add(end);
+            }
+        }
+        Func<int, int> snap = position => position <= 0 ? 0 : boundaries.FirstOrDefault(b => b >= position) is int found && found > 0 ? found : position;
         foreach (KeyValuePair<TableCell, int[]> pair in extents)
         {
-            int span = boundaries.Count(b => b > pair.Value[0] && b <= pair.Value[1]);
+            int span = boundaries.Count(b => b > snap(pair.Value[0]) && b <= snap(pair.Value[1]));
             if (span > 1)
             {
                 TableCellProperties properties = pair.Key.TableCellProperties;
@@ -103,30 +174,45 @@ internal static class TableWidths
         }
 
         tableGrid.RemoveAllChildren<GridColumn>();
-        int before = 0;
+        int previous = 0;
         foreach (int end in boundaries)
         {
-            tableGrid.AppendChild(new GridColumn() { Width = (end - before).ToString(CultureInfo.InvariantCulture) });
-            before = end;
+            tableGrid.AppendChild(new GridColumn() { Width = (end - previous).ToString(CultureInfo.InvariantCulture) });
+            previous = end;
         }
 
-        //A row that ends before the end of the table leaves the grid columns after it unused.
+        //A row that starts after the start of the table, or ends before the end of it, leaves the grid columns around it unused.
         foreach (TableRow row in rows)
         {
-            int rowEnd = row.Elements<TableCell>().Select(c => extents[c][1]).DefaultIfEmpty(0).Max();
-            int unused = boundaries.Count(b => b > rowEnd);
+            int rowStart = snap(starts[row]);
+            int rowEnd = snap(row.Elements<TableCell>().Select(c => extents[c][1]).DefaultIfEmpty(0).Max());
+            int unusedBefore = boundaries.Count(b => b > 0 && b <= rowStart);
+            int unusedAfter = boundaries.Count(b => b > rowEnd);
             TableRowProperties properties = row.TableRowProperties;
+            properties?.GetFirstChild<GridBefore>()?.Remove();
+            properties?.GetFirstChild<WidthBeforeTableRow>()?.Remove();
             properties?.GetFirstChild<GridAfter>()?.Remove();
             properties?.GetFirstChild<WidthAfterTableRow>()?.Remove();
-            if (unused > 0 && rowEnd > 0)
+            bool after = unusedAfter > 0 && rowEnd > 0;
+            if (unusedBefore > 0 || after)
             {
                 if (properties == null)
                 {
                     properties = new TableRowProperties();
                     row.InsertAfter(properties, row.GetFirstChild<TablePropertyExceptions>());
                 }
-                properties.PrependChild(new WidthAfterTableRow() { Width = (boundaries[boundaries.Count - 1] - rowEnd).ToString(CultureInfo.InvariantCulture), Type = TableWidthUnitValues.Dxa });
-                properties.PrependChild(new GridAfter() { Val = unused });
+
+                //In the order Word writes them: gridBefore, wBefore, gridAfter, wAfter.
+                if (after)
+                {
+                    properties.PrependChild(new WidthAfterTableRow() { Width = (boundaries[boundaries.Count - 1] - rowEnd).ToString(CultureInfo.InvariantCulture), Type = TableWidthUnitValues.Dxa });
+                    properties.PrependChild(new GridAfter() { Val = unusedAfter });
+                }
+                if (unusedBefore > 0)
+                {
+                    properties.PrependChild(new WidthBeforeTableRow() { Width = rowStart.ToString(CultureInfo.InvariantCulture), Type = TableWidthUnitValues.Dxa });
+                    properties.PrependChild(new GridBefore() { Val = unusedBefore });
+                }
             }
         }
     }
@@ -324,5 +410,83 @@ public partial class TableColumnWrapperCollection
         {
             column.SetWidth(columnWidth, rulerStyle);
         }
+    }
+}
+
+public partial class TableRowWrapper
+{
+    /// <summary>
+    /// The distance in points between the left margin and the left edge of the row: the space the row leaves unused before its first cell,
+    /// 0 when it has none (<c>Row.LeftIndent</c> in Word). Setting it moves the row without changing its cells, as
+    /// <c>SetLeftIndent(value, RulerStyle.None)</c>.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">The value is negative, not a number or more than 1584 points, the most Word allows.</exception>
+    public double LeftIndent
+    {
+        get
+        {
+            TableRowProperties properties = _tableRow.TableRowProperties;
+            return int.TryParse(properties?.GetFirstChild<WidthBeforeTableRow>()?.Width?.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int twips) && properties.GetFirstChild<GridBefore>() != null
+                ? ConversionHelper.TwipsToPoints(twips)
+                : 0;
+        }
+        set { SetLeftIndent(value, RulerStyle.None); }
+    }
+
+    /// <summary>
+    /// Moves the row to the right, as <c>Row.SetLeftIndent</c> in Word, by leaving space before its first cell. Like the rest of the table it
+    /// is made ragged: the grid gets a column where the row starts. With <see cref="RulerStyle.None"/> the cells keep their widths and the row
+    /// is pushed out; otherwise the cells give up the width of the indent (<see cref="RulerStyle.FirstColumn"/>: the first cell,
+    /// <see cref="RulerStyle.Proportional"/>: in proportion, <see cref="RulerStyle.SameWidth"/>: all the same) so that the row ends where it did.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">The value is negative, not a number or more than 1584 points, the most Word allows.</exception>
+    public void SetLeftIndent(double leftIndent, RulerStyle rulerStyle)
+    {
+        int twips = ConversionHelper.PointsToTwips(leftIndent, nameof(leftIndent));
+        Table table = _tableRow.Ancestors<Table>().FirstOrDefault();
+        if (table == null)
+        {
+            return;
+        }
+
+        List<int> grid = TableWidths.ReadGrid(table);
+        List<TableCell> cells = _tableRow.Elements<TableCell>().ToList();
+        int current = (int)Math.Round(LeftIndent * 20, MidpointRounding.AwayFromZero);
+        if (rulerStyle != RulerStyle.None && cells.Count > 0)
+        {
+            List<int> widths = cells.Select(c => TableWidths.EffectiveWidth(c, grid)).ToList();
+            int delta = twips - current;
+            int[] adjusted;
+            if (rulerStyle == RulerStyle.SameWidth)
+            {
+                //Word gives each cell a whole number of twips and does not share out what is left.
+                adjusted = widths.Select(_ => Math.Max(0, (widths.Sum() - delta) / widths.Count)).ToArray();
+            }
+            else
+            {
+                adjusted = TableWidths.Adjust(widths, delta, rulerStyle);
+                if (rulerStyle == RulerStyle.Proportional)
+                {
+                    adjusted = TableWidths.Share(Math.Max(0, widths.Sum() - delta), widths);
+                }
+            }
+            for (int index = 0; index < cells.Count; index++)
+            {
+                new TableCellWrapper(cells[index]).WidthTwips = adjusted[index];
+            }
+        }
+
+        TableRowProperties properties = GetOrAddProperties();
+        properties.GetFirstChild<GridBefore>()?.Remove();
+        properties.GetFirstChild<WidthBeforeTableRow>()?.Remove();
+        if (twips > 0)
+        {
+            properties.PrependChild(new WidthBeforeTableRow() { Width = twips.ToString(CultureInfo.InvariantCulture), Type = TableWidthUnitValues.Dxa });
+            properties.PrependChild(new GridBefore() { Val = 1 });
+        }
+        TableWidths.FitGridToCells(table);
+
+        //The cells are as wide as they were given; only the width of the table follows the grid.
+        TableWrapper.ColumnsChanged(table, false);
     }
 }
