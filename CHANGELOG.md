@@ -28,6 +28,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 - `Cells`, `Rows` and `Columns` get `Borders`: the edges of the block are the outside borders and the lines between its cells the inside ones. As in Word, the cell on the other side of an edge gets the matching border too, and the borders of a whole table go on the table.
 
+- `Cells` gets `Merge`, `Split`, `Add` and `Delete`, and `Cell.Delete(ShiftCells.Up)` works: the cells below move up and the bottom one is left empty. The markup of each is Word 16's. Where the library differs from Word it is recorded in `docs/word-om-gap-review.md`.
+
 ### Behaviour changes
 - **`Cell.Width` makes the table ragged**, as in Word. It used to set only that cell's width; now the grid is split where cells of any row end, cells span the pieces (`gridSpan`) and a row that ends early gets `gridAfter`/`wAfter`.
 - A table without a style keeps an automatic width (`w:tblW`) until its columns are wider than the space between the margins, as Word does; it used to turn fixed ten twips sooner.

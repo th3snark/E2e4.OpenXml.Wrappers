@@ -294,6 +294,54 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $t.Columns.Borders.OutsideLineStyle = 1
         $t.Columns.Borders.InsideLineStyle = 1
     }
+    'cells-merge-row'                 = {
+        param($doc)
+        $t = $doc.Tables.Add($doc.Range(0, 0), 3, 3)
+        $i = 1
+        foreach ($c in $t.Range.Cells) { $c.Range.Text = "c$i"; $i++ }
+        $t.Rows.Item(2).Cells.Merge()
+    }
+    'cells-merge-block'               = {
+        param($doc)
+        $t = $doc.Tables.Add($doc.Range(0, 0), 3, 3)
+        $i = 1
+        foreach ($c in $t.Range.Cells) { $c.Range.Text = "c$i"; $i++ }
+        $t.Cell(1, 1).Merge($t.Cell(2, 2))
+    }
+    'cell-delete-up'                  = {
+        param($doc)
+        $t = $doc.Tables.Add($doc.Range(0, 0), 3, 3)
+        $i = 1
+        foreach ($c in $t.Range.Cells) { $c.Range.Text = "c$i"; $i++ }
+        $t.Cell(2, 2).Delete(1)
+    }
+    'cells-delete-row-up'             = {
+        param($doc)
+        $t = $doc.Tables.Add($doc.Range(0, 0), 3, 3)
+        $i = 1
+        foreach ($c in $t.Range.Cells) { $c.Range.Text = "c$i"; $i++ }
+        $t.Rows.Item(2).Cells.Delete(1)
+    }
+    'cells-add-end'                   = {
+        param($doc)
+        $t = $doc.Tables.Add($doc.Range(0, 0), 3, 3)
+        $t.Rows.Item(2).Cells.Add()
+    }
+    'cells-add-before'                = {
+        param($doc)
+        $t = $doc.Tables.Add($doc.Range(0, 0), 3, 3)
+        $t.Rows.Item(2).Cells.Add($t.Cell(2, 2))
+    }
+    'cells-split-columns'             = {
+        param($doc)
+        $t = $doc.Tables.Add($doc.Range(0, 0), 3, 3)
+        $t.Rows.Item(2).Cells.Split(1, 2)
+    }
+    'cells-split-rows'                = {
+        param($doc)
+        $t = $doc.Tables.Add($doc.Range(0, 0), 3, 3)
+        $t.Rows.Item(2).Cells.Split(2, 1, $false)
+    }
     'table-3x3'                       = {
         param($doc)
         [void]$doc.Tables.Add($doc.Range(0, 0), 3, 3)

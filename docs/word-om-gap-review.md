@@ -266,8 +266,10 @@ The collections are where tables are thinnest: Word's `Rows`, `Columns` and `Cel
 | Done (step 8a) | `SetHeight`, `Height`, `HeightRule`, `PreferredWidth` (in points it also sets the columns the cells are all of), `PreferredWidthType`, `Shading` (also the table's when the cells are all of them), `VerticalAlignment` |
 | Done (step 8b) | `DistributeWidth`, `SetWidth`, `Width` |
 | Done (step 8c) | `Borders` |
-| Planned, step 8 | `Add`, `Delete`, `Merge`, `Split` |
+| Done (step 8d) | `Add`, `Delete`, `Merge`, `Split` |
 | Needs layout | `AutoFit`, `DistributeHeight` (Word measures the laid-out height) |
+
+`Cells.Merge` merges the rectangle that holds all the cells. `Cells.Add` adds a cell to a row, before a cell or at the end, like the cell it goes before (or the last), and the grid grows by its width with the other rows left short (`gridAfter`). `Cells.Delete` with `ShiftCells.Left` deletes the columns when the cells are all of them; with `Up` the cells below move up and the bottom one is left empty (also `Cell.Delete(ShiftCells.Up)`); a cell that is merged vertically or spans columns throws. `Cells.Split(rows, columns, mergeBeforeSplit)` splits each cell; whole rows split into rows are new rows, which Word gives the row height it measured: the library writes 252 twips, one line of the default 11 point font. Differences: Word turns a merge of a whole table into one row and one column with a measured height, where the library keeps the merged cell in the table's grid and rows; and `mergeBeforeSplit` can only split into a number of columns that divides the columns the merged cell spans, as `Cell.Split` does. The Word scenarios cover each operation on a row or a 2 by 2 block.
 
 `Cells.Borders`, `Rows.Borders` and `Columns.Borders` work on the block of cells: the edges of the block are the outside borders and the lines between its cells the inside ones. From Word 16: a line on the edge of the block is also written as the opposite border of the cell on its other side, and when the block is a whole table the borders go on the table (`tblBorders`) and nothing is written on the cells. The reference scenarios cover a row and a whole table; a block that is a part of the rows and columns of a table follows the same rule but has not been compared with Word.
 
@@ -279,7 +281,7 @@ A cell given a width of its own makes the table ragged, as in Word: the grid get
 
 | Status | Members |
 |---|---|
-| Done | `Delete` (shifting left only; step 8 adds up, and vertically merged cells), `Merge`, `Split`, `Borders`, `BottomPadding`, `Column`, `ColumnIndex`, `FitText`, `Height`, `HeightRule`, `LeftPadding`, `Next`, `Parent`, `PreferredWidth`, `PreferredWidthType`, `Previous`, `Range`, `RightPadding`, `Row`, `RowIndex`, `Shading`, `Tables`, `TopPadding`, `VerticalAlignment`, `Width`, `WordWrap` |
+| Done | `Delete` (left, entire row and column; up since step 8d; vertically merged cells still throw), `Merge`, `Split`, `Borders`, `BottomPadding`, `Column`, `ColumnIndex`, `FitText`, `Height`, `HeightRule`, `LeftPadding`, `Next`, `Parent`, `PreferredWidth`, `PreferredWidthType`, `Previous`, `Range`, `RightPadding`, `Row`, `RowIndex`, `Shading`, `Tables`, `TopPadding`, `VerticalAlignment`, `Width`, `WordWrap` |
 | Done (step 8a) | `SetHeight`, `NestingLevel` |
 | Done (step 8b) | `SetWidth` |
 | Planned, step 8 | `AutoSum`, `Formula` |
