@@ -64,6 +64,18 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
         get { return new EndnoteOptions(this); }
     }
 
+    /// <summary>The content controls in the range, as <c>Range.ContentControls</c> in Word.</summary>
+    public ContentControlWrapperCollection ContentControls
+    {
+        get { return new ContentControlWrapperCollection(this); }
+    }
+
+    /// <summary>The content control the range is in, as <c>Range.ParentContentControl</c> in Word; null if there is none.</summary>
+    public ContentControlWrapper ParentContentControl
+    {
+        get { return ContentControlWrapperCollection.FindParent(this); }
+    }
+
     /// <summary>The footnotes whose marks are in the range, as <c>Range.Footnotes</c> in Word.</summary>
     public FootnoteWrapperCollection Footnotes
     {

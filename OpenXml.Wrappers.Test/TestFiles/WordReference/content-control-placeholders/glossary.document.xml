@@ -1,0 +1,82 @@
+<w:glossaryDocument xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:docParts>
+    <w:docPart>
+      <w:docPartPr>
+        <w:name w:val="DefaultPlaceholder_-1854013440" />
+        <w:category>
+          <w:name w:val="General" />
+          <w:gallery w:val="placeholder" />
+        </w:category>
+        <w:types>
+          <w:type w:val="bbPlcHdr" />
+        </w:types>
+        <w:behaviors>
+          <w:behavior w:val="content" />
+        </w:behaviors>
+        <w:guid w:val="{guid1}" />
+      </w:docPartPr>
+      <w:docPartBody>
+        <w:p>
+          <w:r>
+            <w:rPr>
+              <w:rStyle w:val="PlaceholderText" />
+            </w:rPr>
+            <w:t>Click or tap here to enter text.</w:t>
+          </w:r>
+        </w:p>
+      </w:docPartBody>
+    </w:docPart>
+    <w:docPart>
+      <w:docPartPr>
+        <w:name w:val="DefaultPlaceholder_-1854013438" />
+        <w:category>
+          <w:name w:val="General" />
+          <w:gallery w:val="placeholder" />
+        </w:category>
+        <w:types>
+          <w:type w:val="bbPlcHdr" />
+        </w:types>
+        <w:behaviors>
+          <w:behavior w:val="content" />
+        </w:behaviors>
+        <w:guid w:val="{guid2}" />
+      </w:docPartPr>
+      <w:docPartBody>
+        <w:p>
+          <w:r>
+            <w:rPr>
+              <w:rStyle w:val="PlaceholderText" />
+            </w:rPr>
+            <w:t>Choose an item.</w:t>
+          </w:r>
+        </w:p>
+      </w:docPartBody>
+    </w:docPart>
+    <w:docPart>
+      <w:docPartPr>
+        <w:name w:val="DefaultPlaceholder_-1854013437" />
+        <w:category>
+          <w:name w:val="General" />
+          <w:gallery w:val="placeholder" />
+        </w:category>
+        <w:types>
+          <w:type w:val="bbPlcHdr" />
+        </w:types>
+        <w:behaviors>
+          <w:behavior w:val="content" />
+        </w:behaviors>
+        <w:guid w:val="{guid3}" />
+      </w:docPartPr>
+      <w:docPartBody>
+        <w:p>
+          <w:r>
+            <w:rPr>
+              <w:rStyle w:val="PlaceholderText" />
+            </w:rPr>
+            <w:t>Click or tap to enter a date.</w:t>
+          </w:r>
+        </w:p>
+      </w:docPartBody>
+    </w:docPart>
+  </w:docParts>
+</w:glossaryDocument>

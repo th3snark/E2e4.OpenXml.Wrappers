@@ -1015,6 +1015,141 @@ public class MarkupConformanceTest
             },
             NoteOptionParts()),
 
+        new Scenario("content-control-placeholders",
+            d =>
+            {
+                d.Content.InsertAfter("A\rB\rC");
+                ContentControlType[] types = { ContentControlType.Text, ContentControlType.DropdownList, ContentControlType.Date };
+                for (int i = 0; i < 3; i++)
+                {
+                    RangeWrapper place = d.Paragraphs[i].Range;
+                    place.Collapse();
+                    d.ContentControls.Add(types[i], place);
+                }
+            },
+            ControlParts()),
+
+        new Scenario("content-control-rich-text",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.ContentControls.Add(ContentControlType.RichText, d.Range(6, 11));
+            },
+            ControlParts()),
+
+        new Scenario("content-control-text",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.ContentControls.Add(ContentControlType.Text, d.Range(6, 11));
+            },
+            ControlParts()),
+
+        new Scenario("content-control-combo-box",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.ContentControls.Add(ContentControlType.ComboBox, d.Range(6, 11));
+            },
+            ControlParts()),
+
+        new Scenario("content-control-dropdown-list",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.ContentControls.Add(ContentControlType.DropdownList, d.Range(6, 11));
+            },
+            ControlParts()),
+
+        new Scenario("content-control-date",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.ContentControls.Add(ContentControlType.Date, d.Range(6, 11));
+            },
+            ControlParts()),
+
+        new Scenario("content-control-check-box",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.ContentControls.Add(ContentControlType.CheckBox, d.Range(6, 6));
+            },
+            Body()),
+
+        new Scenario("content-control-collapsed-text",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.ContentControls.Add(ContentControlType.Text, d.Range(5, 5));
+            },
+            ControlParts()),
+
+        new Scenario("content-control-collapsed-date",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.ContentControls.Add(ContentControlType.Date, d.Range(5, 5));
+            },
+            ControlParts()),
+
+        new Scenario("content-control-collapsed-dropdown",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.ContentControls.Add(ContentControlType.DropdownList, d.Range(5, 5));
+            },
+            ControlParts()),
+
+        new Scenario("content-control-properties",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                ContentControlWrapper cc = d.ContentControls.Add(ContentControlType.RichText, d.Range(6, 11));
+                cc.Title = "My title";
+                cc.Tag = "my-tag";
+                cc.LockContentControl = true;
+                cc.LockContents = true;
+                cc.Appearance = ContentControlAppearance.Hidden;
+            },
+            ControlParts()),
+
+        new Scenario("content-control-lock-control-only",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                ContentControlWrapper cc = d.ContentControls.Add(ContentControlType.RichText, d.Range(6, 11));
+                cc.LockContentControl = true;
+            },
+            ControlParts()),
+
+        new Scenario("content-control-lock-contents-only",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                ContentControlWrapper cc = d.ContentControls.Add(ContentControlType.RichText, d.Range(6, 11));
+                cc.LockContents = true;
+            },
+            ControlParts()),
+
+        new Scenario("content-control-delete-keep",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                ContentControlWrapper cc = d.ContentControls.Add(ContentControlType.RichText, d.Range(6, 11));
+                cc.Delete(false);
+            },
+            Body()),
+
+        new Scenario("content-control-delete-contents",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                ContentControlWrapper cc = d.ContentControls.Add(ContentControlType.RichText, d.Range(6, 11));
+                cc.Delete(true);
+            },
+            Body()),
+
         new Scenario("document-settings",
             d =>
             {
@@ -2189,7 +2324,7 @@ public class MarkupConformanceTest
     //The table styles, applied to one table in turn.
     private static readonly int[] BuiltInTableStylesScenario = { -159, -160, -161, -162, -163, -164, -165, -166, -167, -168, -169, -170, -171, -172, -173, -174, -175, -176, -177, -178 };
 
-    private static readonly string[] BuiltInStylesScenarioByName = { "Comment Subject" };
+    private static readonly string[] BuiltInStylesScenarioByName = { "Comment Subject", "Placeholder Text" };
 
     private static void ApplyEveryBuiltInStyle(WordprocessingDocumentWrapper document)
     {
@@ -2374,6 +2509,12 @@ public class MarkupConformanceTest
             Part("endnotes.xml"),
             Elements("settings.xml", "footnotePr", "endnotePr", "footnote", "endnote", "pos", "numFmt", "numStart", "numRestart")
         };
+    }
+
+    //The text of the body, and the glossary document that keeps the placeholders of content controls.
+    private static Comparison[] ControlParts()
+    {
+        return new[] { Body(), Part("glossary.document.xml") };
     }
 
     private static Comparison[] CommentParts()

@@ -156,11 +156,18 @@ public static class DocumentIntegrity
             ? Enumerable.Empty<string>()
             : XElement.Parse(stylesPart.Styles.OuterXml).Elements(W + "style").Select(s => (string)s.Attribute(W + "styleId")), StringComparer.Ordinal);
         List<string> problems = new List<string>();
+        //The glossary document has styles of its own, which its parts use.
+        HashSet<string> glossaryStyleIds = new HashSet<string>(
+            document.MainDocumentPart?.GlossaryDocumentPart?.StyleDefinitionsPart?.Styles == null
+                ? Enumerable.Empty<string>()
+                : XElement.Parse(document.MainDocumentPart.GlossaryDocumentPart.StyleDefinitionsPart.Styles.OuterXml).Elements(W + "style").Select(s => (string)s.Attribute(W + "styleId")),
+            StringComparer.Ordinal);
         foreach (KeyValuePair<OpenXmlPart, XElement> part in XmlParts(document))
         {
+            HashSet<string> known = part.Key is GlossaryDocumentPart || part.Key.GetParentParts().Any(p => p is GlossaryDocumentPart) ? glossaryStyleIds : styleIds;
             IEnumerable<string> missing = part.Value.Descendants()
                 .Where(e => e.Name == W + "pStyle" || e.Name == W + "rStyle" || e.Name == W + "tblStyle")
-                .Where(e => !styleIds.Contains((string)e.Attribute(W + "val") ?? string.Empty))
+                .Where(e => !known.Contains((string)e.Attribute(W + "val") ?? string.Empty))
                 .Select(e => e.Name.LocalName + " " + (string)e.Attribute(W + "val"))
                 .Distinct();
             foreach (string reference in missing)

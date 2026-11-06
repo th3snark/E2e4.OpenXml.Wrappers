@@ -2057,6 +2057,15 @@
       <w:szCs w:val="20" />
     </w:rPr>
   </w:style>
+  <w:style w:styleId="PlaceholderText" w:type="character">
+    <w:name w:val="Placeholder Text" />
+    <w:basedOn w:val="DefaultParagraphFont" />
+    <w:uiPriority w:val="99" />
+    <w:semiHidden />
+    <w:rPr>
+      <w:color w:val="666666" />
+    </w:rPr>
+  </w:style>
   <w:style w:styleId="LightShading" w:type="table">
     <w:name w:val="Light Shading" />
     <w:basedOn w:val="TableNormal" />

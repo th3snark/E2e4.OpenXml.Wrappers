@@ -169,6 +169,24 @@ public partial class WordprocessingDocumentWrapper
         }
     }
 
+    /// <summary>The content controls in the main text, as <c>Document.ContentControls</c> in Word.</summary>
+    public ContentControlWrapperCollection ContentControls
+    {
+        get { return new ContentControlWrapperCollection(Content); }
+    }
+
+    /// <summary>The content controls with a tag, as <c>Document.SelectContentControlsByTag</c> in Word.</summary>
+    public ContentControlWrapperCollection SelectContentControlsByTag(string tag)
+    {
+        return new ContentControlWrapperCollection(Content, c => string.Equals(c.Tag, tag, System.StringComparison.Ordinal));
+    }
+
+    /// <summary>The content controls with a title, as <c>Document.SelectContentControlsByTitle</c> in Word.</summary>
+    public ContentControlWrapperCollection SelectContentControlsByTitle(string title)
+    {
+        return new ContentControlWrapperCollection(Content, c => string.Equals(c.Title, title, System.StringComparison.Ordinal));
+    }
+
     /// <summary>The footnotes of the main text, as <c>Document.Footnotes</c> in Word.</summary>
     public FootnoteWrapperCollection Footnotes
     {

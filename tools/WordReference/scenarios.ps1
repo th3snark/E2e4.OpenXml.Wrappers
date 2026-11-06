@@ -905,6 +905,124 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $doc.Footnotes.SwapWithEndnotes()
     }
 
+    'content-control-placeholders'    = {
+        param($doc)
+        $doc.Content.InsertAfter("A`rB`rC")
+        $types = 1, 4, 6
+        for ($i = 1; $i -le 3; $i++) {
+            $place = $doc.Paragraphs.Item($i).Range
+            $place.Collapse(1)
+            $doc.Application.Selection.EndKey(6)  # wdStory: Word adds to the selection too, which must not be in a control
+            [void]$doc.ContentControls.Add($types[$i - 1], $place)
+        }
+    }
+    'content-control-rich-text'       = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $doc.Application.Selection.EndKey(6)
+        [void]$doc.ContentControls.Add(0, $doc.Range(6, 11))
+    }
+
+    'content-control-text'            = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $doc.Application.Selection.EndKey(6)
+        [void]$doc.ContentControls.Add(1, $doc.Range(6, 11))
+    }
+
+    'content-control-combo-box'       = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $doc.Application.Selection.EndKey(6)
+        [void]$doc.ContentControls.Add(3, $doc.Range(6, 11))
+    }
+
+    'content-control-dropdown-list'   = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $doc.Application.Selection.EndKey(6)
+        [void]$doc.ContentControls.Add(4, $doc.Range(6, 11))
+    }
+
+    'content-control-date'            = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $doc.Application.Selection.EndKey(6)
+        [void]$doc.ContentControls.Add(6, $doc.Range(6, 11))
+    }
+
+    'content-control-check-box'       = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $doc.Application.Selection.EndKey(6)
+        [void]$doc.ContentControls.Add(8, $doc.Range(6, 6))
+    }
+
+    'content-control-collapsed-text'  = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $doc.Application.Selection.EndKey(6)
+        [void]$doc.ContentControls.Add(1, $doc.Range(5, 5))
+    }
+
+    'content-control-collapsed-date'  = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $doc.Application.Selection.EndKey(6)
+        [void]$doc.ContentControls.Add(6, $doc.Range(5, 5))
+    }
+
+    'content-control-collapsed-dropdown' = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $doc.Application.Selection.EndKey(6)
+        [void]$doc.ContentControls.Add(4, $doc.Range(5, 5))
+    }
+
+    'content-control-properties'      = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $doc.Application.Selection.EndKey(6)
+        $cc = $doc.ContentControls.Add(0, $doc.Range(6, 11))
+        $cc.Title = 'My title'
+        $cc.Tag = 'my-tag'
+        $cc.LockContentControl = $true
+        $cc.LockContents = $true
+        $cc.Appearance = 2
+    }
+
+    'content-control-lock-control-only' = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $doc.Application.Selection.EndKey(6)
+        $cc = $doc.ContentControls.Add(0, $doc.Range(6, 11))
+        $cc.LockContentControl = $true
+    }
+
+    'content-control-lock-contents-only' = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $doc.Application.Selection.EndKey(6)
+        $cc = $doc.ContentControls.Add(0, $doc.Range(6, 11))
+        $cc.LockContents = $true
+    }
+
+    'content-control-delete-keep'     = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $doc.Application.Selection.EndKey(6)
+        $cc = $doc.ContentControls.Add(0, $doc.Range(6, 11))
+        $cc.Delete($false)
+    }
+
+    'content-control-delete-contents' = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $doc.Application.Selection.EndKey(6)
+        $cc = $doc.ContentControls.Add(0, $doc.Range(6, 11))
+        $cc.Delete($true)
+    }
+
     'document-settings'               = {
         param($doc)
         $doc.DefaultTabStop = 54
@@ -942,7 +1060,7 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
             -11, -12, -13, -14, -15, -16, -17, -18, -19, -29, -34, -36, -37, -38, -45, -46, -47, -48, -51, -52, -53, -54,
             -69, -70, -71, -72, -73, -74, -78, -79, -80, -83, -84, -85, -90, -95, -96, -97, -98, -99, -100, -101, -102,
             -103, -104, -105, -158,
-            'Comment Subject')  # no WdBuiltinStyle constant; Word adds it with a comment
+            'Comment Subject', 'Placeholder Text')  # no WdBuiltinStyle constant; Word adds them with a comment and a content control
         foreach ($id in $styles) {
             $style = $doc.Styles.Item([object]$id)
             $doc.Content.InsertAfter('x')
