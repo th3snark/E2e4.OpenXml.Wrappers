@@ -2,7 +2,7 @@
   <w:abstractNum w15:restartNumberingAfterBreak="0" w:abstractNumId="0">
     <w:nsid w:val="{nsid1}" />
     <w:multiLevelType w:val="singleLevel" />
-    <w:tmpl w:val="08090001" />
+    <w:tmpl w:val="{tmpl1}" />
     <w:lvl w:ilvl="0">
       <w:start w:val="1" />
       <w:numFmt w:val="bullet" />

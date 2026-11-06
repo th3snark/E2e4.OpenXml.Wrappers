@@ -92,6 +92,51 @@ internal static class ListDefaults
         return copy;
     }
 
+    /// <summary>
+    /// A copy of a template of the document that is in use already, as Word makes one when it is applied again to a new list: it comes right
+    /// after the template, and its name is the name with a 2 added (and another 2 for as long as the name is taken).
+    /// </summary>
+    internal static AbstractNum AddCopyOfTemplate(Numbering numbering, AbstractNum source)
+    {
+        AbstractNum copy = (AbstractNum)source.CloneNode(true);
+        copy.AbstractNumberId = numbering.Elements<AbstractNum>().Select(a => a.AbstractNumberId?.Value ?? -1).DefaultIfEmpty(-1).Max() + 1;
+        copy.Nsid = new Nsid() { Val = NewNsid() };
+        string name = source.AbstractNumDefinitionName?.Val?.Value;
+        if (!string.IsNullOrEmpty(name))
+        {
+            HashSet<string> taken = new HashSet<string>(numbering.Elements<AbstractNum>().Select(a => a.AbstractNumDefinitionName?.Val?.Value ?? string.Empty));
+            do
+            {
+                name += "2";
+            }
+            while (taken.Contains(name));
+            copy.AbstractNumDefinitionName = new AbstractNumDefinitionName() { Val = name };
+        }
+        source.InsertAfterSelf(copy);
+
+        //Word numbers the templates in the order they are in, and the lists that use them follow.
+        Dictionary<int, int> renumbered = new Dictionary<int, int>();
+        int next = 0;
+        foreach (AbstractNum each in numbering.Elements<AbstractNum>())
+        {
+            renumbered[each.AbstractNumberId.Value] = next;
+            next++;
+        }
+        foreach (NumberingInstance num in numbering.Elements<NumberingInstance>())
+        {
+            int? id = num.AbstractNumId?.Val?.Value;
+            if (id != null && renumbered.TryGetValue(id.Value, out int now))
+            {
+                num.AbstractNumId.Val = now;
+            }
+        }
+        foreach (AbstractNum each in numbering.Elements<AbstractNum>())
+        {
+            each.AbstractNumberId = renumbered[each.AbstractNumberId.Value];
+        }
+        return copy;
+    }
+
     internal static AbstractNum AddDefault(Numbering numbering, Kind kind)
     {
         AbstractNum source = ReadTemplate().Elements<AbstractNum>().First(a => Classify(a) == kind);
@@ -233,7 +278,40 @@ public partial class ListFormatWrapper
     /// <param name="continuePreviousList">True to carry on the list before the range.</param>
     public void ApplyListTemplate(ListTemplateWrapper template, bool continuePreviousList = false)
     {
+        ApplyListTemplateWithLevel(template, continuePreviousList);
+    }
+
+    /// <summary>
+    /// Makes the paragraphs the items of a list that uses a template, at a level, as <c>ListFormat.ApplyListTemplateWithLevel</c> in Word.
+    /// </summary>
+    /// <param name="template">The template of the document to use.</param>
+    /// <param name="continuePreviousList">True to carry on the list before the range.</param>
+    /// <param name="applyTo">Only the range, or the list it is in (which is the range itself, for text that is not in a list).</param>
+    /// <param name="defaultListBehavior">How the indents are worked out; only the behaviour of Word 2002 and later is implemented.</param>
+    /// <param name="applyLevel">The level of the items, from 1 as in Word.</param>
+    /// <exception cref="NotSupportedException"><paramref name="applyTo"/> is <see cref="ListApplyTo.ThisPointForward"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">An argument is not a value of its type, or the level is not from 1 to 9.</exception>
+    public void ApplyListTemplateWithLevel(ListTemplateWrapper template, bool continuePreviousList = false, ListApplyTo applyTo = ListApplyTo.WholeList,
+        DefaultListBehavior defaultListBehavior = DefaultListBehavior.Word10, int applyLevel = 1)
+    {
         Guard.ThrowIfNull(template);
+        if (!EnumCompat.IsDefined(applyTo))
+        {
+            throw new ArgumentOutOfRangeException(nameof(applyTo));
+        }
+        if (!EnumCompat.IsDefined(defaultListBehavior))
+        {
+            throw new ArgumentOutOfRangeException(nameof(defaultListBehavior));
+        }
+        if (applyTo == ListApplyTo.ThisPointForward)
+        {
+            throw new NotSupportedException("Applying a template from this point forward is not supported.");
+        }
+        if (applyLevel < 1 || applyLevel > 9)
+        {
+            throw new ArgumentOutOfRangeException(nameof(applyLevel));
+        }
+        int level = applyLevel - 1;
         List<Paragraph> paragraphs = GetParagraphs();
         if (paragraphs.Count == 0)
         {
@@ -264,14 +342,32 @@ public partial class ListFormatWrapper
         if (num == null)
         {
             bool inUse = numbering.Elements<NumberingInstance>().Any(n => FindTemplate(numbering, n) == template.AbstractNum);
-            num = ListDefaults.AddNum(numbering, inUse ? ListDefaults.AddCopy(numbering, template.AbstractNum) : template.AbstractNum);
+            num = ListDefaults.AddNum(numbering, inUse ? ListDefaults.AddCopyOfTemplate(numbering, template.AbstractNum) : template.AbstractNum);
         }
 
-        int hanging = LevelHanging(FindTemplate(numbering, num), 0);
+        int hanging = LevelHanging(FindTemplate(numbering, num), level);
         foreach (Paragraph paragraph in paragraphs)
         {
-            Attach(paragraph, num, 0, hanging);
+            Attach(paragraph, num, level, hanging);
         }
+    }
+
+    /// <summary>
+    /// Whether a template can carry on the list before the range, as <c>ListFormat.CanContinuePreviousList</c> in Word: <see cref="ListContinue.ContinueList"/>
+    /// if a paragraph before the range is numbered, whatever its template, and <see cref="ListContinue.Disabled"/> if none is.
+    /// </summary>
+    /// <param name="listTemplate">The template to apply.</param>
+    public ListContinue CanContinuePreviousList(ListTemplateWrapper listTemplate)
+    {
+        Guard.ThrowIfNull(listTemplate);
+        List<Paragraph> paragraphs = GetParagraphs();
+        if (paragraphs.Count == 0)
+        {
+            return ListContinue.Disabled;
+        }
+        List<Paragraph> all = StoryMap.FindRoot(paragraphs[0]).Descendants<Paragraph>().ToList();
+        int at = all.IndexOf(paragraphs[0]);
+        return all.Take(Math.Max(at, 0)).Any(p => ListNumbering.TryGetNumbering(p, out _, out _)) ? ListContinue.ContinueList : ListContinue.Disabled;
     }
 
     /// <summary>

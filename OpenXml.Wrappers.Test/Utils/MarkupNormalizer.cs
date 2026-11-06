@@ -345,6 +345,10 @@ public static class MarkupNormalizer
             //The id of a custom XML part, in its properties and in the content controls bound to it.
             attribute.Value = placeholders.Get("store", attribute.Value.ToUpperInvariant());
         }
+        else if (element.Name == W + "tmpl" && name == W + "val")
+        {
+            attribute.Value = placeholders.Get("tmpl", attribute.Value);
+        }
         else if (element.Name == W + "nsid" && name == W + "val")
         {
             attribute.Value = placeholders.Get("nsid", attribute.Value);

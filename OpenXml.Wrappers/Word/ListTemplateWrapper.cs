@@ -199,6 +199,64 @@ public class ListTemplateWrapperCollection : IEnumerable<ListTemplateWrapper>
         get { return GetAbstractNums().Count; }
     }
 
+    /// <summary>
+    /// Adds a template, as <c>ListTemplates.Add</c> in Word: a single level, numbered 1., 2., 3. with the number 0.5 inch in and the text
+    /// 0.25 inch further, or, with <paramref name="outlineNumbered"/>, the nine levels of an outline (1), a), i), (1) and so on). The levels can
+    /// then be changed with <see cref="ListTemplateWrapper.ListLevels"/>. No list uses the template until it is applied.
+    /// </summary>
+    /// <param name="outlineNumbered">True for a template with nine levels.</param>
+    /// <param name="name">The name of the template; none when null.</param>
+    public ListTemplateWrapper Add(bool outlineNumbered = false, string name = null)
+    {
+        Numbering numbering = ListDefaults.GetOrCreateNumbering(_document.WordprocessingDocument.MainDocumentPart);
+        AbstractNum template = new AbstractNum() { AbstractNumberId = numbering.Elements<AbstractNum>().Select(a => a.AbstractNumberId?.Value ?? -1).DefaultIfEmpty(-1).Max() + 1 };
+        template.SetAttribute(new OpenXmlAttribute("w15", "restartNumberingAfterBreak", "http://schemas.microsoft.com/office/word/2012/wordml", "0"));
+        template.Nsid = new Nsid() { Val = ListDefaults.NewNsid() };
+        template.MultiLevelType = new MultiLevelType() { Val = outlineNumbered ? MultiLevelValues.Multilevel : MultiLevelValues.SingleLevel };
+        template.TemplateCode = new TemplateCode() { Val = ListDefaults.NewNsid() };
+        if (!string.IsNullOrEmpty(name))
+        {
+            template.AbstractNumDefinitionName = new AbstractNumDefinitionName() { Val = name };
+        }
+
+        if (outlineNumbered)
+        {
+            NumberFormatValues[] formats = { NumberFormatValues.Decimal, NumberFormatValues.LowerLetter, NumberFormatValues.LowerRoman };
+            string[] texts = { "%{0})", "%{0})", "%{0})", "(%{0})", "(%{0})", "(%{0})", "%{0}.", "%{0}.", "%{0}." };
+            for (int level = 0; level < 9; level++)
+            {
+                template.AppendChild(NewLevel(level, formats[level % 3], texts[level].Replace("{0}", (level + 1).ToString(CultureInfo.InvariantCulture)),
+                    level == 0 ? 360 : 360 * (level + 1)));
+            }
+        }
+        else
+        {
+            template.AppendChild(NewLevel(0, NumberFormatValues.Decimal, "%1.", 720));
+        }
+
+        NumberingInstance firstNum = numbering.Elements<NumberingInstance>().FirstOrDefault();
+        if (firstNum != null)
+        {
+            firstNum.InsertBeforeSelf(template);
+        }
+        else
+        {
+            numbering.AppendChild(template);
+        }
+        return new ListTemplateWrapper(template);
+    }
+
+    private static Level NewLevel(int index, NumberFormatValues format, string text, int left)
+    {
+        return new Level(
+            new StartNumberingValue() { Val = 1 },
+            new NumberingFormat() { Val = format },
+            new LevelText() { Val = text },
+            new LevelJustification() { Val = LevelJustificationValues.Left },
+            new PreviousParagraphProperties(new Indentation() { Left = left.ToString(CultureInfo.InvariantCulture), Hanging = "360" }))
+        { LevelIndex = index };
+    }
+
     /// <summary>The template at the index (0-based), as <c>ListTemplates.Item</c> in Word.</summary>
     /// <exception cref="ArgumentOutOfRangeException">There is no template at the index.</exception>
     public ListTemplateWrapper this[int index]
@@ -463,13 +521,52 @@ public class ListLevelWrapper
         }
     }
 
-    /// <summary>The position of the tab stop after the number in points, or 9999999 if the level has none, as <c>ListLevel.TabPosition</c> in Word.</summary>
+    /// <summary>
+    /// The position of the tab stop after the number in points, or 9999999 if the level has none, as <c>ListLevel.TabPosition</c> in Word.
+    /// Setting 9999999 takes the tab stop away.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">The position is negative or beyond 1584 points (other than 9999999).</exception>
     public double TabPosition
     {
         get
         {
             TabStop tab = _level.PreviousParagraphProperties?.Tabs?.Elements<TabStop>().FirstOrDefault(t => t.Val?.Value == TabStopValues.Number || t.Val?.Value == TabStopValues.Left);
             return tab?.Position?.Value is int twips ? twips / 20.0 : Undefined;
+        }
+        set
+        {
+            if (double.IsNaN(value) || (value != Undefined && (value < 0 || value > 1584)))
+            {
+                throw new ArgumentOutOfRangeException(nameof(value));
+            }
+            PreviousParagraphProperties properties = _level.PreviousParagraphProperties ?? (_level.PreviousParagraphProperties = new PreviousParagraphProperties());
+            properties.Tabs = null;
+            if (value != Undefined)
+            {
+                properties.Tabs = new Tabs(new TabStop() { Val = TabStopValues.Number, Position = (int)Math.Round(value * 20, MidpointRounding.AwayFromZero) });
+            }
+            if (!properties.HasChildren)
+            {
+                properties.Remove();
+            }
+        }
+    }
+
+    /// <summary>The font of the number, as <c>ListLevel.Font</c> in Word. A bullet or number takes the font of the text unless this sets it.</summary>
+    public FontWrapper Font
+    {
+        get
+        {
+            return FontWrapper.ForLevel(create =>
+            {
+                NumberingSymbolRunProperties properties = _level.NumberingSymbolRunProperties;
+                if (properties == null && create)
+                {
+                    properties = new NumberingSymbolRunProperties();
+                    _level.NumberingSymbolRunProperties = properties;
+                }
+                return properties;
+            });
         }
     }
 

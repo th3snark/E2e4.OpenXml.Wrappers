@@ -55,6 +55,20 @@ public partial class FontWrapper
         _conditional = conditional;
     }
 
+    //The properties of the numbers of a list level: finds them, making them if asked to.
+    private readonly Func<bool, OpenXmlCompositeElement> _levelProperties;
+
+    private FontWrapper(Func<bool, OpenXmlCompositeElement> levelProperties)
+    {
+        _levelProperties = levelProperties;
+        _explicit = true;
+    }
+
+    internal static FontWrapper ForLevel(Func<bool, OpenXmlCompositeElement> levelProperties)
+    {
+        return new FontWrapper(levelProperties);
+    }
+
     internal static FontWrapper ForCriteria(RangeWrapper range)
     {
         return new FontWrapper(range) { _explicit = true };
@@ -73,7 +87,7 @@ public partial class FontWrapper
     /// </summary>
     public FontWrapper Direct
     {
-        get { return _direct || _conditional != null ? this : new FontWrapper(_range, _style, true); }
+        get { return _direct || _conditional != null || _levelProperties != null ? this : new FontWrapper(_range, _style, true); }
     }
 
     /// <summary>Bold text.</summary>
@@ -523,7 +537,8 @@ public partial class FontWrapper
                 fonts.HighAnsi = value;
                 fonts.AsciiTheme = null;
                 fonts.HighAnsiTheme = null;
-                if (fonts.ComplexScript != null)
+                //The font of a list level is set for complex script text too.
+                if (fonts.ComplexScript != null || _levelProperties != null)
                 {
                     //Word changes the font of complex script text too when it has been set on its own.
                     fonts.ComplexScript = value;
@@ -580,6 +595,10 @@ public partial class FontWrapper
     //A resolver for the theme of the document that the text or style is in.
     private FormattingResolver Resolver()
     {
+        if (_levelProperties != null)
+        {
+            return null;
+        }
         if (_style != null)
         {
             return new FormattingResolver(_style);
@@ -652,6 +671,11 @@ public partial class FontWrapper
 
     private T GetValue<T>(Func<OpenXmlCompositeElement, FormattingResolver, T> read)
     {
+        if (_levelProperties != null)
+        {
+            return read(_levelProperties(false), null);
+        }
+
         if (_conditional != null)
         {
             return read(_conditional(false)?.RunPropertiesBaseStyle, null);
@@ -699,6 +723,17 @@ public partial class FontWrapper
     /// </summary>
     private void Apply(Action<OpenXmlCompositeElement, Func<OpenXmlCompositeElement>> change)
     {
+        if (_levelProperties != null)
+        {
+            OpenXmlCompositeElement levelProperties = _levelProperties(true);
+            change(levelProperties, () => new RunProperties());
+            if (!levelProperties.HasChildren)
+            {
+                levelProperties.Remove();
+            }
+            return;
+        }
+
         if (_conditional != null)
         {
             TableStyleProperties conditional = _conditional(true);

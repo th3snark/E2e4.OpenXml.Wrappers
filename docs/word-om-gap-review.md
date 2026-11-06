@@ -617,7 +617,7 @@ A cell given a width of its own makes the table ragged, as in Word: the grid get
 |---|---|
 | Done (step 13a) | Reading: `CountNumberedItems`, `List`, `ListLevelNumber` (from 1, as Word), `ListString`, `ListTemplate`, `ListType`, `ListValue`, `Parent`, `SingleList`, `SingleListTemplate`. The values are worked out as Word works them out (counters per template, deeper levels starting again, letters that repeat, roman numbers); checked against the numbers Word gave for its default bullet, number and outline lists |
 | Done (step 13b) | `ApplyBulletDefault`, `ApplyNumberDefault`, `ApplyOutlineNumberDefault`, `ApplyListTemplate(template, continuePreviousList)`, `ConvertNumbersToText`, `ListIndent`, `ListOutdent`, `RemoveNumbers`, and setting `ListLevelNumber`. The defaults are the definitions Word 16 wrote (`Templates/ListDefaults.xml`, from the `list-defaults` scenario); markup of each operation matches Word in twelve scenarios. Bullets reuse the document's bullet list; numbers go on from the paragraph before the range when it is numbered the same way and start again after a gap, as Word does. A direct left indent is moved on by the hanging indent of the first level |
-| Planned, step 13c | `ApplyListTemplateWithLevel`, `CanContinuePreviousList` |
+| Done (step 13c) | `ApplyListTemplateWithLevel` (`ApplyTo` of the range or the whole list; `ThisPointForward` throws `NotSupportedException`; `DefaultListBehavior` is accepted and only the Word 2002 behaviour is implemented; `ApplyLevel` from 1), `CanContinuePreviousList` (`ContinueList` when a paragraph before the range is numbered, otherwise `Disabled`; Word 16 never gave `ResetList`). A template already in use is copied right after itself, named with a 2 added (and another for as long as the name is taken), and the templates are numbered in the order they are in, as Word saves them |
 | Decided against | `ListPictureBullet` (legacy picture bullets) |
 
 <!-- learn: list -->
@@ -627,7 +627,8 @@ A cell given a width of its own makes the table ragged, as in Word: the grid get
 | Status | Members |
 |---|---|
 | Done (step 13a) | `CountNumberedItems`, `ListParagraphs`, `SingleListTemplate`, `StyleName` (empty: the library does not link lists to styles) |
-| Planned, step 13c | `ApplyListTemplate`, `ApplyListTemplateWithLevel`, `CanContinuePreviousList`, `ConvertNumbersToText`, `RemoveNumbers`, `Range`, `Parent` |
+| Done (step 13c) | `ApplyListTemplate`, `ApplyListTemplateWithLevel`, `CanContinuePreviousList`, `ConvertNumbersToText`, `RemoveNumbers`, `Range` (from the start of the first paragraph to the end of the last); they work on that range, as Word does for the whole list |
+| Planned later | `Parent` |
 
 <!-- learn: lists,listparagraphs,listlevels -->
 
@@ -644,7 +645,7 @@ A cell given a width of its own makes the table ragged, as in Word: the grid get
 | Status | Members |
 |---|---|
 | Done (step 13a) | `ListLevels`, `Name`, `OutlineNumbered` |
-| Planned, step 13c | `Convert`, `Parent` |
+| Planned later | `Convert`, `Parent` |
 
 <!-- learn: listtemplates -->
 
@@ -653,7 +654,7 @@ A cell given a width of its own makes the table ragged, as in Word: the grid get
 | Status | Members |
 |---|---|
 | Done (step 13a) | `Item` (0-based), `Count`, `Parent`, enumeration |
-| Planned, step 13c | `Add` |
+| Done (step 13c) | `Add(outlineNumbered, name)`: one level (`%1.`, number 18 pt, text 36 pt) or the nine levels of an outline (`%1)`, `%2)`, `%3)`, `(%4)`, `(%5)`, `(%6)`, `%7.`, `%8.`, `%9.`), the first with a name only when one is given, and no list until it is applied |
 
 <!-- learn: listlevel -->
 
@@ -662,7 +663,8 @@ A cell given a width of its own makes the table ragged, as in Word: the grid get
 | Status | Members |
 |---|---|
 | Done (step 13a) | `Alignment`, `Index` (0-based), `NumberFormat`, `NumberPosition`, `NumberStyle`, `Parent`, `ResetOnHigher`, `StartAt`, `TabPosition` (read only), `TextPosition`, `TrailingCharacter`, `LinkedStyle` (read only) |
-| Planned, step 13c | `Font`, setting `TabPosition` and `LinkedStyle` |
+| Done (step 13c) | `Font` (the character properties; its borders and shading are not available for a list level), setting `TabPosition` (9999999 takes the tab stop away) |
+| Planned later | Setting `LinkedStyle` |
 | Decided against | `ApplyPictureBullet`, `PictureBullet` (legacy picture bullets) |
 
 ### 4.3 Footnotes and endnotes (steps 11 and 14)

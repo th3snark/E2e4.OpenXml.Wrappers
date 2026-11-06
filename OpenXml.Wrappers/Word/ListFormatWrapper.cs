@@ -395,6 +395,52 @@ public class ListWrapper : IEquatable<ListWrapper>
         return GetItems().Count;
     }
 
+    /// <summary>
+    /// The text of the list from its first paragraph to the end of its last, as <c>List.Range</c> in Word.
+    /// </summary>
+    public RangeWrapper Range
+    {
+        get
+        {
+            List<Paragraph> paragraphs = GetItems().Select(i => i.Paragraph).ToList();
+            RangeWrapper first = new RangeWrapper(paragraphs[0]);
+            RangeWrapper range = first.Duplicate();
+            range.SetRange(first.Start, new RangeWrapper(paragraphs[paragraphs.Count - 1]).End);
+            return range;
+        }
+    }
+
+    /// <summary>Applies a template to the whole list, as <c>List.ApplyListTemplate</c> in Word.</summary>
+    public void ApplyListTemplate(ListTemplateWrapper listTemplate, bool continuePreviousList = false)
+    {
+        Range.ListFormat.ApplyListTemplate(listTemplate, continuePreviousList);
+    }
+
+    /// <summary>Applies a template to the whole list, at a level, as <c>List.ApplyListTemplateWithLevel</c> in Word.</summary>
+    public void ApplyListTemplateWithLevel(ListTemplateWrapper listTemplate, bool continuePreviousList = false, ListApplyTo applyTo = ListApplyTo.WholeList,
+        DefaultListBehavior defaultListBehavior = DefaultListBehavior.Word10, int applyLevel = 1)
+    {
+        Range.ListFormat.ApplyListTemplateWithLevel(listTemplate, continuePreviousList, applyTo, defaultListBehavior, applyLevel);
+    }
+
+    /// <summary>Whether a template can carry on the list before this one, as <c>List.CanContinuePreviousList</c> in Word.</summary>
+    public ListContinue CanContinuePreviousList(ListTemplateWrapper listTemplate)
+    {
+        return Range.ListFormat.CanContinuePreviousList(listTemplate);
+    }
+
+    /// <summary>Turns the numbers of the list into text and ends the list, as <c>List.ConvertNumbersToText</c> in Word.</summary>
+    public void ConvertNumbersToText()
+    {
+        Range.ListFormat.ConvertNumbersToText();
+    }
+
+    /// <summary>Takes the paragraphs out of the list, as <c>List.RemoveNumbers</c> in Word.</summary>
+    public void RemoveNumbers()
+    {
+        Range.ListFormat.RemoveNumbers();
+    }
+
     /// <summary>The name of the paragraph style linked to the list, as <c>List.StyleName</c> in Word; empty if there is none.</summary>
     public string StyleName
     {
