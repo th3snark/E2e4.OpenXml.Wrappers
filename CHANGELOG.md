@@ -2,7 +2,7 @@
 
 All notable changes are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/) and the project uses [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.2.0] - 2026-11-06
 
 ### Added
 - `Range` moves and measures as Word does, with the numbers Word gives checked in Word itself: `StartOf` and `EndOf` (with the new `Movement` enum, `Move` or `Extend`), `Next` and `Previous` (the unit after or before a range, or null), `MoveUntil`, `MoveWhile`, `MoveStartUntil`, `MoveStartWhile`, `MoveEndUntil` and `MoveEndWhile`, `IsEqual`, `InRange`, `InStory`, `WholeStory`, `InsertParagraph` and `ComputeStatistics` (words, characters, characters with spaces and paragraphs).
