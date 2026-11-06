@@ -816,6 +816,95 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         [void]$doc.Endnotes.Add($doc.Range(11, 11), [Type]::Missing, 'The end note')
         [void]$doc.Footnotes.Add($doc.Range(5, 5), [Type]::Missing, 'The footnote')
     }
+    'note-option-footnote-style'      = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        [void]$doc.Footnotes.Add($doc.Range(5, 5), [Type]::Missing, 'one')
+        [void]$doc.Endnotes.Add($doc.Range(11, 11), [Type]::Missing, 'two')
+        $doc.Footnotes.NumberStyle = 2
+    }
+
+    'note-option-footnote-start'      = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        [void]$doc.Footnotes.Add($doc.Range(5, 5), [Type]::Missing, 'one')
+        [void]$doc.Endnotes.Add($doc.Range(11, 11), [Type]::Missing, 'two')
+        $doc.Footnotes.StartingNumber = 5
+    }
+
+    'note-option-footnote-restart-section' = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        [void]$doc.Footnotes.Add($doc.Range(5, 5), [Type]::Missing, 'one')
+        [void]$doc.Endnotes.Add($doc.Range(11, 11), [Type]::Missing, 'two')
+        $doc.Footnotes.NumberingRule = 1
+    }
+
+    'note-option-footnote-restart-page' = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        [void]$doc.Footnotes.Add($doc.Range(5, 5), [Type]::Missing, 'one')
+        [void]$doc.Endnotes.Add($doc.Range(11, 11), [Type]::Missing, 'two')
+        $doc.Footnotes.NumberingRule = 2
+    }
+
+    'note-option-footnote-location'   = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        [void]$doc.Footnotes.Add($doc.Range(5, 5), [Type]::Missing, 'one')
+        [void]$doc.Endnotes.Add($doc.Range(11, 11), [Type]::Missing, 'two')
+        $doc.Footnotes.Location = 1
+    }
+
+    'note-option-footnote-symbol'     = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        [void]$doc.Footnotes.Add($doc.Range(5, 5), [Type]::Missing, 'one')
+        [void]$doc.Endnotes.Add($doc.Range(11, 11), [Type]::Missing, 'two')
+        $doc.Footnotes.NumberStyle = 9
+    }
+
+    'note-option-endnote-section-end' = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        [void]$doc.Footnotes.Add($doc.Range(5, 5), [Type]::Missing, 'one')
+        [void]$doc.Endnotes.Add($doc.Range(11, 11), [Type]::Missing, 'two')
+        $doc.Endnotes.Location = 0
+    }
+
+    'note-option-endnote-decimal-start' = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        [void]$doc.Footnotes.Add($doc.Range(5, 5), [Type]::Missing, 'one')
+        [void]$doc.Endnotes.Add($doc.Range(11, 11), [Type]::Missing, 'two')
+        $doc.Endnotes.NumberStyle = 0
+        $doc.Endnotes.StartingNumber = 3
+    }
+
+    'note-convert-footnotes'          = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        [void]$doc.Footnotes.Add($doc.Range(5, 5), [Type]::Missing, 'one')
+        [void]$doc.Endnotes.Add($doc.Range(11, 11), [Type]::Missing, 'two')
+        $doc.Footnotes.Convert()
+    }
+
+    'note-convert-endnotes'           = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        [void]$doc.Footnotes.Add($doc.Range(5, 5), [Type]::Missing, 'one')
+        [void]$doc.Endnotes.Add($doc.Range(11, 11), [Type]::Missing, 'two')
+        $doc.Endnotes.Convert()
+    }
+
+    'note-swap'                       = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        [void]$doc.Footnotes.Add($doc.Range(5, 5), [Type]::Missing, 'one')
+        [void]$doc.Endnotes.Add($doc.Range(11, 11), [Type]::Missing, 'two')
+        $doc.Footnotes.SwapWithEndnotes()
+    }
+
     'document-settings'               = {
         param($doc)
         $doc.DefaultTabStop = 54

@@ -682,7 +682,8 @@ Step 11 laid the groundwork every new story needs: `StoryType` (which already te
 | Status | Members |
 |---|---|
 | Done (step 14a) | `Add` (the mark goes at the end of the range; a mark of your own is text), `Item` (0-based), `Count`, `Parent`, enumeration. `Document.Footnotes` looks at the main text; `Range.Footnotes` at the marks in the range. Notes are numbered 1, 2, 3 in the order of the text, as Word saves them |
-| Planned, step 14b | `Convert`, `ResetContinuationNotice`, `ResetContinuationSeparator`, `ResetSeparator`, `SwapWithEndnotes`, `ContinuationNotice`, `ContinuationSeparator`, `Location`, `NumberingRule`, `NumberStyle`, `Separator`, `StartingNumber` |
+| Done (step 14b) | `Convert`, `SwapWithEndnotes`, `Location`, `NumberingRule`, `NumberStyle`, `StartingNumber`, `Separator`, `ContinuationSeparator`. The options are document-wide: written in the settings and in every section, as Word does. A starting number other than 1 needs continuous numbering, and the other way round, as in Word |
+| Decided against | `ContinuationNotice`, `ResetContinuationNotice`, `ResetContinuationSeparator`, `ResetSeparator` (Word leaves the notice out of the file until it is set, and the library never changes the separators) |
 
 <!-- learn: endnotes -->
 
@@ -691,7 +692,8 @@ Step 11 laid the groundwork every new story needs: `StoryType` (which already te
 | Status | Members |
 |---|---|
 | Done (step 14a) | `Add`, `Item` (0-based), `Count`, `Parent`, enumeration, as for footnotes |
-| Planned, step 14b | `Convert`, `ResetContinuationNotice`, `ResetContinuationSeparator`, `ResetSeparator`, `SwapWithFootnotes`, `ContinuationNotice`, `ContinuationSeparator`, `Location`, `NumberingRule`, `NumberStyle`, `Separator`, `StartingNumber` |
+| Done (step 14b) | `Convert`, `SwapWithFootnotes`, `Location` (the end of the document is the default), `NumberingRule`, `NumberStyle` (lowercase roman numbers are the default), `StartingNumber`, `Separator`, `ContinuationSeparator` |
+| Decided against | `ContinuationNotice`, `ResetContinuationNotice`, `ResetContinuationSeparator`, `ResetSeparator`, as for footnotes |
 
 <!-- learn: footnoteoptions -->
 
@@ -699,7 +701,8 @@ Step 11 laid the groundwork every new story needs: `StoryType` (which already te
 
 | Status | Members |
 |---|---|
-| Planned, step 14b | `LayoutColumns`, `Location`, `NumberingRule`, `NumberStyle`, `Parent`, `StartingNumber` |
+| Done (step 14b) | `Location`, `NumberingRule`, `NumberStyle`, `Parent`, `StartingNumber` (`Range.FootnoteOptions`: the options of the sections the range is in, with the document's where a section has none) |
+| Decided against | `LayoutColumns` (the columns footnotes are laid out in need a layout of the page) |
 
 <!-- learn: endnoteoptions -->
 
@@ -707,7 +710,7 @@ Step 11 laid the groundwork every new story needs: `StoryType` (which already te
 
 | Status | Members |
 |---|---|
-| Planned, step 14b | `Location`, `NumberingRule`, `NumberStyle`, `Parent`, `StartingNumber` |
+| Done (step 14b) | `Location` (a setting of the whole document), `NumberingRule`, `NumberStyle`, `Parent`, `StartingNumber` |
 
 ### 4.4 Content controls and custom XML parts (step 15)
 <!-- learn: contentcontrol -->

@@ -1,0 +1,9 @@
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="{rId1}" Target="/word/endnotes.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/endnotes" />
+  <Relationship Id="{rId2}" Target="/word/fontTable.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/fontTable" />
+  <Relationship Id="{rId3}" Target="/word/footnotes.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footnotes" />
+  <Relationship Id="{rId4}" Target="/word/settings.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/settings" />
+  <Relationship Id="{rId5}" Target="/word/styles.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" />
+  <Relationship Id="{rId6}" Target="/word/theme/theme1.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme" />
+  <Relationship Id="{rId7}" Target="/word/webSettings.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/webSettings" />
+</Relationships>
