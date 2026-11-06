@@ -1396,6 +1396,19 @@ public class MarkupConformanceTest
             },
             CustomXmlParts()),
 
+        new Scenario("content-control-xml-node",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                CustomXMLPart part = d.CustomXMLParts.Add("<root xmlns=\"urn:test\" id=\"7\"><name>Bob</name><age>42</age></root>");
+                part.NamespaceManager.AddNamespace("ns", "urn:test");
+                CustomXMLNode node = part.SelectSingleNode("/ns:root/ns:name");
+                ContentControlWrapper control = d.ContentControls.Add(ContentControlType.Text, d.Range(5, 5));
+                control.XMLMapping.SetMappingByNode(node);
+                node.Text = "Alice";
+                node.Delete();
+            },
+            Body(), Part("glossary.document.xml"), Part("customXml.item1.xml"), Part("customXml.itemProps1.xml")),
         new Scenario("custom-xml-part-delete",
             d =>
             {
