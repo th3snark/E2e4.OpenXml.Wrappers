@@ -44,6 +44,27 @@ public class BuiltInStylesTest : IDisposable
     }
 
     [Fact]
+    public void TheStylesAddedInStep9HaveTheNamesAndTypesWordGives()
+    {
+        Assert.Equal("Table of Figures", _document.Styles[BuiltInStyle.TableOfFigures].Name);
+        Assert.Equal("TOA Heading", _document.Styles[BuiltInStyle.ToaHeading].Name);
+        Assert.Equal("Macro Text", _document.Styles[BuiltInStyle.MacroText].Name);
+        Assert.Equal("Index 1", _document.Styles[BuiltInStyle.Index1].Name);
+        Assert.Equal("No Spacing", _document.Styles[BuiltInStyle.NormalObject].Name);
+        Assert.Equal("Block Text", _document.Styles[BuiltInStyle.BlockQuotation].Name);
+        Assert.Equal("Document Map", _document.Styles[BuiltInStyle.NavPane].Name);
+        Assert.Equal("Normal (Web)", _document.Styles[BuiltInStyle.HtmlNormal].Name);
+        Assert.Equal(StyleType.Character, _document.Styles[BuiltInStyle.HtmlDfn].Type);
+        Assert.Equal(StyleType.Paragraph, _document.Styles[BuiltInStyle.HtmlPre].Type);
+        Assert.Equal(StyleType.Table, _document.Styles[BuiltInStyle.TableMediumGrid3].Type);
+
+        StyleWrapper accent = _document.Styles[BuiltInStyle.TableLightShadingAccent1];
+        Assert.Equal("Light Shading - Accent 1", accent.Name);
+        Assert.Equal(accent, _document.Styles["Light Shading - Accent 1"]);
+        Assert.Equal(accent, _document.Styles["Light Shading Accent 1"]);
+    }
+
+    [Fact]
     public void AStyleCanBeAppliedByNameToADocumentThatHasNoStyles()
     {
         MainDocumentPart main = _document.WordprocessingDocument.MainDocumentPart;

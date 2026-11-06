@@ -1654,7 +1654,13 @@ public class MarkupConformanceTest
     {
         -2, -3, -4, -5, -6, -7, -8, -9, -10, -20, -21, -22, -23, -24, -25, -26, -27, -28, -30, -31, -32, -33, -35, -39, -40, -41,
         -42, -43, -44, -63, -64, -65, -67, -68, -75, -76, -77, -81, -82, -86, -87, -88, -89, -91, -180, -181, -182, -261, -262, -263, -264, -265,
+        -11, -12, -13, -14, -15, -16, -17, -18, -19, -29, -34, -36, -37, -38, -45, -46, -47, -48, -51, -52, -53, -54,
+        -69, -70, -71, -72, -73, -74, -78, -79, -80, -83, -84, -85, -90, -95, -96, -97, -98, -99, -100, -101, -102,
+        -103, -104, -105, -158,
     };
+
+    //The table styles, applied to one table in turn.
+    private static readonly int[] BuiltInTableStylesScenario = { -159, -160, -161, -162, -163, -164, -165, -166, -167, -168, -169, -170, -171, -172, -173, -174, -175, -176, -177, -178 };
 
     private static readonly string[] BuiltInStylesScenarioByName = { "Comment Subject" };
 
@@ -1677,6 +1683,10 @@ public class MarkupConformanceTest
             document.Content.InsertParagraphAfter();
         }
         TableWrapper table = document.Tables.Add(document.Paragraphs[document.Paragraphs.Count - 1].Range, 1, 1);
+        foreach (int id in BuiltInTableStylesScenario)
+        {
+            table.Style = document.Styles[(BuiltInStyle)id].Name;
+        }
         table.Style = "Table Grid";
     }
 

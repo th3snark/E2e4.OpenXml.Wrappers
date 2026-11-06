@@ -36,13 +36,32 @@ internal static class BuiltInStyles
         { BuiltInStyle.Toc1, "TOC1" }, { BuiltInStyle.Toc2, "TOC2" }, { BuiltInStyle.Toc3, "TOC3" }, { BuiltInStyle.Toc4, "TOC4" },
         { BuiltInStyle.Toc5, "TOC5" }, { BuiltInStyle.Toc6, "TOC6" }, { BuiltInStyle.Toc7, "TOC7" }, { BuiltInStyle.Toc8, "TOC8" },
         { BuiltInStyle.Toc9, "TOC9" }, { BuiltInStyle.HyperlinkFollowed, "FollowedHyperlink" }, { BuiltInStyle.NormalTable, "TableNormal" },
+        { BuiltInStyle.ToaHeading, "TOAHeading" }, { BuiltInStyle.TableOfFigures, "TableofFigures" }, { BuiltInStyle.TableOfAuthorities, "TableofAuthorities" },
+        { BuiltInStyle.BlockQuotation, "BlockText" }, { BuiltInStyle.NavPane, "DocumentMap" }, { BuiltInStyle.NormalObject, "NoSpacing" },
+        { BuiltInStyle.HtmlNormal, "NormalWeb" }, { BuiltInStyle.HtmlAcronym, "HTMLAcronym" }, { BuiltInStyle.HtmlAddress, "HTMLAddress" },
+        { BuiltInStyle.HtmlCite, "HTMLCite" }, { BuiltInStyle.HtmlCode, "HTMLCode" }, { BuiltInStyle.HtmlDfn, "HTMLDefinition" },
+        { BuiltInStyle.HtmlKbd, "HTMLKeyboard" }, { BuiltInStyle.HtmlPre, "HTMLPreformatted" }, { BuiltInStyle.HtmlSamp, "HTMLSample" },
+        { BuiltInStyle.HtmlTt, "HTMLTypewriter" }, { BuiltInStyle.HtmlVar, "HTMLVariable" },
+        { BuiltInStyle.TableLightShading, "LightShading" }, { BuiltInStyle.TableLightList, "LightList" }, { BuiltInStyle.TableLightGrid, "LightGrid" },
+        { BuiltInStyle.TableMediumShading1, "MediumShading1" }, { BuiltInStyle.TableMediumShading2, "MediumShading2" },
+        { BuiltInStyle.TableMediumList1, "MediumList1" }, { BuiltInStyle.TableMediumList2, "MediumList2" },
+        { BuiltInStyle.TableMediumGrid1, "MediumGrid1" }, { BuiltInStyle.TableMediumGrid2, "MediumGrid2" }, { BuiltInStyle.TableMediumGrid3, "MediumGrid3" },
+        { BuiltInStyle.TableDarkList, "DarkList" }, { BuiltInStyle.TableColorfulShading, "ColorfulShading" },
+        { BuiltInStyle.TableColorfulList, "ColorfulList" }, { BuiltInStyle.TableColorfulGrid, "ColorfulGrid" },
+        { BuiltInStyle.TableLightShadingAccent1, "LightShading-Accent1" }, { BuiltInStyle.TableLightListAccent1, "LightList-Accent1" },
+        { BuiltInStyle.TableLightGridAccent1, "LightGrid-Accent1" }, { BuiltInStyle.TableMediumShading1Accent1, "MediumShading1-Accent1" },
+        { BuiltInStyle.TableMediumShading2Accent1, "MediumShading2-Accent1" }, { BuiltInStyle.TableMediumList1Accent1, "MediumList1-Accent1" },
     };
 
     //The names Word shows for built-in styles stored under another name, other than the lower-case ones ("heading 1" shows as "Heading 1").
     private static readonly Dictionary<string, string> DisplayNames = new Dictionary<string, string>(StringComparer.Ordinal)
     {
         { "annotation text", "Comment Text" }, { "annotation reference", "Comment Reference" }, { "annotation subject", "Comment Subject" }, { "FollowedHyperlink", "Followed Hyperlink" },
-        { "Normal Table", "Table Normal" },
+        { "Normal Table", "Table Normal" }, { "table of figures", "Table of Figures" }, { "table of authorities", "Table of Authorities" },
+        { "toa heading", "TOA Heading" }, { "macro", "Macro Text" },
+        { "Light Shading Accent 1", "Light Shading - Accent 1" }, { "Light List Accent 1", "Light List - Accent 1" },
+        { "Light Grid Accent 1", "Light Grid - Accent 1" }, { "Medium Shading 1 Accent 1", "Medium Shading 1 - Accent 1" },
+        { "Medium Shading 2 Accent 1", "Medium Shading 2 - Accent 1" }, { "Medium List 1 Accent 1", "Medium List 1 - Accent 1" },
     };
 
     private static readonly List<Definition> Definitions = CreateDefinitions();
