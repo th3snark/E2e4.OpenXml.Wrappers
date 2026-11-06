@@ -52,6 +52,18 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
         get { return new ListFormatWrapper(this); }
     }
 
+    /// <summary>The footnotes whose marks are in the range, as <c>Range.Footnotes</c> in Word.</summary>
+    public FootnoteWrapperCollection Footnotes
+    {
+        get { return new FootnoteWrapperCollection(this); }
+    }
+
+    /// <summary>The endnotes whose marks are in the range, as <c>Range.Endnotes</c> in Word.</summary>
+    public EndnoteWrapperCollection Endnotes
+    {
+        get { return new EndnoteWrapperCollection(this); }
+    }
+
     /// <summary>The hyperlinks in the range, as <c>Range.Hyperlinks</c> in Word.</summary>
     public HyperlinkWrapperCollection Hyperlinks
     {

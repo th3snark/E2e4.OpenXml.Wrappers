@@ -210,6 +210,12 @@ public partial class RangeWrapper
         });
     }
 
+    //Puts the mark of a footnote or endnote at the place of a collapsed range.
+    internal void InsertNoteReference(Func<Paragraph, List<Run>> build)
+    {
+        ReplaceWithRuns((paragraph, formatting) => build(paragraph));
+    }
+
     //Replaces the text of a span with runs made for the place, which take the formatting of the first character replaced (or of the character
     //before an insertion point); the formatting is passed to the builder, which puts it in the run. A range of elements is not replaced.
     private void ReplaceWithRuns(Func<Paragraph, RunProperties, List<Run>> build)
