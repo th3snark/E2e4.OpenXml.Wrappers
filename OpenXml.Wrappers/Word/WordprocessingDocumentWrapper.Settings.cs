@@ -169,6 +169,12 @@ public partial class WordprocessingDocumentWrapper
         }
     }
 
+    /// <summary>The first range of each kind of story the document has, as <c>Document.StoryRanges</c> in Word.</summary>
+    public StoryRangesWrapper StoryRanges
+    {
+        get { return new StoryRangesWrapper(this); }
+    }
+
     /// <summary>Deletes every comment of the document, as <c>Document.DeleteAllComments</c> in Word.</summary>
     public void DeleteAllComments()
     {
