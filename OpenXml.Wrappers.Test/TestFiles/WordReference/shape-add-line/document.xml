@@ -1,0 +1,81 @@
+<w:document xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape" mc:Ignorable="w14">
+  <w:body>
+    <w:p>
+      <w:r>
+        <w:t>Hello</w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <mc:AlternateContent>
+          <mc:Choice Requires="wps">
+            <w:drawing>
+              <wp:anchor allowOverlap="1" behindDoc="0" distB="0" distL="114300" distR="114300" distT="0" layoutInCell="1" locked="0" relativeHeight="251659264" simplePos="0">
+                <wp:simplePos x="0" y="0" />
+                <wp:positionH relativeFrom="column">
+                  <wp:posOffset>-660400</wp:posOffset>
+                </wp:positionH>
+                <wp:positionV relativeFrom="paragraph">
+                  <wp:posOffset>-533400</wp:posOffset>
+                </wp:positionV>
+                <wp:extent cx="1016000" cy="508000" />
+                <wp:effectExtent b="25400" l="0" r="31750" t="0" />
+                <wp:wrapNone />
+                <wp:docPr id="{docPr1}" name="Straight Connector 1" />
+                <wp:cNvGraphicFramePr />
+                <a:graphic>
+                  <a:graphicData uri="http://schemas.microsoft.com/office/word/2010/wordprocessingShape">
+                    <wps:wsp>
+                      <wps:cNvCnPr />
+                      <wps:spPr>
+                        <a:xfrm>
+                          <a:off x="0" y="0" />
+                          <a:ext cx="1016000" cy="508000" />
+                        </a:xfrm>
+                        <a:prstGeom prst="line">
+                          <a:avLst />
+                        </a:prstGeom>
+                      </wps:spPr>
+                      <wps:style>
+                        <a:lnRef idx="2">
+                          <a:schemeClr val="accent1" />
+                        </a:lnRef>
+                        <a:fillRef idx="0">
+                          <a:schemeClr val="accent1" />
+                        </a:fillRef>
+                        <a:effectRef idx="1">
+                          <a:schemeClr val="accent1" />
+                        </a:effectRef>
+                        <a:fontRef idx="minor">
+                          <a:schemeClr val="tx1" />
+                        </a:fontRef>
+                      </wps:style>
+                      <wps:bodyPr />
+                    </wps:wsp>
+                  </a:graphicData>
+                </a:graphic>
+              </wp:anchor>
+            </w:drawing>
+          </mc:Choice>
+          <mc:Fallback>
+            <w:pict>
+              <v:line from="-52pt,-42pt" id="Straight Connector 1" strokecolor="#156082 [3204]" strokeweight="1.5pt" style="position:absolute;z-index:251659264;visibility:visible;mso-wrap-style:square;mso-wrap-distance-left:9pt;mso-wrap-distance-top:0;mso-wrap-distance-right:9pt;mso-wrap-distance-bottom:0;mso-position-horizontal:absolute;mso-position-horizontal-relative:text;mso-position-vertical:absolute;mso-position-vertical-relative:text" to="28pt,-2pt" o:gfxdata="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&#xA;AAUAAAAA&#xA;" o:spid="_x0000_s1026" w14:anchorId="7AE2779E">
+                <v:stroke joinstyle="miter" />
+              </v:line>
+            </w:pict>
+          </mc:Fallback>
+        </mc:AlternateContent>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> world again</w:t>
+      </w:r>
+    </w:p>
+    <w:sectPr>
+      <w:pgSz w:h="16838" w:w="11906" />
+      <w:pgMar w:bottom="1440" w:footer="708" w:gutter="0" w:header="708" w:left="1440" w:right="1440" w:top="1440" />
+      <w:cols w:space="708" />
+      <w:docGrid w:linePitch="360" />
+    </w:sectPr>
+  </w:body>
+</w:document>

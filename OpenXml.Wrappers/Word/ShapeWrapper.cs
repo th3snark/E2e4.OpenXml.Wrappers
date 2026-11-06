@@ -10,6 +10,7 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using A = DocumentFormat.OpenXml.Drawing;
 using Pic = DocumentFormat.OpenXml.Drawing.Pictures;
+using Wps = DocumentFormat.OpenXml.Office2010.Word.DrawingShape;
 using Wp14 = DocumentFormat.OpenXml.Office2010.Word.Drawing;
 using WpDrawing = DocumentFormat.OpenXml.Drawing.Wordprocessing;
 
@@ -20,11 +21,20 @@ namespace OpenXml.Wrappers.Word;
 /// </summary>
 public enum ShapeType
 {
+    /// <summary>A shape of the gallery (see <see cref="AutoShapeType"/>).</summary>
+    AutoShape = 1,
+
+    /// <summary>A straight line.</summary>
+    Line = 9,
+
     /// <summary>A linked picture.</summary>
     LinkedPicture = 11,
 
     /// <summary>A picture.</summary>
-    Picture = 13
+    Picture = 13,
+
+    /// <summary>A text box.</summary>
+    TextBox = 17
 }
 
 /// <summary>
@@ -341,7 +351,7 @@ public class WrapFormatWrapper
 /// <summary>
 /// A floating shape, as <c>Shape</c> in Word: a picture that sits on the page, anchored to a paragraph, with text wrapping round it.
 /// </summary>
-public class ShapeWrapper : IEquatable<ShapeWrapper>
+public partial class ShapeWrapper : IEquatable<ShapeWrapper>
 {
     private const double EmuPerPoint = 12700;
     private const long RotationUnit = 60000;
@@ -377,7 +387,7 @@ public class ShapeWrapper : IEquatable<ShapeWrapper>
     /// <summary>What the shape is, as <c>Shape.Type</c> in Word.</summary>
     public ShapeType Type
     {
-        get { return Blip?.Link?.Value != null ? ShapeType.LinkedPicture : ShapeType.Picture; }
+        get { return Shape != null ? (IsTextBox ? ShapeType.TextBox : Shape.GetFirstChild<Wps.NonVisualConnectorProperties>() != null ? ShapeType.Line : ShapeType.AutoShape) : Blip?.Link?.Value != null ? ShapeType.LinkedPicture : ShapeType.Picture; }
     }
 
     /// <summary>The name of the shape, as <c>Shape.Name</c> in Word.</summary>
@@ -864,7 +874,7 @@ public class ShapeWrapper : IEquatable<ShapeWrapper>
 /// <summary>
 /// The floating shapes of a document or header, as <c>Shapes</c> in Word.
 /// </summary>
-public class ShapeWrapperCollection : IEnumerable<ShapeWrapper>
+public partial class ShapeWrapperCollection : IEnumerable<ShapeWrapper>
 {
     private const uint FirstHeight = 251658240U;
     private readonly RangeWrapper _range;

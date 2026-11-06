@@ -1,0 +1,545 @@
+<w:document xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape" mc:Ignorable="w14">
+  <w:body>
+    <w:p>
+      <w:r>
+        <w:t>Hello</w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <mc:AlternateContent>
+          <mc:Choice Requires="wps">
+            <w:drawing>
+              <wp:anchor allowOverlap="1" behindDoc="0" distB="0" distL="114300" distR="114300" distT="0" layoutInCell="1" locked="0" relativeHeight="251665408" simplePos="0">
+                <wp:simplePos x="0" y="0" />
+                <wp:positionH relativeFrom="column">
+                  <wp:posOffset>-660400</wp:posOffset>
+                </wp:positionH>
+                <wp:positionV relativeFrom="paragraph">
+                  <wp:posOffset>-533400</wp:posOffset>
+                </wp:positionV>
+                <wp:extent cx="1016000" cy="508000" />
+                <wp:effectExtent b="44450" l="0" r="31750" t="19050" />
+                <wp:wrapNone />
+                <wp:docPr id="{docPr1}" name="Arrow: Right 7" />
+                <wp:cNvGraphicFramePr />
+                <a:graphic>
+                  <a:graphicData uri="http://schemas.microsoft.com/office/word/2010/wordprocessingShape">
+                    <wps:wsp>
+                      <wps:cNvSpPr />
+                      <wps:spPr>
+                        <a:xfrm>
+                          <a:off x="0" y="0" />
+                          <a:ext cx="1016000" cy="508000" />
+                        </a:xfrm>
+                        <a:prstGeom prst="rightArrow">
+                          <a:avLst />
+                        </a:prstGeom>
+                      </wps:spPr>
+                      <wps:style>
+                        <a:lnRef idx="2">
+                          <a:schemeClr val="accent1">
+                            <a:shade val="15000" />
+                          </a:schemeClr>
+                        </a:lnRef>
+                        <a:fillRef idx="1">
+                          <a:schemeClr val="accent1" />
+                        </a:fillRef>
+                        <a:effectRef idx="0">
+                          <a:schemeClr val="accent1" />
+                        </a:effectRef>
+                        <a:fontRef idx="minor">
+                          <a:schemeClr val="lt1" />
+                        </a:fontRef>
+                      </wps:style>
+                      <wps:bodyPr anchor="ctr" anchorCtr="0" bIns="45720" compatLnSpc="1" forceAA="0" fromWordArt="0" horzOverflow="overflow" lIns="91440" numCol="1" rIns="91440" rot="0" rtlCol="0" spcCol="0" spcFirstLastPara="0" tIns="45720" vert="horz" vertOverflow="overflow" wrap="square">
+                        <a:prstTxWarp prst="textNoShape">
+                          <a:avLst />
+                        </a:prstTxWarp>
+                        <a:noAutofit />
+                      </wps:bodyPr>
+                    </wps:wsp>
+                  </a:graphicData>
+                </a:graphic>
+              </wp:anchor>
+            </w:drawing>
+          </mc:Choice>
+          <mc:Fallback>
+            <w:pict>
+              <v:shapetype adj="16200,5400" coordsize="21600,21600" id="_x0000_t13" path="m@0,l@0@1,0@1,0@2@0@2@0,21600,21600,10800xe" o:spt="13" w14:anchorId="34C64428">
+                <v:stroke joinstyle="miter" />
+                <v:formulas>
+                  <v:f eqn="val #0" />
+                  <v:f eqn="val #1" />
+                  <v:f eqn="sum height 0 #1" />
+                  <v:f eqn="sum 10800 0 #1" />
+                  <v:f eqn="sum width 0 #0" />
+                  <v:f eqn="prod @4 @3 10800" />
+                  <v:f eqn="sum width 0 @5" />
+                </v:formulas>
+                <v:path textboxrect="0,@1,@6,@2" o:connectangles="270,180,90,0" o:connectlocs="@0,0;0,10800;@0,21600;21600,10800" o:connecttype="custom" />
+                <v:handles>
+                  <v:h position="#0,#1" xrange="0,21600" yrange="0,10800" />
+                </v:handles>
+              </v:shapetype>
+              <v:shape fillcolor="#156082 [3204]" id="Arrow: Right 7" strokecolor="#030e13 [484]" strokeweight="1.5pt" style="position:absolute;margin-left:-52pt;margin-top:-42pt;width:80pt;height:40pt;z-index:251665408;visibility:visible;mso-wrap-style:square;mso-wrap-distance-left:9pt;mso-wrap-distance-top:0;mso-wrap-distance-right:9pt;mso-wrap-distance-bottom:0;mso-position-horizontal:absolute;mso-position-horizontal-relative:text;mso-position-vertical:absolute;mso-position-vertical-relative:text;v-text-anchor:middle" type="#_x0000_t13" o:gfxdata="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&#xA;cmV2LnhtbFBLBQYAAAAABAAEAPMAAADCBQAAAAA=&#xA;" o:spid="_x0000_s1026" />
+            </w:pict>
+          </mc:Fallback>
+        </mc:AlternateContent>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <mc:AlternateContent>
+          <mc:Choice Requires="wps">
+            <w:drawing>
+              <wp:anchor allowOverlap="1" behindDoc="0" distB="0" distL="114300" distR="114300" distT="0" layoutInCell="1" locked="0" relativeHeight="251664384" simplePos="0">
+                <wp:simplePos x="0" y="0" />
+                <wp:positionH relativeFrom="column">
+                  <wp:posOffset>-660400</wp:posOffset>
+                </wp:positionH>
+                <wp:positionV relativeFrom="paragraph">
+                  <wp:posOffset>-533400</wp:posOffset>
+                </wp:positionV>
+                <wp:extent cx="1016000" cy="508000" />
+                <wp:effectExtent b="25400" l="19050" r="31750" t="0" />
+                <wp:wrapNone />
+                <wp:docPr id="{docPr2}" name="Hexagon 6" />
+                <wp:cNvGraphicFramePr />
+                <a:graphic>
+                  <a:graphicData uri="http://schemas.microsoft.com/office/word/2010/wordprocessingShape">
+                    <wps:wsp>
+                      <wps:cNvSpPr />
+                      <wps:spPr>
+                        <a:xfrm>
+                          <a:off x="0" y="0" />
+                          <a:ext cx="1016000" cy="508000" />
+                        </a:xfrm>
+                        <a:prstGeom prst="hexagon">
+                          <a:avLst />
+                        </a:prstGeom>
+                      </wps:spPr>
+                      <wps:style>
+                        <a:lnRef idx="2">
+                          <a:schemeClr val="accent1">
+                            <a:shade val="15000" />
+                          </a:schemeClr>
+                        </a:lnRef>
+                        <a:fillRef idx="1">
+                          <a:schemeClr val="accent1" />
+                        </a:fillRef>
+                        <a:effectRef idx="0">
+                          <a:schemeClr val="accent1" />
+                        </a:effectRef>
+                        <a:fontRef idx="minor">
+                          <a:schemeClr val="lt1" />
+                        </a:fontRef>
+                      </wps:style>
+                      <wps:bodyPr anchor="ctr" anchorCtr="0" bIns="45720" compatLnSpc="1" forceAA="0" fromWordArt="0" horzOverflow="overflow" lIns="91440" numCol="1" rIns="91440" rot="0" rtlCol="0" spcCol="0" spcFirstLastPara="0" tIns="45720" vert="horz" vertOverflow="overflow" wrap="square">
+                        <a:prstTxWarp prst="textNoShape">
+                          <a:avLst />
+                        </a:prstTxWarp>
+                        <a:noAutofit />
+                      </wps:bodyPr>
+                    </wps:wsp>
+                  </a:graphicData>
+                </a:graphic>
+              </wp:anchor>
+            </w:drawing>
+          </mc:Choice>
+          <mc:Fallback>
+            <w:pict>
+              <v:shapetype adj="5400" coordsize="21600,21600" id="_x0000_t9" path="m@0,l,10800@0,21600@1,21600,21600,10800@1,xe" o:spt="9" w14:anchorId="59AAC070">
+                <v:stroke joinstyle="miter" />
+                <v:formulas>
+                  <v:f eqn="val #0" />
+                  <v:f eqn="sum width 0 #0" />
+                  <v:f eqn="sum height 0 #0" />
+                  <v:f eqn="prod @0 2929 10000" />
+                  <v:f eqn="sum width 0 @3" />
+                  <v:f eqn="sum height 0 @3" />
+                </v:formulas>
+                <v:path gradientshapeok="t" textboxrect="1800,1800,19800,19800;3600,3600,18000,18000;6300,6300,15300,15300" o:connecttype="rect" />
+                <v:handles>
+                  <v:h position="#0,topLeft" xrange="0,10800" />
+                </v:handles>
+              </v:shapetype>
+              <v:shape adj="2700" fillcolor="#156082 [3204]" id="Hexagon 6" strokecolor="#030e13 [484]" strokeweight="1.5pt" style="position:absolute;margin-left:-52pt;margin-top:-42pt;width:80pt;height:40pt;z-index:251664384;visibility:visible;mso-wrap-style:square;mso-wrap-distance-left:9pt;mso-wrap-distance-top:0;mso-wrap-distance-right:9pt;mso-wrap-distance-bottom:0;mso-position-horizontal:absolute;mso-position-horizontal-relative:text;mso-position-vertical:absolute;mso-position-vertical-relative:text;v-text-anchor:middle" type="#_x0000_t9" o:gfxdata="UEsDBBQABgAIAAAAIQC2gziS/gAAAOEBAAATAAAAW0NvbnRlbnRfVHlwZXNdLnhtbJSRQU7DMBBF&#xA;90jcwfIWJU67QAgl6YK0S0CoHGBkTxKLZGx5TGhvj5O2G0SRWNoz/78nu9wcxkFMGNg6quQqL6RA&#xA;0s5Y6ir5vt9lD1JwBDIwOMJKHpHlpr69KfdHjyxSmriSfYz+USnWPY7AufNIadK6MEJMx9ApD/oD&#xA;OlTrorhX2lFEilmcO2RdNtjC5xDF9pCuTyYBB5bi6bQ4syoJ3g9WQ0ymaiLzg5KdCXlKLjvcW893&#xA;SUOqXwnz5DrgnHtJTxOsQfEKIT7DmDSUCaxw7Rqn8787ZsmRM9e2VmPeBN4uqYvTtW7jvijg9N/y&#xA;JsXecLq0q+WD6m8AAAD//wMAUEsDBBQABgAIAAAAIQA4/SH/1gAAAJQBAAALAAAAX3JlbHMvLnJl&#xA;bHOkkMFqwzAMhu+DvYPRfXGawxijTi+j0GvpHsDYimMaW0Yy2fr2M4PBMnrbUb/Q94l/f/hMi1qR&#xA;JVI2sOt6UJgd+ZiDgffL8ekFlFSbvV0oo4EbChzGx4f9GRdb25HMsYhqlCwG5lrLq9biZkxWOiqY&#xA;22YiTra2kYMu1l1tQD30/bPm3wwYN0x18gb45AdQl1tp5j/sFB2T0FQ7R0nTNEV3j6o9feQzro1i&#xA;OWA14Fm+Q8a1a8+Bvu/d/dMb2JY5uiPbhG/ktn4cqGU/er3pcvwCAAD//wMAUEsDBBQABgAIAAAA&#xA;IQAac33bWgIAABYFAAAOAAAAZHJzL2Uyb0RvYy54bWysVMFu2zAMvQ/YPwi6r7aDtOuCOEWQosOA&#xA;oi3aDj0rshQbkEWNUuJkXz9KdpyiLXYYdpEpkXyknh81v9q3hu0U+gZsyYuznDNlJVSN3ZT85/PN&#xA;l0vOfBC2EgasKvlBeX61+Pxp3rmZmkANplLICMT6WedKXofgZlnmZa1a4c/AKUtODdiKQFvcZBWK&#xA;jtBbk03y/CLrACuHIJX3dHrdO/ki4WutZLjX2qvATMmpt5BWTOs6rtliLmYbFK5u5NCG+IcuWtFY&#xA;KjpCXYsg2Babd1BtIxE86HAmoc1A60aqdAe6TZG/uc1TLZxKdyFyvBtp8v8PVt7tntwDEg2d8zNP&#xA;ZrzFXmMbv9Qf2yeyDiNZah+YpMMiLy7ynDiV5DvPL6NNMNkp26EP3xW0LBrUstqLDfQ0id2tD330&#xA;MYpSTy0kKxyMil0Y+6g0ayoqOkkkJ3WolUG2E/RfhZTKhqJ31aJS/XFxfmppzEgNJsCIrBtjRuwB&#xA;ICrvPXbf6xAfU1US15ic/62xPnnMSJXBhjG5bSzgRwCGbjVU7uOPJPXURJbWUB0ekCH00vZO3jRE&#xA;963w4UEgaZn+EM1nuKdFG+hKDoPFWQ34+6PzGE//i7ycdTQbJfe/tgIVZ+aHJfF9K6bTOExpMz3/&#xA;OqENvvasX3vstl0B/aaCXgInkxnjgzmaGqF9oTFexqrkElZS7ZLLgMfNKvQzSw+BVMtlCqMBciLc&#xA;2icnI3hkNWrpef8i0A2aC6TWOzjOkZi90V0fGzMtLLcBdJNEeeJ14JuGLwlneCjidL/ep6jTc7b4&#xA;AwAA//8DAFBLAwQUAAYACAAAACEA9fZf7NoAAAAKAQAADwAAAGRycy9kb3ducmV2LnhtbExPQU7D&#xA;MBC8I/EHa5G4tU4QRFWIUwFSH5AUwdWNt3FKvI5spw28nu0JTjuzO5qdqbaLG8UZQxw8KcjXGQik&#xA;zpuBegXv+91qAyImTUaPnlDBN0bY1rc3lS6Nv1CD5zb1gk0ollqBTWkqpYydRafj2k9IfDv64HRi&#xA;Gnppgr6wuRvlQ5YV0umB+IPVE75Z7L7a2SmIc9P97G0eht1H/DzJ+Fq02Ch1f7e8PINIuKQ/MVzj&#xA;c3SoOdPBz2SiGBWs8uyRyyRGmytgyVPB88AL5rKu5P8K9S8AAAD//wMAUEsBAi0AFAAGAAgAAAAh&#xA;ALaDOJL+AAAA4QEAABMAAAAAAAAAAAAAAAAAAAAAAFtDb250ZW50X1R5cGVzXS54bWxQSwECLQAU&#xA;AAYACAAAACEAOP0h/9YAAACUAQAACwAAAAAAAAAAAAAAAAAvAQAAX3JlbHMvLnJlbHNQSwECLQAU&#xA;AAYACAAAACEAGnN921oCAAAWBQAADgAAAAAAAAAAAAAAAAAuAgAAZHJzL2Uyb0RvYy54bWxQSwEC&#xA;LQAUAAYACAAAACEA9fZf7NoAAAAKAQAADwAAAAAAAAAAAAAAAAC0BAAAZHJzL2Rvd25yZXYueG1s&#xA;UEsFBgAAAAAEAAQA8wAAALsFAAAAAA==&#xA;" o:spid="_x0000_s1026" />
+            </w:pict>
+          </mc:Fallback>
+        </mc:AlternateContent>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <mc:AlternateContent>
+          <mc:Choice Requires="wps">
+            <w:drawing>
+              <wp:anchor allowOverlap="1" behindDoc="0" distB="0" distL="114300" distR="114300" distT="0" layoutInCell="1" locked="0" relativeHeight="251663360" simplePos="0">
+                <wp:simplePos x="0" y="0" />
+                <wp:positionH relativeFrom="column">
+                  <wp:posOffset>-660400</wp:posOffset>
+                </wp:positionH>
+                <wp:positionV relativeFrom="paragraph">
+                  <wp:posOffset>-533400</wp:posOffset>
+                </wp:positionV>
+                <wp:extent cx="1016000" cy="508000" />
+                <wp:effectExtent b="25400" l="0" r="12700" t="0" />
+                <wp:wrapNone />
+                <wp:docPr id="{docPr3}" name="Oval 5" />
+                <wp:cNvGraphicFramePr />
+                <a:graphic>
+                  <a:graphicData uri="http://schemas.microsoft.com/office/word/2010/wordprocessingShape">
+                    <wps:wsp>
+                      <wps:cNvSpPr />
+                      <wps:spPr>
+                        <a:xfrm>
+                          <a:off x="0" y="0" />
+                          <a:ext cx="1016000" cy="508000" />
+                        </a:xfrm>
+                        <a:prstGeom prst="ellipse">
+                          <a:avLst />
+                        </a:prstGeom>
+                      </wps:spPr>
+                      <wps:style>
+                        <a:lnRef idx="2">
+                          <a:schemeClr val="accent1">
+                            <a:shade val="15000" />
+                          </a:schemeClr>
+                        </a:lnRef>
+                        <a:fillRef idx="1">
+                          <a:schemeClr val="accent1" />
+                        </a:fillRef>
+                        <a:effectRef idx="0">
+                          <a:schemeClr val="accent1" />
+                        </a:effectRef>
+                        <a:fontRef idx="minor">
+                          <a:schemeClr val="lt1" />
+                        </a:fontRef>
+                      </wps:style>
+                      <wps:bodyPr anchor="ctr" anchorCtr="0" bIns="45720" compatLnSpc="1" forceAA="0" fromWordArt="0" horzOverflow="overflow" lIns="91440" numCol="1" rIns="91440" rot="0" rtlCol="0" spcCol="0" spcFirstLastPara="0" tIns="45720" vert="horz" vertOverflow="overflow" wrap="square">
+                        <a:prstTxWarp prst="textNoShape">
+                          <a:avLst />
+                        </a:prstTxWarp>
+                        <a:noAutofit />
+                      </wps:bodyPr>
+                    </wps:wsp>
+                  </a:graphicData>
+                </a:graphic>
+              </wp:anchor>
+            </w:drawing>
+          </mc:Choice>
+          <mc:Fallback>
+            <w:pict>
+              <v:oval fillcolor="#156082 [3204]" id="Oval 5" strokecolor="#030e13 [484]" strokeweight="1.5pt" style="position:absolute;margin-left:-52pt;margin-top:-42pt;width:80pt;height:40pt;z-index:251663360;visibility:visible;mso-wrap-style:square;mso-wrap-distance-left:9pt;mso-wrap-distance-top:0;mso-wrap-distance-right:9pt;mso-wrap-distance-bottom:0;mso-position-horizontal:absolute;mso-position-horizontal-relative:text;mso-position-vertical:absolute;mso-position-vertical-relative:text;v-text-anchor:middle" o:gfxdata="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&#xA;bWxQSwUGAAAAAAQABADzAAAAvQUAAAAA&#xA;" o:spid="_x0000_s1026" w14:anchorId="1A99F43E">
+                <v:stroke joinstyle="miter" />
+              </v:oval>
+            </w:pict>
+          </mc:Fallback>
+        </mc:AlternateContent>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <mc:AlternateContent>
+          <mc:Choice Requires="wps">
+            <w:drawing>
+              <wp:anchor allowOverlap="1" behindDoc="0" distB="0" distL="114300" distR="114300" distT="0" layoutInCell="1" locked="0" relativeHeight="251662336" simplePos="0">
+                <wp:simplePos x="0" y="0" />
+                <wp:positionH relativeFrom="column">
+                  <wp:posOffset>-660400</wp:posOffset>
+                </wp:positionH>
+                <wp:positionV relativeFrom="paragraph">
+                  <wp:posOffset>-533400</wp:posOffset>
+                </wp:positionV>
+                <wp:extent cx="1016000" cy="508000" />
+                <wp:effectExtent b="25400" l="19050" r="31750" t="19050" />
+                <wp:wrapNone />
+                <wp:docPr id="{docPr4}" name="Isosceles Triangle 4" />
+                <wp:cNvGraphicFramePr />
+                <a:graphic>
+                  <a:graphicData uri="http://schemas.microsoft.com/office/word/2010/wordprocessingShape">
+                    <wps:wsp>
+                      <wps:cNvSpPr />
+                      <wps:spPr>
+                        <a:xfrm>
+                          <a:off x="0" y="0" />
+                          <a:ext cx="1016000" cy="508000" />
+                        </a:xfrm>
+                        <a:prstGeom prst="triangle">
+                          <a:avLst />
+                        </a:prstGeom>
+                      </wps:spPr>
+                      <wps:style>
+                        <a:lnRef idx="2">
+                          <a:schemeClr val="accent1">
+                            <a:shade val="15000" />
+                          </a:schemeClr>
+                        </a:lnRef>
+                        <a:fillRef idx="1">
+                          <a:schemeClr val="accent1" />
+                        </a:fillRef>
+                        <a:effectRef idx="0">
+                          <a:schemeClr val="accent1" />
+                        </a:effectRef>
+                        <a:fontRef idx="minor">
+                          <a:schemeClr val="lt1" />
+                        </a:fontRef>
+                      </wps:style>
+                      <wps:bodyPr anchor="ctr" anchorCtr="0" bIns="45720" compatLnSpc="1" forceAA="0" fromWordArt="0" horzOverflow="overflow" lIns="91440" numCol="1" rIns="91440" rot="0" rtlCol="0" spcCol="0" spcFirstLastPara="0" tIns="45720" vert="horz" vertOverflow="overflow" wrap="square">
+                        <a:prstTxWarp prst="textNoShape">
+                          <a:avLst />
+                        </a:prstTxWarp>
+                        <a:noAutofit />
+                      </wps:bodyPr>
+                    </wps:wsp>
+                  </a:graphicData>
+                </a:graphic>
+              </wp:anchor>
+            </w:drawing>
+          </mc:Choice>
+          <mc:Fallback>
+            <w:pict>
+              <v:shapetype adj="10800" coordsize="21600,21600" id="_x0000_t5" path="m@0,l,21600r21600,xe" o:spt="5" w14:anchorId="760FEE3F">
+                <v:stroke joinstyle="miter" />
+                <v:formulas>
+                  <v:f eqn="val #0" />
+                  <v:f eqn="prod #0 1 2" />
+                  <v:f eqn="sum @1 10800 0" />
+                </v:formulas>
+                <v:path gradientshapeok="t" textboxrect="0,10800,10800,18000;5400,10800,16200,18000;10800,10800,21600,18000;0,7200,7200,21600;7200,7200,14400,21600;14400,7200,21600,21600" o:connectlocs="@0,0;@1,10800;0,21600;10800,21600;21600,21600;@2,10800" o:connecttype="custom" />
+                <v:handles>
+                  <v:h position="#0,topLeft" xrange="0,21600" />
+                </v:handles>
+              </v:shapetype>
+              <v:shape fillcolor="#156082 [3204]" id="Isosceles Triangle 4" strokecolor="#030e13 [484]" strokeweight="1.5pt" style="position:absolute;margin-left:-52pt;margin-top:-42pt;width:80pt;height:40pt;z-index:251662336;visibility:visible;mso-wrap-style:square;mso-wrap-distance-left:9pt;mso-wrap-distance-top:0;mso-wrap-distance-right:9pt;mso-wrap-distance-bottom:0;mso-position-horizontal:absolute;mso-position-horizontal-relative:text;mso-position-vertical:absolute;mso-position-vertical-relative:text;v-text-anchor:middle" type="#_x0000_t5" o:gfxdata="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&#xA;UEsFBgAAAAAEAAQA8wAAALsFAAAAAA==&#xA;" o:spid="_x0000_s1026" />
+            </w:pict>
+          </mc:Fallback>
+        </mc:AlternateContent>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <mc:AlternateContent>
+          <mc:Choice Requires="wps">
+            <w:drawing>
+              <wp:anchor allowOverlap="1" behindDoc="0" distB="0" distL="114300" distR="114300" distT="0" layoutInCell="1" locked="0" relativeHeight="251661312" simplePos="0">
+                <wp:simplePos x="0" y="0" />
+                <wp:positionH relativeFrom="column">
+                  <wp:posOffset>-660400</wp:posOffset>
+                </wp:positionH>
+                <wp:positionV relativeFrom="paragraph">
+                  <wp:posOffset>-533400</wp:posOffset>
+                </wp:positionV>
+                <wp:extent cx="1016000" cy="508000" />
+                <wp:effectExtent b="25400" l="0" r="12700" t="0" />
+                <wp:wrapNone />
+                <wp:docPr id="{docPr5}" name="Rectangle: Rounded Corners 3" />
+                <wp:cNvGraphicFramePr />
+                <a:graphic>
+                  <a:graphicData uri="http://schemas.microsoft.com/office/word/2010/wordprocessingShape">
+                    <wps:wsp>
+                      <wps:cNvSpPr />
+                      <wps:spPr>
+                        <a:xfrm>
+                          <a:off x="0" y="0" />
+                          <a:ext cx="1016000" cy="508000" />
+                        </a:xfrm>
+                        <a:prstGeom prst="roundRect">
+                          <a:avLst />
+                        </a:prstGeom>
+                      </wps:spPr>
+                      <wps:style>
+                        <a:lnRef idx="2">
+                          <a:schemeClr val="accent1">
+                            <a:shade val="15000" />
+                          </a:schemeClr>
+                        </a:lnRef>
+                        <a:fillRef idx="1">
+                          <a:schemeClr val="accent1" />
+                        </a:fillRef>
+                        <a:effectRef idx="0">
+                          <a:schemeClr val="accent1" />
+                        </a:effectRef>
+                        <a:fontRef idx="minor">
+                          <a:schemeClr val="lt1" />
+                        </a:fontRef>
+                      </wps:style>
+                      <wps:bodyPr anchor="ctr" anchorCtr="0" bIns="45720" compatLnSpc="1" forceAA="0" fromWordArt="0" horzOverflow="overflow" lIns="91440" numCol="1" rIns="91440" rot="0" rtlCol="0" spcCol="0" spcFirstLastPara="0" tIns="45720" vert="horz" vertOverflow="overflow" wrap="square">
+                        <a:prstTxWarp prst="textNoShape">
+                          <a:avLst />
+                        </a:prstTxWarp>
+                        <a:noAutofit />
+                      </wps:bodyPr>
+                    </wps:wsp>
+                  </a:graphicData>
+                </a:graphic>
+              </wp:anchor>
+            </w:drawing>
+          </mc:Choice>
+          <mc:Fallback>
+            <w:pict>
+              <v:roundrect arcsize="10923f" fillcolor="#156082 [3204]" id="Rectangle: Rounded Corners 3" strokecolor="#030e13 [484]" strokeweight="1.5pt" style="position:absolute;margin-left:-52pt;margin-top:-42pt;width:80pt;height:40pt;z-index:251661312;visibility:visible;mso-wrap-style:square;mso-wrap-distance-left:9pt;mso-wrap-distance-top:0;mso-wrap-distance-right:9pt;mso-wrap-distance-bottom:0;mso-position-horizontal:absolute;mso-position-horizontal-relative:text;mso-position-vertical:absolute;mso-position-vertical-relative:text;v-text-anchor:middle" o:gfxdata="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&#xA;bWxQSwUGAAAAAAQABADzAAAAvQUAAAAA&#xA;" o:spid="_x0000_s1026" w14:anchorId="3CED4746">
+                <v:stroke joinstyle="miter" />
+              </v:roundrect>
+            </w:pict>
+          </mc:Fallback>
+        </mc:AlternateContent>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <mc:AlternateContent>
+          <mc:Choice Requires="wps">
+            <w:drawing>
+              <wp:anchor allowOverlap="1" behindDoc="0" distB="0" distL="114300" distR="114300" distT="0" layoutInCell="1" locked="0" relativeHeight="251660288" simplePos="0">
+                <wp:simplePos x="0" y="0" />
+                <wp:positionH relativeFrom="column">
+                  <wp:posOffset>-660400</wp:posOffset>
+                </wp:positionH>
+                <wp:positionV relativeFrom="paragraph">
+                  <wp:posOffset>-533400</wp:posOffset>
+                </wp:positionV>
+                <wp:extent cx="1016000" cy="508000" />
+                <wp:effectExtent b="44450" l="19050" r="31750" t="19050" />
+                <wp:wrapNone />
+                <wp:docPr id="{docPr6}" name="Diamond 2" />
+                <wp:cNvGraphicFramePr />
+                <a:graphic>
+                  <a:graphicData uri="http://schemas.microsoft.com/office/word/2010/wordprocessingShape">
+                    <wps:wsp>
+                      <wps:cNvSpPr />
+                      <wps:spPr>
+                        <a:xfrm>
+                          <a:off x="0" y="0" />
+                          <a:ext cx="1016000" cy="508000" />
+                        </a:xfrm>
+                        <a:prstGeom prst="diamond">
+                          <a:avLst />
+                        </a:prstGeom>
+                      </wps:spPr>
+                      <wps:style>
+                        <a:lnRef idx="2">
+                          <a:schemeClr val="accent1">
+                            <a:shade val="15000" />
+                          </a:schemeClr>
+                        </a:lnRef>
+                        <a:fillRef idx="1">
+                          <a:schemeClr val="accent1" />
+                        </a:fillRef>
+                        <a:effectRef idx="0">
+                          <a:schemeClr val="accent1" />
+                        </a:effectRef>
+                        <a:fontRef idx="minor">
+                          <a:schemeClr val="lt1" />
+                        </a:fontRef>
+                      </wps:style>
+                      <wps:bodyPr anchor="ctr" anchorCtr="0" bIns="45720" compatLnSpc="1" forceAA="0" fromWordArt="0" horzOverflow="overflow" lIns="91440" numCol="1" rIns="91440" rot="0" rtlCol="0" spcCol="0" spcFirstLastPara="0" tIns="45720" vert="horz" vertOverflow="overflow" wrap="square">
+                        <a:prstTxWarp prst="textNoShape">
+                          <a:avLst />
+                        </a:prstTxWarp>
+                        <a:noAutofit />
+                      </wps:bodyPr>
+                    </wps:wsp>
+                  </a:graphicData>
+                </a:graphic>
+              </wp:anchor>
+            </w:drawing>
+          </mc:Choice>
+          <mc:Fallback>
+            <w:pict>
+              <v:shapetype coordsize="21600,21600" id="_x0000_t4" path="m10800,l,10800,10800,21600,21600,10800xe" o:spt="4" w14:anchorId="12C067EE">
+                <v:stroke joinstyle="miter" />
+                <v:path gradientshapeok="t" textboxrect="5400,5400,16200,16200" o:connecttype="rect" />
+              </v:shapetype>
+              <v:shape fillcolor="#156082 [3204]" id="Diamond 2" strokecolor="#030e13 [484]" strokeweight="1.5pt" style="position:absolute;margin-left:-52pt;margin-top:-42pt;width:80pt;height:40pt;z-index:251660288;visibility:visible;mso-wrap-style:square;mso-wrap-distance-left:9pt;mso-wrap-distance-top:0;mso-wrap-distance-right:9pt;mso-wrap-distance-bottom:0;mso-position-horizontal:absolute;mso-position-horizontal-relative:text;mso-position-vertical:absolute;mso-position-vertical-relative:text;v-text-anchor:middle" type="#_x0000_t4" o:gfxdata="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&#xA;LnhtbFBLBQYAAAAABAAEAPMAAAC/BQAAAAA=&#xA;" o:spid="_x0000_s1026" />
+            </w:pict>
+          </mc:Fallback>
+        </mc:AlternateContent>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <mc:AlternateContent>
+          <mc:Choice Requires="wps">
+            <w:drawing>
+              <wp:anchor allowOverlap="1" behindDoc="0" distB="0" distL="114300" distR="114300" distT="0" layoutInCell="1" locked="0" relativeHeight="251659264" simplePos="0">
+                <wp:simplePos x="0" y="0" />
+                <wp:positionH relativeFrom="column">
+                  <wp:posOffset>-660400</wp:posOffset>
+                </wp:positionH>
+                <wp:positionV relativeFrom="paragraph">
+                  <wp:posOffset>-533400</wp:posOffset>
+                </wp:positionV>
+                <wp:extent cx="1016000" cy="508000" />
+                <wp:effectExtent b="25400" l="0" r="12700" t="0" />
+                <wp:wrapNone />
+                <wp:docPr id="{docPr7}" name="Rectangle 1" />
+                <wp:cNvGraphicFramePr />
+                <a:graphic>
+                  <a:graphicData uri="http://schemas.microsoft.com/office/word/2010/wordprocessingShape">
+                    <wps:wsp>
+                      <wps:cNvSpPr />
+                      <wps:spPr>
+                        <a:xfrm>
+                          <a:off x="0" y="0" />
+                          <a:ext cx="1016000" cy="508000" />
+                        </a:xfrm>
+                        <a:prstGeom prst="rect">
+                          <a:avLst />
+                        </a:prstGeom>
+                      </wps:spPr>
+                      <wps:style>
+                        <a:lnRef idx="2">
+                          <a:schemeClr val="accent1">
+                            <a:shade val="15000" />
+                          </a:schemeClr>
+                        </a:lnRef>
+                        <a:fillRef idx="1">
+                          <a:schemeClr val="accent1" />
+                        </a:fillRef>
+                        <a:effectRef idx="0">
+                          <a:schemeClr val="accent1" />
+                        </a:effectRef>
+                        <a:fontRef idx="minor">
+                          <a:schemeClr val="lt1" />
+                        </a:fontRef>
+                      </wps:style>
+                      <wps:bodyPr anchor="ctr" anchorCtr="0" bIns="45720" compatLnSpc="1" forceAA="0" fromWordArt="0" horzOverflow="overflow" lIns="91440" numCol="1" rIns="91440" rot="0" rtlCol="0" spcCol="0" spcFirstLastPara="0" tIns="45720" vert="horz" vertOverflow="overflow" wrap="square">
+                        <a:prstTxWarp prst="textNoShape">
+                          <a:avLst />
+                        </a:prstTxWarp>
+                        <a:noAutofit />
+                      </wps:bodyPr>
+                    </wps:wsp>
+                  </a:graphicData>
+                </a:graphic>
+              </wp:anchor>
+            </w:drawing>
+          </mc:Choice>
+          <mc:Fallback>
+            <w:pict>
+              <v:rect fillcolor="#156082 [3204]" id="Rectangle 1" strokecolor="#030e13 [484]" strokeweight="1.5pt" style="position:absolute;margin-left:-52pt;margin-top:-42pt;width:80pt;height:40pt;z-index:251659264;visibility:visible;mso-wrap-style:square;mso-wrap-distance-left:9pt;mso-wrap-distance-top:0;mso-wrap-distance-right:9pt;mso-wrap-distance-bottom:0;mso-position-horizontal:absolute;mso-position-horizontal-relative:text;mso-position-vertical:absolute;mso-position-vertical-relative:text;v-text-anchor:middle" o:gfxdata="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&#xA;bFBLBQYAAAAABAAEAPMAAAC8BQAAAAA=&#xA;" o:spid="_x0000_s1026" w14:anchorId="7A423721" />
+            </w:pict>
+          </mc:Fallback>
+        </mc:AlternateContent>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> world again</w:t>
+      </w:r>
+    </w:p>
+    <w:sectPr>
+      <w:pgSz w:h="16838" w:w="11906" />
+      <w:pgMar w:bottom="1440" w:footer="708" w:gutter="0" w:header="708" w:left="1440" w:right="1440" w:top="1440" />
+      <w:cols w:space="708" />
+      <w:docGrid w:linePitch="360" />
+    </w:sectPr>
+  </w:body>
+</w:document>

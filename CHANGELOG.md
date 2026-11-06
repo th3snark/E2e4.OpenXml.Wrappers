@@ -2,6 +2,11 @@
 
 All notable changes are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- Text boxes and drawn shapes: `Shapes.AddTextbox`, `Shapes.AddShape` (rectangle, diamond, rounded rectangle, isosceles triangle, oval, hexagon, right arrow), `Shapes.AddLine`, and on `Shape` the members `AutoShapeType`, `Fill` (`Visible`, `ForeColor`, `Transparency`), `Line` (`Visible`, `ForeColor`, `Weight`) and `TextFrame` (`TextRange`, `HasText`), with `ShapeType` values for auto shapes, lines and text boxes. Five new reference scenarios; the shape itself matches Word 16. The old copy Word writes for versions before 2010 is not written.
+
 ## [1.5.0] - 2026-11-06
 
 ### Added

@@ -238,6 +238,111 @@ public class ShapeWrapperTest : IDisposable
     }
 
     [Fact]
+    public void ATextBoxHoldsTextAndKeepsItOutOfTheMainText()
+    {
+        ShapeWrapper box = _document.Shapes.AddTextbox(TextOrientation.Horizontal, 20, 30, 120, 60, _document.Range(5, 5));
+
+        Assert.Equal(ShapeType.TextBox, box.Type);
+        Assert.Equal("Text Box 1", box.Name);
+        Assert.Equal(120, box.Width, 3);
+        Assert.Equal(60, box.Height, 3);
+        Assert.Equal(-52, box.Left, 3);
+        Assert.Equal(-42, box.Top, 3);
+        Assert.False(box.TextFrame.HasText);
+        Assert.False(box.Fill.Visible);
+        Assert.True(box.Line.Visible);
+        Assert.Equal(0.5, box.Line.Weight, 3);
+
+        box.TextFrame.TextRange.Text = "Boxed\rtwo";
+
+        Assert.True(box.TextFrame.HasText);
+        Assert.Equal("Boxed\rtwo\r", box.TextFrame.TextRange.Text);
+        Assert.Equal("Hello world again", _document.Content.Text.TrimEnd('\r'));
+        Assert.Equal(1, _document.Shapes.Count);
+        AssertValid();
+    }
+
+    [Fact]
+    public void ShapesOfTheGalleryAreNamedByTheirOrderAndKeepTheirType()
+    {
+        ShapeWrapper rectangle = _document.Shapes.AddShape(AutoShapeType.Rectangle, 20, 30, 80, 40, _document.Range(5, 5));
+        ShapeWrapper arrow = _document.Shapes.AddShape(AutoShapeType.RightArrow, 20, 30, 80, 40, _document.Range(5, 5));
+        ShapeWrapper line = _document.Shapes.AddLine(20, 30, 100, 70, _document.Range(5, 5));
+
+        Assert.Equal("Rectangle 1", rectangle.Name);
+        Assert.Equal("Arrow: Right 2", arrow.Name);
+        Assert.Equal("Straight Connector 3", line.Name);
+        Assert.Equal(ShapeType.AutoShape, rectangle.Type);
+        Assert.Equal(AutoShapeType.RightArrow, arrow.AutoShapeType);
+        Assert.Equal(ShapeType.Line, line.Type);
+        Assert.Equal(80, line.Width, 3);
+        Assert.Equal(40, line.Height, 3);
+        Assert.Throws<InvalidOperationException>(() => line.AutoShapeType);
+        Assert.Throws<InvalidOperationException>(() => line.TextFrame);
+        Assert.Throws<ArgumentOutOfRangeException>(() => _document.Shapes.AddShape((AutoShapeType)99, 0, 0, 10, 10));
+        Assert.Throws<ArgumentOutOfRangeException>(() => _document.Shapes.AddLine(10, 10, 5, 20));
+        Assert.Throws<ArgumentOutOfRangeException>(() => _document.Shapes.AddTextbox((TextOrientation)9, 0, 0, 10, 10));
+        AssertValid();
+    }
+
+    [Fact]
+    public void FillAndLineAreReadAndSet()
+    {
+        ShapeWrapper shape = _document.Shapes.AddShape(AutoShapeType.Oval, 20, 30, 80, 40, _document.Range(5, 5));
+
+        Assert.True(shape.Fill.Visible);
+        Assert.Equal(8544277, shape.Fill.ForeColor.RGB);
+        Assert.True(shape.Line.Visible);
+        Assert.Equal(3351556, shape.Line.ForeColor.RGB);
+        Assert.Equal(1.5, shape.Line.Weight, 3);
+
+        shape.Fill.ForeColor.RGB = 255;
+        shape.Fill.Transparency = 0.25;
+        shape.Line.ForeColor.RGB = 65280;
+        shape.Line.Weight = 3;
+        Assert.Equal(255, shape.Fill.ForeColor.RGB);
+        Assert.Equal(0.25, shape.Fill.Transparency, 3);
+        Assert.Equal(65280, shape.Line.ForeColor.RGB);
+        Assert.Equal(3, shape.Line.Weight, 3);
+
+        shape.Fill.Visible = false;
+        shape.Line.Visible = false;
+        Assert.False(shape.Fill.Visible);
+        Assert.False(shape.Line.Visible);
+        shape.Fill.Visible = true;
+        shape.Line.Visible = true;
+        Assert.True(shape.Fill.Visible);
+        Assert.True(shape.Line.Visible);
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => shape.Fill.Transparency = 2);
+        Assert.Throws<ArgumentOutOfRangeException>(() => shape.Line.Weight = -1);
+        Assert.Throws<ArgumentOutOfRangeException>(() => shape.Fill.ForeColor.RGB = -5);
+        AssertValid();
+    }
+
+    [Fact]
+    public void AShapeIsMovedSizedRotatedAndDeletedLikeAPicture()
+    {
+        ShapeWrapper shape = _document.Shapes.AddShape(AutoShapeType.Rectangle, 20, 30, 80, 40, _document.Range(5, 5));
+
+        shape.Width = 100;
+        shape.Rotation = 90;
+        shape.Left = 10;
+        shape.WrapFormat.Type = WrapType.Square;
+        shape.Name = "Mine";
+        Assert.Equal(100, shape.Width, 3);
+        Assert.Equal(90, shape.Rotation, 3);
+        Assert.Equal(WrapType.Square, shape.WrapFormat.Type);
+        Assert.Equal("Mine", shape.Name);
+        Assert.Equal(0, shape.Anchor.Start);
+        AssertValid();
+
+        shape.Delete();
+        Assert.Equal(0, _document.Shapes.Count);
+        Assert.Equal("Hello world again", _document.Content.Text.TrimEnd('\r'));
+        Assert.Throws<InvalidOperationException>(() => Add().Fill);
+    }
+    [Fact]
     public void TheArgumentsAreChecked()
     {
         Assert.Throws<ArgumentNullException>(() => _document.Shapes.AddPicture(null));
