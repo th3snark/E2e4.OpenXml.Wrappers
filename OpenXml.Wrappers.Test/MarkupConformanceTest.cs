@@ -1434,6 +1434,86 @@ public class MarkupConformanceTest
             },
             Body()),
 
+        new Scenario("shape-add-picture",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.Shapes.AddPicture(PicturePath, false, true, 20, 30, 60, 30, d.Range(5, 5));
+            },
+            PictureParts()),
+
+        new Scenario("shape-two-pictures",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                ShapeWrapper a = d.Shapes.AddPicture(PicturePath, false, true, 20, 30, 60, 30, d.Range(5, 5));
+                ShapeWrapper b = d.Shapes.AddPicture(PicturePath, false, true, 10, 10, 60, 30, d.Range(5, 5));
+                b.ZOrder(ZOrderCommand.SendToBack);
+            },
+            Body()),
+
+        new Scenario("shape-picture-properties",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                ShapeWrapper s = d.Shapes.AddPicture(PicturePath, false, true, 20, 30, 60, 30, d.Range(5, 5));
+                s.Name = "Box";
+                s.AlternativeText = "A box";
+                s.Title = "Title";
+                s.Rotation = 30;
+                s.RelativeHorizontalPosition = RelativeHorizontalPosition.Page;
+                s.RelativeVerticalPosition = RelativeVerticalPosition.Margin;
+                s.Left = 40;
+                s.Top = 50;
+                s.WrapFormat.DistanceLeft = 10;
+                s.WrapFormat.AllowOverlap = false;
+                s.LockAnchor = true;
+                s.LockAspectRatio = true;
+                s.Visible = false;
+            },
+            Body()),
+
+        new Scenario("shape-picture-wraps",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                foreach (WrapType type in new[] { WrapType.Square, WrapType.Tight, WrapType.Through, WrapType.TopBottom, WrapType.Behind })
+                {
+                    d.Shapes.AddPicture(PicturePath, false, true, 20, 30, 60, 30, d.Range(5, 5)).WrapFormat.Type = type;
+                }
+                ShapeWrapper left = d.Shapes.AddPicture(PicturePath, false, true, 20, 30, 60, 30, d.Range(5, 5));
+                left.WrapFormat.Type = WrapType.Square;
+                left.WrapFormat.Side = WrapSideType.Left;
+                ShapeWrapper largest = d.Shapes.AddPicture(PicturePath, false, true, 20, 30, 60, 30, d.Range(5, 5));
+                largest.WrapFormat.Type = WrapType.Square;
+                largest.WrapFormat.Side = WrapSideType.Largest;
+            },
+            DrawingElements("wrapSquare", "wrapTight", "wrapThrough", "wrapTopAndBottom", "wrapNone", "wrapPolygon")),
+
+        new Scenario("shape-delete",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.Shapes.AddPicture(PicturePath, false, true, 20, 30, 60, 30, d.Range(5, 5)).Delete();
+            },
+            PictureParts()),
+
+        new Scenario("shape-to-inline",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.Shapes.AddPicture(PicturePath, false, true, 20, 30, 60, 30, d.Range(5, 5)).ConvertToInlineShape();
+            },
+            Body()),
+
+        new Scenario("shape-from-inline",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.InlineShapes.AddPicture(PicturePath, false, true, d.Range(5, 5)).ConvertToShape();
+            },
+            DrawingElements("docPr", "extent", "wrapNone")),
+
         new Scenario("document-settings",
             d =>
             {
@@ -2812,6 +2892,13 @@ public class MarkupConformanceTest
     }
 
     private static readonly string PicturePath = System.IO.Path.GetFullPath(TestFile.Picture);
+
+    //Elements of the drawing part of the document in any namespace, by local name.
+    private static Comparison DrawingElements(params string[] localNames)
+    {
+        return new Comparison("drawing " + string.Join(", ", localNames), parts => "document.xml",
+            root => root.Descendants().Where(e => localNames.Contains(e.Name.LocalName)));
+    }
 
     private static Comparison[] PictureParts()
     {

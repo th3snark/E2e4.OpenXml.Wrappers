@@ -1289,6 +1289,86 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $toc.Update()
     }
 
+    'shape-add-picture'               = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $s = $doc.Shapes.AddPicture($script:Picture, $false, $true, 20, 30, 60, 30, $doc.Range(5, 5))
+        Write-Host ('picture: type {0}, name "{1}", id {2}, left {3} top {4} w {5} h {6}, relH {7} relV {8}, wrap {9} side {10}, z {11}, lockanchor {12}, lockaspect {13}, visible {14}, rot {15}' -f $s.Type, $s.Name, $s.ID, $s.Left, $s.Top, $s.Width, $s.Height, $s.RelativeHorizontalPosition, $s.RelativeVerticalPosition, $s.WrapFormat.Type, $s.WrapFormat.Side, $s.ZOrderPosition, $s.LockAnchor, $s.LockAspectRatio, $s.Visible, $s.Rotation)
+        Write-Host ('wrap distances: {0} {1} {2} {3} overlap {4}; anchor start {5}' -f $s.WrapFormat.DistanceTop, $s.WrapFormat.DistanceBottom, $s.WrapFormat.DistanceLeft, $s.WrapFormat.DistanceRight, $s.WrapFormat.AllowOverlap, $s.Anchor.Start)
+    }
+
+
+
+
+    'shape-two-pictures'              = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $a = $doc.Shapes.AddPicture($script:Picture, $false, $true, 20, 30, 60, 30, $doc.Range(5, 5))
+        $b = $doc.Shapes.AddPicture($script:Picture, $false, $true, 10, 10, 60, 30, $doc.Range(5, 5))
+        Write-Host ('z {0} {1}; names {2} {3}; count {4}' -f $a.ZOrderPosition, $b.ZOrderPosition, $a.Name, $b.Name, $doc.Shapes.Count)
+        $b.ZOrder(1)
+        Write-Host ('after send to back: z {0} {1}' -f $a.ZOrderPosition, $b.ZOrderPosition)
+    }
+
+
+    'shape-to-inline'                 = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $s = $doc.Shapes.AddPicture($script:Picture, $false, $true, 20, 30, 60, 30, $doc.Range(5, 5))
+        $inline = $s.ConvertToInlineShape()
+        Write-Host ('inline type {0}, w {1}, shapes {2}, inline shapes {3}' -f $inline.Type, $inline.Width, $doc.Shapes.Count, $doc.InlineShapes.Count)
+    }
+
+    'shape-picture-properties'        = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $s = $doc.Shapes.AddPicture($script:Picture, $false, $true, 20, 30, 60, 30, $doc.Range(5, 5))
+        $s.Name = 'Box'
+        $s.AlternativeText = 'A box'
+        $s.Title = 'Title'
+        $s.Rotation = 30
+        $s.RelativeHorizontalPosition = 1
+        $s.RelativeVerticalPosition = 0
+        $s.Left = 40
+        $s.Top = 50
+        $s.WrapFormat.DistanceLeft = 10
+        $s.WrapFormat.AllowOverlap = $false
+        $s.LockAnchor = $true
+        $s.LockAspectRatio = $true
+        $s.Visible = $false
+        Write-Host ('after: left {0} top {1} relH {2} relV {3} rot {4} w {5} h {6}' -f $s.Left, $s.Top, $s.RelativeHorizontalPosition, $s.RelativeVerticalPosition, $s.Rotation, $s.Width, $s.Height)
+    }
+
+    'shape-picture-wraps'             = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        foreach ($type in 0, 1, 2, 4, 5) {
+            $s = $doc.Shapes.AddPicture($script:Picture, $false, $true, 20, 30, 60, 30, $doc.Range(5, 5))
+            $s.WrapFormat.Type = $type
+        }
+        $s = $doc.Shapes.AddPicture($script:Picture, $false, $true, 20, 30, 60, 30, $doc.Range(5, 5))
+        $s.WrapFormat.Type = 0
+        $s.WrapFormat.Side = 1
+        $s = $doc.Shapes.AddPicture($script:Picture, $false, $true, 20, 30, 60, 30, $doc.Range(5, 5))
+        $s.WrapFormat.Type = 0
+        $s.WrapFormat.Side = 3
+        Write-Host ('count {0}' -f $doc.Shapes.Count)
+    }
+
+    'shape-delete'                    = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $s = $doc.Shapes.AddPicture($script:Picture, $false, $true, 20, 30, 60, 30, $doc.Range(5, 5))
+        $s.Delete()
+    }
+
+    'shape-from-inline'               = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $i = $doc.InlineShapes.AddPicture($script:Picture, $false, $true, $doc.Range(5, 5))
+        $s = $i.ConvertToShape()
+        Write-Host ('shape: type {0}, wrap {1}, left {2} top {3} w {4} h {5} relH {6} relV {7}' -f $s.Type, $s.WrapFormat.Type, $s.Left, $s.Top, $s.Width, $s.Height, $s.RelativeHorizontalPosition, $s.RelativeVerticalPosition)
+    }
     'document-settings'               = {
         param($doc)
         $doc.DefaultTabStop = 54
