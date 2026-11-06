@@ -175,6 +175,12 @@ public partial class WordprocessingDocumentWrapper
         get { return new ContentControlWrapperCollection(Content); }
     }
 
+    /// <summary>The inline shapes (pictures) in the main text, as <c>Document.InlineShapes</c> in Word.</summary>
+    public InlineShapeWrapperCollection InlineShapes
+    {
+        get { return new InlineShapeWrapperCollection(Content); }
+    }
+
     /// <summary>The custom XML parts of the document, as <c>Document.CustomXMLParts</c> in Word.</summary>
     public CustomXMLParts CustomXMLParts
     {

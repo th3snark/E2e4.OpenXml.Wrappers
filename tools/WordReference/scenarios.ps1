@@ -9,6 +9,9 @@ the same name that does the same thing through the library. Word's indexes are 1
 # Twenty three-letter words, one for each font property below: word i is at positions 4i to 4i + 3.
 $script:FontWords = (1..20 | ForEach-Object { 'w{0:00}' -f $_ }) -join ' '
 
+# The picture the inline picture scenarios insert (40 x 20 pixels at 96 dpi).
+$script:Picture = (Resolve-Path (Join-Path $PSScriptRoot '..\..\OpenXml.Wrappers.Test\TestFiles\Pictures\blue-40x20.png')).Path
+
 function Set-FontProperty($font, [int] $index, [bool] $on) {
     switch ($index) {
         0 { $font.Italic = $on }
@@ -1150,6 +1153,70 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $doc.Content.InsertAfter('Hello')
         $part = $doc.CustomXMLParts.Add('<root xmlns="urn:test"><name>Bob</name></root>')
         $part.Delete()
+    }
+
+    'inline-picture-add'              = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $s = $doc.InlineShapes.AddPicture($script:Picture, $false, $true, $doc.Range(5, 5))
+        Write-Host ('size {0} x {1}, type {2}, lock {3}, alt "{4}", title "{5}"' -f $s.Width, $s.Height, $s.Type, $s.LockAspectRatio, $s.AlternativeText, $s.Title)
+    }
+
+    'inline-picture-twice'            = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        [void]$doc.InlineShapes.AddPicture($script:Picture, $false, $true, $doc.Range(5, 5))
+        [void]$doc.InlineShapes.AddPicture($script:Picture, $false, $true, $doc.Range(0, 0))
+    }
+
+    'inline-picture-properties'       = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $s = $doc.InlineShapes.AddPicture($script:Picture, $false, $true, $doc.Range(5, 5))
+        $s.AlternativeText = 'A blue box'
+        $s.Title = 'Box'
+        $s.Width = 60
+        Write-Host ('after width: {0} x {1}' -f $s.Width, $s.Height)
+        $s.LockAspectRatio = $false
+        $s.Height = 30
+        Write-Host ('after unlocked height: {0} x {1}, scale {2} x {3}' -f $s.Width, $s.Height, $s.ScaleWidth, $s.ScaleHeight)
+    }
+
+    'inline-picture-scale'            = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $s = $doc.InlineShapes.AddPicture($script:Picture, $false, $true, $doc.Range(5, 5))
+        $s.ScaleWidth = 200
+        Write-Host ('scale: {0} x {1}, scale {2} x {3}' -f $s.Width, $s.Height, $s.ScaleWidth, $s.ScaleHeight)
+    }
+
+    'inline-picture-lock'             = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $s = $doc.InlineShapes.AddPicture($script:Picture, $false, $true, $doc.Range(5, 5))
+        $s.LockAspectRatio = $true
+        $s.Width = 60
+        Write-Host ('locked: {0} x {1}, lock {2}' -f $s.Width, $s.Height, $s.LockAspectRatio)
+    }
+
+    'inline-picture-linked'           = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $s = $doc.InlineShapes.AddPicture($script:Picture, $true, $false, $doc.Range(5, 5))
+        Write-Host ('linked type {0}' -f $s.Type)
+    }
+
+    'inline-picture-delete'           = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $s = $doc.InlineShapes.AddPicture($script:Picture, $false, $true, $doc.Range(5, 5))
+        $s.Delete()
+    }
+
+    'inline-picture-over-text'        = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        [void]$doc.InlineShapes.AddPicture($script:Picture, $false, $true, $doc.Range(6, 11))
     }
 
     'document-settings'               = {

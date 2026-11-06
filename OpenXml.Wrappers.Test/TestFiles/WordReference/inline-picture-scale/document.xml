@@ -1,0 +1,62 @@
+<w:document xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:a14="http://schemas.microsoft.com/office/drawing/2010/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">
+  <w:body>
+    <w:p>
+      <w:r>
+        <w:t>Hello</w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:drawing>
+          <wp:inline distB="0" distL="0" distR="0" distT="0">
+            <wp:extent cx="762106" cy="190527" />
+            <wp:effectExtent b="0" l="0" r="0" t="0" />
+            <wp:docPr id="{docPr1}" name="Picture 1" />
+            <wp:cNvGraphicFramePr />
+            <a:graphic>
+              <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                <pic:pic>
+                  <pic:nvPicPr>
+                    <pic:cNvPr id="{pic1}" name="" />
+                    <pic:cNvPicPr />
+                  </pic:nvPicPr>
+                  <pic:blipFill>
+                    <a:blip r:embed="{rId1}">
+                      <a:extLst>
+                        <a:ext uri="{28A0092B-C50C-407E-A947-70E740481C1C}">
+                          <a14:useLocalDpi val="0" />
+                        </a:ext>
+                      </a:extLst>
+                    </a:blip>
+                    <a:stretch>
+                      <a:fillRect />
+                    </a:stretch>
+                  </pic:blipFill>
+                  <pic:spPr>
+                    <a:xfrm>
+                      <a:off x="0" y="0" />
+                      <a:ext cx="762106" cy="190527" />
+                    </a:xfrm>
+                    <a:prstGeom prst="rect">
+                      <a:avLst />
+                    </a:prstGeom>
+                  </pic:spPr>
+                </pic:pic>
+              </a:graphicData>
+            </a:graphic>
+          </wp:inline>
+        </w:drawing>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> world again</w:t>
+      </w:r>
+    </w:p>
+    <w:sectPr>
+      <w:pgSz w:h="16838" w:w="11906" />
+      <w:pgMar w:bottom="1440" w:footer="708" w:gutter="0" w:header="708" w:left="1440" w:right="1440" w:top="1440" />
+      <w:cols w:space="708" />
+      <w:docGrid w:linePitch="360" />
+    </w:sectPr>
+  </w:body>
+</w:document>
