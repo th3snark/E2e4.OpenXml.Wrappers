@@ -200,6 +200,128 @@ public partial class RangeWrapper
     }
 
     /// <summary>
+    /// The name of the character style of the range, as <c>Range.CharacterStyle</c> in Word (which is read only): the style every character
+    /// has, "Default Paragraph Font" for text without one, and null where the characters have different styles. The style of a collapsed
+    /// range is that of the character before it, or after it at the start of a paragraph. Spaces at the end of the range are not looked at,
+    /// unless it is all spaces, as in Word. The names are those stored in the document, as for <see cref="Style"/>.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The range is of a kind that does not contain text.</exception>
+    public string CharacterStyle
+    {
+        get
+        {
+            List<string> ids = GetRunsForCharacterStyle().Select(r => r.RunProperties?.RunStyle?.Val?.Value).Distinct().ToList();
+            if (ids.Count > 1)
+            {
+                return null;
+            }
+            return ids.Count == 0 || ids[0] == null
+                ? StyleHelper.GetDefaultStyleName(AnchorElement, StyleValues.Character) ?? "Default Paragraph Font"
+                : StyleHelper.GetStyleName(AnchorElement, ids[0]);
+        }
+    }
+
+    //The runs whose style is the character style of the range: those of a range of text, but for a collapsed range the character that Word
+    //takes it from, and without the spaces at the end.
+    private IList<Run> GetRunsForCharacterStyle()
+    {
+        if (!_isSpan)
+        {
+            return GetRuns();
+        }
+
+        int start = Start;
+        int end = End;
+        RangeWrapper source = Duplicate();
+        if (start == end)
+        {
+            bool atParagraphStart = start == 0;
+            if (!atParagraphStart)
+            {
+                source.SetRange(start - 1, start);
+                string before = source.Text;
+                atParagraphStart = before == "\r" || before == "\a";
+            }
+            GetPositions(out StoryMap map, out _, out _);
+            int from = atParagraphStart ? start : start - 1;
+            if (from + 1 > map.Length)
+            {
+                return new List<Run>();
+            }
+            source.SetRange(from, from + 1);
+            return source.GetRuns();
+        }
+
+        string text = source.Text;
+        string trimmed = text.TrimEnd(' ');
+        if (trimmed.Length > 0 && trimmed.Length < text.Length)
+        {
+            source.SetRange(start, end - (text.Length - trimmed.Length));
+        }
+        return source.GetRuns();
+    }
+
+    /// <summary>The character style of the range as an object (see <see cref="CharacterStyle"/>), null where the range has different ones.</summary>
+    public StyleWrapper CharacterStyleObject
+    {
+        get { return StyleHelper.GetStyleObject(AnchorElement, CharacterStyle); }
+    }
+
+    /// <summary>
+    /// The name of the paragraph style of the range, as <c>Range.ParagraphStyle</c> in Word (which is read only): the style of the paragraphs
+    /// the range touches, or null where they have different styles. Unlike <see cref="Style"/> it is never the character style.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The range is of a kind that does not contain text.</exception>
+    public string ParagraphStyle
+    {
+        get
+        {
+            List<string> ids = GetStyledParagraphs().Select(p => p.ParagraphProperties?.ParagraphStyleId?.Val?.Value).Distinct().ToList();
+            if (ids.Count != 1)
+            {
+                return null;
+            }
+            return ids[0] == null
+                ? StyleHelper.GetDefaultStyleName(AnchorElement, StyleValues.Paragraph) ?? "Normal"
+                : StyleHelper.GetStyleName(AnchorElement, ids[0]);
+        }
+    }
+
+    /// <summary>The paragraph style of the range as an object (see <see cref="ParagraphStyle"/>), null where the paragraphs have different ones.</summary>
+    public StyleWrapper ParagraphStyleObject
+    {
+        get { return StyleHelper.GetStyleObject(AnchorElement, ParagraphStyle); }
+    }
+
+    /// <summary>
+    /// The name of the table style of the range, as <c>Range.TableStyle</c> in Word (which is read only): the style of the table when the
+    /// whole range is inside one table, and the default table style ("Table Normal") for any other range, as Word gives.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The range is of a kind that does not contain text.</exception>
+    public string TableStyle
+    {
+        get
+        {
+            List<Table> tables = GetStyledParagraphs().Select(p => p.Ancestors<Table>().FirstOrDefault()).Distinct().ToList();
+            if (tables.Count == 1 && tables[0] != null)
+            {
+                string id = tables[0].GetFirstChild<TableProperties>()?.TableStyle?.Val?.Value;
+                if (id != null)
+                {
+                    return StyleHelper.GetStyleName(AnchorElement, id);
+                }
+            }
+            return StyleHelper.GetDefaultStyleName(AnchorElement, StyleValues.Table) ?? "Table Normal";
+        }
+    }
+
+    /// <summary>The table style of the range as an object (see <see cref="TableStyle"/>).</summary>
+    public StyleWrapper TableStyleObject
+    {
+        get { return StyleHelper.GetStyleObject(AnchorElement, TableStyle); }
+    }
+
+    /// <summary>
     /// True for the ranges that cover part of a paragraph, whose runs can have a character style.
     /// </summary>
     private bool IsPartialParagraphRange()

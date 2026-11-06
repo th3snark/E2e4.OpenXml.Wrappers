@@ -42,6 +42,7 @@ internal static class BuiltInStyles
     private static readonly Dictionary<string, string> DisplayNames = new Dictionary<string, string>(StringComparer.Ordinal)
     {
         { "annotation text", "Comment Text" }, { "annotation reference", "Comment Reference" }, { "annotation subject", "Comment Subject" }, { "FollowedHyperlink", "Followed Hyperlink" },
+        { "Normal Table", "Table Normal" },
     };
 
     private static readonly List<Definition> Definitions = CreateDefinitions();

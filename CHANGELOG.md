@@ -44,7 +44,10 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 - `Find` gets `MatchPrefix`, `MatchSuffix`, `IgnorePunct` and `IgnoreSpace`, and `Find` and `Replacement` get `LanguageID`, `LanguageIDFarEast` and `NoProofing` (formatting to look for, and to give the replacement). Six new reference scenarios, all matching Word.
 
+- `Range.CharacterStyle`, `ParagraphStyle` and `TableStyle` (read only, as in Word; names, with `...Object` forms that return the style), and `Document.DefaultTableStyle` and `SetDefaultTableStyle` (written as `w:defaultTableStyle`, in a new reference scenario that matches Word). The rules are Word 16's: `CharacterStyle` is "Default Paragraph Font" for plain text and null where characters differ, a collapsed range takes the character before it (after it at the start of a paragraph), and spaces at the end of a range are not looked at; `TableStyle` is the table's style inside one table and "Table Normal" anywhere else.
+
 ### Behaviour changes
+- **The built-in table style is named "Table Normal"**, as Word names it (`NameLocal`), where it was "Normal Table", the name it is stored under; `Styles["Table Normal"]` now finds it. `Styles["Normal Table"]` still works.
 - **`Styles.Add` of a table style writes an empty `w:tblPr`**, as Word does.
 - **`Styles.Add` of a paragraph style adds its linked character style too** (`<name> Char`), and a new character or table style is based on the default of its type, as Word writes them. A style written with `w:customStyle="true"` is now written `1`.
 - **A grid column is not made of a sliver**: cell edges within 2 twips of each other count as one when a cell is given a width, as in Word.
