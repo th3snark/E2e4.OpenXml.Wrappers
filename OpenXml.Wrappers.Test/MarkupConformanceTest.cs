@@ -904,6 +904,117 @@ public class MarkupConformanceTest
                 d.Footnotes.Add(d.Range(5, 5), null, "The footnote");
             },
             NoteParts()),
+        new Scenario("note-option-footnote-style",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.Footnotes.Add(d.Range(5, 5), null, "one");
+                d.Endnotes.Add(d.Range(11, 11), null, "two");
+                d.Footnotes.NumberStyle = NoteNumberStyle.LowercaseRoman;
+            },
+            NoteOptionParts()),
+
+        new Scenario("note-option-footnote-start",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.Footnotes.Add(d.Range(5, 5), null, "one");
+                d.Endnotes.Add(d.Range(11, 11), null, "two");
+                d.Footnotes.StartingNumber = 5;
+            },
+            NoteOptionParts()),
+
+        new Scenario("note-option-footnote-restart-section",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.Footnotes.Add(d.Range(5, 5), null, "one");
+                d.Endnotes.Add(d.Range(11, 11), null, "two");
+                d.Footnotes.NumberingRule = NumberingRule.RestartSection;
+            },
+            NoteOptionParts()),
+
+        new Scenario("note-option-footnote-restart-page",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.Footnotes.Add(d.Range(5, 5), null, "one");
+                d.Endnotes.Add(d.Range(11, 11), null, "two");
+                d.Footnotes.NumberingRule = NumberingRule.RestartPage;
+            },
+            NoteOptionParts()),
+
+        new Scenario("note-option-footnote-location",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.Footnotes.Add(d.Range(5, 5), null, "one");
+                d.Endnotes.Add(d.Range(11, 11), null, "two");
+                d.Footnotes.Location = FootnoteLocation.BeneathText;
+            },
+            NoteOptionParts()),
+
+        new Scenario("note-option-footnote-symbol",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.Footnotes.Add(d.Range(5, 5), null, "one");
+                d.Endnotes.Add(d.Range(11, 11), null, "two");
+                d.Footnotes.NumberStyle = NoteNumberStyle.Symbol;
+            },
+            NoteOptionParts()),
+
+        new Scenario("note-option-endnote-section-end",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.Footnotes.Add(d.Range(5, 5), null, "one");
+                d.Endnotes.Add(d.Range(11, 11), null, "two");
+                d.Endnotes.Location = EndnoteLocation.EndOfSection;
+            },
+            NoteOptionParts()),
+
+        new Scenario("note-option-endnote-decimal-start",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.Footnotes.Add(d.Range(5, 5), null, "one");
+                d.Endnotes.Add(d.Range(11, 11), null, "two");
+                d.Endnotes.NumberStyle = NoteNumberStyle.Arabic;
+                d.Endnotes.StartingNumber = 3;
+            },
+            NoteOptionParts()),
+
+        new Scenario("note-convert-footnotes",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.Footnotes.Add(d.Range(5, 5), null, "one");
+                d.Endnotes.Add(d.Range(11, 11), null, "two");
+                d.Footnotes.Convert();
+            },
+            NoteOptionParts()),
+
+        new Scenario("note-convert-endnotes",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.Footnotes.Add(d.Range(5, 5), null, "one");
+                d.Endnotes.Add(d.Range(11, 11), null, "two");
+                d.Endnotes.Convert();
+            },
+            NoteOptionParts()),
+
+        new Scenario("note-swap",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.Footnotes.Add(d.Range(5, 5), null, "one");
+                d.Endnotes.Add(d.Range(11, 11), null, "two");
+                d.Footnotes.SwapWithEndnotes();
+            },
+            NoteOptionParts()),
+
         new Scenario("document-settings",
             d =>
             {
@@ -2250,6 +2361,18 @@ public class MarkupConformanceTest
             Part("footnotes.xml"),
             Part("endnotes.xml"),
             Elements("settings.xml", "footnotePr", "endnotePr", "footnote", "endnote")
+        };
+    }
+
+    //The notes, the settings that say how they are numbered, and the section properties that do too.
+    private static Comparison[] NoteOptionParts()
+    {
+        return new[]
+        {
+            WholeBody(),
+            Part("footnotes.xml"),
+            Part("endnotes.xml"),
+            Elements("settings.xml", "footnotePr", "endnotePr", "footnote", "endnote", "pos", "numFmt", "numStart", "numRestart")
         };
     }
 

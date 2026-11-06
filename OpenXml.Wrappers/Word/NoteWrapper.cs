@@ -13,7 +13,7 @@ namespace OpenXml.Wrappers.Word;
 /// What footnotes and endnotes have in common: the parts that hold them, their ids and the marks that refer to them. Footnotes and endnotes
 /// are the same in the file but for their names, so one set of methods works on both.
 /// </summary>
-internal static class NoteOps
+internal static partial class NoteOps
 {
     private const string Main = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
 
@@ -476,7 +476,7 @@ public class EndnoteWrapper : IEquatable<EndnoteWrapper>
 /// <summary>
 /// The footnotes of a range or a document, as <c>Footnotes</c> in Word.
 /// </summary>
-public class FootnoteWrapperCollection : IEnumerable<FootnoteWrapper>
+public partial class FootnoteWrapperCollection : IEnumerable<FootnoteWrapper>
 {
     private readonly RangeWrapper _range;
 
@@ -544,7 +544,7 @@ public class FootnoteWrapperCollection : IEnumerable<FootnoteWrapper>
 /// <summary>
 /// The endnotes of a range or a document, as <c>Endnotes</c> in Word.
 /// </summary>
-public class EndnoteWrapperCollection : IEnumerable<EndnoteWrapper>
+public partial class EndnoteWrapperCollection : IEnumerable<EndnoteWrapper>
 {
     private readonly RangeWrapper _range;
 
