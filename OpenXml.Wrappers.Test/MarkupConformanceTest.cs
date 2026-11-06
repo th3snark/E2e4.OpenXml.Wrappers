@@ -516,6 +516,28 @@ public class MarkupConformanceTest
             d => d.Protect(ProtectionType.AllowOnlyReading, "password"),
             Elements("settings.xml", "documentProtection")),
 
+        new Scenario("page-border-options",
+            d =>
+            {
+                BordersWrapper borders = d.Sections[0].Borders;
+                borders.Enable = true;
+                borders.AlwaysInFront = false;
+                borders.DistanceFrom = BorderDistanceFrom.FromText;
+                borders.EnableFirstPageInSection = false;
+                borders.SurroundHeader = false;
+                borders.SurroundFooter = false;
+            },
+            Elements("document.xml", "pgBorders"),
+            Elements("settings.xml", "bordersDoNotSurroundHeader", "bordersDoNotSurroundFooter")),
+
+        new Scenario("page-setup-direction",
+            d =>
+            {
+                d.PageSetup.TogglePortrait();
+                d.PageSetup.SectionDirection = SectionDirection.Rtl;
+            },
+            Elements("document.xml", "pgSz", "bidi")),
+
         new Scenario("document-settings",
             d =>
             {

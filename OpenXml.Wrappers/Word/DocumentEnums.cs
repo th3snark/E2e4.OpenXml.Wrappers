@@ -10,6 +10,18 @@ public enum PageOrientation
 }
 
 /// <summary>
+/// The direction a section is laid out in, as <c>WdSectionDirection</c> in Word (with the same values).
+/// </summary>
+public enum SectionDirection
+{
+    /// <summary>Right to left.</summary>
+    Rtl = 0,
+
+    /// <summary>Left to right.</summary>
+    Ltr = 1
+}
+
+/// <summary>
 /// Where a section starts, as <c>WdSectionStart</c> in Word.
 /// </summary>
 public enum SectionStart

@@ -507,6 +507,23 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $doc.Protect(3, $false, 'password')  # wdAllowOnlyReading
     }
 
+    'page-border-options'             = {
+        param($doc)
+        $borders = $doc.Sections.Item(1).Borders
+        $borders.Enable = $true
+        $borders.AlwaysInFront = $false
+        $borders.DistanceFrom = 0
+        $borders.EnableFirstPageInSection = $false
+        $borders.SurroundHeader = $false
+        $borders.SurroundFooter = $false
+    }
+
+    'page-setup-direction'            = {
+        param($doc)
+        $doc.PageSetup.TogglePortrait()
+        $doc.PageSetup.SectionDirection = 0  # wdSectionDirectionRtl
+    }
+
     'document-settings'               = {
         param($doc)
         $doc.DefaultTabStop = 54

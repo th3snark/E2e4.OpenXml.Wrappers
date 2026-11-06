@@ -168,6 +168,36 @@ public partial class PageSetupWrapper
         }
     }
 
+    /// <summary>Switches between portrait and landscape, as <c>PageSetup.TogglePortrait</c> in Word: the width and height change places.</summary>
+    public void TogglePortrait()
+    {
+        Orientation = Orientation == PageOrientation.Portrait ? PageOrientation.Landscape : PageOrientation.Portrait;
+    }
+
+    /// <summary>
+    /// The direction the section is laid out in, as <c>PageSetup.SectionDirection</c> in Word: left to right (the default) or right to left
+    /// (<c>w:bidi</c>).
+    /// </summary>
+    public SectionDirection SectionDirection
+    {
+        get { return Properties?.GetFirstChild<BiDi>() != null ? SectionDirection.Rtl : SectionDirection.Ltr; }
+        set
+        {
+            if (!EnumCompat.IsDefined(value))
+            {
+                throw new ArgumentOutOfRangeException(nameof(value));
+            }
+            if (value == SectionDirection.Rtl)
+            {
+                GetOrAdd<BiDi>();
+            }
+            else
+            {
+                Properties?.RemoveAllChildren<BiDi>();
+            }
+        }
+    }
+
     /// <summary>True to leave the endnotes of the section out (they go at the end of the document).</summary>
     public bool SuppressEndnotes
     {

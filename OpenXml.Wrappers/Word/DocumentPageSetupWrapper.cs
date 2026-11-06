@@ -136,6 +136,19 @@ public class DocumentPageSetupWrapper
         set { Apply(p => p.VerticalAlignment = value); }
     }
 
+    /// <summary>Switches every section between portrait and landscape; a section changes on its own, as <see cref="PageSetupWrapper.TogglePortrait"/>.</summary>
+    public void TogglePortrait()
+    {
+        Apply(p => p.TogglePortrait());
+    }
+
+    /// <summary>The direction the sections are laid out in.</summary>
+    public SectionDirection SectionDirection
+    {
+        get { return First.SectionDirection; }
+        set { Apply(p => p.SectionDirection = value); }
+    }
+
     /// <summary>Whether the endnotes of the sections are left out.</summary>
     public bool SuppressEndnotes
     {
