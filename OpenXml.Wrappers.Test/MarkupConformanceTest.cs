@@ -1506,6 +1506,30 @@ public class MarkupConformanceTest
             },
             Body()),
 
+        new Scenario("toc-added-styles",
+            d =>
+            {
+                HeadedDocument(d, "First\rSome text\rTitled\rMore text\rSub\rEnd", (0, "Heading 1"), (2, "Title"), (4, "Subtitle"));
+                TableOfContentsWrapper toc = d.TablesOfContents.Add(d.Range(0, 0), true, 1, 3, false, null, true, true, "Title,1,Subtitle,2");
+                Assert.Equal(2, toc.HeadingStyles.Count);
+            },
+            Body()),
+
+        new Scenario("toc-added-styles-nopages",
+            d =>
+            {
+                HeadedDocument(d, "First\rSome text\rTitled\rEnd", (0, "Heading 1"), (2, "Title"));
+                d.TablesOfContents.Add(d.Range(0, 0), true, 1, 3, false, null, false, false, "Title,2");
+            },
+            Body()),
+
+        new Scenario("toc-added-styles-outline",
+            d =>
+            {
+                HeadedDocument(d, "First\rSome text\rTitled\rEnd", (0, "Heading 1"), (2, "Title"));
+                d.TablesOfContents.Add(d.Range(0, 0), true, 1, 3, false, null, true, true, "Title,2", false, false, true);
+            },
+            Body()),
         new Scenario("toc-options",
             d =>
             {

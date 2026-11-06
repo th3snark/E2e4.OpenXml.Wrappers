@@ -541,7 +541,7 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         param($doc)
         $numbers = $doc.Sections.Item(1).Footers.Item(1).PageNumbers
         $numbers.IncludeChapterNumber = $true
-        $numbers.HeadingLevelForChapter = 2
+        $numbers.LevelForChapter = 2
         $numbers.ChapterPageSeparator = 2  # wdSeparatorColon
         $numbers.ShowFirstPageNumber = $false
     }
@@ -1405,6 +1405,68 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $doc.Paragraphs.Item(5).Style = 'Heading 2'
         $toc = $doc.TablesOfContents.Add($doc.Range(0, 0))
         Write-Host ('toc: count {0}, upper {1}, lower {2}, pages {3}, hyper {4}, right {5}, headings {6}, fields {7}, leader {8}, id "{9}"' -f $doc.TablesOfContents.Count, $toc.UpperHeadingLevel, $toc.LowerHeadingLevel, $toc.IncludePageNumbers, $toc.UseHyperlinks, $toc.RightAlignPageNumbers, $toc.UseHeadingStyles, $toc.UseFields, $toc.TabLeader, $toc.TableID)
+    }
+
+    'toc-added-styles'                = {
+        param($doc)
+        $doc.Content.InsertAfter("First`rSome text`rTitled`rMore text`rSub`rEnd")
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+        $doc.Paragraphs.Item(3).Style = 'Title'
+        $doc.Paragraphs.Item(5).Style = 'Subtitle'
+        $m = [Type]::Missing
+        $toc = $doc.TablesOfContents.Add($doc.Range(0, 0), $true, 1, 3, $m, $m, $m, $m, 'Title,1,Subtitle,2')
+        Write-Host ('toc: headings {0}' -f $toc.HeadingStyles.Count)
+        foreach ($h in $toc.HeadingStyles) { Write-Host ('  style "{0}" level {1}' -f $h.Style, $h.Level) }
+    }
+
+    #toc-heading-styles prints what Word does and makes no snapshot: after the last change Word wrote a bare o in the code.
+    'toc-heading-styles'              = {
+        param($doc)
+        $doc.Content.InsertAfter("First`rSome text`rTitled`rMore text`rSub`rEnd")
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+        $doc.Paragraphs.Item(3).Style = 'Title'
+        $doc.Paragraphs.Item(5).Style = 'Subtitle'
+        $toc = $doc.TablesOfContents.Add($doc.Range(0, 0))
+        Write-Host ('before: headings {0}' -f $toc.HeadingStyles.Count)
+        $h = $toc.HeadingStyles.Add('Title', 1)
+        $toc.HeadingStyles.Add('Subtitle', 2) | Out-Null
+        Write-Host ('after: headings {0}; first "{1}" level {2}; second "{3}" level {4}' -f $toc.HeadingStyles.Count, $toc.HeadingStyles.Item(1).Style, $toc.HeadingStyles.Item(1).Level, $toc.HeadingStyles.Item(2).Style, $toc.HeadingStyles.Item(2).Level)
+        $toc.HeadingStyles.Item(2).Level = 3
+        Write-Host ('changed level: {0}' -f $toc.HeadingStyles.Item(2).Level)
+        $toc.HeadingStyles.Item(1).Delete()
+        Write-Host ('after delete: headings {0}' -f $toc.HeadingStyles.Count)
+        $toc.Update()
+    }
+
+    #toc-heading-styles-range makes no snapshot either: Word rebuilds the entries with formatting of its own on the end of the field.
+    'toc-heading-styles-range'        = {
+        param($doc)
+        $doc.Content.InsertAfter("First`rSome text`rTitled`rMore text`rSub`rEnd")
+        $doc.Paragraphs.Item(1).Style = 'Heading 2'
+        $doc.Paragraphs.Item(3).Style = 'Title'
+        $m = [Type]::Missing
+        $toc = $doc.TablesOfContents.Add($doc.Range(0, 0), $true, 2, 4)
+        Write-Host ('start: upper {0} lower {1}' -f $toc.UpperHeadingLevel, $toc.LowerHeadingLevel)
+        $toc.HeadingStyles.Add('Title', 1) | Out-Null
+        Write-Host ('after add: upper {0} lower {1} headings {2}' -f $toc.UpperHeadingLevel, $toc.LowerHeadingLevel, $toc.HeadingStyles.Count)
+    }
+
+    'toc-added-styles-nopages'        = {
+        param($doc)
+        $doc.Content.InsertAfter("First`rSome text`rTitled`rEnd")
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+        $doc.Paragraphs.Item(3).Style = 'Title'
+        $m = [Type]::Missing
+        [void]$doc.TablesOfContents.Add($doc.Range(0, 0), $true, 1, 3, $false, $m, $false, $false, 'Title,2')
+    }
+
+    'toc-added-styles-outline'        = {
+        param($doc)
+        $doc.Content.InsertAfter("First`rSome text`rTitled`rEnd")
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+        $doc.Paragraphs.Item(3).Style = 'Title'
+        $m = [Type]::Missing
+        [void]$doc.TablesOfContents.Add($doc.Range(0, 0), $true, 1, 3, $false, $m, $true, $true, 'Title,2', $m, $m, $true)
     }
 
     'toc-options'                     = {
