@@ -135,6 +135,17 @@ public class DocumentSettingsMembersTest : IDisposable
     }
 
     [Fact]
+    public void ConvertBringsTheDocumentToTheLatestMode()
+    {
+        _document.SetCompatibilityMode(14);
+
+        _document.Convert();
+
+        Assert.Equal(15, _document.CompatibilityMode);
+        Assert.Throws<InvalidOperationException>(() => _document.Convert());
+    }
+
+    [Fact]
     public void TheCompatibilityModeCanBeSetByAMethod()
     {
         _document.SetCompatibilityMode(14);
