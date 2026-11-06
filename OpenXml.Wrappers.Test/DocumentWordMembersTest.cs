@@ -127,7 +127,6 @@ public class DocumentWordMembersTest : IDisposable
         Assert.Equal(1, footer.PageNumbers.Count);
         //In a frame, as Word writes it, with the frame lined up rather than the paragraph.
         Assert.Equal(HorizontalAlignmentValues.Center, footer.Range.Paragraphs[0].Paragraph.ParagraphProperties.FrameProperties.XAlign.Value);
-        Assert.Throws<NotSupportedException>(() => footer.PageNumbers.Add(PageNumberAlignment.Inside));
 
         _document.Sections[0].Footers[HeaderFooterIndex.FirstPage].PageNumbers.Add(PageNumberAlignment.Right, false);
         Assert.True(_document.Sections[0].PageSetup.DifferentFirstPageHeaderFooter);

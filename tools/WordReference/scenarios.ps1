@@ -524,6 +524,62 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $doc.PageSetup.SectionDirection = 0  # wdSectionDirectionRtl
     }
 
+    'page-numbers-add-inside'         = {
+        param($doc)
+        [void]$doc.Sections.Item(1).Footers.Item(1).PageNumbers.Add(3)  # wdAlignPageNumberInside
+    }
+
+    'page-numbers-add-outside'        = {
+        param($doc)
+        [void]$doc.Sections.Item(1).Footers.Item(1).PageNumbers.Add(4)  # wdAlignPageNumberOutside
+    }
+
+    'page-numbers-chapter'            = {
+        param($doc)
+        $numbers = $doc.Sections.Item(1).Footers.Item(1).PageNumbers
+        $numbers.IncludeChapterNumber = $true
+        $numbers.HeadingLevelForChapter = 2
+        $numbers.ChapterPageSeparator = 2  # wdSeparatorColon
+        $numbers.ShowFirstPageNumber = $false
+    }
+
+    'page-numbers-chapter-default'    = {
+        param($doc)
+        $numbers = $doc.Sections.Item(1).Footers.Item(1).PageNumbers
+        $numbers.IncludeChapterNumber = $true
+        $numbers.ChapterPageSeparator = 1  # wdSeparatorPeriod
+        $numbers.ChapterPageSeparator = 0  # wdSeparatorHyphen
+    }
+
+    'text-columns-add'                = {
+        param($doc)
+        $columns = $doc.PageSetup.TextColumns
+        [void]$columns.Add(72, 10)
+        [void]$columns.Add(100, 20)
+        [void]$columns.Add(90)
+    }
+
+
+    'text-columns-add-no-width'       = {
+        param($doc)
+        $columns = $doc.PageSetup.TextColumns
+        [void]$columns.Add()
+    }
+
+    'text-columns-items'              = {
+        param($doc)
+        $columns = $doc.PageSetup.TextColumns
+        $columns.SetCount(3)
+        $columns.Item(1).Width = 100
+        $columns.Item(2).SpaceAfter = 10
+    }
+
+    'text-columns-flow'               = {
+        param($doc)
+        $doc.PageSetup.TextColumns.SetCount(2)
+        $doc.PageSetup.TextColumns.FlowDirection = 1  # wdFlowRtl
+    }
+
     'document-settings'               = {
         param($doc)
         $doc.DefaultTabStop = 54

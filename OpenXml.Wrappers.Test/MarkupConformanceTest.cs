@@ -538,6 +538,68 @@ public class MarkupConformanceTest
             },
             Elements("document.xml", "pgSz", "bidi")),
 
+        new Scenario("page-numbers-add-inside", d => d.Sections[0].Footers[HeaderFooterIndex.Primary].PageNumbers.Add(PageNumberAlignment.Inside), PageNumber()),
+
+        new Scenario("page-numbers-add-outside", d => d.Sections[0].Footers[HeaderFooterIndex.Primary].PageNumbers.Add(PageNumberAlignment.Outside), PageNumber()),
+
+        new Scenario("page-numbers-chapter",
+            d =>
+            {
+                PageNumbersWrapper numbers = d.Sections[0].Footers[HeaderFooterIndex.Primary].PageNumbers;
+                numbers.IncludeChapterNumber = true;
+                numbers.HeadingLevelForChapter = 2;
+                numbers.ChapterPageSeparator = SeparatorType.Colon;
+                numbers.ShowFirstPageNumber = false;
+            },
+            Elements("document.xml", "pgNumType", "titlePg")),
+
+        new Scenario("page-numbers-chapter-default",
+            d =>
+            {
+                PageNumbersWrapper numbers = d.Sections[0].Footers[HeaderFooterIndex.Primary].PageNumbers;
+                numbers.IncludeChapterNumber = true;
+                numbers.ChapterPageSeparator = SeparatorType.Period;
+                numbers.ChapterPageSeparator = SeparatorType.Hyphen;
+            },
+            Elements("document.xml", "pgNumType")),
+
+        new Scenario("text-columns-add",
+            d =>
+            {
+                TextColumnsWrapper columns = d.Sections[0].PageSetup.TextColumns;
+                columns.Add(72, 10);
+                columns.Add(100, 20);
+                columns.Add(90);
+            },
+            Elements("document.xml", "cols")),
+
+
+        new Scenario("text-columns-add-no-width",
+            d =>
+            {
+                TextColumnsWrapper columns = d.Sections[0].PageSetup.TextColumns;
+                columns.Add();
+            },
+            Elements("document.xml", "cols")),
+
+        new Scenario("text-columns-items",
+            d =>
+            {
+                TextColumnsWrapper columns = d.Sections[0].PageSetup.TextColumns;
+                columns.SetCount(3);
+                columns[0].Width = 100;
+                columns[1].SpaceAfter = 10;
+            },
+            Elements("document.xml", "cols")),
+
+        new Scenario("text-columns-flow",
+            d =>
+            {
+                d.Sections[0].PageSetup.TextColumns.SetCount(2);
+                d.Sections[0].PageSetup.TextColumns.FlowDirection = FlowDirection.Rtl;
+            },
+            Elements("document.xml", "cols", "bidi")),
+
         new Scenario("document-settings",
             d =>
             {
