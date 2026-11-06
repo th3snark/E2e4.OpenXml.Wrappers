@@ -1490,6 +1490,56 @@ public class MarkupConformanceTest
             },
             DrawingElements("wrapSquare", "wrapTight", "wrapThrough", "wrapTopAndBottom", "wrapNone", "wrapPolygon")),
 
+        new Scenario("shape-add-textbox",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                ShapeWrapper s = d.Shapes.AddTextbox(TextOrientation.Horizontal, 20, 30, 120, 60, d.Range(5, 5));
+                s.TextFrame.TextRange.Text = "Boxed";
+            },
+            DrawingElements("wsp", "docPr")),
+
+        new Scenario("shape-add-rectangle",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.Shapes.AddShape(AutoShapeType.Rectangle, 20, 30, 80, 40, d.Range(5, 5));
+            },
+            DrawingElements("wsp", "docPr")),
+
+        new Scenario("shape-add-line",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.Shapes.AddLine(20, 30, 100, 70, d.Range(5, 5));
+            },
+            DrawingElements("wsp", "docPr")),
+
+        new Scenario("shape-autoshapes",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                foreach (AutoShapeType type in new[] { AutoShapeType.Rectangle, AutoShapeType.Diamond, AutoShapeType.RoundedRectangle, AutoShapeType.IsoscelesTriangle,
+                    AutoShapeType.Oval, AutoShapeType.Hexagon, AutoShapeType.RightArrow })
+                {
+                    d.Shapes.AddShape(type, 20, 30, 80, 40, d.Range(5, 5));
+                }
+            },
+            DrawingElements("wsp", "docPr")),
+
+        new Scenario("shape-fill-line",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                ShapeWrapper a = d.Shapes.AddShape(AutoShapeType.Rectangle, 20, 30, 80, 40, d.Range(5, 5));
+                a.Fill.ForeColor.RGB = 255;
+                a.Line.ForeColor.RGB = 65280;
+                a.Line.Weight = 3;
+                ShapeWrapper c = d.Shapes.AddTextbox(TextOrientation.Horizontal, 20, 150, 80, 40, d.Range(5, 5));
+                c.Fill.ForeColor.RGB = 16711680;
+                c.Fill.Transparency = 0.5;
+            },
+            DrawingElements("wsp", "docPr")),
         new Scenario("shape-delete",
             d =>
             {

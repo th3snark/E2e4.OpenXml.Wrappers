@@ -837,7 +837,8 @@ A table of contents is a `TOC` field. `Update` rebuilds its entries from the hea
 | Status | Members |
 |---|---|
 | Done (step 18a, pictures) | `ConvertToInlineShape`, `Delete`, `ZOrder`, `ZOrderPosition` (from 1, as in Word), `AlternativeText`, `Anchor`, `Height`, `ID`, `Left`, `LockAnchor`, `LockAspectRatio`, `Name`, `RelativeHorizontalPosition`, `RelativeVerticalPosition`, `Rotation` (with the room a rotated picture needs, in steps of 1.5 pt), `Title`, `Top`, `Type` (picture, linked picture), `Visible`, `Width`, `WrapFormat`. `Left` and `Top` are offsets from `RelativeHorizontalPosition` and `RelativeVerticalPosition`; changing those does not move the shape on the page, as no layout is known. A picture is anchored at the start of the paragraph of the anchor range, as Word does |
-| Planned, step 18b | `Fill`, `Line`, `TextFrame` and `AutoShapeType` (text boxes and drawn shapes: Word writes a `wps` shape with a VML fallback including a binary `o:gfxdata` blob, which is not copied), `Duplicate`, `Flip`, `HorizontalFlip`, `VerticalFlip`, `IncrementLeft`, `IncrementRotation`, `IncrementTop`, `ScaleHeight`, `ScaleWidth`, `Decorative`, `LayoutInCell`, `Hyperlink`, `PictureFormat`, `Parent`, `Child`, `ParentGroup`, `Ungroup`, `GroupItems`, `HeightRelative`, `LeftRelative`, `TopRelative`, `WidthRelative`, `RelativeHorizontalSize`, `RelativeVerticalSize` |
+| Done (step 18b) | `AutoShapeType` (rectangle, diamond, rounded rectangle, isosceles triangle, oval, hexagon, right arrow), `Fill` and `Line` (`Visible`, `ForeColor.RGB`, `Transparency`, `Weight`), `TextFrame`, and `Type` for text boxes (17), shapes of the gallery (1) and lines (9). The markup of the shape itself (`wps:wsp`) is Word 16's, checked by five scenarios; Word also writes a copy for versions before 2010 with a binary blob, which the library leaves out, and the room around the shape (`effectExtent`) is left at zero. Word measures `Left` and `Top` of a new shape from the page and stores them from the column and the paragraph; the library takes the paragraph to be at the top margin |
+| Planned later | `Duplicate`, `Flip`, `HorizontalFlip`, `VerticalFlip`, `IncrementLeft`, `IncrementRotation`, `IncrementTop`, `ScaleHeight`, `ScaleWidth`, `Decorative`, `LayoutInCell`, `Hyperlink`, `PictureFormat`, `Parent`, `Child`, `ParentGroup`, `Ungroup`, `GroupItems`, `HeightRelative`, `LeftRelative`, `TopRelative`, `WidthRelative`, `RelativeHorizontalSize`, `RelativeVerticalSize` |
 | Planned, step 19 | `Select` |
 | Out of scope | Charts, SmartArt, OLE and 3D: `Chart`, `HasChart`, `SmartArt`, `HasSmartArt`, `OLEFormat`, `LinkFormat`, `Model3D`. HTML: `Script`. Theme-based styles: `ShapeStyle`, `BackgroundStyle`, `GraphicStyle`. The format painter: `Apply`, `PickUp` |
 | Decided against | Drawing canvases: `CanvasItems`, `CanvasCropBottom`, `CanvasCropLeft`, `CanvasCropRight`, `CanvasCropTop`. Geometry editing: `Adjustments`, `Nodes`, `Vertices`, `Callout`. Effects: `Glow`, `Reflection`, `Shadow`, `SoftEdge`, `ThreeD`, `TextEffect`. `TextFrame2` (the Office text frame, which TextFrame covers), `SetShapesDefaultProperties` |
@@ -849,7 +850,8 @@ A table of contents is a `TOC` field. `Update` rebuilds its entries from the hea
 | Status | Members |
 |---|---|
 | Done (step 18a) | `AddPicture` (anchored at the start of the paragraph, in front of the text; a file already in the document is shared), `Item` (0-based, lowest in the stack first), `Count`, `Parent`, enumeration. `Document.Shapes` and `HeaderFooter.Shapes` |
-| Planned, step 18b | `AddLabel`, `AddLine`, `AddShape`, `AddTextbox` |
+| Done (step 18b) | `AddLine` (a line that goes down and right), `AddShape` (seven shapes of the gallery), `AddTextbox` |
+| Planned later | `AddLabel`, the other shapes of the gallery, lines that go up or left |
 | Planned, step 19 | `SelectAll` |
 | Out of scope | `AddChart2`, `AddSmartArt`, `Add3DModel` (charts, SmartArt, 3D), `AddOLEControl`, `AddOLEObject` (OLE) |
 | Decided against | `AddCallout`, `AddCanvas`, `AddCurve`, `AddPolyline`, `BuildFreeform`, `AddTextEffect` (WordArt), `AddWebVideo`, `Range` (multi-shape ranges) |
@@ -860,7 +862,8 @@ A table of contents is a `TOC` field. `Update` rebuilds its entries from the hea
 
 | Status | Members |
 |---|---|
-| Planned, step 18 | `DeleteText`, `AutoSize`, `ContainingRange`, `HasText`, `HorizontalAnchor`, `MarginBottom`, `MarginLeft`, `MarginRight`, `MarginTop`, `NoTextRotation`, `Orientation`, `Parent`, `TextRange`, `VerticalAnchor`, `WordWrap` |
+| Done (step 18b) | `HasText`, `TextRange` (set and read as text; a range over the text of a shape supports `Text` only) |
+| Planned later | `DeleteText`, `AutoSize`, `ContainingRange`, `HorizontalAnchor`, `MarginBottom`, `MarginLeft`, `MarginRight`, `MarginTop`, `NoTextRotation`, `Orientation`, `Parent`, `VerticalAnchor`, `WordWrap` |
 | Out of scope | `Overflowing` (layout) |
 | Decided against | Linked text boxes: `BreakForwardLink`, `ValidLinkTarget`, `Next`, `Previous`. `Column`, and the WordArt formats `PathFormat`, `WarpFormat`, `ThreeD` |
 

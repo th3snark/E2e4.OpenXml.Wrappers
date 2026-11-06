@@ -1355,6 +1355,49 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         Write-Host ('count {0}' -f $doc.Shapes.Count)
     }
 
+    'shape-add-textbox'               = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $s = $doc.Shapes.AddTextbox(1, 20, 30, 120, 60, $doc.Range(5, 5))
+        $s.TextFrame.TextRange.Text = 'Boxed'
+        Write-Host ('textbox: type {0}, name "{1}", id {2}, w {3} h {4}, wrap {5}, autoshape {6}, fill {7} line {8}' -f $s.Type, $s.Name, $s.ID, $s.Width, $s.Height, $s.WrapFormat.Type, $s.AutoShapeType, $s.Fill.Visible, $s.Line.Visible)
+    }
+
+    'shape-add-rectangle'             = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $s = $doc.Shapes.AddShape(1, 20, 30, 80, 40, $doc.Range(5, 5))
+        Write-Host ('rect: type {0}, name "{1}", id {2}, w {3} h {4}, wrap {5}, autoshape {6}, fill {7} {8}, line {9} {10} w {11}' -f $s.Type, $s.Name, $s.ID, $s.Width, $s.Height, $s.WrapFormat.Type, $s.AutoShapeType, $s.Fill.Visible, $s.Fill.ForeColor.RGB, $s.Line.Visible, $s.Line.ForeColor.RGB, $s.Line.Weight)
+    }
+
+    'shape-add-line'                  = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $s = $doc.Shapes.AddLine(20, 30, 100, 70, $doc.Range(5, 5))
+        Write-Host ('line: type {0}, name "{1}", w {2} h {3} left {4} top {5}' -f $s.Type, $s.Name, $s.Width, $s.Height, $s.Left, $s.Top)
+    }
+
+    'shape-autoshapes'                = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        foreach ($t in 1, 4, 5, 7, 9, 10, 33) {
+            $s = $doc.Shapes.AddShape($t, 20, 30, 80, 40, $doc.Range(5, 5))
+            Write-Host ('autoshape {0}: name "{1}" type {2} autoshapetype {3} left {4} top {5} relH {6} relV {7}' -f $t, $s.Name, $s.Type, $s.AutoShapeType, $s.Left, $s.Top, $s.RelativeHorizontalPosition, $s.RelativeVerticalPosition)
+        }
+    }
+
+    'shape-fill-line'                 = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $a = $doc.Shapes.AddShape(1, 20, 30, 80, 40, $doc.Range(5, 5))
+        $a.Fill.ForeColor.RGB = 255
+        $a.Line.ForeColor.RGB = 65280
+        $a.Line.Weight = 3
+        $c = $doc.Shapes.AddTextbox(1, 20, 150, 80, 40, $doc.Range(5, 5))
+        $c.Fill.ForeColor.RGB = 16711680
+        $c.Fill.Transparency = 0.5
+        Write-Host ('a fill {0} {1} line {2} {3} {4}; c fill {5} {6} tr {7} line {8} {9}' -f $a.Fill.Visible, $a.Fill.ForeColor.RGB, $a.Line.Visible, $a.Line.ForeColor.RGB, $a.Line.Weight, $c.Fill.Visible, $c.Fill.ForeColor.RGB, $c.Fill.Transparency, $c.Line.Visible, $c.Line.Weight)
+    }
     'shape-delete'                    = {
         param($doc)
         $doc.Content.InsertAfter('Hello world again')

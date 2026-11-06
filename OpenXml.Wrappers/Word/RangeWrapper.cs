@@ -189,7 +189,7 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
                 StoryMap map = StoryMap.Build(StoryMap.FindRoot(_startOpenXmlElement));
                 sb.Append(map.GetText(0, map.Length));
             }
-            else if (_startOpenXmlElement is Header || _startOpenXmlElement is Footer)
+            else if (_startOpenXmlElement is Header || _startOpenXmlElement is Footer || _startOpenXmlElement is TextBoxContent)
             {
                 foreach (OpenXmlElement block in _startOpenXmlElement.ChildElements)
                 {
@@ -271,6 +271,20 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
                 EmptyBody(GetBody());
                 RangeWrapper whole = new RangeWrapper(StoryMap.Build(StoryMap.FindRoot(_startOpenXmlElement)), 0, 0);
                 whole.SetSpanText(text.EndsWith('\r') ? text.Substring(0, text.Length - 1) : text);
+            }
+            else if (_startOpenXmlElement is TextBoxContent)
+            {
+                //The text of a shape is replaced by one plain paragraph for each line.
+                _startOpenXmlElement.RemoveAllChildren();
+                foreach (string line in text.TrimEnd('\r').Split('\r'))
+                {
+                    Paragraph paragraph = new Paragraph();
+                    foreach (Run run in BuildNewRunListFromText(line, paragraph))
+                    {
+                        paragraph.AppendChild(run);
+                    }
+                    _startOpenXmlElement.AppendChild(paragraph);
+                }
             }
             else if (_startOpenXmlElement is Header || _startOpenXmlElement is Footer)
             {
