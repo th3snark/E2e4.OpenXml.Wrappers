@@ -82,6 +82,28 @@ public class ReplacementWrapper
         set { Formatting.Highlight = value; }
     }
 
+    /// <summary>The language to give the replaced text, as the number Word uses (for example 1033); 0 leaves it as it is.</summary>
+    /// <exception cref="ArgumentOutOfRangeException">The number is not a language.</exception>
+    public int LanguageID
+    {
+        get { return Formatting.GetLanguage(false); }
+        set { Formatting.SetLanguage(value, false); }
+    }
+
+    /// <summary>The language to give the replaced East Asian text, as <see cref="LanguageID"/>.</summary>
+    public int LanguageIDFarEast
+    {
+        get { return Formatting.GetLanguage(true); }
+        set { Formatting.SetLanguage(value, true); }
+    }
+
+    /// <summary>True to leave the replaced text out of proofing and false to put it back in. Null leaves it as it is.</summary>
+    public bool? NoProofing
+    {
+        get { return Formatting.NoProofing; }
+        set { Formatting.NoProofing = value; }
+    }
+
     /// <summary>Takes away the formatting that has been set, so that the replacement is text alone.</summary>
     public void ClearFormatting()
     {
@@ -155,6 +177,18 @@ public class FindWrapper
     /// <summary>True to match only whole words, that is text not directly preceded or followed by a letter or digit.</summary>
     public bool MatchWholeWord { get; set; }
 
+    /// <summary>True to find only text that starts a word: not directly preceded by a letter or digit.</summary>
+    public bool MatchPrefix { get; set; }
+
+    /// <summary>True to find only text that ends a word: not directly followed by a letter or digit. With <see cref="MatchPrefix"/> it is the same as <see cref="MatchWholeWord"/>.</summary>
+    public bool MatchSuffix { get; set; }
+
+    /// <summary>True to ignore punctuation, in the text and in the text searched: <c>coop</c> finds <c>co-op</c>. The match ends at its last letter. Not used with <see cref="MatchWildcards"/>.</summary>
+    public bool IgnorePunct { get; set; }
+
+    /// <summary>True to ignore white space (spaces, tabs and no-break spaces) in the text and in the text searched: <c>ab</c> finds <c>a b</c>. Not used with <see cref="MatchWildcards"/>.</summary>
+    public bool IgnoreSpace { get; set; }
+
     /// <summary>True to treat <see cref="Text"/> as a pattern, as described for the class.</summary>
     public bool MatchWildcards { get; set; }
 
@@ -217,6 +251,28 @@ public class FindWrapper
     {
         get { return _criteria.Highlight; }
         set { _criteria.Highlight = value; }
+    }
+
+    /// <summary>The language of the text to look for, as the number Word uses (for example 1033 for English (United States)); 0 for any.</summary>
+    /// <exception cref="ArgumentOutOfRangeException">The number is not a language.</exception>
+    public int LanguageID
+    {
+        get { return _criteria.GetLanguage(false); }
+        set { _criteria.SetLanguage(value, false); }
+    }
+
+    /// <summary>The language of the East Asian text to look for, as <see cref="LanguageID"/>.</summary>
+    public int LanguageIDFarEast
+    {
+        get { return _criteria.GetLanguage(true); }
+        set { _criteria.SetLanguage(value, true); }
+    }
+
+    /// <summary>True to look for text that is left out of proofing, false for text that is not. Null for either.</summary>
+    public bool? NoProofing
+    {
+        get { return _criteria.NoProofing; }
+        set { _criteria.NoProofing = value; }
     }
 
     /// <summary>True if the last <c>Execute</c> found the text.</summary>
@@ -726,7 +782,8 @@ public class FindWrapper
         char[] characters = map.ToCharacters();
         List<int> positions = null;
         string haystack;
-        if (Array.IndexOf(characters, '\0') < 0)
+        bool ignoring = _pattern.Regex == null && (IgnorePunct || IgnoreSpace);
+        if (!ignoring && Array.IndexOf(characters, '\0') < 0)
         {
             haystack = new string(characters);
         }
@@ -736,7 +793,7 @@ public class FindWrapper
             StringBuilder visible = new StringBuilder(characters.Length);
             for (int i = 0; i < characters.Length; i++)
             {
-                if (characters[i] != '\0')
+                if (characters[i] != '\0' && !(ignoring && IsIgnored(characters[i])))
                 {
                     positions.Add(i);
                     visible.Append(characters[i]);
@@ -763,7 +820,7 @@ public class FindWrapper
                 {
                     break;
                 }
-                if (match.Length == 0 || (MatchWholeWord && !IsWholeWord(haystack, match.Index, match.Length)))
+                if (match.Length == 0 || !WordEdgesOk(haystack, match.Index, match.Length))
                 {
                     position = match.Index + 1;
                     continue;
@@ -786,7 +843,11 @@ public class FindWrapper
             return matches;
         }
 
-        string find = _pattern.Literal;
+        string find = ignoring ? new string(_pattern.Literal.Where(c => !IsIgnored(c)).ToArray()) : _pattern.Literal;
+        if (find.Length == 0)
+        {
+            return matches;
+        }
         StringComparison comparison = _pattern.Comparison;
         while (position <= to - find.Length)
         {
@@ -796,7 +857,7 @@ public class FindWrapper
                 break;
             }
 
-            FoundMatch candidate = !MatchWholeWord || IsWholeWord(haystack, index, find.Length)
+            FoundMatch candidate = WordEdgesOk(haystack, index, find.Length)
                 ? CreateMatch(positions, index, find.Length, haystack.Substring(index, find.Length), null)
                 : null;
             if (candidate != null && AcceptsFormat(map, candidate))
@@ -956,13 +1017,22 @@ public class FindWrapper
         return index >= 0 ? index : ~index;
     }
 
-    private static bool IsWholeWord(string haystack, int index, int length)
+    //Whether the match is at the edges of a word that the options ask for: the start for a prefix, the end for a suffix, both for a whole word.
+    //Only an edge of the match that is itself part of a word needs a word boundary.
+    private bool WordEdgesOk(string haystack, int index, int length)
     {
-        //Only the edges of the match that are themselves part of a word need a word boundary.
-        bool startOk = !char.IsLetterOrDigit(haystack[index]) || index == 0 || !char.IsLetterOrDigit(haystack[index - 1]);
+        bool prefix = MatchWholeWord || MatchPrefix;
+        bool suffix = MatchWholeWord || MatchSuffix;
+        bool startOk = !prefix || !char.IsLetterOrDigit(haystack[index]) || index == 0 || !char.IsLetterOrDigit(haystack[index - 1]);
         int end = index + length;
-        bool endOk = !char.IsLetterOrDigit(haystack[end - 1]) || end == haystack.Length || !char.IsLetterOrDigit(haystack[end]);
+        bool endOk = !suffix || !char.IsLetterOrDigit(haystack[end - 1]) || end == haystack.Length || !char.IsLetterOrDigit(haystack[end]);
         return startOk && endOk;
+    }
+
+    //The characters that the options to ignore punctuation and white space leave out.
+    private bool IsIgnored(char c)
+    {
+        return (IgnorePunct && char.IsPunctuation(c)) || (IgnoreSpace && (c == ' ' || c == '\t' || c == '\u00A0'));
     }
 
     #region Matching and replacing text

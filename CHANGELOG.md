@@ -42,6 +42,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 - `Style.Table` (`TableStyle`): `Alignment`, `AllowBreakAcrossPage`, `Borders`, `Shading`, `Spacing`, `LeftIndent`, `RowStripe`, `ColumnStripe` and the four paddings of a table style, and `TableStyle.Condition(ConditionCode)` (`ConditionalStyle`: `Font`, `ParagraphFormat`, `Borders`, `Shading` and the paddings of the first row, the bands, the corner cells and so on). The markup is Word 16's, checked in twelve new reference scenarios.
 
+- `Find` gets `MatchPrefix`, `MatchSuffix`, `IgnorePunct` and `IgnoreSpace`, and `Find` and `Replacement` get `LanguageID`, `LanguageIDFarEast` and `NoProofing` (formatting to look for, and to give the replacement). Six new reference scenarios, all matching Word.
+
 ### Behaviour changes
 - **`Styles.Add` of a table style writes an empty `w:tblPr`**, as Word does.
 - **`Styles.Add` of a paragraph style adds its linked character style too** (`<name> Char`), and a new character or table style is based on the default of its type, as Word writes them. A style written with `w:customStyle="true"` is now written `1`.

@@ -1094,6 +1094,68 @@ public class MarkupConformanceTest
         new Scenario("table-style-cond-shading-vband", d => d.Styles.Add("RefTable", StyleType.Table).Table.Condition(ConditionCode.OddColumnBanding).Shading.BackgroundPatternColor = ColorHelper.RGB(0, 255, 0), RefStyles()),
         new Scenario("table-style-cond-borders-band", d => d.Styles.Add("RefTable", StyleType.Table).Table.Condition(ConditionCode.OddRowBanding).Borders[BorderPosition.Bottom].LineStyle = BorderLineStyle.SingleLine, RefStyles()),
         new Scenario("table-style-cond-padding-only", d => d.Styles.Add("RefTable", StyleType.Table).Table.Condition(ConditionCode.FirstRow).TopPadding = 3, RefStyles()),
+        new Scenario("find-match-prefix",
+            d =>
+            {
+                d.Content.InsertAfter("pre prefix preach unpre repre");
+                RangeWrapper r = d.Content;
+                r.Find.MatchPrefix = true;
+                r.Find.Execute("pre", replaceWith: "X", replace: ReplaceMode.All);
+            },
+            Body()),
+
+        new Scenario("find-match-suffix",
+            d =>
+            {
+                d.Content.InsertAfter("ing sing singing ingot");
+                RangeWrapper r = d.Content;
+                r.Find.MatchSuffix = true;
+                r.Find.Execute("ing", replaceWith: "X", replace: ReplaceMode.All);
+            },
+            Body()),
+
+        new Scenario("find-match-prefix-suffix",
+            d =>
+            {
+                d.Content.InsertAfter("cat concat cats cat");
+                RangeWrapper r = d.Content;
+                r.Find.MatchPrefix = true;
+                r.Find.MatchSuffix = true;
+                r.Find.Execute("cat", replaceWith: "X", replace: ReplaceMode.All);
+            },
+            Body()),
+
+        new Scenario("find-ignore-punct",
+            d =>
+            {
+                d.Content.InsertAfter("co-op coop co,op co op");
+                RangeWrapper r = d.Content;
+                r.Find.IgnorePunct = true;
+                r.Find.Execute("coop", replaceWith: "X", replace: ReplaceMode.All);
+            },
+            Body()),
+
+        new Scenario("find-ignore-space",
+            d =>
+            {
+                d.Content.InsertAfter("a b ab a  b ab");
+                RangeWrapper r = d.Content;
+                r.Find.IgnoreSpace = true;
+                r.Find.Execute("ab", replaceWith: "X", replace: ReplaceMode.All);
+            },
+            Body()),
+
+        new Scenario("find-replace-language",
+            d =>
+            {
+                d.Content.InsertAfter("One two three");
+                RangeWrapper r = d.Content;
+                r.Find.Replacement.LanguageID = 1036;
+                r.Find.Replacement.NoProofing = true;
+                r.Find.Execute("two", format: true, replaceWith: "^&", replace: ReplaceMode.All);
+            },
+            Body()),
+
         new Scenario("find-replace-font",
             d =>
             {
