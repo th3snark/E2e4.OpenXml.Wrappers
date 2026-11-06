@@ -680,6 +680,97 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         [void]$doc.Hyperlinks.Add($doc.Range(12, 17), 'https://example.com/')
         [void]$doc.Hyperlinks.Add($doc.Range(0, 5), 'https://example.com/')
     }
+    'list-defaults'                   = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo`rThree")
+        $doc.Paragraphs.Item(1).Range.ListFormat.ApplyBulletDefault()
+        $doc.Paragraphs.Item(2).Range.ListFormat.ApplyNumberDefault()
+        $doc.Paragraphs.Item(3).Range.ListFormat.ApplyOutlineNumberDefault()
+    }
+
+    'list-apply-bullet'               = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo`rThree")
+        $doc.Content.ListFormat.ApplyBulletDefault()
+    }
+
+    'list-apply-number'               = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo`rThree")
+        $doc.Content.ListFormat.ApplyNumberDefault()
+    }
+
+    'list-apply-outline'              = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo`rThree")
+        $doc.Content.ListFormat.ApplyOutlineNumberDefault()
+    }
+
+    'list-apply-on-heading'           = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo`rThree")
+        $doc.Paragraphs.Item(1).Range.Style = 'Heading 1'
+        $doc.Paragraphs.Item(1).Range.ListFormat.ApplyBulletDefault()
+    }
+
+    'list-apply-on-indented'          = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo`rThree")
+        $doc.Paragraphs.Item(1).Range.ParagraphFormat.LeftIndent = 72
+        $doc.Paragraphs.Item(1).Range.ListFormat.ApplyNumberDefault()
+    }
+
+    'list-indent-outdent'             = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo`rThree")
+        $doc.Content.ListFormat.ApplyOutlineNumberDefault()
+        $doc.Paragraphs.Item(2).Range.ListFormat.ListIndent()
+        $doc.Paragraphs.Item(3).Range.ListFormat.ListIndent()
+        $doc.Paragraphs.Item(3).Range.ListFormat.ListOutdent()
+    }
+
+    'list-outdent-first-level'        = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo`rThree")
+        $doc.Content.ListFormat.ApplyOutlineNumberDefault()
+        $doc.Paragraphs.Item(1).Range.ListFormat.ListOutdent()
+    }
+
+    'list-level-number'               = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo`rThree")
+        $doc.Content.ListFormat.ApplyOutlineNumberDefault()
+        $doc.Paragraphs.Item(3).Range.ListFormat.ListLevelNumber = 4
+    }
+
+    'list-remove-numbers'             = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo`rThree")
+        $doc.Content.ListFormat.ApplyOutlineNumberDefault()
+        $doc.Paragraphs.Item(2).Range.ListFormat.ListLevelNumber = 2
+        $doc.Paragraphs.Item(2).Range.ListFormat.RemoveNumbers()
+    }
+
+    'list-convert-bullet-to-text'     = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo`rThree")
+        $doc.Content.ListFormat.ApplyBulletDefault()
+        $doc.Paragraphs.Item(2).Range.ListFormat.ConvertNumbersToText()
+    }
+
+    'list-convert-number-to-text'     = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo`rThree")
+        $doc.Content.ListFormat.ApplyNumberDefault()
+        $doc.Paragraphs.Item(1).Range.ListFormat.ConvertNumbersToText()
+    }
+
+    'list-apply-template-continue'    = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo`rThree")
+        $doc.Paragraphs.Item(1).Range.ListFormat.ApplyNumberDefault()
+        $doc.Paragraphs.Item(2).Range.ListFormat.ApplyListTemplate($doc.ListTemplates.Item(1), $true)
+    }
     'document-settings'               = {
         param($doc)
         $doc.DefaultTabStop = 54

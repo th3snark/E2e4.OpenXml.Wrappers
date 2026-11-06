@@ -73,7 +73,7 @@ internal static class ListNumbering
         return id == null ? null : numbering.Elements<AbstractNum>().FirstOrDefault(a => a.AbstractNumberId?.Value == id.Value);
     }
 
-    private static Level FindLevel(AbstractNum template, int level)
+    internal static Level FindLevel(AbstractNum template, int level)
     {
         return template.Elements<Level>().FirstOrDefault(l => l.LevelIndex?.Value == level) ?? template.Elements<Level>().ElementAtOrDefault(level);
     }
@@ -226,7 +226,7 @@ internal static class ListNumbering
 /// The list formatting of the paragraphs of a range, as <c>ListFormat</c> in Word. Values that describe one item (<see cref="ListString"/>,
 /// <see cref="ListLevelNumber"/>, <see cref="ListValue"/>) are those of the first paragraph.
 /// </summary>
-public class ListFormatWrapper
+public partial class ListFormatWrapper
 {
     private readonly RangeWrapper _range;
 
@@ -282,7 +282,11 @@ public class ListFormatWrapper
         }
     }
 
-    /// <summary>The level of the first paragraph, from 1, as <c>ListFormat.ListLevelNumber</c> in Word; 1 when it is not in a list.</summary>
+    /// <summary>
+    /// The level of the first paragraph, from 1, as <c>ListFormat.ListLevelNumber</c> in Word; 1 when it is not in a list. Setting it moves
+    /// the numbered paragraphs to that level.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">The list's template has no such level.</exception>
     public int ListLevelNumber
     {
         get
@@ -290,6 +294,7 @@ public class ListFormatWrapper
             ListNumbering.Item first = GetItems().FirstOrDefault();
             return first == null ? 1 : first.Level + 1;
         }
+        set { SetListLevelNumber(value); }
     }
 
     /// <summary>The text of the number or bullet of the first paragraph, as <c>ListFormat.ListString</c> in Word; empty if it has none.</summary>

@@ -86,6 +86,7 @@ internal static class Program
                 WriteTemplate(package, "docProps/app.xml", templatesFolder, "app.xml");
             }
         }
+        WriteListTemplates(inputFolder, templatesFolder);
         string styles = Path.Combine(inputFolder, "built-in-styles.docx");
         if (File.Exists(styles))
         {
@@ -97,6 +98,25 @@ internal static class Program
                     root.Elements().Where(e => e.Name != W + "style").Remove();
                 });
             }
+        }
+    }
+
+    private static void WriteListTemplates(string inputFolder, string templatesFolder)
+    {
+        string lists = Path.Combine(inputFolder, "list-defaults.docx");
+        if (!File.Exists(lists))
+        {
+            return;
+        }
+        using (ZipArchive package = ZipFile.OpenRead(lists))
+        {
+            WriteTemplate(package, "word/numbering.xml", templatesFolder, "ListDefaults.xml", root =>
+            {
+                //Only the definitions of the default bullet, number and outline lists: the list instances and the id each definition was
+                //given are the document's own.
+                root.Elements().Where(e => e.Name != W + "abstractNum").Remove();
+                root.Descendants(W + "nsid").Remove();
+            });
         }
     }
 

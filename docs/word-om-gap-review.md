@@ -614,7 +614,8 @@ A cell given a width of its own makes the table ragged, as in Word: the grid get
 | Status | Members |
 |---|---|
 | Done (step 13a) | Reading: `CountNumberedItems`, `List`, `ListLevelNumber` (from 1, as Word), `ListString`, `ListTemplate`, `ListType`, `ListValue`, `Parent`, `SingleList`, `SingleListTemplate`. The values are worked out as Word works them out (counters per template, deeper levels starting again, letters that repeat, roman numbers); checked against the numbers Word gave for its default bullet, number and outline lists |
-| Planned, step 13b | `ApplyBulletDefault`, `ApplyListTemplate`, `ApplyListTemplateWithLevel`, `ApplyNumberDefault`, `ApplyOutlineNumberDefault`, `CanContinuePreviousList`, `ConvertNumbersToText`, `ListIndent`, `ListOutdent`, `RemoveNumbers`, and setting `ListLevelNumber` |
+| Done (step 13b) | `ApplyBulletDefault`, `ApplyNumberDefault`, `ApplyOutlineNumberDefault`, `ApplyListTemplate(template, continuePreviousList)`, `ConvertNumbersToText`, `ListIndent`, `ListOutdent`, `RemoveNumbers`, and setting `ListLevelNumber`. The defaults are the definitions Word 16 wrote (`Templates/ListDefaults.xml`, from the `list-defaults` scenario); markup of each operation matches Word in twelve scenarios. Bullets reuse the document's bullet list; numbers go on from the paragraph before the range when it is numbered the same way and start again after a gap, as Word does. A direct left indent is moved on by the hanging indent of the first level |
+| Planned, step 13c | `ApplyListTemplateWithLevel`, `CanContinuePreviousList` |
 | Decided against | `ListPictureBullet` (legacy picture bullets) |
 
 <!-- learn: list -->
@@ -624,7 +625,7 @@ A cell given a width of its own makes the table ragged, as in Word: the grid get
 | Status | Members |
 |---|---|
 | Done (step 13a) | `CountNumberedItems`, `ListParagraphs`, `SingleListTemplate`, `StyleName` (empty: the library does not link lists to styles) |
-| Planned, step 13b | `ApplyListTemplate`, `ApplyListTemplateWithLevel`, `CanContinuePreviousList`, `ConvertNumbersToText`, `RemoveNumbers`, `Range`, `Parent` |
+| Planned, step 13c | `ApplyListTemplate`, `ApplyListTemplateWithLevel`, `CanContinuePreviousList`, `ConvertNumbersToText`, `RemoveNumbers`, `Range`, `Parent` |
 
 <!-- learn: lists,listparagraphs,listlevels -->
 
@@ -641,7 +642,7 @@ A cell given a width of its own makes the table ragged, as in Word: the grid get
 | Status | Members |
 |---|---|
 | Done (step 13a) | `ListLevels`, `Name`, `OutlineNumbered` |
-| Planned, step 13b | `Convert`, `Parent` |
+| Planned, step 13c | `Convert`, `Parent` |
 
 <!-- learn: listtemplates -->
 
@@ -650,7 +651,7 @@ A cell given a width of its own makes the table ragged, as in Word: the grid get
 | Status | Members |
 |---|---|
 | Done (step 13a) | `Item` (0-based), `Count`, `Parent`, enumeration |
-| Planned, step 13b | `Add` |
+| Planned, step 13c | `Add` |
 
 <!-- learn: listlevel -->
 
@@ -659,7 +660,7 @@ A cell given a width of its own makes the table ragged, as in Word: the grid get
 | Status | Members |
 |---|---|
 | Done (step 13a) | `Alignment`, `Index` (0-based), `NumberFormat`, `NumberPosition`, `NumberStyle`, `Parent`, `ResetOnHigher`, `StartAt`, `TabPosition` (read only), `TextPosition`, `TrailingCharacter`, `LinkedStyle` (read only) |
-| Planned, step 13b | `Font`, setting `TabPosition`, `ResetOnHigher` beyond the default, `LinkedStyle` |
+| Planned, step 13c | `Font`, setting `TabPosition` and `LinkedStyle` |
 | Decided against | `ApplyPictureBullet`, `PictureBullet` (legacy picture bullets) |
 
 ### 4.3 Footnotes and endnotes (steps 11 and 14)
