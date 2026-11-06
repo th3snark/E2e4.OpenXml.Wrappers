@@ -516,6 +516,10 @@ public class MarkupConformanceTest
             d => d.Protect(ProtectionType.AllowOnlyReading, "password"),
             Elements("settings.xml", "documentProtection")),
 
+        new Scenario("default-table-style",
+            d => d.SetDefaultTableStyle("Table Grid", false),
+            Elements("settings.xml", "defaultTableStyle")),
+
         new Scenario("heading-insert-paragraph-after",
             d =>
             {

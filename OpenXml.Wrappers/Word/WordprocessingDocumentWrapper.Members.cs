@@ -284,6 +284,54 @@ public partial class WordprocessingDocumentWrapper
     }
 
     /// <summary>
+    /// The name of the default table style that the document says it has (<c>w:defaultTableStyle</c>), as <c>Document.DefaultTableStyle</c>
+    /// in Word, or null when none is set (Word gives a style without a name then). It is a setting of the document: it does not change the
+    /// style of the tables already there, nor of those <c>Tables.Add</c> makes, which Word also leaves alone.
+    /// </summary>
+    public string DefaultTableStyle
+    {
+        get
+        {
+            string id = GetSettings(false)?.GetFirstChild<DefaultTableStyle>()?.Val?.Value;
+            return id == null ? null : StyleHelper.GetStyleName(_wordprocessingDocument.MainDocumentPart.Document, id);
+        }
+    }
+
+    /// <summary>The default table style as an object (see <see cref="DefaultTableStyle"/>); null when none is set.</summary>
+    public StyleWrapper DefaultTableStyleObject
+    {
+        get { return StyleHelper.GetStyleObject(_wordprocessingDocument.MainDocumentPart.Document, DefaultTableStyle); }
+    }
+
+    /// <summary>
+    /// Sets the default table style of the document, as <c>Document.SetDefaultTableStyle</c> in Word. Word writes it even for "Table Normal".
+    /// </summary>
+    /// <param name="style">The name of a table style.</param>
+    /// <param name="setInTemplate">Whether to set it in the template as well; there is no template here, so it has no effect.</param>
+    /// <exception cref="ArgumentException">There is no table style with the name.</exception>
+    public void SetDefaultTableStyle(string style, bool setInTemplate)
+    {
+        Guard.ThrowIfNull(style, nameof(style));
+
+        string id = StyleHelper.FindStyleId(_wordprocessingDocument.MainDocumentPart.Document, style, out StyleValues type);
+        if (type != StyleValues.Table)
+        {
+            throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, "The style '{0}' is not a table style.", style), nameof(style));
+        }
+
+        Settings settings = GetSettings(true);
+        settings.RemoveAllChildren<DefaultTableStyle>();
+        settings.AddChild(new DefaultTableStyle() { Val = id });
+    }
+
+    /// <summary>Sets the default table style of the document to a style of it; see <see cref="SetDefaultTableStyle(string, bool)"/>.</summary>
+    public void SetDefaultTableStyle(StyleWrapper style, bool setInTemplate)
+    {
+        Guard.ThrowIfNull(style, nameof(style));
+        SetDefaultTableStyle(style.Name, setInTemplate);
+    }
+
+    /// <summary>
     /// The compatibility mode of the document: 15 for Word 2013 and later, 14 for Word 2010, 12 for Word 2007 (<c>Document.CompatibilityMode</c>
     /// in Word). Documents without a setting are in mode 12.
     /// </summary>

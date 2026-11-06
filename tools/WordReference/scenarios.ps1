@@ -507,6 +507,11 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $doc.Protect(3, $false, 'password')  # wdAllowOnlyReading
     }
 
+    'default-table-style'             = {
+        param($doc)
+        $doc.SetDefaultTableStyle('Table Grid', $false)
+    }
+
     'heading-insert-paragraph-after'  = {
         param($doc)
         $doc.Content.InsertAfter('Heading')
