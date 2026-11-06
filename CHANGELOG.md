@@ -5,6 +5,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 ## [Unreleased]
 
 ### Added
+- `Hyperlinks` on the document and on `Range`, and `Hyperlink` (`Address`, `SubAddress`, `ScreenTip`, `Target`, `TextToDisplay`, `EmailSubject`, `Name`, `Type`, `Range`, `Parent`, `Delete`). `Hyperlinks.Add(anchor, address, subAddress, screenTip, textToDisplay, target)` writes what Word 16 writes (a `w:hyperlink` with the Hyperlink character style, a new relationship for each address), checked in eleven new reference scenarios. HYPERLINK fields count as hyperlinks and can be read and deleted.
 - `StoryType` (with the values of `WdStoryType`), `Range.StoryType`, `Range.NextStoryRange`, `Bookmark.StoryType` and `Document.StoryRanges` (`Item` by `StoryType`, `Count`, enumeration). The stories listed are the main text, the first comment, and the headers and footers of the first section; each comment is a story of its own here, where Word joins them. Footnote, endnote and text-box stories follow with those objects.
 
 ## [1.2.0] - 2026-11-06

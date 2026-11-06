@@ -169,6 +169,12 @@ public partial class WordprocessingDocumentWrapper
         }
     }
 
+    /// <summary>The hyperlinks in the main text of the document, as <c>Document.Hyperlinks</c> in Word.</summary>
+    public HyperlinkWrapperCollection Hyperlinks
+    {
+        get { return new HyperlinkWrapperCollection(Content); }
+    }
+
     /// <summary>The first range of each kind of story the document has, as <c>Document.StoryRanges</c> in Word.</summary>
     public StoryRangesWrapper StoryRanges
     {
