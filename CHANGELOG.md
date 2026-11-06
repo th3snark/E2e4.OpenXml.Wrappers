@@ -6,6 +6,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Added
 - Floating pictures: `Document.Shapes` and `HeaderFooter.Shapes` (`AddPicture`, `Item`, `Count`) and `Shape` (`Left`, `Top`, `Width`, `Height`, `RelativeHorizontalPosition`, `RelativeVerticalPosition`, `Rotation`, `LockAspectRatio`, `LockAnchor`, `Visible`, `Name`, `AlternativeText`, `Title`, `ID`, `Type`, `Anchor`, `WrapFormat`, `ZOrder`, `ZOrderPosition`, `Delete`, `ConvertToInlineShape`) with `WrapFormat` (`Type`, `Side`, the four distances, `AllowOverlap`), and `InlineShape.ConvertToShape`. Seven new reference scenarios, all matching Word 16. Text boxes and drawn shapes come in a later release.
+- Selection: `Document.Selection` (one for each document, following the edits made to the text) with `Start`, `End`, `Text`, `Type`, `SetRange`, `Collapse`, `Expand`, `Move`, `MoveStart`, `MoveEnd`, `MoveLeft`, `MoveRight`, `MoveUp`, `MoveDown`, `HomeKey`, `EndKey`, `TypeText`, `TypeParagraph`, `TypeBackspace`, `Delete`, `InsertBefore`, `InsertAfter`, `SelectRow`, `SelectCell` and the collections of the selected text, and `Select()` on `Range`, `Table`, `Row`, `Cell`, `Bookmark`, `Field`, `Comment` and `Paragraph`. Its behaviour follows what Word 16 does for the same calls; movement by lines and screens needs layout and is not available.
 
 ## [1.4.0] - 2026-11-06
 

@@ -176,6 +176,12 @@ public partial class TableWrapper : System.IEquatable<TableWrapper>
         get { return ConversionHelper.TwipsToPoints(Convert.ToInt32(_table.GetTableWidth())); }
     }
 
+    /// <summary>Selects the table, as <c>Table.Select</c> in Word.</summary>
+    public void Select()
+    {
+        Range.Select();
+    }
+
     #region Equality
 
     // Two wrappers are equal when they wrap the same underlying element(s), so a new wrapper obtained for the same item compares equal.

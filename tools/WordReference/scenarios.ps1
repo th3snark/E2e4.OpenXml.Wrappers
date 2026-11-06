@@ -1369,6 +1369,160 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $s = $i.ConvertToShape()
         Write-Host ('shape: type {0}, wrap {1}, left {2} top {3} w {4} h {5} relH {6} relV {7}' -f $s.Type, $s.WrapFormat.Type, $s.Left, $s.Top, $s.Width, $s.Height, $s.RelativeHorizontalPosition, $s.RelativeVerticalPosition)
     }
+    # The three selection scenarios do not make a document to compare: they print what Word does, and SelectionWrapperTest checks the
+    # library against those values. Run them with New-WordReferences.ps1 and delete the folders they write.
+    'selection-behaviour'             = {
+        param($doc)
+        $sel = $doc.Application.Selection
+        function Show($label) { Write-Host ('{0}: start {1} end {2} type {3} text "{4}" | doc "{5}"' -f $label, $sel.Start, $sel.End, $sel.Type, ($sel.Text -replace "`r", '\r'), (($doc.Content.Text) -replace "`r", '\r')) }
+        Show 'new'
+        $sel.TypeText('Hello world again')
+        Show 'typed'
+        $sel.TypeParagraph()
+        Show 'paragraph'
+        $sel.TypeText('Second')
+        Show 'second'
+        $sel.HomeKey(6) | Out-Null
+        Show 'home story'
+        $sel.EndKey(5) | Out-Null
+        Show 'end line'
+        $sel.MoveRight(1, 5) | Out-Null
+        Show 'right 5'
+        $sel.MoveRight(1, 5, 1) | Out-Null
+        Show 'extend right 5'
+        $sel.TypeText('X')
+        Show 'type over'
+        $sel.TypeBackspace()
+        Show 'backspace'
+        $sel.MoveLeft(1, 3, 1) | Out-Null
+        Show 'extend left 3'
+        $sel.TypeBackspace()
+        Show 'backspace selection'
+        $sel.EndKey(6) | Out-Null
+        Show 'end story'
+        $sel.HomeKey(5, 1) | Out-Null
+        Show 'extend home line'
+        $sel.MoveUp(4, 1) | Out-Null
+        Show 'up paragraph'
+        $sel.MoveDown(4, 1) | Out-Null
+        Show 'down paragraph'
+        $sel.Collapse(1)
+        Show 'collapse start'
+        $sel.Expand(2) | Out-Null
+        Show 'expand word'
+        $sel.Expand(4) | Out-Null
+        Show 'expand paragraph'
+        $sel.Collapse(0)
+        Show 'collapse end'
+        $sel.MoveLeft(1, 100) | Out-Null
+        Show 'left 100'
+        $sel.MoveRight(1, 3) | Out-Null
+        $sel.Delete() | Out-Null
+        Show 'delete char'
+        $sel.InsertAfter('Z')
+        Show 'insert after'
+        $sel.InsertBefore('Y')
+        Show 'insert before'
+        $doc.Range(0, 3).Select()
+        Show 'range select'
+        $doc.Range(2, 2).InsertAfter('QQ')
+        Show 'after edit before selection'
+        $sel.SetRange(1, 4)
+        Show 'setrange'
+        $sel.TypeText('')
+        Show 'type empty'
+    }
+
+    'selection-moves'                 = {
+        param($doc)
+        $sel = $doc.Application.Selection
+        function Show($label) { Write-Host ('{0}: start {1} end {2} type {3} text "{4}"' -f $label, $sel.Start, $sel.End, $sel.Type, ($sel.Text -replace "`r", '\r')) }
+        $sel.TypeText("Hello world again`rSecond line here`rThird")
+        $doc.Range(6, 11).Select()
+        Show 'select world'
+        [void]$sel.MoveRight(1, 1)
+        Show 'right 1 from selection'
+        $doc.Range(6, 11).Select()
+        [void]$sel.MoveLeft(1, 1)
+        Show 'left 1 from selection'
+        $doc.Range(6, 11).Select()
+        [void]$sel.MoveRight(1, 3)
+        Show 'right 3 from selection'
+        $doc.Range(6, 11).Select()
+        [void]$sel.Move(1, 2)
+        Show 'move 2 from selection'
+        $doc.Range(6, 11).Select()
+        [void]$sel.MoveEnd(1, 2)
+        Show 'moveend 2'
+        $doc.Range(6, 11).Select()
+        [void]$sel.MoveStart(1, -2)
+        Show 'movestart -2'
+        $doc.Range(8, 8).Select()
+        [void]$sel.MoveRight(1, 3, 1)
+        Show 'extend right 3'
+        [void]$sel.MoveLeft(1, 5, 1)
+        Show 'extend left 5 (crossing)'
+        [void]$sel.MoveRight(1, 1, 1)
+        Show 'extend right 1'
+        $doc.Range(8, 8).Select()
+        [void]$sel.MoveRight(2, 1)
+        Show 'right word'
+        [void]$sel.MoveRight(2, 1, 1)
+        Show 'extend right word'
+        $doc.Range(25, 25).Select()
+        [void]$sel.MoveUp(4, 1)
+        Show 'up paragraph from 25'
+        [void]$sel.MoveUp(4, 1)
+        Show 'up again'
+        [void]$sel.MoveDown(4, 2)
+        Show 'down 2'
+        $doc.Range(2, 2).Select()
+        [void]$sel.MoveDown(4, 1, 1)
+        Show 'extend down paragraph'
+        $doc.Range(6, 11).Select()
+        $sel.TypeParagraph()
+        Show 'typeparagraph over selection'
+        $doc.Range(6, 11).Select()
+        Write-Host ('delete returns {0}' -f $sel.Delete())
+        Show 'delete selection'
+        Write-Host ('delete word returns {0}' -f $sel.Delete(2, 1))
+        Show 'delete word'
+        $sel.HomeKey(6) | Out-Null
+        Write-Host ('homekey returns {0}' -f $sel.EndKey(6))
+        Show 'end story'
+        Write-Host ('mover left at start returns {0}' -f $sel.MoveLeft(1, 3))
+        $sel.EndKey(6) | Out-Null
+        Write-Host ('moveright at end returns {0}' -f $sel.MoveRight(1, 3))
+    }
+
+    'selection-tables'                = {
+        param($doc)
+        $sel = $doc.Application.Selection
+        function Show($label) { Write-Host ('{0}: start {1} end {2} type {3} text "{4}"' -f $label, $sel.Start, $sel.End, $sel.Type, ($sel.Text -replace "`r", '\r' -replace "`a", '\a')) }
+        $doc.Content.InsertAfter("Before`r")
+        [void]$doc.Tables.Add($doc.Range($doc.Content.End - 1, $doc.Content.End - 1), 2, 2)
+        $doc.Tables.Item(1).Cell(1, 1).Range.Text = 'a'
+        $doc.Tables.Item(1).Cell(1, 2).Range.Text = 'b'
+        $doc.Tables.Item(1).Cell(2, 1).Range.Text = 'c'
+        $doc.Tables.Item(1).Cell(2, 2).Range.Text = 'd'
+        $doc.Tables.Item(1).Cell(1, 2).Range.Select()
+        Show 'cell'
+        $sel.SelectRow()
+        Show 'row'
+        $sel.SelectColumn()
+        Show 'column'
+        $sel.SelectCell()
+        Show 'selectcell'
+        $sel.HomeKey(10) | Out-Null
+        Show 'home row'
+        $sel.EndKey(10) | Out-Null
+        Show 'end row'
+        $sel.HomeKey(9) | Out-Null
+        Show 'home column'
+        $sel.EndKey(9) | Out-Null
+        Show 'end column'
+    }
+
     'document-settings'               = {
         param($doc)
         $doc.DefaultTabStop = 54

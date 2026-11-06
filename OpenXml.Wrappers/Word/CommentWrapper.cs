@@ -171,6 +171,12 @@ public partial class CommentWrapper : System.IEquatable<CommentWrapper>
         get { return _commentRangeStart.GetRoot().Descendants<CommentRangeStart>().ToList().IndexOf(_commentRangeStart); }
     }
 
+    /// <summary>Selects the comment, as <c>Comment.Select</c> in Word.</summary>
+    public void Select()
+    {
+        Range.Select();
+    }
+
     #region Equality
 
     // Two wrappers are equal when they wrap the same underlying element(s), so a new wrapper obtained for the same item compares equal.

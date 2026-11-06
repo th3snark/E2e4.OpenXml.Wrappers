@@ -64,6 +64,12 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
         get { return new EndnoteOptions(this); }
     }
 
+    /// <summary>Selects the range in its document, as <c>Range.Select</c> in Word.</summary>
+    public void Select()
+    {
+        Document.Selection.Set(this);
+    }
+
     /// <summary>The tables of contents in the range, as <c>Range.TablesOfContents</c> in Word.</summary>
     public TableOfContentsWrapperCollection TablesOfContents
     {
