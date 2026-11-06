@@ -516,6 +516,23 @@ public class MarkupConformanceTest
             d => d.Protect(ProtectionType.AllowOnlyReading, "password"),
             Elements("settings.xml", "documentProtection")),
 
+        new Scenario("document-settings",
+            d =>
+            {
+                d.DefaultTabStop = 54;
+                d.AutoHyphenation = true;
+                d.HyphenateCaps = false;
+                d.ConsecutiveHyphensLimit = 2;
+                d.UpdateStylesOnOpen = true;
+                d.EmbedTrueTypeFonts = true;
+                d.SaveSubsetFonts = true;
+                d.DoNotEmbedSystemFonts = false;
+                d.RemovePersonalInformation = true;
+                d.RemoveDateAndTime = true;
+            },
+            Elements("settings.xml", "removePersonalInformation", "removeDateAndTime", "embedTrueTypeFonts", "embedSystemFonts", "saveSubsetFonts", "linkStyles",
+                "defaultTabStop", "autoHyphenation", "consecutiveHyphenLimit", "doNotHyphenateCaps")),
+
         new Scenario("default-table-style",
             d => d.SetDefaultTableStyle("Table Grid", false),
             Elements("settings.xml", "defaultTableStyle")),

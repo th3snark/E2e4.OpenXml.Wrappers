@@ -507,6 +507,20 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $doc.Protect(3, $false, 'password')  # wdAllowOnlyReading
     }
 
+    'document-settings'               = {
+        param($doc)
+        $doc.DefaultTabStop = 54
+        $doc.AutoHyphenation = $true
+        $doc.HyphenateCaps = $false
+        $doc.ConsecutiveHyphensLimit = 2
+        $doc.UpdateStylesOnOpen = $true
+        $doc.EmbedTrueTypeFonts = $true
+        $doc.SaveSubsetFonts = $true
+        $doc.DoNotEmbedSystemFonts = $false
+        $doc.RemovePersonalInformation = $true
+        $doc.RemoveDateAndTime = $true
+    }
+
     'default-table-style'             = {
         param($doc)
         $doc.SetDefaultTableStyle('Table Grid', $false)

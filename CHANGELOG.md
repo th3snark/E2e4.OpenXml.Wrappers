@@ -50,6 +50,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 - `Find.MatchPhrase`: white space in the text to find matches any white space or control characters (spaces, tabs, line breaks, paragraph marks), as measured in Word 16: `two three` finds `two  three` and `two`, a tab, `three`, but `two  three` does not find a single space. One new reference scenario, matching Word. `LanguageIDOther` and `Parent` are not added: Word does not expose the first on `Find` or `Replacement`, and the second belongs to an `Application` hierarchy the library does not have yet.
 
+- Document settings: `DefaultTabStop`, `AutoHyphenation`, `HyphenateCaps`, `ConsecutiveHyphensLimit`, `UpdateStylesOnOpen`, `EmbedTrueTypeFonts`, `SaveSubsetFonts`, `DoNotEmbedSystemFonts`, `RemovePersonalInformation` and `RemoveDateAndTime`, with Word 16's defaults and markup (a new reference scenario matches); `Type` (`WordDocumentType`), `SaveFormat`, `DeleteAllComments` and `SetCompatibilityMode`.
+
 ### Behaviour changes
 - **The built-in table style is named "Table Normal"**, as Word names it (`NameLocal`), where it was "Normal Table", the name it is stored under; `Styles["Table Normal"]` now finds it. `Styles["Normal Table"]` still works.
 - **`Styles.Add` of a table style writes an empty `w:tblPr`**, as Word does.
