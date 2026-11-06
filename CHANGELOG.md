@@ -2,7 +2,7 @@
 
 All notable changes are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/) and the project uses [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.4.0] - 2026-11-06
 
 ### Added
 - Content controls: `Document.ContentControls` and `Range.ContentControls` (`Add`, `Item`, `Count`, enumeration), `Document.SelectContentControlsByTag` and `SelectContentControlsByTitle`, `Range.ParentContentControl`, and `ContentControl` with `Type`, `ID`, `Title`, `Tag`, `LockContentControl`, `LockContents`, `Appearance`, `ShowingPlaceholderText`, `Range`, `ParentContentControl` and `Delete`. Rich text, text, combo box, drop-down list, date and check box controls can be made, around text or at a point. The placeholders are kept in a glossary document with the parts around it, taken from Word 16 (new templates `Glossary*.xml`), and the Placeholder Text style joins the built-in styles. Fifteen new reference scenarios, all matching Word.
