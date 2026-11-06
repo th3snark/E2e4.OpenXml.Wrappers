@@ -604,6 +604,82 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $doc.Convert()
     }
 
+    'hyperlink-add'                   = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        [void]$doc.Hyperlinks.Add($doc.Range(0, 5), 'https://example.com/')
+    }
+
+    'hyperlink-add-place-only'        = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        [void]$doc.Bookmarks.Add('Mark', $doc.Range(6, 11))
+        [void]$doc.Hyperlinks.Add($doc.Range(0, 5), '', 'Mark', 'Go to mark', 'Display')
+    }
+
+    'hyperlink-add-all-arguments'     = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        [void]$doc.Hyperlinks.Add($doc.Range(0, 5), 'https://example.org/page', 'sec1', 'Tip', 'Shown', '_blank')
+    }
+
+    'hyperlink-add-formatted'         = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $doc.Range(0, 5).Font.Bold = $true
+        $doc.Range(3, 5).Font.Italic = $true
+        [void]$doc.Hyperlinks.Add($doc.Range(0, 5), 'https://example.com/')
+    }
+
+    'hyperlink-add-collapsed-text'    = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        [void]$doc.Hyperlinks.Add($doc.Range(5, 5), 'https://example.com/', '', '', 'Inserted')
+    }
+
+    'hyperlink-add-collapsed'         = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        [void]$doc.Hyperlinks.Add($doc.Range(5, 5), 'https://example.com/')
+    }
+
+    'hyperlink-set-text'              = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $link = $doc.Hyperlinks.Add($doc.Range(0, 5), 'https://example.com/')
+        $link.TextToDisplay = 'Longer replacement'
+    }
+
+    'hyperlink-edit'                  = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $link = $doc.Hyperlinks.Add($doc.Range(0, 5), 'https://example.com/')
+        $link.Address = 'https://changed.example/'
+        $link.ScreenTip = 'A tip'
+        $link.SubAddress = 'Mark2'
+        $link.Target = '_top'
+    }
+
+    'hyperlink-email-subject'         = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $link = $doc.Hyperlinks.Add($doc.Range(0, 5), 'mailto:a@b.com')
+        $link.EmailSubject = 'Hi there'
+    }
+
+    'hyperlink-delete'                = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        [void]$doc.Hyperlinks.Add($doc.Range(0, 5), 'https://example.com/')
+        $doc.Hyperlinks.Item(1).Delete()
+    }
+
+    'hyperlink-two-same-address'      = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        [void]$doc.Hyperlinks.Add($doc.Range(12, 17), 'https://example.com/')
+        [void]$doc.Hyperlinks.Add($doc.Range(0, 5), 'https://example.com/')
+    }
     'document-settings'               = {
         param($doc)
         $doc.DefaultTabStop = 54

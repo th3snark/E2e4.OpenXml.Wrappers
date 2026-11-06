@@ -630,6 +630,104 @@ public class MarkupConformanceTest
             },
             Elements("settings.xml", "compat")),
 
+        new Scenario("hyperlink-add",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.Hyperlinks.Add(d.Range(0, 5), "https://example.com/");
+            },
+            HyperlinkParts()),
+
+        new Scenario("hyperlink-add-place-only",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.Bookmarks.Add("Mark", d.Range(6, 11));
+                d.Hyperlinks.Add(d.Range(0, 5), string.Empty, "Mark", "Go to mark", "Display");
+            },
+            HyperlinkParts()),
+
+        new Scenario("hyperlink-add-all-arguments",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.Hyperlinks.Add(d.Range(0, 5), "https://example.org/page", "sec1", "Tip", "Shown", "_blank");
+            },
+            HyperlinkParts()),
+
+        new Scenario("hyperlink-add-formatted",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.Range(0, 5).Font.Bold = true;
+                d.Range(3, 5).Font.Italic = true;
+                d.Hyperlinks.Add(d.Range(0, 5), "https://example.com/");
+            },
+            HyperlinkParts()),
+
+        new Scenario("hyperlink-add-collapsed-text",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.Hyperlinks.Add(d.Range(5, 5), "https://example.com/", string.Empty, string.Empty, "Inserted");
+            },
+            HyperlinkParts()),
+
+        new Scenario("hyperlink-add-collapsed",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.Hyperlinks.Add(d.Range(5, 5), "https://example.com/");
+            },
+            HyperlinkParts()),
+
+        new Scenario("hyperlink-set-text",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                HyperlinkWrapper link = d.Hyperlinks.Add(d.Range(0, 5), "https://example.com/");
+                link.TextToDisplay = "Longer replacement";
+            },
+            HyperlinkParts()),
+
+        new Scenario("hyperlink-edit",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                HyperlinkWrapper link = d.Hyperlinks.Add(d.Range(0, 5), "https://example.com/");
+                link.Address = "https://changed.example/";
+                link.ScreenTip = "A tip";
+                link.SubAddress = "Mark2";
+                link.Target = "_top";
+            },
+            HyperlinkParts()),
+
+        new Scenario("hyperlink-email-subject",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                HyperlinkWrapper link = d.Hyperlinks.Add(d.Range(0, 5), "mailto:a@b.com");
+                link.EmailSubject = "Hi there";
+            },
+            HyperlinkParts()),
+
+        new Scenario("hyperlink-delete",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.Hyperlinks.Add(d.Range(0, 5), "https://example.com/");
+                d.Hyperlinks[0].Delete();
+            },
+            HyperlinkParts()),
+
+        new Scenario("hyperlink-two-same-address",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.Hyperlinks.Add(d.Range(12, 17), "https://example.com/");
+                d.Hyperlinks.Add(d.Range(0, 5), "https://example.com/");
+            },
+            HyperlinkParts()),
         new Scenario("document-settings",
             d =>
             {
@@ -1945,6 +2043,20 @@ public class MarkupConformanceTest
     private static bool IsFieldResult(XElement text)
     {
         return text.Parent.Element(W + "rPr")?.Element(W + "noProof") != null;
+    }
+
+    //The text of the body, the hyperlink relationships and the Hyperlink character style.
+    private static Comparison[] HyperlinkParts()
+    {
+        XNamespace packageRelationships = "http://schemas.openxmlformats.org/package/2006/relationships";
+        return new[]
+        {
+            Body(),
+            new Comparison("hyperlink relationships", parts => "document.xml.rels",
+                root => root.Elements(packageRelationships + "Relationship").Where(e => ((string)e.Attribute("Type") ?? string.Empty).EndsWith("/hyperlink", StringComparison.Ordinal))),
+            new Comparison("styles.xml Hyperlink style", parts => "styles.xml",
+                root => root.Elements(W + "style").Where(e => (string)e.Attribute(W + "styleId") == "Hyperlink"))
+        };
     }
 
     private static Comparison[] CommentParts()
