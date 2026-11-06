@@ -43,6 +43,23 @@ using (WordprocessingDocumentWrapper document = WordprocessingDocumentWrapper.Op
 
 `Create` makes a new document (at a path or in a stream), which is what Word 365 writes for a new blank document: its styles, the current Office theme (Aptos), settings and document properties, with the paper size, header distance, language and separators taken from `CultureInfo.CurrentCulture` as Word takes them from Windows. `SaveAs` then writes a copy to a new file. Editable documents are saved when disposed or closed, unless you close with `Close(SaveOptions.DoNotSaveChanges)`. `SaveAs(path, SaveFormat)` also writes the macro-enabled and template formats. A document has `Name`, `FullName`, `Path` and `ReadOnly`, `Characters`, `Words` and `Sentences`, `ComputeStatistics` (words, characters, paragraphs; lines and pages depend on the layout and throw `NotSupportedException`), `TrackRevisions` (it can be read and switched off, not on; see [Not supported](#not-supported)), `CompatibilityMode`, `Protect`/`Unprotect`/`ProtectionType` (with a password), `Variables` (shown by a `DOCVARIABLE` field) and `PageSetup`, which reads the first section and sets every section. New documents are marked as Word 2013+ (`compatibilityMode` 15), so Word does not open them in Compatibility Mode.
 
+Code ported from Word can start from an application, which keeps the open documents together (there is no program behind it):
+
+```csharp
+using Document = OpenXml.Wrappers.Word.WordprocessingDocumentWrapper;
+using Range = OpenXml.Wrappers.Word.RangeWrapper;
+
+using (ApplicationWrapper app = new ApplicationWrapper { UserName = "A. Writer", UserInitials = "AW" })
+{
+    Document document = app.Documents.Add();          // Document1, not saved anywhere yet
+    app.Selection.TypeText("Hello");                  // the selection of app.ActiveDocument
+    document.Comments.Add(document.Range(0, 5), "Check");   // by A. Writer
+    document.SaveAs("hello.docx");
+}
+```
+
+`Documents` has `Add`, `Open`, `Count`, `Save`, `Close` and an indexer by 0-based index or by name. Documents made by `Open` or `Create` have an application of their own (`Document.Application`).
+
 ## Examples
 
 The [`samples`](samples/OpenXml.Wrappers.Samples) project holds 21 runnable examples. Each one builds a complete `.docx` that opens in Word, and each is checked by the test suite (it is created and validated against the Open XML schema). Run them all with:

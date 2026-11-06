@@ -103,7 +103,7 @@ public partial class WordprocessingDocumentWrapper
     /// </summary>
     public string Name
     {
-        get { return DocumentFiles.TryGetPath(_wordprocessingDocument, out string path) ? System.IO.Path.GetFileName(path) : "Document1"; }
+        get { return DocumentFiles.TryGetPath(_wordprocessingDocument, out string path) ? System.IO.Path.GetFileName(path) : _untitledName ?? "Document1"; }
     }
 
     /// <summary>The full path of the file of the document, as <c>Document.FullName</c> in Word.</summary>
