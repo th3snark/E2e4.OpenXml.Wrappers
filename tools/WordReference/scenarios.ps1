@@ -912,6 +912,193 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $doc.Application.Selection.InsertRowsAbove(1)
     }
 
+    # Printing-only (no snapshot): what the selection is after inserting columns, extending it, and moving to fields. The unit tests replay the values.
+    'selection-insert-columns'        = {
+        param($doc)
+        $doc.Content.InsertAfter("Before`r")
+        $t = $doc.Tables.Add($doc.Range($doc.Content.End - 1, $doc.Content.End - 1), 2, 3)
+        for ($r = 1; $r -le 2; $r++) { for ($c = 1; $c -le 3; $c++) { $t.Cell($r, $c).Range.Text = "r$r" + "c$c" } }
+        $t.Cell(1, 2).Select()
+        $doc.Application.Selection.InsertColumns()
+    }
+
+    'selection-insert-columns-right'  = {
+        param($doc)
+        $doc.Content.InsertAfter("Before`r")
+        $t = $doc.Tables.Add($doc.Range($doc.Content.End - 1, $doc.Content.End - 1), 2, 3)
+        for ($r = 1; $r -le 2; $r++) { for ($c = 1; $c -le 3; $c++) { $t.Cell($r, $c).Range.Text = "r$r" + "c$c" } }
+        $t.Cell(1, 2).Select()
+        $doc.Application.Selection.InsertColumnsRight()
+    }
+
+    'selection-insert-columns-two'    = {
+        param($doc)
+        $doc.Content.InsertAfter("Before`r")
+        $t = $doc.Tables.Add($doc.Range($doc.Content.End - 1, $doc.Content.End - 1), 2, 3)
+        for ($r = 1; $r -le 2; $r++) { for ($c = 1; $c -le 3; $c++) { $t.Cell($r, $c).Range.Text = "r$r" + "c$c" } }
+        $doc.Application.Selection.SetRange($t.Cell(1, 2).Range.Start, $t.Cell(1, 3).Range.End)
+        $doc.Application.Selection.InsertColumns()
+    }
+
+    'selection-insert-rows'           = {
+        param($doc)
+        $doc.Content.InsertAfter("Before`r")
+        $t = $doc.Tables.Add($doc.Range($doc.Content.End - 1, $doc.Content.End - 1), 3, 2)
+        for ($r = 1; $r -le 3; $r++) { for ($c = 1; $c -le 2; $c++) { $t.Cell($r, $c).Range.Text = "r$r" + "c$c" } }
+        $t.Cell(2, 1).Select()
+        $doc.Application.Selection.InsertRows(2)
+    }
+
+    'selection-extend-case'           = {
+        param($doc)
+        $doc.Content.InsertAfter("one Two three Four")
+        $sel = $doc.Application.Selection
+        function Ext($s, $u) { Add-Type -AssemblyName Microsoft.VisualBasic; [void][Microsoft.VisualBasic.Interaction]::CallByName($s, 'Extend', [Microsoft.VisualBasic.CallType]::Method, $u) }
+        $sel.SetRange(0, 0); Ext $sel 't'; Write-Host ("extend to t from 0: {0}-{1}" -f $sel.Start, $sel.End)
+        $sel.SetRange(0, 0); Ext $sel 'T'; Write-Host ("extend to T from 0: {0}-{1}" -f $sel.Start, $sel.End)
+        $sel.SetRange(0, 0); Ext $sel 'tw'; Write-Host ("extend to 'tw' from 0: {0}-{1}" -f $sel.Start, $sel.End)
+        $sel.SetRange(0, 3); Ext $sel 'o'; Write-Host ("extend to o from 0-3: {0}-{1}" -f $sel.Start, $sel.End)
+    }
+
+    'selection-insert-columns-behaviour' = {
+        param($doc)
+        $doc.Content.InsertAfter("Before`r")
+        $t = $doc.Tables.Add($doc.Range($doc.Content.End - 1, $doc.Content.End - 1), 2, 3)
+        for ($r = 1; $r -le 2; $r++) { for ($c = 1; $c -le 3; $c++) { $t.Cell($r, $c).Range.Text = "r$r" + "c$c" } }
+        $sel = $doc.Application.Selection
+        function Show($label) {
+            $t = $doc.Tables.Item(1)
+            Write-Host ('{0}: cols {1}; sel {2}-{3} type {4}; row1 "{5}"; widths {6}' -f $label, $t.Columns.Count, $sel.Start, $sel.End, $sel.Type, (($t.Rows.Item(1).Cells | ForEach-Object { $_.Range.Text.TrimEnd([char]13, [char]7) }) -join '|'), (($t.Rows.Item(1).Cells | ForEach-Object { $_.Width }) -join ','))
+        }
+        Show 'start'
+        $t.Cell(1, 2).Select()
+        $sel.InsertColumns()
+        Show 'insert columns (cell 1,2)'
+        $doc.Tables.Item(1).Cell(1, 2).Select()
+        $sel.InsertColumnsRight()
+        Show 'insert columns right (cell 1,2)'
+        $doc.Tables.Item(1).Cell(1, 1).Range.Select()
+        $sel.SetRange($doc.Tables.Item(1).Cell(1, 1).Range.Start, $doc.Tables.Item(1).Cell(1, 2).Range.End)
+        Show 'two cells selected'
+        $sel.InsertColumns()
+        Show 'insert columns (two cells)'
+        $doc.Tables.Item(1).Cell(1, 3).Select()
+        $sel.SelectColumn()
+        Show 'column selected'
+        $sel.InsertColumnsRight()
+        Show 'insert columns right (column)'
+    }
+
+    'selection-insert-rows-behaviour' = {
+        param($doc)
+        $doc.Content.InsertAfter("Before`r")
+        $t = $doc.Tables.Add($doc.Range($doc.Content.End - 1, $doc.Content.End - 1), 3, 2)
+        for ($r = 1; $r -le 3; $r++) { for ($c = 1; $c -le 2; $c++) { $t.Cell($r, $c).Range.Text = "r$r" + "c$c" } }
+        $sel = $doc.Application.Selection
+        $t.Cell(2, 1).Select()
+        $sel.InsertRows(2)
+        $t = $doc.Tables.Item(1)
+        Write-Host ('rows after InsertRows(2) on row 2: {0}; first column "{1}"' -f $t.Rows.Count, (($t.Columns.Item(1).Cells | ForEach-Object { $_.Range.Text.TrimEnd([char]13, [char]7) }) -join '|'))
+        Write-Host ('selection {0}-{1} type {2}' -f $sel.Start, $sel.End, $sel.Type)
+        $t.Cell(1, 1).Select(); $sel.InsertRowsAbove(1)
+        Write-Host ('after InsertRowsAbove(1): selection {0}-{1} type {2}' -f $sel.Start, $sel.End, $sel.Type)
+        $t.Cell(1, 1).Select(); $sel.InsertRowsBelow(1)
+        Write-Host ('after InsertRowsBelow(1): selection {0}-{1} type {2}' -f $sel.Start, $sel.End, $sel.Type)
+        $t = $doc.Tables.Item(1)
+        $sel.SetRange($t.Cell(1, 1).Range.Start, $t.Cell(2, 2).Range.End)
+        Write-Host ('two rows selected: {0}-{1} type {2}' -f $sel.Start, $sel.End, $sel.Type)
+        $sel.InsertRows(1)
+        $t = $doc.Tables.Item(1)
+        Write-Host ('after InsertRows(1) on two rows: rows {0}; selection {1}-{2} type {3}' -f $t.Rows.Count, $sel.Start, $sel.End, $sel.Type)
+        $sel.SetRange(2, 2)
+        try { $sel.InsertRows(2); Write-Host ('InsertRows outside a table: ok; tables {0}; rows {1}' -f $doc.Tables.Count, $doc.Tables.Item(1).Rows.Count) } catch { Write-Host ('InsertRows outside a table: ' + $_.Exception.Message) }
+        $doc.Content.InsertParagraphAfter(); $sel.SetRange(2, 2)
+        try { $sel.InsertColumns(); Write-Host 'InsertColumns outside a table: ok' } catch { Write-Host ('InsertColumns outside a table: ' + $_.Exception.Message) }
+    }
+
+    'selection-extend-units'          = {
+        param($doc)
+        $doc.Content.InsertAfter("One two three. Four five six.`rSecond paragraph here.`rThird.")
+        $sel = $doc.Application.Selection
+        function Ext($s, $u) { Add-Type -AssemblyName Microsoft.VisualBasic; [void][Microsoft.VisualBasic.Interaction]::CallByName($s, 'Extend', [Microsoft.VisualBasic.CallType]::Method, $u) }
+        function Show($label) { Write-Host ('{0}: {1}-{2} mode {3} "{4}"' -f $label, $sel.Start, $sel.End, $sel.ExtendMode, ($sel.Text -replace "`r", '\r')) }
+        $sel.SetRange(5, 5)
+        Show 'start'
+        for ($i = 0; $i -lt 6; $i++) { $sel.Extend(); Show "extend $i" }
+        for ($i = 0; $i -lt 6; $i++) { $sel.Shrink(); Show "shrink $i" }
+        $sel.ExtendMode = $false
+        Show 'mode off'
+        $sel.SetRange(5, 5)
+        Ext $sel 'e'; Show "extend to 'e'"
+        Ext $sel 'e'; Show "extend to 'e' again"
+        Ext $sel '.'; Show "extend to '.'"
+        Ext $sel "`r"; Show 'extend to paragraph mark'
+        Ext $sel 'Q'; Show "extend to 'Q' (absent)"
+        $sel.Shrink(); Show 'shrink after character extends'
+        $sel.Collapse(1); Show 'collapse'
+        $sel.SetRange(5, 8); $sel.Shrink(); Show 'shrink on 3 chars'
+        $sel.SetRange(5, 5); $sel.ExtendMode = $true; Ext $sel 'z'; Show "extend mode on, extend to 'z'"; Ext $sel 'f'; Show "extend to 'f'"
+        $sel.ExtendMode = $true; Show 'mode set on'; $sel.MoveRight(1, 1, 0) | Out-Null; Show 'moveright in extend mode'
+        $sel.ExtendMode = $false
+        $sel.SetRange(5, 5); $sel.Shrink(); Show 'shrink insertion point'
+    }
+
+    'selection-extend-mode'           = {
+        param($doc)
+        $doc.Content.InsertAfter("One two three. Four five six.`rSecond paragraph here.`rThird.")
+        $sel = $doc.Application.Selection
+        function Show($label) { Write-Host ('{0}: {1}-{2} mode {3} "{4}"' -f $label, $sel.Start, $sel.End, $sel.ExtendMode, ($sel.Text -replace "`r", '\r')) }
+        $sel.SetRange(5, 5); $sel.ExtendMode = $true; $sel.MoveRight(1, 3, 0) | Out-Null; Show 'moveright 3 in mode'
+        $sel.MoveLeft(1, 1, 0) | Out-Null; Show 'moveleft 1 in mode'
+        $sel.MoveRight(2, 1, 0) | Out-Null; Show 'moveright word in mode'
+        $sel.MoveDown(4, 1, 0) | Out-Null; Show 'movedown paragraph in mode'
+        $sel.Collapse(1); Show 'collapse'
+        $sel.SetRange(2, 6); Show 'setrange'
+        $sel.Select(); Show 'range select'
+        $sel.Range.Select(); Show 'range.select'
+        $sel.TypeText('X'); Show 'typetext'
+        $sel.ExtendMode = $true; $sel.Extend(); $sel.Extend(); Show 'extend twice'
+        $sel.SetRange(8, 8); Show 'after setrange to ip'
+        $sel.Extend(); Show 'extend'
+        $sel.ExtendMode = $false; $sel.Extend(); Show 'extend from mode off (turns on)'
+        $sel.ExtendMode = $false
+        $sel.SetRange(6, 12); $sel.Extend(); Show 'extend from 6-12 (mode on)'
+        $sel.ExtendMode = $false
+        $sel.SetRange(16, 16); $sel.Extend(); $sel.Extend(); Show 'extend ip at 16 twice (sentence start)'
+    }
+    'selection-next-field'            = {
+        param($doc)
+        $doc.Content.InsertAfter("A ")
+        $r = $doc.Range($doc.Content.End - 1, $doc.Content.End - 1)
+        [void]$doc.Fields.Add($r, -1, 'DATE', $false)
+        $doc.Content.InsertAfter(" B ")
+        $r = $doc.Range($doc.Content.End - 1, $doc.Content.End - 1)
+        [void]$doc.Fields.Add($r, -1, 'PAGE', $false)
+        $doc.Content.InsertAfter(" C")
+        $sel = $doc.Application.Selection
+        function Show($label, $f) { Write-Host ('{0}: {1}-{2} type {3} found {4}' -f $label, $sel.Start, $sel.End, $sel.Type, $(if ($f -eq $null) { 'nothing' } else { $f.Code.Text.Trim() })) }
+        $sel.SetRange(0, 0)
+        Show 'next from start' $sel.NextField()
+        Show 'next again' $sel.NextField()
+        Show 'next at last' $sel.NextField()
+        Show 'previous' $sel.PreviousField()
+        Show 'previous again' $sel.PreviousField()
+        Show 'previous at first' $sel.PreviousField()
+        $sel.SetRange(3, 3)
+        Show 'next from inside first' $sel.NextField()
+        $sel.SetRange($doc.Content.End - 1, $doc.Content.End - 1)
+        Show 'previous from end' $sel.PreviousField()
+        $sel.SetRange(2, 2)
+        Show 'next from ip at field start' $sel.NextField()
+        $sel.SetRange(3, 3)
+        Show 'previous from ip inside first' $sel.PreviousField()
+        $sel.SetRange(2, 2)
+        Show 'previous from ip at field start' $sel.PreviousField()
+        $sel.SetRange(21, 21)
+        Show 'next from ip at field end' $sel.NextField()
+        $sel.SetRange(0, 5)
+        Show 'next from 0-5 spanning field start' $sel.NextField()
+    }
     'selection-clear-character'       = {
         param($doc)
         $doc.Content.InsertAfter('Hello world again')

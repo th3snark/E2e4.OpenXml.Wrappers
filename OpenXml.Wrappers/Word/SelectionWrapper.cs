@@ -146,7 +146,8 @@ public partial class SelectionWrapper
             RangeWrapper whole = new RangeWrapper(StoryMap.FindRoot(_range.AnchorElement));
             int start = _range.Start;
             int end = _range.End;
-            if (whole.Rows.Any(r => r.Range.Start == start && r.Range.End == end))
+            List<RangeWrapper> rows = whole.Rows.Select(r => r.Range).ToList();
+            if (rows.Any(r => r.Start == start) && rows.Any(r => r.End == end))
             {
                 return SelectionType.Row;
             }
@@ -230,7 +231,7 @@ public partial class SelectionWrapper
     public int MoveRight(TextUnit unit = TextUnit.Character, int count = 1, Movement extend = Movement.Move)
     {
         CheckUnit(unit, false);
-        return MovePoint(unit, count, extend);
+        return MovePoint(unit, count, Effective(extend));
     }
 
     /// <summary>
@@ -241,7 +242,7 @@ public partial class SelectionWrapper
     public int MoveLeft(TextUnit unit = TextUnit.Character, int count = 1, Movement extend = Movement.Move)
     {
         CheckUnit(unit, false);
-        return MovePoint(unit, -count, extend);
+        return MovePoint(unit, -count, Effective(extend));
     }
 
     //Moves by characters, words or sentences. Without extending, a selection of something collapses first (to its end going right, to its
@@ -323,7 +324,7 @@ public partial class SelectionWrapper
     /// <exception cref="NotSupportedException">The unit is not a paragraph: lines and screens need layout.</exception>
     public int MoveUp(TextUnit unit = TextUnit.Paragraph, int count = 1, Movement extend = Movement.Move)
     {
-        return MoveParagraphs(unit, -count, extend);
+        return MoveParagraphs(unit, -count, Effective(extend));
     }
 
     /// <summary>
@@ -333,7 +334,7 @@ public partial class SelectionWrapper
     /// <exception cref="NotSupportedException">The unit is not a paragraph: lines and screens need layout.</exception>
     public int MoveDown(TextUnit unit = TextUnit.Paragraph, int count = 1, Movement extend = Movement.Move)
     {
-        return MoveParagraphs(unit, count, extend);
+        return MoveParagraphs(unit, count, Effective(extend));
     }
 
     private int MoveParagraphs(TextUnit unit, int count, Movement extend)
@@ -407,7 +408,7 @@ public partial class SelectionWrapper
     /// <exception cref="InvalidOperationException">The unit is a row or column and the selection is not in a table.</exception>
     public int HomeKey(KeyUnit unit = KeyUnit.Story, Movement extend = Movement.Move)
     {
-        return GoTo(unit, extend, true);
+        return GoTo(unit, Effective(extend), true);
     }
 
     /// <summary>
@@ -417,7 +418,7 @@ public partial class SelectionWrapper
     /// <exception cref="InvalidOperationException">The unit is a row or column and the selection is not in a table.</exception>
     public int EndKey(KeyUnit unit = KeyUnit.Story, Movement extend = Movement.Move)
     {
-        return GoTo(unit, extend, false);
+        return GoTo(unit, Effective(extend), false);
     }
 
     private int GoTo(KeyUnit unit, Movement extend, bool home)
@@ -476,6 +477,7 @@ public partial class SelectionWrapper
         {
             return;
         }
+        ExtendMode = false;
         if (_range.Start != _range.End)
         {
             DeleteSelected();
@@ -499,6 +501,7 @@ public partial class SelectionWrapper
     /// </summary>
     public void TypeBackspace()
     {
+        ExtendMode = false;
         if (_range.Start != _range.End)
         {
             DeleteSelected();
