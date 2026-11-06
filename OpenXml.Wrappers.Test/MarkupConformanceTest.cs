@@ -1150,6 +1150,113 @@ public class MarkupConformanceTest
             },
             Body()),
 
+        new Scenario("content-control-check-box-checked",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                ContentControlWrapper cc = d.ContentControls.Add(ContentControlType.CheckBox, d.Range(6, 6));
+                cc.Checked = true;
+            },
+            Body()),
+
+        new Scenario("content-control-check-box-symbols",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                ContentControlWrapper cc = d.ContentControls.Add(ContentControlType.CheckBox, d.Range(6, 6));
+                cc.SetCheckedSymbol(10004, "Segoe UI Symbol");
+                cc.SetUncheckedSymbol(10006, "Segoe UI Symbol");
+                cc.Checked = true;
+            },
+            Body()),
+
+        new Scenario("content-control-dropdown-entries",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                ContentControlWrapper cc = d.ContentControls.Add(ContentControlType.DropdownList, d.Range(5, 5));
+                cc.DropdownListEntries.Add("One", "1");
+                cc.DropdownListEntries.Add("Two");
+                cc.DropdownListEntries.Add("Zero", "0", 0);
+            },
+            ControlParts()),
+
+        new Scenario("content-control-dropdown-select",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                ContentControlWrapper cc = d.ContentControls.Add(ContentControlType.DropdownList, d.Range(5, 5));
+                cc.DropdownListEntries.Add("One", "1");
+                cc.DropdownListEntries.Add("Two", "2");
+                cc.DropdownListEntries[1].Select();
+            },
+            ControlParts()),
+
+        new Scenario("content-control-dropdown-clear",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                ContentControlWrapper cc = d.ContentControls.Add(ContentControlType.DropdownList, d.Range(5, 5));
+                cc.DropdownListEntries.Add("One", "1");
+                cc.DropdownListEntries.Add("Two", "2");
+                cc.DropdownListEntries[0].Delete();
+                cc.DropdownListEntries.Add("Three", "3");
+                cc.DropdownListEntries[0].MoveDown();
+            },
+            ControlParts()),
+
+        new Scenario("content-control-combo-entries",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                ContentControlWrapper cc = d.ContentControls.Add(ContentControlType.ComboBox, d.Range(5, 5));
+                cc.DropdownListEntries.Add("One", "1");
+                cc.DropdownListEntries.Add("Two", "2");
+                cc.DropdownListEntries.Clear();
+                cc.DropdownListEntries.Add("Only", "only");
+            },
+            ControlParts()),
+
+        new Scenario("content-control-date-format",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                ContentControlWrapper cc = d.ContentControls.Add(ContentControlType.Date, d.Range(5, 5));
+                cc.DateDisplayFormat = "dddd, d MMMM yyyy";
+                cc.DateStorageFormat = ContentControlDateStorageFormat.Date;
+                cc.DateDisplayLocale = 1041;
+                cc.DateCalendarType = CalendarType.Japan;
+            },
+            ControlParts()),
+
+        new Scenario("content-control-multiline",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                ContentControlWrapper cc = d.ContentControls.Add(ContentControlType.Text, d.Range(5, 5));
+                cc.MultiLine = true;
+            },
+            ControlParts()),
+
+        new Scenario("content-control-color-temporary",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                ContentControlWrapper cc = d.ContentControls.Add(ContentControlType.RichText, d.Range(6, 11));
+                cc.Color = 255;
+                cc.Temporary = true;
+            },
+            ControlParts()),
+
+        new Scenario("content-control-default-text-style",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                ContentControlWrapper cc = d.ContentControls.Add(ContentControlType.Text, d.Range(6, 11));
+                cc.DefaultTextStyle = "Strong";
+            },
+            Body()),
+
         new Scenario("document-settings",
             d =>
             {

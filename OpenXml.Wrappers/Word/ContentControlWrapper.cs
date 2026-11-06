@@ -152,7 +152,7 @@ internal static class ContentControlParts
 /// <summary>
 /// A content control, as <c>ContentControl</c> in Word: a <c>w:sdt</c> element.
 /// </summary>
-public class ContentControlWrapper : IEquatable<ContentControlWrapper>
+public partial class ContentControlWrapper : IEquatable<ContentControlWrapper>
 {
     private readonly SdtElement _sdt;
 
