@@ -1,0 +1,31 @@
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:body>
+    <w:p>
+      <w:fldSimple w:instr=" TOC \o &quot;1-9&quot; ">
+        <w:r>
+          <w:rPr>
+            <w:b />
+            <w:bCs />
+            <w:noProof />
+            <w:lang w:val="en-US" />
+          </w:rPr>
+          <w:t>No table of contents entries found.</w:t>
+        </w:r>
+      </w:fldSimple>
+      <w:r>
+        <w:t>Plain</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t>text</w:t>
+      </w:r>
+    </w:p>
+    <w:sectPr>
+      <w:pgSz w:h="16838" w:w="11906" />
+      <w:pgMar w:bottom="1440" w:footer="708" w:gutter="0" w:header="708" w:left="1440" w:right="1440" w:top="1440" />
+      <w:cols w:space="708" />
+      <w:docGrid w:linePitch="360" />
+    </w:sectPr>
+  </w:body>
+</w:document>

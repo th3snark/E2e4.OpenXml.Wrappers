@@ -64,6 +64,12 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
         get { return new EndnoteOptions(this); }
     }
 
+    /// <summary>The tables of contents in the range, as <c>Range.TablesOfContents</c> in Word.</summary>
+    public TableOfContentsWrapperCollection TablesOfContents
+    {
+        get { return new TableOfContentsWrapperCollection(this); }
+    }
+
     /// <summary>The inline shapes (pictures) in the range, as <c>Range.InlineShapes</c> in Word.</summary>
     public InlineShapeWrapperCollection InlineShapes
     {
