@@ -306,6 +306,10 @@ public static class MarkupNormalizer
         {
             attribute.Value = placeholders.Get("para", attribute.Value);
         }
+        else if (element.Name == W + "guid" && name == W + "val")
+        {
+            attribute.Value = placeholders.Get("guid", attribute.Value);
+        }
         else if (element.Name == W + "nsid" && name == W + "val")
         {
             attribute.Value = placeholders.Get("nsid", attribute.Value);

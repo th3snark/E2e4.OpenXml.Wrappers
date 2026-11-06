@@ -87,6 +87,7 @@ internal static class Program
             }
         }
         WriteListTemplates(inputFolder, templatesFolder);
+        WriteGlossaryTemplates(inputFolder, templatesFolder);
         string styles = Path.Combine(inputFolder, "built-in-styles.docx");
         if (File.Exists(styles))
         {
@@ -98,6 +99,24 @@ internal static class Program
                     root.Elements().Where(e => e.Name != W + "style").Remove();
                 });
             }
+        }
+    }
+
+    private static void WriteGlossaryTemplates(string inputFolder, string templatesFolder)
+    {
+        string controls = Path.Combine(inputFolder, "content-control-placeholders.docx");
+        if (!File.Exists(controls))
+        {
+            return;
+        }
+        using (ZipArchive package = ZipFile.OpenRead(controls))
+        {
+            //The glossary document Word keeps the placeholders of content controls in: the three default placeholders and the parts around them.
+            WriteTemplate(package, "word/glossary/document.xml", templatesFolder, "GlossaryDocument.xml");
+            WriteTemplate(package, "word/glossary/styles.xml", templatesFolder, "GlossaryStyles.xml");
+            WriteTemplate(package, "word/glossary/settings.xml", templatesFolder, "GlossarySettings.xml");
+            WriteTemplate(package, "word/glossary/webSettings.xml", templatesFolder, "GlossaryWebSettings.xml");
+            WriteTemplate(package, "word/glossary/fontTable.xml", templatesFolder, "GlossaryFontTable.xml");
         }
     }
 

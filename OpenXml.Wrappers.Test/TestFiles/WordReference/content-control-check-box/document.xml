@@ -1,0 +1,36 @@
+<w:document xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml" mc:Ignorable="w14">
+  <w:body>
+    <w:p>
+      <w:r>
+        <w:t xml:space="preserve">Hello </w:t>
+      </w:r>
+      <w:sdt>
+        <w:sdtPr>
+          <w:id w:val="{sdt1}" />
+          <w14:checkbox>
+            <w14:checked w14:val="0" />
+            <w14:checkedState w14:font="MS Gothic" w14:val="2612" />
+            <w14:uncheckedState w14:font="MS Gothic" w14:val="2610" />
+          </w14:checkbox>
+        </w:sdtPr>
+        <w:sdtContent>
+          <w:r>
+            <w:rPr>
+              <w:rFonts w:ascii="MS Gothic" w:eastAsia="MS Gothic" w:hAnsi="MS Gothic" w:hint="eastAsia" />
+            </w:rPr>
+            <w:t>☐</w:t>
+          </w:r>
+        </w:sdtContent>
+      </w:sdt>
+      <w:r>
+        <w:t>world again</w:t>
+      </w:r>
+    </w:p>
+    <w:sectPr>
+      <w:pgSz w:h="16838" w:w="11906" />
+      <w:pgMar w:bottom="1440" w:footer="708" w:gutter="0" w:header="708" w:left="1440" w:right="1440" w:top="1440" />
+      <w:cols w:space="708" />
+      <w:docGrid w:linePitch="360" />
+    </w:sectPr>
+  </w:body>
+</w:document>
