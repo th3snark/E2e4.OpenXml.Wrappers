@@ -2,6 +2,11 @@
 
 All notable changes are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- Content controls: `ContentControl.SetPlaceholderText` and `PlaceholderText` (the text a control shows while it is empty, kept as an entry of the glossary document the way Word keeps it), and custom XML editing: `CustomXMLPart.AddNode` and, on a node, `AppendChildNode`, `AppendChildSubtree`, `InsertNodeBefore`, `InsertSubtreeBefore`, `ReplaceChildNode` and `ReplaceChildSubtree`. One new reference scenario matching Word 16.
+
 ## [1.7.0] - 2026-11-06
 
 ### Added

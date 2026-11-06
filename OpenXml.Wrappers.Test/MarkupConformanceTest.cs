@@ -1409,6 +1409,18 @@ public class MarkupConformanceTest
                 node.Delete();
             },
             Body(), Part("glossary.document.xml"), Part("customXml.item1.xml"), Part("customXml.itemProps1.xml")),
+        new Scenario("content-control-placeholder-text",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                ContentControlWrapper around = d.ContentControls.Add(ContentControlType.Text, d.Range(12, 17));
+                ContentControlWrapper point = d.ContentControls.Add(ContentControlType.Text, d.Range(5, 5));
+                point.SetPlaceholderText(null, null, "Type here");
+                around.SetPlaceholderText(null, null, "Other");
+                point.SetPlaceholderText(null, null, "Changed");
+            },
+            Body(), Part("glossary.document.xml")),
+
         new Scenario("custom-xml-part-delete",
             d =>
             {

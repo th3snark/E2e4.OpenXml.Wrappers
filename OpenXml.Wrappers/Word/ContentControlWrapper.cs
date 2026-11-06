@@ -121,6 +121,30 @@ internal static class ContentControlParts
         }
     }
 
+    /// <summary>
+    /// Adds an entry for placeholder text a user wrote, named as Word names it (32 hexadecimal digits), and returns the name. It is made from the
+    /// default placeholder entry of Word, with the text changed.
+    /// </summary>
+    internal static string AddPlaceholder(MainDocumentPart main, string text)
+    {
+        EnsurePlaceholder(main, "DefaultPlaceholder_-1854013440");
+        DocParts parts = main.GlossaryDocumentPart.GlossaryDocument.DocParts;
+        DocPart template = parts.Elements<DocPart>().First(p => p.DocPartProperties?.DocPartName?.Val?.Value == "DefaultPlaceholder_-1854013440");
+        DocPart copy = (DocPart)template.CloneNode(true);
+        string name = Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture).ToUpperInvariant();
+        copy.DocPartProperties.DocPartName.Val = name;
+        copy.DocPartProperties.DocPartId = new DocPartId() { Val = "{" + Guid.NewGuid().ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant() + "}" };
+        Text shown = copy.DocPartBody.Descendants<Text>().First();
+        foreach (Text extra in copy.DocPartBody.Descendants<Text>().Skip(1).ToList())
+        {
+            extra.Remove();
+        }
+        shown.Text = text;
+        shown.Space = text.Length > 0 && (char.IsWhiteSpace(text[0]) || char.IsWhiteSpace(text[text.Length - 1])) ? DocumentFormat.OpenXml.SpaceProcessingModeValues.Preserve : null;
+        parts.AppendChild(copy);
+        return name;
+    }
+
     /// <summary>Makes sure the document has the glossary document and the default placeholder in it.</summary>
     internal static void EnsurePlaceholder(MainDocumentPart main, string name)
     {

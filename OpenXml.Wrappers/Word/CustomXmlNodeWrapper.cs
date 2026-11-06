@@ -171,7 +171,7 @@ public class CustomXMLNode : IEquatable<CustomXMLNode>
     }
 
     //The object in a loaded document, or null if the place is empty now.
-    private XObject Resolve(XDocument document)
+    internal XObject Resolve(XDocument document)
     {
         return ((IEnumerable)document.XPathEvaluate(_xPath, Namespaces(_prefixMappings))).Cast<object>().OfType<XObject>().FirstOrDefault();
     }
@@ -274,6 +274,13 @@ public class CustomXMLNode : IEquatable<CustomXMLNode>
         }
     }
 
+    private void ChangeDocument(Action<XDocument> change)
+    {
+        XDocument document = _part.LoadDocument();
+        change(document);
+        _part.SaveDocument(document);
+    }
+
     private void Change(Action<XObject> change)
     {
         XDocument document = _part.LoadDocument();
@@ -361,6 +368,129 @@ public class CustomXMLNode : IEquatable<CustomXMLNode>
         return at < 0 || at >= all.Count ? null : From(_part, all[at]);
     }
 
+    //Makes a node of the kind asked for: an element, an attribute, text, CDATA or a comment.
+    private static XObject Make(string name, string namespaceUri, CustomXMLNodeType nodeType, string nodeValue)
+    {
+        XNamespace ns = namespaceUri ?? string.Empty;
+        switch (nodeType)
+        {
+            case CustomXMLNodeType.Element:
+                Guard.ThrowIfNull(name);
+                return new XElement(ns + name, nodeValue ?? string.Empty);
+            case CustomXMLNodeType.Attribute:
+                Guard.ThrowIfNull(name);
+                return new XAttribute(ns + name, nodeValue ?? string.Empty);
+            case CustomXMLNodeType.Text:
+                return new XText(nodeValue ?? string.Empty);
+            case CustomXMLNodeType.CData:
+                return new XCData(nodeValue ?? string.Empty);
+            case CustomXMLNodeType.Comment:
+                return new XComment(nodeValue ?? string.Empty);
+            default:
+                throw new ArgumentOutOfRangeException(nameof(nodeType));
+        }
+    }
+
+    //Puts what was made inside an element: an attribute among its attributes, anything else among its nodes, before a node or at the end.
+    private void Put(XDocument document, XObject made, XObject before)
+    {
+        if (!(Target(document) is XElement parent))
+        {
+            throw new InvalidOperationException("Only an element can have nodes inside it.");
+        }
+        if (made is XAttribute attribute)
+        {
+            parent.SetAttributeValue(attribute.Name, attribute.Value);
+        }
+        else if (before is XNode next && ReferenceEquals(next.Parent, parent))
+        {
+            next.AddBeforeSelf(made);
+        }
+        else
+        {
+            parent.Add(made);
+        }
+    }
+
+    private static XObject InDocument(XDocument document, CustomXMLNode other)
+    {
+        return other == null ? null : other.Resolve(document) ?? throw new ArgumentException("The node is not in the part.", nameof(other));
+    }
+
+    /// <summary>Adds a node at the end of the node, as <c>CustomXMLNode.AppendChildNode</c> in Word: an element, an attribute, text, CDATA or a comment.</summary>
+    /// <param name="name">The name; not used for text, CDATA and comments.</param>
+    /// <param name="namespaceUri">The namespace of the name.</param>
+    /// <param name="nodeType">What to add.</param>
+    /// <param name="nodeValue">The text or value of the new node.</param>
+    public void AppendChildNode(string name, string namespaceUri = "", CustomXMLNodeType nodeType = CustomXMLNodeType.Element, string nodeValue = "")
+    {
+        ChangeDocument(document => Put(document, Make(name, namespaceUri, nodeType, nodeValue), null));
+    }
+
+    /// <summary>Adds XML at the end of the node, as <c>CustomXMLNode.AppendChildSubtree</c> in Word.</summary>
+    /// <exception cref="XmlException">The text is not well-formed XML.</exception>
+    public void AppendChildSubtree(string xml)
+    {
+        Guard.ThrowIfNull(xml);
+        XElement subtree = XElement.Parse(xml);
+        ChangeDocument(document => Put(document, subtree, null));
+    }
+
+    /// <summary>Adds a node before another node of this one, as <c>CustomXMLNode.InsertNodeBefore</c> in Word; at the end when it is null.</summary>
+    public void InsertNodeBefore(string name, string namespaceUri = "", CustomXMLNodeType nodeType = CustomXMLNodeType.Element, string nodeValue = "", CustomXMLNode nextSibling = null)
+    {
+        ChangeDocument(document => Put(document, Make(name, namespaceUri, nodeType, nodeValue), InDocument(document, nextSibling)));
+    }
+
+    /// <summary>Adds XML before another node of this one, as <c>CustomXMLNode.InsertSubtreeBefore</c> in Word; at the end when it is null.</summary>
+    /// <exception cref="XmlException">The text is not well-formed XML.</exception>
+    public void InsertSubtreeBefore(string xml, CustomXMLNode nextSibling = null)
+    {
+        Guard.ThrowIfNull(xml);
+        XElement subtree = XElement.Parse(xml);
+        ChangeDocument(document => Put(document, subtree, InDocument(document, nextSibling)));
+    }
+
+    /// <summary>Replaces a node of this one with a new node, as <c>CustomXMLNode.ReplaceChildNode</c> in Word.</summary>
+    /// <exception cref="ArgumentNullException">The old node is null.</exception>
+    public void ReplaceChildNode(CustomXMLNode oldNode, string name, string namespaceUri = "", CustomXMLNodeType nodeType = CustomXMLNodeType.Element, string nodeValue = "")
+    {
+        Guard.ThrowIfNull(oldNode);
+        ChangeDocument(document =>
+        {
+            XObject old = InDocument(document, oldNode);
+            Put(document, Make(name, namespaceUri, nodeType, nodeValue), old is XNode node ? node : null);
+            RemoveObject(old);
+        });
+    }
+
+    /// <summary>Replaces a node of this one with XML, as <c>CustomXMLNode.ReplaceChildSubtree</c> in Word.</summary>
+    /// <exception cref="ArgumentNullException">The old node is null.</exception>
+    /// <exception cref="XmlException">The text is not well-formed XML.</exception>
+    public void ReplaceChildSubtree(string xml, CustomXMLNode oldNode)
+    {
+        Guard.ThrowIfNull(xml);
+        Guard.ThrowIfNull(oldNode);
+        XElement subtree = XElement.Parse(xml);
+        ChangeDocument(document =>
+        {
+            XObject old = InDocument(document, oldNode);
+            Put(document, subtree, old is XNode node ? node : null);
+            RemoveObject(old);
+        });
+    }
+
+    private static void RemoveObject(XObject target)
+    {
+        if (target is XAttribute attribute)
+        {
+            attribute.Remove();
+        }
+        else if (target is XNode node)
+        {
+            node.Remove();
+        }
+    }
     /// <summary>Takes the node out of the part, as <c>CustomXMLNode.Delete</c> in Word. The content controls bound to it keep their contents.</summary>
     public void Delete()
     {

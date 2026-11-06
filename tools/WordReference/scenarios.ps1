@@ -9,6 +9,14 @@ the same name that does the same thing through the library. Word's indexes are 1
 # Twenty three-letter words, one for each font property below: word i is at positions 4i to 4i + 3.
 $script:FontWords = (1..20 | ForEach-Object { 'w{0:00}' -f $_ }) -join ' '
 
+# ContentControl.SetPlaceholderText takes a building block, a range and text, of which Word needs the first two to be null objects (an omitted
+# or $null argument is a type mismatch): wrapped in a DispatchWrapper they are.
+function Set-PlaceholderText($control, $range, [string]$text) {
+    $none = [Activator]::CreateInstance([System.Runtime.InteropServices.DispatchWrapper], @($null))
+    $first = if ($null -ne $range) { $none } else { $none }
+    $second = if ($null -ne $range) { $range } else { $none }
+    [void][System.__ComObject].InvokeMember('SetPlaceholderText', [Reflection.BindingFlags]::InvokeMethod, $null, $control, @($first, $second, $text))
+}
 # The picture the inline picture scenarios insert (40 x 20 pixels at 96 dpi).
 $script:Picture = (Resolve-Path (Join-Path $PSScriptRoot '..\..\OpenXml.Wrappers.Test\TestFiles\Pictures\blue-40x20.png')).Path
 
@@ -1345,6 +1353,52 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         Write-Host ('linked: {0}; unlinked: {1}' -f $doc.SelectLinkedControls($node).Count, $doc.SelectUnlinkedControls($part).Count)
         $node.Delete()
         Write-Host ('after delete: part xml "{0}"' -f $part.XML)
+    }
+
+    'content-control-placeholder-text' = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $tc = $doc.ContentControls.Add(1, $doc.Range(12, 17))
+        $cc = $doc.ContentControls.Add(1, $doc.Range(5, 5))
+        Set-PlaceholderText $cc $null 'Type here'
+        Write-Host ('point: showing {0} text "{1}" placeholder name "{2}" value "{3}"' -f $cc.ShowingPlaceholderText, $cc.Range.Text, $cc.PlaceholderText.Name, $cc.PlaceholderText.Value)
+        Set-PlaceholderText $tc $null 'Other'
+        Write-Host ('around text: showing {0} text "{1}" placeholder "{2}"' -f $tc.ShowingPlaceholderText, $tc.Range.Text, $tc.PlaceholderText.Value)
+        Set-PlaceholderText $cc $null 'Changed'
+        Write-Host ('changed: showing {0} text "{1}" value "{2}"' -f $cc.ShowingPlaceholderText, $cc.Range.Text, $cc.PlaceholderText.Value)
+        Write-Host ('parent: {0}' -f $cc.Parent.GetType().FullName)
+    }
+    #content-control-placeholder-range prints what Word does and makes no snapshot: Word gives the entry a paragraph style of its own name.
+    'content-control-placeholder-range' = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $cc = $doc.ContentControls.Add(1, $doc.Range(5, 5))
+        Set-PlaceholderText $cc $doc.Range(6, 11) ''
+        Write-Host ('from range: showing {0} text "{1}" value "{2}"' -f $cc.ShowingPlaceholderText, $cc.Range.Text, $cc.PlaceholderText.Value)
+    }
+    'custom-xml-node-edit'            = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello')
+        $part = $doc.CustomXMLParts.Add('<root xmlns="urn:test"><name>Bob</name></root>')
+        $part.NamespaceManager.AddNamespace('ns', 'urn:test')
+        $root = $part.DocumentElement
+        [void]$root.AppendChildNode('age', 'urn:test', 1, '42')
+        Write-Host ('append: {0}' -f $part.XML)
+        [void]$root.AppendChildNode('note', '', 1, 'plain')
+        Write-Host ('append no ns: {0}' -f $part.XML)
+        [void]$root.AppendChildNode('id', '', 2, '7')
+        Write-Host ('attribute: {0}' -f $part.XML)
+        $root.AppendChildSubtree('<city xmlns="urn:test">Paris</city>')
+        Write-Host ('subtree: {0}' -f $part.XML)
+        $first = $part.SelectSingleNode('/ns:root/ns:name')
+        [void]$root.InsertNodeBefore('first', 'urn:test', 1, 'x', $first)
+        Write-Host ('before: {0}' -f $part.XML)
+        [void]$root.ReplaceChildNode($first, 'surname', 'urn:test', 1, 'Smith')
+        Write-Host ('replace: {0}' -f $part.XML)
+        [void]$part.AddNode($root, 'extra', 'urn:test', 1, 'e')
+        Write-Host ('addnode: {0}' -f $part.XML)
+        $part.SelectSingleNode('/ns:root/ns:age').Text = '43'
+        Write-Host ('final: {0}' -f $part.XML)
     }
 
     'custom-xml-part-delete'          = {
