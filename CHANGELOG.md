@@ -2,7 +2,7 @@
 
 All notable changes are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/) and the project uses [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.5.0] - 2026-11-06
 
 ### Added
 - Floating pictures: `Document.Shapes` and `HeaderFooter.Shapes` (`AddPicture`, `Item`, `Count`) and `Shape` (`Left`, `Top`, `Width`, `Height`, `RelativeHorizontalPosition`, `RelativeVerticalPosition`, `Rotation`, `LockAspectRatio`, `LockAnchor`, `Visible`, `Name`, `AlternativeText`, `Title`, `ID`, `Type`, `Anchor`, `WrapFormat`, `ZOrder`, `ZOrderPosition`, `Delete`, `ConvertToInlineShape`) with `WrapFormat` (`Type`, `Side`, the four distances, `AllowOverlap`), and `InlineShape.ConvertToShape`. Seven new reference scenarios, all matching Word 16. Text boxes and drawn shapes come in a later release.
