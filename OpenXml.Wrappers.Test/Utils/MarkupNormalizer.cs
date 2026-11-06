@@ -199,6 +199,11 @@ public static class MarkupNormalizer
             {
                 element.Value = "{date}";
             }
+            if (element.Name == W + "instrText")
+            {
+                //The names of the bookmarks of a table of contents are numbers Word makes up.
+                element.Value = TocName.Replace(element.Value, m => "_Toc" + placeholders.Get("toc", m.Groups[1].Value));
+            }
         }
         RemoveFormattingWhitespace(root);
         MergeRuns(root);
@@ -271,6 +276,8 @@ public static class MarkupNormalizer
         return (name == W + "bookmarkStart" || name == W + "bookmarkEnd") && goBackIds.Contains((string)element.Attribute(W + "id"));
     }
 
+    private static readonly System.Text.RegularExpressions.Regex TocName = new System.Text.RegularExpressions.Regex(@"_Toc(\d+)");
+
     private static void NormalizeAttribute(XElement element, XAttribute attribute, bool commentParagraphIds, Dictionary<string, string> relationshipIds,
         Placeholders placeholders)
     {
@@ -279,7 +286,16 @@ public static class MarkupNormalizer
             return;
         }
         XName name = attribute.Name;
-        if ((name.Namespace == W && name.LocalName.StartsWith("rsid", StringComparison.Ordinal)) || name == W14 + "textId" || name == WP14 + "anchorId" || name == WP14 + "editId")
+        if (name == W + "dirty")
+        {
+            //Word does not mark a field to be updated when it saves; the library does for the fields that need layout.
+            attribute.Remove();
+        }
+        else if ((name == W + "name" || name == W + "anchor") && TocName.IsMatch(attribute.Value))
+        {
+            attribute.Value = TocName.Replace(attribute.Value, m => "_Toc" + placeholders.Get("toc", m.Groups[1].Value));
+        }
+        else if ((name.Namespace == W && name.LocalName.StartsWith("rsid", StringComparison.Ordinal)) || name == W14 + "textId" || name == WP14 + "anchorId" || name == WP14 + "editId")
         {
             attribute.Remove();
         }

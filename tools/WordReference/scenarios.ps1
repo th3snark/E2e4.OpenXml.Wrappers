@@ -1219,6 +1219,76 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         [void]$doc.InlineShapes.AddPicture($script:Picture, $false, $true, $doc.Range(6, 11))
     }
 
+    'toc-add'                         = {
+        param($doc)
+        $doc.Content.InsertAfter("First`rSome text`rSecond`rMore text`rSub heading`rEnd")
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+        $doc.Paragraphs.Item(3).Style = 'Heading 1'
+        $doc.Paragraphs.Item(5).Style = 'Heading 2'
+        $toc = $doc.TablesOfContents.Add($doc.Range(0, 0))
+        Write-Host ('toc: count {0}, upper {1}, lower {2}, pages {3}, hyper {4}, right {5}, headings {6}, fields {7}, leader {8}, id "{9}"' -f $doc.TablesOfContents.Count, $toc.UpperHeadingLevel, $toc.LowerHeadingLevel, $toc.IncludePageNumbers, $toc.UseHyperlinks, $toc.RightAlignPageNumbers, $toc.UseHeadingStyles, $toc.UseFields, $toc.TabLeader, $toc.TableID)
+    }
+
+    'toc-options'                     = {
+        param($doc)
+        $doc.Content.InsertAfter("First`rSome text`rSecond`rMore text`rSub heading`rEnd")
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+        $doc.Paragraphs.Item(3).Style = 'Heading 1'
+        $doc.Paragraphs.Item(5).Style = 'Heading 2'
+        [void]$doc.TablesOfContents.Add($doc.Range(0, 0), $true, 1, 1, $false, [Type]::Missing, $false, $false, [Type]::Missing, $false, $true)
+    }
+
+    'toc-hyperlinks'                  = {
+        param($doc)
+        $doc.Content.InsertAfter("First`rSome text`rSub heading")
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+        $doc.Paragraphs.Item(3).Style = 'Heading 2'
+        [void]$doc.TablesOfContents.Add($doc.Range(0, 0), $true, 1, 3, $false, [Type]::Missing, $true, $true, [Type]::Missing, $true)
+    }
+
+    'toc-flags'                       = {
+        param($doc)
+        $doc.Content.InsertAfter("First`rSome text`rSub heading")
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+        $doc.Paragraphs.Item(3).Style = 'Heading 2'
+        [void]$doc.TablesOfContents.Add($doc.Range(0, 0), $true, 2, 3, $true, 'A', $true, $true, [Type]::Missing, $true, $false, $true)
+    }
+
+    'toc-margins'                     = {
+        param($doc)
+        $doc.PageSetup.LeftMargin = 100
+        $doc.Content.InsertAfter("First`rSome text")
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+        [void]$doc.TablesOfContents.Add($doc.Range(0, 0))
+    }
+
+    'toc-empty'                       = {
+        param($doc)
+        $doc.Content.InsertAfter("Plain`rtext")
+        $toc = $doc.TablesOfContents.Add($doc.Range(0, 0))
+        Write-Host ('empty toc range text: "{0}"' -f $toc.Range.Text)
+    }
+
+
+
+    'toc-delete'                      = {
+        param($doc)
+        $doc.Content.InsertAfter("First`rSome text`rSecond")
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+        $doc.Paragraphs.Item(3).Style = 'Heading 1'
+        $toc = $doc.TablesOfContents.Add($doc.Range(0, 0))
+        $toc.Delete()
+    }
+
+    'toc-update'                      = {
+        param($doc)
+        $doc.Content.InsertAfter("First`rSome text`rSecond")
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+        $toc = $doc.TablesOfContents.Add($doc.Range(0, 0))
+        $doc.Paragraphs.Item($doc.Paragraphs.Count).Style = 'Heading 1'
+        $toc.Update()
+    }
+
     'document-settings'               = {
         param($doc)
         $doc.DefaultTabStop = 54

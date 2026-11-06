@@ -175,6 +175,12 @@ public partial class WordprocessingDocumentWrapper
         get { return new ContentControlWrapperCollection(Content); }
     }
 
+    /// <summary>The tables of contents in the main text, as <c>Document.TablesOfContents</c> in Word.</summary>
+    public TableOfContentsWrapperCollection TablesOfContents
+    {
+        get { return new TableOfContentsWrapperCollection(Content); }
+    }
+
     /// <summary>The inline shapes (pictures) in the main text, as <c>Document.InlineShapes</c> in Word.</summary>
     public InlineShapeWrapperCollection InlineShapes
     {

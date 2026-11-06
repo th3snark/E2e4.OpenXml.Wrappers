@@ -1367,6 +1367,73 @@ public class MarkupConformanceTest
             },
             Body()),
 
+        new Scenario("toc-add",
+            d =>
+            {
+                HeadedDocument(d, "First\rSome text\rSecond\rMore text\rSub heading\rEnd", (0, "Heading 1"), (2, "Heading 1"), (4, "Heading 2"));
+                d.TablesOfContents.Add(d.Range(0, 0));
+            },
+            Body()),
+
+        new Scenario("toc-options",
+            d =>
+            {
+                HeadedDocument(d, "First\rSome text\rSecond\rMore text\rSub heading\rEnd", (0, "Heading 1"), (2, "Heading 1"), (4, "Heading 2"));
+                d.TablesOfContents.Add(d.Range(0, 0), true, 1, 1, false, null, false, false, null, false, true);
+            },
+            Body()),
+
+        new Scenario("toc-hyperlinks",
+            d =>
+            {
+                HeadedDocument(d, "First\rSome text\rSub heading", (0, "Heading 1"), (2, "Heading 2"));
+                d.TablesOfContents.Add(d.Range(0, 0), true, 1, 3, false, null, true, true, null, true);
+            },
+            Body()),
+
+        new Scenario("toc-flags",
+            d =>
+            {
+                HeadedDocument(d, "First\rSome text\rSub heading", (0, "Heading 1"), (2, "Heading 2"));
+                d.TablesOfContents.Add(d.Range(0, 0), true, 2, 3, true, "A", true, true, null, true, false, true);
+            },
+            Body()),
+
+        new Scenario("toc-margins",
+            d =>
+            {
+                d.PageSetup.LeftMargin = 100;
+                HeadedDocument(d, "First\rSome text", (0, "Heading 1"));
+                d.TablesOfContents.Add(d.Range(0, 0));
+            },
+            Body()),
+
+        new Scenario("toc-empty",
+            d =>
+            {
+                d.Content.InsertAfter("Plain\rtext");
+                d.TablesOfContents.Add(d.Range(0, 0));
+            },
+            Body()),
+
+        new Scenario("toc-delete",
+            d =>
+            {
+                HeadedDocument(d, "First\rSome text\rSecond", (0, "Heading 1"), (2, "Heading 1"));
+                d.TablesOfContents.Add(d.Range(0, 0)).Delete();
+            },
+            Body()),
+
+        new Scenario("toc-update",
+            d =>
+            {
+                HeadedDocument(d, "First\rSome text\rSecond", (0, "Heading 1"));
+                TableOfContentsWrapper toc = d.TablesOfContents.Add(d.Range(0, 0));
+                d.Paragraphs[d.Paragraphs.Count - 1].Style = "Heading 1";
+                toc.Update();
+            },
+            Body()),
+
         new Scenario("document-settings",
             d =>
             {
@@ -2732,6 +2799,16 @@ public class MarkupConformanceTest
     private static Comparison[] ControlParts()
     {
         return new[] { Body(), Part("glossary.document.xml") };
+    }
+
+    //Fills a document with the text and gives paragraphs (0-based) styles.
+    private static void HeadedDocument(WordprocessingDocumentWrapper d, string text, params (int Paragraph, string Style)[] styles)
+    {
+        d.Content.InsertAfter(text);
+        foreach ((int paragraph, string style) in styles)
+        {
+            d.Paragraphs[paragraph].Style = style;
+        }
     }
 
     private static readonly string PicturePath = System.IO.Path.GetFullPath(TestFile.Picture);
