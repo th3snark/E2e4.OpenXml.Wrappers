@@ -1530,6 +1530,61 @@ public class MarkupConformanceTest
                 d.TablesOfContents.Add(d.Range(0, 0), true, 1, 3, false, null, true, true, "Title,2", false, false, true);
             },
             Body()),
+        new Scenario("caption-add",
+            d =>
+            {
+                d.Content.InsertAfter("Intro\rPicture one\rEnd");
+                d.Paragraphs[1].Range.InsertCaption("Figure", ": First");
+            },
+            Body()),
+
+        new Scenario("caption-above",
+            d =>
+            {
+                d.Content.InsertAfter("Intro\rPicture one\rEnd");
+                d.Paragraphs[1].Range.InsertCaption("Figure", ": First", string.Empty, CaptionPosition.Above);
+            },
+            Body()),
+
+        new Scenario("caption-exclude-label",
+            d =>
+            {
+                d.Content.InsertAfter("Intro\rPicture one\rEnd");
+                d.Paragraphs[1].Range.InsertCaption("Figure", ": First", string.Empty, CaptionPosition.Above, true);
+            },
+            Body()),
+
+        new Scenario("tof-add",
+            d =>
+            {
+                d.Content.InsertAfter("Intro\rPicture one\rMiddle\rPicture two\rEnd");
+                d.Paragraphs[3].Range.InsertCaption("Figure", ": Second");
+                d.Paragraphs[1].Range.InsertCaption("Figure", ": First");
+                TableOfFiguresWrapper table = d.TablesOfFigures.Add(d.Range(0, 0), "Figure");
+                Assert.Equal("Figure", table.Caption);
+                Assert.True(table.IncludeLabel);
+            },
+            Body()),
+
+        new Scenario("tof-options",
+            d =>
+            {
+                d.Content.InsertAfter("Intro\rPicture one\rEnd");
+                d.Paragraphs[1].Range.InsertCaption("Figure", ": First");
+                d.TablesOfFigures.Add(d.Range(0, 0), "Figure", false, false, 1, 9, false, null, false, false, null, true);
+            },
+            Body()),
+
+        new Scenario("toc-mark-entry",
+            d =>
+            {
+                d.Content.InsertAfter("Intro text here\rSecond bit");
+                d.TablesOfContents.MarkEntry(d.Range(16, 22), "Second", null, null, 1);
+                d.TablesOfContents.MarkEntry(d.Range(0, 5), "Marked one", null, "A", 2);
+                TableOfContentsWrapper toc = d.TablesOfContents.Add(d.Range(0, 0), false, 1, 3, true, "A");
+                Assert.True(toc.UseFields);
+            },
+            Body()),
         new Scenario("toc-options",
             d =>
             {

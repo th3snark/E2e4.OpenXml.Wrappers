@@ -1469,6 +1469,51 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         [void]$doc.TablesOfContents.Add($doc.Range(0, 0), $true, 1, 3, $false, $m, $true, $true, 'Title,2', $m, $m, $true)
     }
 
+    'tof-add'                         = {
+        param($doc)
+        $doc.Content.InsertAfter("Intro`rPicture one`rMiddle`rPicture two`rEnd")
+        $doc.Paragraphs.Item(4).Range.InsertCaption('Figure', ': Second')
+        $doc.Paragraphs.Item(2).Range.InsertCaption('Figure', ': First')
+        $t = $doc.TablesOfFigures.Add($doc.Range(0, 0), 'Figure')
+        Write-Host ('tof: count {0}, caption "{1}", include label {2}, pages {3}, hyper {4}, right {5}, id "{6}", leader {7}' -f $doc.TablesOfFigures.Count, $t.Caption, $t.IncludeLabel, $t.IncludePageNumbers, $t.UseHyperlinks, $t.RightAlignPageNumbers, $t.TableID, $t.TabLeader)
+    }
+
+    'tof-options'                     = {
+        param($doc)
+        $doc.Content.InsertAfter("Intro`rPicture one`rEnd")
+        $doc.Paragraphs.Item(2).Range.InsertCaption('Figure', ': First')
+        $m = [Type]::Missing
+        [void]$doc.TablesOfFigures.Add($doc.Range(0, 0), 'Figure', $false, $m, $m, $m, $m, $m, $false, $false, $m, $true)
+    }
+
+    'toc-mark-entry'                  = {
+        param($doc)
+        $doc.Content.InsertAfter("Intro text here`rSecond bit")
+        $m = [Type]::Missing
+        [void]$doc.TablesOfContents.MarkEntry($doc.Range(16, 22), 'Second', $m, $m, 1)
+        [void]$doc.TablesOfContents.MarkEntry($doc.Range(0, 5), 'Marked one', $m, 'A', 2)
+        $toc = $doc.TablesOfContents.Add($doc.Range(0, 0), $false, 1, 3, $true, 'A')
+        Write-Host ('toc: fields {0}, id "{1}"' -f $toc.UseFields, $toc.TableID)
+    }
+
+    'caption-add'                     = {
+        param($doc)
+        $doc.Content.InsertAfter("Intro`rPicture one`rEnd")
+        $doc.Paragraphs.Item(2).Range.InsertCaption('Figure', ': First')
+    }
+
+    'caption-above'                   = {
+        param($doc)
+        $doc.Content.InsertAfter("Intro`rPicture one`rEnd")
+        $doc.Paragraphs.Item(2).Range.InsertCaption('Figure', ': First', [Type]::Missing, 0)
+    }
+
+    'caption-exclude-label'           = {
+        param($doc)
+        $doc.Content.InsertAfter("Intro`rPicture one`rEnd")
+        $doc.Paragraphs.Item(2).Range.InsertCaption('Figure', ': First', [Type]::Missing, 0, $true)
+    }
+
     'toc-options'                     = {
         param($doc)
         $doc.Content.InsertAfter("First`rSome text`rSecond`rMore text`rSub heading`rEnd")
