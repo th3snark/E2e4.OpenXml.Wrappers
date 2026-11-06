@@ -44,6 +44,65 @@ public class CustomXMLPart : IEquatable<CustomXMLPart>
         }
     }
 
+    internal XDocument LoadDocument()
+    {
+        return Load();
+    }
+
+    //Saves a changed document and shows the new values in the content controls bound to the part.
+    internal void SaveDocument(XDocument document)
+    {
+        Save(document, _part);
+        string id = Id;
+        foreach (SdtElement sdt in _main.GetStoryRoots().Where(r => r != null).SelectMany(r => r.Descendants<SdtElement>()).ToList())
+        {
+            DataBinding binding = sdt.SdtProperties?.GetFirstChild<DataBinding>();
+            if (binding?.StoreItemId?.Value != id || binding.XPath?.Value == null)
+            {
+                continue;
+            }
+            object found = ((IEnumerable)document.XPathEvaluate(binding.XPath.Value, CustomXMLNode.Namespaces(binding.PrefixMappings?.Value))).Cast<object>().FirstOrDefault();
+            string value = found is XElement element ? element.Value : found is XAttribute attribute ? attribute.Value : null;
+            if (value != null)
+            {
+                new ContentControlWrapper(sdt).ReplaceContents(value);
+            }
+        }
+    }
+
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<CustomXmlPart, CustomXMLPrefixMappings> Prefixes =
+        new System.Runtime.CompilerServices.ConditionalWeakTable<CustomXmlPart, CustomXMLPrefixMappings>();
+
+    /// <summary>The prefixes the XPath expressions given to <see cref="SelectNodes"/> and <see cref="SelectSingleNode"/> can use, as <c>CustomXMLPart.NamespaceManager</c> in Word.</summary>
+    public CustomXMLPrefixMappings NamespaceManager
+    {
+        get { return Prefixes.GetOrCreateValue(_part); }
+    }
+
+    /// <summary>The root element of the part, as <c>CustomXMLPart.DocumentElement</c> in Word.</summary>
+    public CustomXMLNode DocumentElement
+    {
+        get { return CustomXMLNode.From(this, Load().Root); }
+    }
+
+    /// <summary>The first node an XPath expression matches, as <c>CustomXMLPart.SelectSingleNode</c> in Word; null if there is none.</summary>
+    /// <exception cref="ArgumentNullException">The expression is null.</exception>
+    public CustomXMLNode SelectSingleNode(string xPath)
+    {
+        return SelectNodes(xPath).FirstOrDefault();
+    }
+
+    /// <summary>The nodes an XPath expression matches, as <c>CustomXMLPart.SelectNodes</c> in Word. The prefixes are those of <see cref="NamespaceManager"/>.</summary>
+    /// <exception cref="ArgumentNullException">The expression is null.</exception>
+    public CustomXMLNodes SelectNodes(string xPath)
+    {
+        Guard.ThrowIfNull(xPath);
+        XDocument document = Load();
+        object result = document.XPathEvaluate(xPath, NamespaceManager.Manager());
+        IEnumerable<object> found = result is IEnumerable sequence && !(result is string) ? sequence.Cast<object>() : Enumerable.Empty<object>();
+        return new CustomXMLNodes(found.OfType<XObject>().Select(o => CustomXMLNode.From(this, o)).ToList());
+    }
+
     /// <summary>The id of the part, as <c>CustomXMLPart.Id</c> in Word: a GUID in braces.</summary>
     public string Id
     {
@@ -327,6 +386,30 @@ public class XMLMapping
         });
         _control.ReplaceContents(text);
         return true;
+    }
+
+    /// <summary>Binds the control to a node, as <c>XMLMapping.SetMappingByNode</c> in Word, and shows the text of the node in it.</summary>
+    /// <exception cref="ArgumentNullException">The node is null.</exception>
+    public bool SetMappingByNode(CustomXMLNode node)
+    {
+        Guard.ThrowIfNull(node);
+        return SetMapping(node.XPath, node.PrefixMappings, node.OwnerPart);
+    }
+
+    /// <summary>The node the control is bound to, as <c>XMLMapping.CustomXMLNode</c> in Word; null when it is not bound or the node is gone.</summary>
+    public CustomXMLNode CustomXMLNode
+    {
+        get
+        {
+            CustomXMLPart part = CustomXMLPart;
+            if (part == null || Binding?.XPath?.Value == null)
+            {
+                return null;
+            }
+            XDocument document = XDocument.Parse(part.XML);
+            XObject target = ((IEnumerable)document.XPathEvaluate(Binding.XPath.Value, Namespaces(PrefixMappings))).OfType<XObject>().FirstOrDefault();
+            return target == null ? null : Word.CustomXMLNode.From(part, target);
+        }
     }
 
     /// <summary>Removes the binding, as <c>XMLMapping.Delete</c> in Word. The control keeps its contents.</summary>

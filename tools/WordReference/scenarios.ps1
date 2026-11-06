@@ -1326,6 +1326,27 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $cc.XMLMapping.Delete()
     }
 
+    'content-control-xml-node'        = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $doc.Application.Selection.EndKey(6)
+        $part = $doc.CustomXMLParts.Add('<root xmlns="urn:test" id="7"><name>Bob</name><age>42</age></root>')
+        $part.NamespaceManager.AddNamespace('ns', 'urn:test')
+        $node = $part.SelectSingleNode('/ns:root/ns:name')
+        Write-Host ('node: base "{0}" ns "{1}" text "{2}" xml "{3}" type {4} xpath "{5}" children {6} hasChildren {7} parent "{8}"' -f $node.BaseName, $node.NamespaceURI, $node.Text, $node.XML, $node.NodeType, $node.XPath, $node.ChildNodes.Count, $node.HasChildNodes, $node.ParentNode.BaseName)
+        $root = $part.DocumentElement
+        Write-Host ('root: base "{0}" children {1} attributes {2} first "{3}" last "{4}" attr "{5}"={6}' -f $root.BaseName, $root.ChildNodes.Count, $root.Attributes.Count, $root.FirstChild.BaseName, $root.LastChild.BaseName, $root.Attributes.Item(1).BaseName, $root.Attributes.Item(1).Text)
+        Write-Host ('select: names {0}; all {1}; none {2}' -f $part.SelectNodes('//ns:name').Count, $part.SelectNodes('/ns:root/*').Count, $part.SelectNodes('//ns:zzz').Count)
+        $cc = $doc.ContentControls.Add(1, $doc.Range(5, 5))
+        $cc.XMLMapping.SetMappingByNode($node)
+        Write-Host ('mapping: mapped {0} xpath "{1}" prefixes "{2}" node "{3}" text now "{4}"' -f $cc.XMLMapping.IsMapped, $cc.XMLMapping.XPath, $cc.XMLMapping.PrefixMappings, $cc.XMLMapping.CustomXMLNode.BaseName, $cc.Range.Text)
+        $node.Text = 'Alice'
+        Write-Host ('after set: cc text "{0}" part xml "{1}"' -f $cc.Range.Text, $part.XML)
+        Write-Host ('linked: {0}; unlinked: {1}' -f $doc.SelectLinkedControls($node).Count, $doc.SelectUnlinkedControls($part).Count)
+        $node.Delete()
+        Write-Host ('after delete: part xml "{0}"' -f $part.XML)
+    }
+
     'custom-xml-part-delete'          = {
         param($doc)
         $doc.Content.InsertAfter('Hello')

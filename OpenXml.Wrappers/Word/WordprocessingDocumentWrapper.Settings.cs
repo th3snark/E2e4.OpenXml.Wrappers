@@ -217,6 +217,21 @@ public partial class WordprocessingDocumentWrapper
         return new ContentControlWrapperCollection(Content, c => string.Equals(c.Title, title, System.StringComparison.Ordinal));
     }
 
+    /// <summary>The content controls bound to a node of a custom XML part, as <c>Document.SelectLinkedControls</c> in Word.</summary>
+    /// <exception cref="System.ArgumentNullException">The node is null.</exception>
+    public ContentControlWrapperCollection SelectLinkedControls(CustomXMLNode node)
+    {
+        Guard.ThrowIfNull(node);
+        return new ContentControlWrapperCollection(Content, c => c.XMLMapping.CustomXMLNode == node);
+    }
+
+    /// <summary>The content controls that are not bound to a custom XML part, as <c>Document.SelectUnlinkedControls</c> in Word.</summary>
+    /// <param name="stream">A part; the controls bound to other parts or to none are listed.</param>
+    public ContentControlWrapperCollection SelectUnlinkedControls(CustomXMLPart stream = null)
+    {
+        return new ContentControlWrapperCollection(Content, c => !c.XMLMapping.IsMapped || (stream != null && c.XMLMapping.CustomXMLPart != stream));
+    }
+
     /// <summary>The footnotes of the main text, as <c>Document.Footnotes</c> in Word.</summary>
     public FootnoteWrapperCollection Footnotes
     {
