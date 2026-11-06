@@ -46,6 +46,12 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
         get { return new BookmarkWrapperCollection(ElementRange()); }
     }
 
+    /// <summary>The list formatting of the paragraphs in the range, as <c>Range.ListFormat</c> in Word.</summary>
+    public ListFormatWrapper ListFormat
+    {
+        get { return new ListFormatWrapper(this); }
+    }
+
     /// <summary>The hyperlinks in the range, as <c>Range.Hyperlinks</c> in Word.</summary>
     public HyperlinkWrapperCollection Hyperlinks
     {

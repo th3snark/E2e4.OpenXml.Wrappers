@@ -169,6 +169,27 @@ public partial class WordprocessingDocumentWrapper
         }
     }
 
+    /// <summary>The list templates of the document, as <c>Document.ListTemplates</c> in Word.</summary>
+    public ListTemplateWrapperCollection ListTemplates
+    {
+        get { return new ListTemplateWrapperCollection(this); }
+    }
+
+    /// <summary>The lists in the main text of the document, as <c>Document.Lists</c> in Word.</summary>
+    public ListWrapperCollection Lists
+    {
+        get { return new ListWrapperCollection(this); }
+    }
+
+    /// <summary>The paragraphs of the main text that are in a list, as <c>Document.ListParagraphs</c> in Word.</summary>
+    public ListParagraphWrapperCollection ListParagraphs
+    {
+        get
+        {
+            return new ListParagraphWrapperCollection(ListNumbering.GetItems(WordprocessingDocument.MainDocumentPart.Document.Body).Select(i => i.Paragraph).ToList());
+        }
+    }
+
     /// <summary>The hyperlinks in the main text of the document, as <c>Document.Hyperlinks</c> in Word.</summary>
     public HyperlinkWrapperCollection Hyperlinks
     {
