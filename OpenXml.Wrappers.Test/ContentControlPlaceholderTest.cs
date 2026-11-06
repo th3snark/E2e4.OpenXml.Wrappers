@@ -56,6 +56,34 @@ public class ContentControlPlaceholderTest : IDisposable
     }
 
     [Fact]
+    public void AnEmptiedControlShowsItsPlaceholderAgain()
+    {
+        ContentControlWrapper control = _document.ContentControls.Add(ContentControlType.Text, _document.Range(12, 17));
+        control.SetPlaceholderText(null, null, "Other");
+
+        control.Range.Text = string.Empty;
+
+        Assert.True(control.ShowingPlaceholderText);
+        Assert.Equal("Other", control.Range.Text);
+
+        AssertValid();
+    }
+
+    [Fact]
+    public void ATextControlWhoseTextIsDeletedShowsItsPlaceholder()
+    {
+        ContentControlWrapper control = _document.ContentControls.Add(ContentControlType.Text, _document.Range(12, 17));
+        control.SetPlaceholderText(null, null, "Other");
+        Assert.False(control.ShowingPlaceholderText);
+
+        control.Range.Delete();
+
+        Assert.True(control.ShowingPlaceholderText);
+        Assert.Equal("Other", control.Range.Text);
+        AssertValid();
+    }
+
+    [Fact]
     public void AControlHoldingTextKeepsItAndRemembersThePlaceholder()
     {
         ContentControlWrapper control = _document.ContentControls.Add(ContentControlType.Text, _document.Range(12, 17));

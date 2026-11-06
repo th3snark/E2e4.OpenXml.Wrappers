@@ -31,11 +31,15 @@
           <w:placeholder>
             <w:docPart w:val="{docpart2}" />
           </w:placeholder>
+          <w:showingPlcHdr />
           <w:text />
         </w:sdtPr>
         <w:sdtContent>
           <w:r>
-            <w:t>again</w:t>
+            <w:rPr>
+              <w:rStyle w:val="PlaceholderText" />
+            </w:rPr>
+            <w:t>Other</w:t>
           </w:r>
         </w:sdtContent>
       </w:sdt>
