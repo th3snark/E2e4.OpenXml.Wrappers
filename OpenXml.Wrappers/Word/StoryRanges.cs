@@ -184,8 +184,9 @@ public partial class RangeWrapper
 
 /// <summary>
 /// The first range of each kind of story a document has, as <c>StoryRanges</c> in Word. Only the stories the library can read are listed: the
-/// main text, the first comment (Word joins all the comments into one story, where each is a story of its own here), and the headers and\n/// footers of the first section. The footnotes, endnotes and text boxes follow in the steps that
-/// add them.
+/// main text, the first footnote, the first endnote and the first comment (Word joins the notes of a kind, and the comments, into one story,
+/// where each is a story of its own here), and the headers and footers of the first section. The separators of the notes and text boxes are
+/// not listed.
 /// </summary>
 public class StoryRangesWrapper : IEnumerable<RangeWrapper>
 {
@@ -207,6 +208,12 @@ public class StoryRangesWrapper : IEnumerable<RangeWrapper>
         if (type == StoryType.MainText)
         {
             return _document.Content;
+        }
+        if (type == StoryType.Footnotes || type == StoryType.Endnotes)
+        {
+            //The first note: each note is a story of its own here.
+            FootnoteEndnoteType note = NoteOps.GetNotes(_document.WordprocessingDocument.MainDocumentPart, type == StoryType.Endnotes).FirstOrDefault();
+            return note == null ? null : NoteOps.GetTextRange(note);
         }
         if (type == StoryType.Comments)
         {
@@ -231,7 +238,7 @@ public class StoryRangesWrapper : IEnumerable<RangeWrapper>
 
     private IEnumerable<StoryType> Types()
     {
-        foreach (StoryType type in new[] { StoryType.MainText, StoryType.Comments, StoryType.EvenPagesHeader, StoryType.PrimaryHeader, StoryType.EvenPagesFooter,
+        foreach (StoryType type in new[] { StoryType.MainText, StoryType.Footnotes, StoryType.Endnotes, StoryType.Comments, StoryType.EvenPagesHeader, StoryType.PrimaryHeader, StoryType.EvenPagesFooter,
             StoryType.PrimaryFooter, StoryType.FirstPageHeader, StoryType.FirstPageFooter })
         {
             if (Find(type) != null)

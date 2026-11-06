@@ -771,6 +771,51 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $doc.Paragraphs.Item(1).Range.ListFormat.ApplyNumberDefault()
         $doc.Paragraphs.Item(2).Range.ListFormat.ApplyListTemplate($doc.ListTemplates.Item(1), $true)
     }
+    'footnote-add'                    = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        [void]$doc.Footnotes.Add($doc.Range(5, 5), [Type]::Missing, 'The note text')
+    }
+
+    'footnote-add-to-range'           = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        [void]$doc.Footnotes.Add($doc.Range(5, 10))
+    }
+
+    'footnote-add-custom-mark'        = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        [void]$doc.Footnotes.Add($doc.Range(5, 5), 'ref*', 'custom mark')
+    }
+
+    'footnote-add-before-another'     = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        [void]$doc.Footnotes.Add($doc.Range(11, 11), [Type]::Missing, 'second in the file')
+        [void]$doc.Footnotes.Add($doc.Range(5, 5), [Type]::Missing, 'first in the text')
+    }
+
+    'footnote-delete'                 = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        [void]$doc.Footnotes.Add($doc.Range(5, 5), [Type]::Missing, 'one')
+        [void]$doc.Footnotes.Add($doc.Range(11, 11), [Type]::Missing, 'two')
+        $doc.Footnotes.Item(1).Delete()
+    }
+
+    'endnote-add'                     = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        [void]$doc.Endnotes.Add($doc.Range(5, 5), [Type]::Missing, 'The end note')
+    }
+
+    'footnote-and-endnote'            = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        [void]$doc.Endnotes.Add($doc.Range(11, 11), [Type]::Missing, 'The end note')
+        [void]$doc.Footnotes.Add($doc.Range(5, 5), [Type]::Missing, 'The footnote')
+    }
     'document-settings'               = {
         param($doc)
         $doc.DefaultTabStop = 54

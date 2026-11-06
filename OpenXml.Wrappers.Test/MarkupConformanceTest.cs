@@ -845,6 +845,65 @@ public class MarkupConformanceTest
                 d.Paragraphs[1].Range.ListFormat.ApplyListTemplate(d.ListTemplates[0], true);
             },
             ListParts()),
+        new Scenario("footnote-add",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.Footnotes.Add(d.Range(5, 5), null, "The note text");
+            },
+            NoteParts()),
+
+        new Scenario("footnote-add-to-range",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.Footnotes.Add(d.Range(5, 10));
+            },
+            NoteParts()),
+
+        new Scenario("footnote-add-custom-mark",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.Footnotes.Add(d.Range(5, 5), "ref*", "custom mark");
+            },
+            NoteParts()),
+
+        new Scenario("footnote-add-before-another",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.Footnotes.Add(d.Range(11, 11), null, "second in the file");
+                d.Footnotes.Add(d.Range(5, 5), null, "first in the text");
+            },
+            NoteParts()),
+
+        new Scenario("footnote-delete",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.Footnotes.Add(d.Range(5, 5), null, "one");
+                d.Footnotes.Add(d.Range(11, 11), null, "two");
+                d.Footnotes[0].Delete();
+            },
+            NoteParts()),
+
+        new Scenario("endnote-add",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.Endnotes.Add(d.Range(5, 5), null, "The end note");
+            },
+            NoteParts()),
+
+        new Scenario("footnote-and-endnote",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.Endnotes.Add(d.Range(11, 11), null, "The end note");
+                d.Footnotes.Add(d.Range(5, 5), null, "The footnote");
+            },
+            NoteParts()),
         new Scenario("document-settings",
             d =>
             {
@@ -2180,6 +2239,18 @@ public class MarkupConformanceTest
     private static Comparison[] ListParts()
     {
         return new[] { Body(), Part("numbering.xml") };
+    }
+
+    //The text of the body, the notes and the settings that name their separators.
+    private static Comparison[] NoteParts()
+    {
+        return new[]
+        {
+            Body(),
+            Part("footnotes.xml"),
+            Part("endnotes.xml"),
+            Elements("settings.xml", "footnotePr", "endnotePr", "footnote", "endnote")
+        };
     }
 
     private static Comparison[] CommentParts()

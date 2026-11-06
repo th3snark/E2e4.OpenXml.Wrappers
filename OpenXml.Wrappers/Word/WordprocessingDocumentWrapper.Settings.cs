@@ -169,6 +169,18 @@ public partial class WordprocessingDocumentWrapper
         }
     }
 
+    /// <summary>The footnotes of the main text, as <c>Document.Footnotes</c> in Word.</summary>
+    public FootnoteWrapperCollection Footnotes
+    {
+        get { return new FootnoteWrapperCollection(Content); }
+    }
+
+    /// <summary>The endnotes of the main text, as <c>Document.Endnotes</c> in Word.</summary>
+    public EndnoteWrapperCollection Endnotes
+    {
+        get { return new EndnoteWrapperCollection(Content); }
+    }
+
     /// <summary>The list templates of the document, as <c>Document.ListTemplates</c> in Word.</summary>
     public ListTemplateWrapperCollection ListTemplates
     {

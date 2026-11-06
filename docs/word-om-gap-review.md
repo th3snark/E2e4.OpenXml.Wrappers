@@ -665,7 +665,7 @@ A cell given a width of its own makes the table ragged, as in Word: the grid get
 
 ### 4.3 Footnotes and endnotes (steps 11 and 14)
 
-Step 11 laid the groundwork every new story needs: `StoryType` (which already tells footnote, endnote and separator notes and text boxes apart), `StoryRanges` and `NextStoryRange`. The story map treats every comment and every note as a story of its own, and the footnote and endnote stories arrive with their objects in step 14.
+Step 11 laid the groundwork every new story needs: `StoryType` (which already tells footnote, endnote and separator notes and text boxes apart), `StoryRanges` and `NextStoryRange`. The story map treats every comment and every note as a story of its own, so the range of a note counts from the start of that note (Word counts one story for all the footnotes). `StoryRanges` lists the first footnote and the first endnote.
 
 <!-- learn: footnote,endnote -->
 
@@ -673,7 +673,7 @@ Step 11 laid the groundwork every new story needs: `StoryType` (which already te
 
 | Status | Members |
 |---|---|
-| Planned, step 14 | `Delete`, `Index`, `Parent`, `Range`, `Reference` |
+| Done (step 14a) | `Delete`, `Index` (0-based), `Parent`, `Range` (the text without the mark and the space after it; positions count from the start of the note, which is a story of its own here, where Word joins the notes of a kind), `Reference` |
 
 <!-- learn: footnotes -->
 
@@ -681,7 +681,8 @@ Step 11 laid the groundwork every new story needs: `StoryType` (which already te
 
 | Status | Members |
 |---|---|
-| Planned, step 14 | `Add`, `Convert`, `Item`, `ResetContinuationNotice`, `ResetContinuationSeparator`, `ResetSeparator`, `SwapWithEndnotes`, `ContinuationNotice`, `ContinuationSeparator`, `Count`, `Location`, `NumberingRule`, `NumberStyle`, `Parent`, `Separator`, `StartingNumber` |
+| Done (step 14a) | `Add` (the mark goes at the end of the range; a mark of your own is text), `Item` (0-based), `Count`, `Parent`, enumeration. `Document.Footnotes` looks at the main text; `Range.Footnotes` at the marks in the range. Notes are numbered 1, 2, 3 in the order of the text, as Word saves them |
+| Planned, step 14b | `Convert`, `ResetContinuationNotice`, `ResetContinuationSeparator`, `ResetSeparator`, `SwapWithEndnotes`, `ContinuationNotice`, `ContinuationSeparator`, `Location`, `NumberingRule`, `NumberStyle`, `Separator`, `StartingNumber` |
 
 <!-- learn: endnotes -->
 
@@ -689,7 +690,8 @@ Step 11 laid the groundwork every new story needs: `StoryType` (which already te
 
 | Status | Members |
 |---|---|
-| Planned, step 14 | `Add`, `Convert`, `Item`, `ResetContinuationNotice`, `ResetContinuationSeparator`, `ResetSeparator`, `SwapWithFootnotes`, `ContinuationNotice`, `ContinuationSeparator`, `Count`, `Location`, `NumberingRule`, `NumberStyle`, `Parent`, `Separator`, `StartingNumber` |
+| Done (step 14a) | `Add`, `Item` (0-based), `Count`, `Parent`, enumeration, as for footnotes |
+| Planned, step 14b | `Convert`, `ResetContinuationNotice`, `ResetContinuationSeparator`, `ResetSeparator`, `SwapWithFootnotes`, `ContinuationNotice`, `ContinuationSeparator`, `Location`, `NumberingRule`, `NumberStyle`, `Separator`, `StartingNumber` |
 
 <!-- learn: footnoteoptions -->
 
@@ -697,7 +699,7 @@ Step 11 laid the groundwork every new story needs: `StoryType` (which already te
 
 | Status | Members |
 |---|---|
-| Planned, step 14 | `LayoutColumns`, `Location`, `NumberingRule`, `NumberStyle`, `Parent`, `StartingNumber` |
+| Planned, step 14b | `LayoutColumns`, `Location`, `NumberingRule`, `NumberStyle`, `Parent`, `StartingNumber` |
 
 <!-- learn: endnoteoptions -->
 
@@ -705,7 +707,7 @@ Step 11 laid the groundwork every new story needs: `StoryType` (which already te
 
 | Status | Members |
 |---|---|
-| Planned, step 14 | `Location`, `NumberingRule`, `NumberStyle`, `Parent`, `StartingNumber` |
+| Planned, step 14b | `Location`, `NumberingRule`, `NumberStyle`, `Parent`, `StartingNumber` |
 
 ### 4.4 Content controls and custom XML parts (step 15)
 <!-- learn: contentcontrol -->
