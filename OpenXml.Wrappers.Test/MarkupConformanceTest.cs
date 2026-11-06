@@ -600,6 +600,28 @@ public class MarkupConformanceTest
             },
             Elements("document.xml", "cols", "bidi")),
 
+
+        new Scenario("section-protected-for-forms",
+            d =>
+            {
+                d.Content.InsertAfter("a");
+                d.Sections.Add();
+                d.Sections[0].ProtectedForForms = false;
+                d.Sections[1].ProtectedForForms = false;
+                d.Sections[1].ProtectedForForms = true;
+            },
+            Body()),
+
+        new Scenario("fields-unlink",
+            d =>
+            {
+                d.Content.InsertAfter("text");
+                d.Fields.Add(d.Range(0, 0), FieldType.Empty, "SEQ a", false);
+                d.Fields.Add(d.Range(0, 0), FieldType.Empty, "SEQ b", false);
+                d.Fields.Unlink();
+            },
+            Body()),
+
         new Scenario("document-settings",
             d =>
             {
