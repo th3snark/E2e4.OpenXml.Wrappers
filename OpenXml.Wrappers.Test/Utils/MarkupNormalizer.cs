@@ -43,6 +43,8 @@ public static class MarkupNormalizer
     private static readonly XNamespace R = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
     private static readonly XNamespace MC = "http://schemas.openxmlformats.org/markup-compatibility/2006";
     private static readonly XNamespace WP = "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing";
+    private static readonly XNamespace Pic = "http://schemas.openxmlformats.org/drawingml/2006/picture";
+    private static readonly XNamespace WP14 = "http://schemas.microsoft.com/office/word/2010/wordprocessingDrawing";
     private static readonly XNamespace PackageRelationships = "http://schemas.openxmlformats.org/package/2006/relationships";
     private static readonly XNamespace ContentTypes = "http://schemas.openxmlformats.org/package/2006/content-types";
 
@@ -277,7 +279,7 @@ public static class MarkupNormalizer
             return;
         }
         XName name = attribute.Name;
-        if ((name.Namespace == W && name.LocalName.StartsWith("rsid", StringComparison.Ordinal)) || name == W14 + "textId")
+        if ((name.Namespace == W && name.LocalName.StartsWith("rsid", StringComparison.Ordinal)) || name == W14 + "textId" || name == WP14 + "anchorId" || name == WP14 + "editId")
         {
             attribute.Remove();
         }
@@ -308,6 +310,11 @@ public static class MarkupNormalizer
         else if (element.Name == WP + "docPr" && name == "id")
         {
             attribute.Value = placeholders.Get("docPr", attribute.Value);
+        }
+        else if (element.Name == Pic + "cNvPr" && name == "id")
+        {
+            //Word gives a picture a random id of its own.
+            attribute.Value = placeholders.Get("pic", attribute.Value);
         }
         else if (name == W15 + "paraId" || name == W15 + "paraIdParent" || name == W16cid + "paraId")
         {
@@ -373,7 +380,11 @@ public static class MarkupNormalizer
     //The Open XML SDK names the first custom XML part item.xml where Word names it item1.xml. The name means nothing, so it is compared as Word's.
     private static string CanonicalPartName(string name)
     {
-        return name.Replace("customXml/item.xml", "customXml/item1.xml").Replace("customXml/_rels/item.xml.rels", "customXml/_rels/item1.xml.rels");
+        //Likewise the SDK puts pictures in /media, numbered from nothing, where Word puts them in /word/media, numbered from 1.
+        return System.Text.RegularExpressions.Regex.Replace(
+            name.Replace("customXml/item.xml", "customXml/item1.xml").Replace("customXml/_rels/item.xml.rels", "customXml/_rels/item1.xml.rels"),
+            @"^(/?)media/image(\d*)\.",
+            m => m.Groups[1].Value + "word/media/image" + (m.Groups[2].Value.Length == 0 ? 1 : int.Parse(m.Groups[2].Value, CultureInfo.InvariantCulture) + 1).ToString(CultureInfo.InvariantCulture) + ".");
     }
 
     private static void NormalizeRelationships(XElement root, string source, Placeholders placeholders)
@@ -384,6 +395,11 @@ public static class MarkupNormalizer
         foreach (XElement relationship in relationships)
         {
             XAttribute target = relationship.Attribute("Target");
+            if (target != null && (string)relationship.Attribute("TargetMode") == "External" && target.Value.StartsWith("file:", StringComparison.OrdinalIgnoreCase))
+            {
+                //A linked file is somewhere on the machine that wrote the document.
+                target.Value = "file:///{path}";
+            }
             if (target != null && (string)relationship.Attribute("TargetMode") != "External")
             {
                 target.Value = CanonicalPartName(ResolveTarget(folder, target.Value));
@@ -441,7 +457,7 @@ public static class MarkupNormalizer
             elements.Add(new XElement(ContentTypes + "Default", new XAttribute("Extension", "rels"), new XAttribute("ContentType", relationships)));
         }
         foreach (string entryName in entryNames.Where(n => n != ContentTypesEntry && n[n.Length - 1] != '/' && !IsRelationshipsEntry(n))
-            .OrderBy(n => n, StringComparer.OrdinalIgnoreCase))
+            .OrderBy(n => CanonicalPartName(n), StringComparer.OrdinalIgnoreCase))
         {
             string partName = "/" + entryName;
             string extension = Path.GetExtension(entryName).TrimStart('.').ToUpperInvariant();

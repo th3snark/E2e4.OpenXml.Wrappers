@@ -1294,6 +1294,79 @@ public class MarkupConformanceTest
             },
             Body(), Part("glossary.document.xml")),
 
+        new Scenario("inline-picture-add",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.InlineShapes.AddPicture(PicturePath, false, true, d.Range(5, 5));
+            },
+            PictureParts()),
+
+        new Scenario("inline-picture-twice",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.InlineShapes.AddPicture(PicturePath, false, true, d.Range(5, 5));
+                d.InlineShapes.AddPicture(PicturePath, false, true, d.Range(0, 0));
+            },
+            PictureParts()),
+
+        new Scenario("inline-picture-properties",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                InlineShapeWrapper shape = d.InlineShapes.AddPicture(PicturePath, false, true, d.Range(5, 5));
+                shape.AlternativeText = "A blue box";
+                shape.Title = "Box";
+                shape.Width = 60;
+                shape.LockAspectRatio = false;
+                shape.Height = 30;
+            },
+            Body()),
+
+        new Scenario("inline-picture-scale",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                InlineShapeWrapper shape = d.InlineShapes.AddPicture(PicturePath, false, true, d.Range(5, 5));
+                shape.ScaleWidth = 200;
+            },
+            Body()),
+
+        new Scenario("inline-picture-lock",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                InlineShapeWrapper shape = d.InlineShapes.AddPicture(PicturePath, false, true, d.Range(5, 5));
+                shape.LockAspectRatio = true;
+                shape.Width = 60;
+            },
+            Body()),
+
+        new Scenario("inline-picture-linked",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.InlineShapes.AddPicture(PicturePath, true, false, d.Range(5, 5));
+            },
+            PictureParts()),
+
+        new Scenario("inline-picture-delete",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.InlineShapes.AddPicture(PicturePath, false, true, d.Range(5, 5)).Delete();
+            },
+            PictureParts()),
+
+        new Scenario("inline-picture-over-text",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.InlineShapes.AddPicture(PicturePath, false, true, d.Range(6, 11));
+            },
+            Body()),
+
         new Scenario("document-settings",
             d =>
             {
@@ -2659,6 +2732,13 @@ public class MarkupConformanceTest
     private static Comparison[] ControlParts()
     {
         return new[] { Body(), Part("glossary.document.xml") };
+    }
+
+    private static readonly string PicturePath = System.IO.Path.GetFullPath(TestFile.Picture);
+
+    private static Comparison[] PictureParts()
+    {
+        return new[] { Body(), Part("document.xml.rels"), Part("content-types.xml") };
     }
 
     private static Comparison[] CustomXmlParts()
