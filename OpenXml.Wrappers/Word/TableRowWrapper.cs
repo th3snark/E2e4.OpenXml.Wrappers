@@ -267,6 +267,12 @@ public partial class TableRowWrapper : System.IEquatable<TableRowWrapper>
         get { return new BordersWrapper(_tableRow, false); }
     }
 
+    /// <summary>Selects the row, as <c>TableRow.Select</c> in Word.</summary>
+    public void Select()
+    {
+        Range.Select();
+    }
+
     #region Equality
 
     // Two wrappers are equal when they wrap the same underlying element(s), so a new wrapper obtained for the same item compares equal.

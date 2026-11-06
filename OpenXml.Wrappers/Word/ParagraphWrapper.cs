@@ -340,6 +340,12 @@ public partial class ParagraphWrapper : System.IEquatable<ParagraphWrapper>
         set { Format.KeepWithNext = value; }
     }
 
+    /// <summary>Selects the paragraph, as <c>Paragraph.Select</c> in Word.</summary>
+    public void Select()
+    {
+        Range.Select();
+    }
+
     #region Equality
 
     // Two wrappers are equal when they wrap the same underlying element(s), so a new wrapper obtained for the same item compares equal.

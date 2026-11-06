@@ -168,6 +168,12 @@ public partial class TableCellWrapper : System.IEquatable<TableCellWrapper>
         }
     }
 
+    /// <summary>Selects the cell, as <c>TableCell.Select</c> in Word.</summary>
+    public void Select()
+    {
+        Range.Select();
+    }
+
     #region Equality
 
     // Two wrappers are equal when they wrap the same underlying element(s), so a new wrapper obtained for the same item compares equal.

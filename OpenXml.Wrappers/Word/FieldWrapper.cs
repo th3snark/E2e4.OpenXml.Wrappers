@@ -366,6 +366,12 @@ public partial class FieldWrapper : System.IEquatable<FieldWrapper>
         }
     }
 
+    /// <summary>Selects the field, as <c>Field.Select</c> in Word.</summary>
+    public void Select()
+    {
+        Range.Select();
+    }
+
     #region Equality
 
     // Two wrappers are equal when they wrap the same underlying element(s), so a new wrapper obtained for the same item compares equal.
