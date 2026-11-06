@@ -774,6 +774,116 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $doc.Paragraphs.Item(1).Range.ListFormat.ApplyNumberDefault()
         $doc.Paragraphs.Item(2).Range.ListFormat.ApplyListTemplate($doc.ListTemplates.Item(1), $true)
     }
+    'list-template-add'               = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo`rThree")
+        $t = $doc.ListTemplates.Add($false, 'Mine')
+        Write-Host ('template: name "{0}" outline {1} levels {2}' -f $t.Name, $t.OutlineNumbered, $t.ListLevels.Count)
+        $l = $t.ListLevels.Item(1)
+        Write-Host ('level1 default: fmt "{0}" style {1} numpos {2} textpos {3} tab {4} trail {5} start {6}' -f $l.NumberFormat, $l.NumberStyle, $l.NumberPosition, $l.TextPosition, $l.TabPosition, $l.TrailingCharacter, $l.StartAt)
+        $doc.Content.ListFormat.ApplyListTemplate($t)
+        Write-Host ('count templates {0}' -f $doc.ListTemplates.Count)
+    }
+
+    'list-template-add-outline'       = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo")
+        $t = $doc.ListTemplates.Add($true, 'Outline')
+        Write-Host ('template: name "{0}" outline {1} levels {2}' -f $t.Name, $t.OutlineNumbered, $t.ListLevels.Count)
+        $l = $t.ListLevels.Item(2)
+        Write-Host ('level2 default: fmt "{0}" style {1} numpos {2} textpos {3} tab {4}' -f $l.NumberFormat, $l.NumberStyle, $l.NumberPosition, $l.TextPosition, $l.TabPosition)
+        $doc.Content.ListFormat.ApplyListTemplate($t)
+    }
+
+    'list-template-add-unnamed'       = {
+        param($doc)
+        $doc.Content.InsertAfter('One')
+        $t = $doc.ListTemplates.Add()
+        Write-Host ('unnamed: name "{0}" outline {1}' -f $t.Name, $t.OutlineNumbered)
+    }
+
+    'list-level-font-tab'             = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo")
+        $t = $doc.ListTemplates.Add($false, 'Styled')
+        $l = $t.ListLevels.Item(1)
+        $l.NumberFormat = '%1.'
+        $l.NumberStyle = 0
+        $l.Font.Bold = 1
+        $l.Font.Size = 14
+        $l.Font.Name = 'Arial'
+        $l.Font.Color = 255
+        $l.TabPosition = 100
+        Write-Host ('font: bold {0} size {1} name {2} color {3}; tab {4}' -f $l.Font.Bold, $l.Font.Size, $l.Font.Name, $l.Font.Color, $l.TabPosition)
+        $doc.Content.ListFormat.ApplyListTemplate($t)
+    }
+
+    'list-apply-with-level'           = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo`rThree")
+        $doc.Paragraphs.Item(1).Range.ListFormat.ApplyNumberDefault()
+        $t = $doc.ListTemplates.Item(1)
+        $r = $doc.Range($doc.Paragraphs.Item(2).Range.Start, $doc.Paragraphs.Item(3).Range.End)
+        Write-Host ('can continue: {0}' -f $r.ListFormat.CanContinuePreviousList($t))
+        $r.ListFormat.ApplyListTemplateWithLevel($t, $true, 0, [Type]::Missing, 2)
+        Write-Host ('levels: {0} {1} {2}' -f $doc.Paragraphs.Item(1).Range.ListFormat.ListLevelNumber, $doc.Paragraphs.Item(2).Range.ListFormat.ListLevelNumber, $doc.Paragraphs.Item(3).Range.ListFormat.ListLevelNumber)
+    }
+
+    #list-can-continue prints what Word does and makes no snapshot: CanContinuePreviousList makes Word add a list for the template it is asked about.
+    'list-can-continue'               = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo`rThree`rFour`rFive")
+        $p = { param($i) $doc.Paragraphs.Item($i).Range }
+        $t = $doc.ListTemplates.Add($false, 'A')
+        Write-Host ('no list before: {0}' -f (& $p 1).ListFormat.CanContinuePreviousList($t))
+        (& $p 1).ListFormat.ApplyListTemplate($t)
+        Write-Host ('after para1 numbered by t: para2 {0}' -f (& $p 2).ListFormat.CanContinuePreviousList($t))
+        $u = $doc.ListTemplates.Add($false, 'B')
+        Write-Host ('other template: para2 {0}' -f (& $p 2).ListFormat.CanContinuePreviousList($u))
+        Write-Host ('gap: para3 {0}' -f (& $p 3).ListFormat.CanContinuePreviousList($t))
+        Write-Host ('para1 itself: {0}' -f (& $p 1).ListFormat.CanContinuePreviousList($t))
+        (& $p 4).ListFormat.ApplyListTemplate($t, $false)
+        Write-Host ('para5 after para4 reset: {0}' -f (& $p 5).ListFormat.CanContinuePreviousList($t))
+    }
+
+    #The three list-on-list scenarios print what Word does and make no snapshot: touching Doc.Lists makes Word name a template (A2), which the library
+    #does not do. ListWrapperTest replays the printed values.
+    'list-apply-template-in-use'      = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo`rThree")
+        $t = $doc.ListTemplates.Add($false, 'A')
+        $doc.Paragraphs.Item(1).Range.ListFormat.ApplyListTemplate($t)
+        $doc.Paragraphs.Item(2).Range.ListFormat.ApplyListTemplate($t, $false)
+        $doc.Paragraphs.Item(3).Range.ListFormat.ApplyListTemplate($t, $false)
+    }
+
+    'list-on-list'                    = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo`rThree")
+        $doc.Content.ListFormat.ApplyNumberDefault()
+        $l = $doc.Lists.Item(1)
+        $t = $doc.ListTemplates.Add($false, 'Z')
+        $t.ListLevels.Item(1).NumberFormat = '(%1)'
+        $l.ApplyListTemplate($t)
+        Write-Host ('after apply: lists {0} strings {1} {2} {3}' -f $doc.Lists.Count, $doc.Paragraphs.Item(1).Range.ListFormat.ListString, $doc.Paragraphs.Item(2).Range.ListFormat.ListString, $doc.Paragraphs.Item(3).Range.ListFormat.ListString)
+    }
+
+    'list-on-list-remove'             = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo`rThree")
+        $doc.Content.ListFormat.ApplyNumberDefault()
+        $doc.Lists.Item(1).RemoveNumbers()
+        Write-Host ('after remove: lists {0}' -f $doc.Lists.Count)
+    }
+
+    'list-on-list-convert'            = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo`rThree")
+        $doc.Content.ListFormat.ApplyNumberDefault()
+        $doc.Lists.Item(1).ConvertNumbersToText()
+        Write-Host ('after convert: lists {0}; text "{1}"' -f $doc.Lists.Count, $doc.Content.Text.Replace("`r", '|').Replace("`t", '>'))
+    }
+
     'footnote-add'                    = {
         param($doc)
         $doc.Content.InsertAfter('Hello world again')

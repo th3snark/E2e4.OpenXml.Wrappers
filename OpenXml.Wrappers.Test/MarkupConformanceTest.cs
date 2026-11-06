@@ -845,7 +845,63 @@ public class MarkupConformanceTest
                 d.Paragraphs[1].Range.ListFormat.ApplyListTemplate(d.ListTemplates[0], true);
             },
             ListParts()),
-        new Scenario("footnote-add",
+        new Scenario("list-template-add",
+            d =>
+            {
+                d.Content.InsertAfter("One\rTwo\rThree");
+                d.Content.ListFormat.ApplyListTemplate(d.ListTemplates.Add(false, "Mine"));
+            },
+            ListParts()),
+        new Scenario("list-template-add-outline",
+            d =>
+            {
+                d.Content.InsertAfter("One\rTwo");
+                d.Content.ListFormat.ApplyListTemplate(d.ListTemplates.Add(true, "Outline"));
+            },
+            ListParts()),
+        new Scenario("list-template-add-unnamed",
+            d =>
+            {
+                d.Content.InsertAfter("One");
+                d.ListTemplates.Add();
+            },
+            ListParts()),
+        new Scenario("list-level-font-tab",
+            d =>
+            {
+                d.Content.InsertAfter("One\rTwo");
+                ListTemplateWrapper template = d.ListTemplates.Add(false, "Styled");
+                ListLevelWrapper level = template.ListLevels[0];
+                level.NumberFormat = "%1.";
+                level.NumberStyle = ListNumberStyle.Arabic;
+                level.Font.Bold = true;
+                level.Font.Size = 14;
+                level.Font.Name = "Arial";
+                level.Font.Color = 255;
+                level.TabPosition = 100;
+                d.Content.ListFormat.ApplyListTemplate(template);
+            },
+            ListParts()),
+        new Scenario("list-apply-with-level",
+            d =>
+            {
+                d.Content.InsertAfter("One\rTwo\rThree");
+                d.Paragraphs[0].Range.ListFormat.ApplyNumberDefault();
+                ListTemplateWrapper template = d.ListTemplates[0];
+                RangeWrapper range = d.Range(d.Paragraphs[1].Range.Start, d.Paragraphs[2].Range.End);
+                range.ListFormat.ApplyListTemplateWithLevel(template, true, ListApplyTo.WholeList, DefaultListBehavior.Word10, 2);
+            },
+            ListParts()),
+        new Scenario("list-apply-template-in-use",
+            d =>
+            {
+                d.Content.InsertAfter("One\rTwo\rThree");
+                ListTemplateWrapper template = d.ListTemplates.Add(false, "A");
+                d.Paragraphs[0].Range.ListFormat.ApplyListTemplate(template);
+                d.Paragraphs[1].Range.ListFormat.ApplyListTemplate(template, false);
+                d.Paragraphs[2].Range.ListFormat.ApplyListTemplate(template, false);
+            },
+            ListParts()),        new Scenario("footnote-add",
             d =>
             {
                 d.Content.InsertAfter("Hello world again");

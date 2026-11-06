@@ -1,0 +1,20 @@
+<w:numbering xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w15="http://schemas.microsoft.com/office/word/2012/wordml" xmlns:w16cid="http://schemas.microsoft.com/office/word/2016/wordml/cid" mc:Ignorable="w15 w16cid">
+  <w:abstractNum w15:restartNumberingAfterBreak="0" w:abstractNumId="0">
+    <w:nsid w:val="{nsid1}" />
+    <w:multiLevelType w:val="singleLevel" />
+    <w:tmpl w:val="{tmpl1}" />
+    <w:name w:val="Mine" />
+    <w:lvl w:ilvl="0">
+      <w:start w:val="1" />
+      <w:numFmt w:val="decimal" />
+      <w:lvlText w:val="%1." />
+      <w:lvlJc w:val="left" />
+      <w:pPr>
+        <w:ind w:hanging="360" w:left="720" />
+      </w:pPr>
+    </w:lvl>
+  </w:abstractNum>
+  <w:num w16cid:durableId="{durable1}" w:numId="1">
+    <w:abstractNumId w:val="0" />
+  </w:num>
+</w:numbering>
