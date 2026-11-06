@@ -1149,6 +1149,17 @@ public class MarkupConformanceTest
             },
             Body()),
 
+        new Scenario("find-match-phrase",
+            d =>
+            {
+                d.Content.InsertAfter("a  b\tc\vd e and two  three");
+                RangeWrapper r = d.Content;
+                r.Find.MatchPhrase = true;
+                r.Find.Execute("a b c d e", replaceWith: "X", replace: ReplaceMode.All);
+                r.Find.Execute("two three", replaceWith: "Y", replace: ReplaceMode.All);
+            },
+            Body()),
+
         new Scenario("find-replace-language",
             d =>
             {
