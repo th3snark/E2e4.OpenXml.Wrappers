@@ -190,6 +190,7 @@ public partial class WordprocessingDocumentWrapper : IDisposable
                 SaveChanges();
             }
             _wordprocessingDocument.Dispose();
+            _application?.Unregister(this);
         }
     }
 

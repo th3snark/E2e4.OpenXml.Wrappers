@@ -169,7 +169,10 @@ public class CommentWrapperCollection : IEnumerable<CommentWrapper>
             BuiltInStyles.GetOrCreate(mainDocumentPart, style);
         }
 
-        string author = string.IsNullOrEmpty(Environment.UserName) ? "Unknown" : Environment.UserName;
+        //The author is the user of the application of the document when it has one, and the user of the system otherwise.
+        ApplicationWrapper application = WordprocessingDocumentWrapper.For(mainDocumentPart.OpenXmlPackage as WordprocessingDocument)?.ApplicationIfAny;
+        string author = application != null ? application.UserName : string.IsNullOrEmpty(Environment.UserName) ? "Unknown" : Environment.UserName;
+        string initials = application != null ? application.UserInitials : CommentParts.GetInitials(author);
         DateTime now = DateTime.Now.Truncate(TimeSpan.TicksPerSecond);
 
         Paragraph paragraph = new Paragraph(
@@ -185,7 +188,7 @@ public class CommentWrapperCollection : IEnumerable<CommentWrapper>
             //Word writes the local time here, with the time in UTC in the comments extensible part.
             Date = DateTime.SpecifyKind(now, DateTimeKind.Unspecified),
             Author = author,
-            Initials = CommentParts.GetInitials(author)
+            Initials = initials
         };
         comments.AppendChild(comment);
         CommentParts.Add(mainDocumentPart, comment);
