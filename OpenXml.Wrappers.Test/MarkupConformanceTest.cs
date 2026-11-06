@@ -728,6 +728,123 @@ public class MarkupConformanceTest
                 d.Hyperlinks.Add(d.Range(0, 5), "https://example.com/");
             },
             HyperlinkParts()),
+        new Scenario("list-defaults",
+            d =>
+            {
+                d.Content.InsertAfter("One\rTwo\rThree");
+                d.Paragraphs[0].Range.ListFormat.ApplyBulletDefault();
+                d.Paragraphs[1].Range.ListFormat.ApplyNumberDefault();
+                d.Paragraphs[2].Range.ListFormat.ApplyOutlineNumberDefault();
+            },
+            Body()),
+
+        new Scenario("list-apply-bullet",
+            d =>
+            {
+                d.Content.InsertAfter("One\rTwo\rThree");
+                d.Content.ListFormat.ApplyBulletDefault();
+            },
+            ListParts()),
+
+        new Scenario("list-apply-number",
+            d =>
+            {
+                d.Content.InsertAfter("One\rTwo\rThree");
+                d.Content.ListFormat.ApplyNumberDefault();
+            },
+            ListParts()),
+
+        new Scenario("list-apply-outline",
+            d =>
+            {
+                d.Content.InsertAfter("One\rTwo\rThree");
+                d.Content.ListFormat.ApplyOutlineNumberDefault();
+            },
+            ListParts()),
+
+        new Scenario("list-apply-on-heading",
+            d =>
+            {
+                d.Content.InsertAfter("One\rTwo\rThree");
+                d.Paragraphs[0].Range.Style = "Heading 1";
+                d.Paragraphs[0].Range.ListFormat.ApplyBulletDefault();
+            },
+            ListParts()),
+
+        new Scenario("list-apply-on-indented",
+            d =>
+            {
+                d.Content.InsertAfter("One\rTwo\rThree");
+                d.Paragraphs[0].Range.ParagraphFormat.LeftIndent = 72;
+                d.Paragraphs[0].Range.ListFormat.ApplyNumberDefault();
+            },
+            ListParts()),
+
+        new Scenario("list-indent-outdent",
+            d =>
+            {
+                d.Content.InsertAfter("One\rTwo\rThree");
+                d.Content.ListFormat.ApplyOutlineNumberDefault();
+                d.Paragraphs[1].Range.ListFormat.ListIndent();
+                d.Paragraphs[2].Range.ListFormat.ListIndent();
+                d.Paragraphs[2].Range.ListFormat.ListOutdent();
+            },
+            ListParts()),
+
+        new Scenario("list-outdent-first-level",
+            d =>
+            {
+                d.Content.InsertAfter("One\rTwo\rThree");
+                d.Content.ListFormat.ApplyOutlineNumberDefault();
+                d.Paragraphs[0].Range.ListFormat.ListOutdent();
+            },
+            ListParts()),
+
+        new Scenario("list-level-number",
+            d =>
+            {
+                d.Content.InsertAfter("One\rTwo\rThree");
+                d.Content.ListFormat.ApplyOutlineNumberDefault();
+                d.Paragraphs[2].Range.ListFormat.ListLevelNumber = 4;
+            },
+            ListParts()),
+
+        new Scenario("list-remove-numbers",
+            d =>
+            {
+                d.Content.InsertAfter("One\rTwo\rThree");
+                d.Content.ListFormat.ApplyOutlineNumberDefault();
+                d.Paragraphs[1].Range.ListFormat.ListLevelNumber = 2;
+                d.Paragraphs[1].Range.ListFormat.RemoveNumbers();
+            },
+            ListParts()),
+
+        new Scenario("list-convert-bullet-to-text",
+            d =>
+            {
+                d.Content.InsertAfter("One\rTwo\rThree");
+                d.Content.ListFormat.ApplyBulletDefault();
+                d.Paragraphs[1].Range.ListFormat.ConvertNumbersToText();
+            },
+            ListParts()),
+
+        new Scenario("list-convert-number-to-text",
+            d =>
+            {
+                d.Content.InsertAfter("One\rTwo\rThree");
+                d.Content.ListFormat.ApplyNumberDefault();
+                d.Paragraphs[0].Range.ListFormat.ConvertNumbersToText();
+            },
+            ListParts()),
+
+        new Scenario("list-apply-template-continue",
+            d =>
+            {
+                d.Content.InsertAfter("One\rTwo\rThree");
+                d.Paragraphs[0].Range.ListFormat.ApplyNumberDefault();
+                d.Paragraphs[1].Range.ListFormat.ApplyListTemplate(d.ListTemplates[0], true);
+            },
+            ListParts()),
         new Scenario("document-settings",
             d =>
             {
@@ -2057,6 +2174,12 @@ public class MarkupConformanceTest
             new Comparison("styles.xml Hyperlink style", parts => "styles.xml",
                 root => root.Elements(W + "style").Where(e => (string)e.Attribute(W + "styleId") == "Hyperlink"))
         };
+    }
+
+    //The text of the body and the numbering definitions.
+    private static Comparison[] ListParts()
+    {
+        return new[] { Body(), Part("numbering.xml") };
     }
 
     private static Comparison[] CommentParts()
