@@ -2,7 +2,7 @@
 
 All notable changes are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/) and the project uses [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.3.0] - 2026-11-06
 
 ### Added
 - Footnotes and endnotes: `Document.Footnotes` and `Endnotes` (also `Range.Footnotes` and `Endnotes`), with `Add(range, reference, text)`, `Item`, `Count`, and `Footnote`/`Endnote` with `Range`, `Reference`, `Index`, `Parent` and `Delete`. The parts, the separators, the styles and the numbering of the notes (1, 2, 3 in the order of the text) are what Word 16 writes, checked in seven new reference scenarios. `StoryRanges` lists the first footnote and the first endnote. The options are `Footnotes.Location`, `NumberStyle`, `NumberingRule` and `StartingNumber` (and the same on `Endnotes`), written in the settings and in every section as Word does, and `Range.FootnoteOptions` and `EndnoteOptions` for the sections of a range; `Convert`, `SwapWithEndnotes` and `SwapWithFootnotes` move the notes between the kinds; `Separator` and `ContinuationSeparator` give the separator stories. Eleven more reference scenarios, all matching Word 16.
