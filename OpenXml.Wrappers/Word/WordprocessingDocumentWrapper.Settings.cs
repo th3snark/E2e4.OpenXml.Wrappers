@@ -181,4 +181,17 @@ public partial class WordprocessingDocumentWrapper
     {
         CompatibilityMode = mode;
     }
+
+    /// <summary>
+    /// Brings the document up to the latest format, compatibility mode 15, as <c>Document.Convert</c> in Word.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The document is in mode 15 already; Word makes the command unavailable.</exception>
+    public void Convert()
+    {
+        if (CompatibilityMode == 15)
+        {
+            throw new InvalidOperationException("The document is in the latest format already.");
+        }
+        CompatibilityMode = 15;
+    }
 }

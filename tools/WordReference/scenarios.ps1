@@ -598,6 +598,12 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $doc.Fields.Unlink()
     }
 
+    'document-convert'                = {
+        param($doc)
+        $doc.SetCompatibilityMode(14)
+        $doc.Convert()
+    }
+
     'document-settings'               = {
         param($doc)
         $doc.DefaultTabStop = 54

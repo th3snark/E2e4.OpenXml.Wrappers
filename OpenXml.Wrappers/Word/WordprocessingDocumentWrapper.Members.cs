@@ -429,8 +429,8 @@ public partial class WordprocessingDocumentWrapper
             protection.CryptographicAlgorithmType = CryptAlgorithmValues.TypeAny;
             protection.CryptographicAlgorithmSid = 14;
             protection.CryptographicSpinCount = 100000;
-            protection.Hash = Convert.ToBase64String(HashPassword(password, salt, 100000));
-            protection.Salt = Convert.ToBase64String(salt);
+            protection.Hash = System.Convert.ToBase64String(HashPassword(password, salt, 100000));
+            protection.Salt = System.Convert.ToBase64String(salt);
         }
         settings.AddChild(protection);
     }
@@ -451,8 +451,8 @@ public partial class WordprocessingDocumentWrapper
         if (protection.Hash != null && protection.Salt != null)
         {
             int spinCount = (int)(protection.CryptographicSpinCount?.Value ?? 100000);
-            byte[] expected = Convert.FromBase64String(protection.Hash.Value);
-            byte[] actual = HashPassword(password ?? string.Empty, Convert.FromBase64String(protection.Salt.Value), spinCount);
+            byte[] expected = System.Convert.FromBase64String(protection.Hash.Value);
+            byte[] actual = HashPassword(password ?? string.Empty, System.Convert.FromBase64String(protection.Salt.Value), spinCount);
             if (!SameBytes(expected, actual))
             {
                 throw new UnauthorizedAccessException("The password is not correct.");
@@ -462,8 +462,8 @@ public partial class WordprocessingDocumentWrapper
         {
             //As version 1.0 of this library wrote it, which Word could not check.
             int spin = (int)(protection.CryptographicSpinCount?.Value ?? 100000);
-            byte[] expected = Convert.FromBase64String(protection.HashValue.Value);
-            byte[] actual = HashPasswordVersion1(password ?? string.Empty, Convert.FromBase64String(protection.SaltValue.Value), spin);
+            byte[] expected = System.Convert.FromBase64String(protection.HashValue.Value);
+            byte[] actual = HashPasswordVersion1(password ?? string.Empty, System.Convert.FromBase64String(protection.SaltValue.Value), spin);
             if (!SameBytes(expected, actual))
             {
                 throw new UnauthorizedAccessException("The password is not correct.");

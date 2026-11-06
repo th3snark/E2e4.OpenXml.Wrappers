@@ -622,6 +622,14 @@ public class MarkupConformanceTest
             },
             Body()),
 
+        new Scenario("document-convert",
+            d =>
+            {
+                d.SetCompatibilityMode(14);
+                d.Convert();
+            },
+            Elements("settings.xml", "compat")),
+
         new Scenario("document-settings",
             d =>
             {
