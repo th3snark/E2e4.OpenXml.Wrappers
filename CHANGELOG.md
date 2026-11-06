@@ -2,6 +2,11 @@
 
 All notable changes are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- `StoryType` (with the values of `WdStoryType`), `Range.StoryType`, `Range.NextStoryRange`, `Bookmark.StoryType` and `Document.StoryRanges` (`Item` by `StoryType`, `Count`, enumeration). The stories listed are the main text, the first comment, and the headers and footers of the first section; each comment is a story of its own here, where Word joins them. Footnote, endnote and text-box stories follow with those objects.
+
 ## [1.2.0] - 2026-11-06
 
 ### Added
