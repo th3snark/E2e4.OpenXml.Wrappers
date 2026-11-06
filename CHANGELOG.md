@@ -2,12 +2,16 @@
 
 All notable changes are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/) and the project uses [Semantic Versioning](https://semver.org/).
 
-## [1.6.0] - 2026-11-06
+## [1.7.0] - 2026-11-06
 
 ### Added
 - Custom XML nodes: `CustomXMLPart.DocumentElement`, `SelectNodes`, `SelectSingleNode` and `NamespaceManager`, `CustomXMLNode` with `CustomXMLNodes` (name, namespace, type, text, XML, XPath, parent, children, attributes, siblings, `Delete`), `XMLMapping.SetMappingByNode` and `CustomXMLNode`, and `Document.SelectLinkedControls` and `SelectUnlinkedControls`. Changing a node changes the content controls bound to it. One new reference scenario matching Word 16.
 - Tables of figures and captions: `TablesOfFigures` on `Document` and `Range` (`Add`, `Item`, `Count`) with `TableOfFigures`, `TablesOfContents.MarkEntry` (a `TC` field) and `Range.InsertCaption`. A table of contents that uses fields now lists the `TC` entries with its identifier when it is made or updated. Six new reference scenarios matching Word 16.
 - Tables of contents: `TableOfContents.HeadingStyles` (`Add`, `Item`, `Count`; `HeadingStyle.Style`, `Level` and `Delete`) and the `addedStyles` argument of `TablesOfContents.Add`, the `\t` switch of the field. Three new reference scenarios matching Word 16. The switches of the field code are now written in the order Word writes them.
+
+## [1.6.0] - 2026-11-06
+
+### Added
 - Selection: `ClearFormatting`, `ClearCharacterAllFormatting`, `ClearCharacterDirectFormatting`, `ClearCharacterStyle`, `ClearParagraphAllFormatting`, `ClearParagraphDirectFormatting`, `ClearParagraphStyle`, `BoldRun`, `ItalicRun`, `InsertRowsAbove` and `InsertRowsBelow`. Six new reference scenarios, all matching Word 16.
 - List templates and lists: `ListTemplates.Add`, `ListLevel.Font`, setting `ListLevel.TabPosition`, `ListFormat.ApplyListTemplateWithLevel` and `CanContinuePreviousList`, and on `List`: `Range`, `ApplyListTemplate`, `ApplyListTemplateWithLevel`, `CanContinuePreviousList`, `ConvertNumbersToText` and `RemoveNumbers`. Eight new reference scenarios, all matching Word 16. Applying a template that is already in use now makes the copy Word makes: right after the template, named with a 2 added.
 - Text boxes and drawn shapes: `Shapes.AddTextbox`, `Shapes.AddShape` (rectangle, diamond, rounded rectangle, isosceles triangle, oval, hexagon, right arrow), `Shapes.AddLine`, and on `Shape` the members `AutoShapeType`, `Fill` (`Visible`, `ForeColor`, `Transparency`), `Line` (`Visible`, `ForeColor`, `Weight`) and `TextFrame` (`TextRange`, `HasText`), with `ShapeType` values for auto shapes, lines and text boxes. Five new reference scenarios; the shape itself matches Word 16. The old copy Word writes for versions before 2010 is not written.
