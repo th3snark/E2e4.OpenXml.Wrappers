@@ -135,7 +135,8 @@ In Word, `Paragraph` exposes the whole of `ParagraphFormat`; here it forwards on
 | Done | `ClearFormatting`, `Execute` (Word's parameters in Word's order), `Forward`, `Found`, `MatchCase`, `MatchWholeWord`, `MatchWildcards`, `Replacement`, `Text`, `Wrap` (`FindWrap.Ask` throws) |
 | Done (step 9b) | `Format`, `Font`, `ParagraphFormat`, `Style` (the name), `Highlight` (true or false; null for either) |
 | Done (step 9e) | `MatchPrefix`, `MatchSuffix`, `IgnorePunct`, `IgnoreSpace`, `NoProofing`, `LanguageID`, `LanguageIDFarEast` |
-| Planned, step 9 | `MatchPhrase`, `LanguageIDOther`, `Parent` |
+| Done (step 9h) | `MatchPhrase` (white space in the text matches any white space or control characters, as measured: a run must be matched by one at least as long, the whole run is used when text follows; not used with wildcards) |
+| Decided against | `LanguageIDOther` (Word 16 does not expose it on `Find` or `Replacement` over COM), `Parent` (returns the owning Word object; the library has no `Application` hierarchy for it until step 20) |
 | Out of scope | `MatchSoundsLike`, `MatchAllWordForms` (need Word's linguistic data; they exist and throw when set to `true`), `HitHighlight`, `ClearHitHighlight` (UI), `Frame` (frames) |
 | Decided against | `Execute2007` (the same as Execute). Script-specific matching, which needs reference behaviour we cannot test: `MatchFuzzy`, `SetAllFuzzyOptions`, `ClearAllFuzzyOptions`, `MatchByte`, `MatchAlefHamza`, `MatchControl`, `MatchDiacritics`, `MatchKashida`, `CorrectHangulEndings`, `HanjaPhoneticHangul` |
 
@@ -147,7 +148,7 @@ In Word, `Paragraph` exposes the whole of `ParagraphFormat`; here it forwards on
 | Done | `ClearFormatting`, `Text` |
 | Done (step 9b) | `Font`, `ParagraphFormat`, `Style` (the name), `Highlight` (true, false or null) |
 | Done (step 9e) | `LanguageID`, `LanguageIDFarEast`, `NoProofing` |
-| Planned, step 9 | `Parent` |
+| Decided against | `Parent` (see `Find`) |
 | Out of scope | `Frame` (frames) |
 
 ### 3.9 Style, Styles, TableStyle, ConditionalStyle
@@ -161,7 +162,7 @@ In Word, `Paragraph` exposes the whole of `ParagraphFormat`; here it forwards on
 | Done (step 9a) | `AutomaticallyUpdate`, `InUse`, `LanguageID`, `LanguageIDFarEast`, `NoProofing`, `Linked`, `LinkStyle` (read only), `Locked`, `Priority`, `QuickStyle`, `UnhideWhenUsed`, `Visibility`, `NoSpaceBetweenParagraphsOfSameStyle`; `BaseStyle` and `NextParagraphStyle` can be set |
 | Done (step 9c) | `Borders`, `Shading` (paragraph styles; Word gives `Nothing` for a character style, so they are null there. `Font.Borders`, `Font.Shading`, `ParagraphFormat.Borders` and `ParagraphFormat.Shading` of a style work too) |
 | Done (step 9d) | `Table` (null for a style that is not a table style) |
-| Planned, step 9 | `Parent` |
+| Decided against | `Parent` (see `Find`) |
 | Planned, step 13 | `ListLevelNumber`, `ListTemplate`, `LinkToListTemplate` |
 | Out of scope | `Frame` (frames) |
 | Decided against | `Description` (the summary Word generates for its UI, such as "Font: Bold, Style: Quick Style") |
@@ -178,7 +179,7 @@ Borders and shading of styles as Word 16 writes them: a paragraph style has `w:p
 |---|---|
 | Done | `Add`, `Item` (by index, name or `BuiltInStyle`), `Count` |
 | Done (step 9g) | `BuiltInStyle` covers all of `WdBuiltinStyle` except List Bullet and List Number (1 to 5), whose numbering Word writes as a numbering part (planned with lists, step 13): index, TOA, list, list continue, envelope, HTML, body text variants, Message Header, Note Heading, Macro Text, Normal Indent, Block Text, Document Map, Normal (Web), `NormalObject` (Word 365 shows No Spacing for it) and the 20 built-in table styles, checked in the `built-in-styles` scenario |
-| Planned, step 9 | `Parent` |
+| Decided against | `Parent` (see `Find`) |
 
 <!-- learn: tablestyle -->
 
@@ -187,7 +188,7 @@ Borders and shading of styles as Word 16 writes them: a paragraph style has `w:p
 | Status | Members |
 |---|---|
 | Done (step 9d) | `Condition` (`ConditionCode`), `Alignment`, `AllowBreakAcrossPage`, `Borders`, `BottomPadding`, `ColumnStripe`, `LeftIndent`, `LeftPadding`, `RightPadding`, `RowStripe`, `Shading`, `Spacing`, `TopPadding` |
-| Planned, step 9 | `Parent` |
+| Decided against | `Parent` (see `Find`) |
 | Decided against | `AllowPageBreaks` (not measured; `AllowBreakAcrossPage` is the row property), `TableDirection` (setting it through automation changed nothing in Word 16) |
 
 Table styles as Word 16 writes them: `Styles.Add` of a table style writes an empty `w:tblPr`. `Alignment` and `Spacing` are written to the style's table properties and to its row properties, `AllowBreakAcrossPage = false` is `w:cantSplit` in the row properties, `LeftIndent` is `w:tblInd`, the stripes are `w:tblStyleRowBandSize` and `w:tblStyleColBandSize`, and `Borders` are `w:tblBorders`. The paddings and the shading go to the style's cell properties (`w:tcMar` and `w:shd`), not to `w:tblCellMar` or the table properties; a padding that is set writes only its own side. Reading gives only what the style sets itself.
@@ -199,7 +200,7 @@ Table styles as Word 16 writes them: `Styles.Add` of a table style writes an emp
 | Status | Members |
 |---|---|
 | Done (step 9d) | `Borders`, `BottomPadding`, `Font`, `LeftPadding`, `ParagraphFormat`, `RightPadding`, `Shading`, `TopPadding` (`Font.Borders`, `Font.Shading`, `Font.Duplicate` and the borders and shading of `ParagraphFormat` throw `NotSupportedException`; use `Borders` and `Shading` of the conditional format) |
-| Planned, step 9 | `Parent` |
+| Decided against | `Parent` (see `Find`) |
 
 Conditional formats as Word 16 writes them (`w:tblStylePr`, in the order whole table, first row, last row, first column, last column, vertical bands, horizontal bands, then the corner cells): `Font` is `w:rPr`, `ParagraphFormat` is `w:pPr`, and the shading, the borders and the paddings are in the cell properties with an empty `w:tblPr` beside them. Setting the shading or a border makes the borders that are not set `nil`; setting a padding makes the other three sides `nil`. Word's own results for combinations of several of these in one session were not the sum of the parts (a later border or padding dropped what an earlier one wrote), so only each on its own, and font, paragraph format and shading together, are compared.
 

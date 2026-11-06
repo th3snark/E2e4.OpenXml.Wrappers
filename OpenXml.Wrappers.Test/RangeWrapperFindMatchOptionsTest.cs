@@ -60,6 +60,34 @@ public class RangeWrapperFindMatchOptionsTest
     }
 
     [Fact]
+    public void APhraseMatchesAnyWhiteSpaceBetweenItsWords()
+    {
+        Assert.Equal("X and two  three", Replaced("a  b\tc\vd e and two  three", f => f.MatchPhrase = true, "a b c d e"));
+        Assert.Equal("one X", Replaced("one two  three", f => f.MatchPhrase = true, "two three"));
+        Assert.Equal("one X", Replaced("one two\tthree", f => f.MatchPhrase = true, "two three"));
+        Assert.Equal("one two  three", Replaced("one two  three", f => f.MatchPhrase = false, "two three"));
+    }
+
+    [Fact]
+    public void APhraseNeedsAsMuchWhiteSpaceAsItHasAndKeepsItsOwnWords()
+    {
+        Assert.Equal("one two three", Replaced("one two three", f => f.MatchPhrase = true, "two  three"));
+        Assert.Equal("one two three", Replaced("one two three", f => f.MatchPhrase = true, "twothree"));
+        Assert.Equal("one X three", Replaced("one two  three", f => f.MatchPhrase = true, "two "));
+    }
+
+    [Fact]
+    public void APhraseCanRunAcrossAParagraphMark()
+    {
+        Body body = new Body(new Paragraph(new Run(new Text("one two"))), new Paragraph(new Run(new Text("three four"))));
+        RangeWrapper range = new RangeWrapper(body);
+        range.Find.MatchPhrase = true;
+
+        Assert.True(range.Find.Execute("two three"));
+        Assert.Equal("two\rthree", range.Text);
+    }
+
+    [Fact]
     public void AMatchThatIgnoresPunctuationEndsAtItsLastLetter()
     {
         Body body = CreateBody("co-op, then");

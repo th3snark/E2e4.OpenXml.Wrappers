@@ -1049,6 +1049,17 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $f.IgnoreSpace = $true
         [void]$f.Execute('ab', $m, $m, $m, $m, $m, $m, $m, $m, 'X', 2)
     }
+    'find-match-phrase'               = {
+        param($doc)
+        $doc.Content.InsertAfter("a  b`tc`vd e and two  three")
+        $m = [Type]::Missing
+        $f = $doc.Content.Find
+        $f.ClearFormatting()
+        $f.Replacement.ClearFormatting()
+        $f.MatchPhrase = $true
+        [void]$f.Execute('a b c d e', $m, $m, $m, $m, $m, $m, $m, $m, 'X', 2)
+        [void]$f.Execute('two three', $m, $m, $m, $m, $m, $m, $m, $m, 'Y', 2)
+    }
     'find-replace-language'           = {
         param($doc)
         $doc.Content.InsertAfter('One two three')

@@ -48,6 +48,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 - `BuiltInStyle` grows from 55 to 122 values: the rest of `WdBuiltinStyle` that does not need numbering (index, table of figures and authorities, list and list continue, envelope, HTML, the body text variants, Normal Indent, Block Text, Document Map, Normal (Web), No Spacing as `NormalObject`, and the twenty built-in table styles such as Light Shading - Accent 1). Word's own definitions, in the extended `built-in-styles` scenario, which matches. List Bullet and List Number are left out until lists are done.
 
+- `Find.MatchPhrase`: white space in the text to find matches any white space or control characters (spaces, tabs, line breaks, paragraph marks), as measured in Word 16: `two three` finds `two  three` and `two`, a tab, `three`, but `two  three` does not find a single space. One new reference scenario, matching Word. `LanguageIDOther` and `Parent` are not added: Word does not expose the first on `Find` or `Replacement`, and the second belongs to an `Application` hierarchy the library does not have yet.
+
 ### Behaviour changes
 - **The built-in table style is named "Table Normal"**, as Word names it (`NameLocal`), where it was "Normal Table", the name it is stored under; `Styles["Table Normal"]` now finds it. `Styles["Normal Table"]` still works.
 - **`Styles.Add` of a table style writes an empty `w:tblPr`**, as Word does.

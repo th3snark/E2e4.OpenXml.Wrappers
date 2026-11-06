@@ -189,6 +189,14 @@ public class FindWrapper
     /// <summary>True to ignore white space (spaces, tabs and no-break spaces) in the text and in the text searched: <c>ab</c> finds <c>a b</c>. Not used with <see cref="MatchWildcards"/>.</summary>
     public bool IgnoreSpace { get; set; }
 
+    /// <summary>
+    /// True to let white space in <see cref="Text"/> match any white space or control character in the text searched (spaces, tabs, line breaks
+    /// and paragraph marks): <c>two three</c> finds <c>two  three</c>, <c>two</c> and <c>three</c> on either side of a tab, and across a paragraph
+    /// mark. As in Word, a run of white space in the text must be matched by one at least as long, and the whole run is used when more text
+    /// follows it. Not used with <see cref="MatchWildcards"/>.
+    /// </summary>
+    public bool MatchPhrase { get; set; }
+
     /// <summary>True to treat <see cref="Text"/> as a pattern, as described for the class.</summary>
     public bool MatchWildcards { get; set; }
 
@@ -313,7 +321,7 @@ public class FindWrapper
             throw new NotSupportedException("FindWrap.Ask is not supported: there is no user to ask.");
         }
 
-        _pattern = Pattern.Create(Text ?? string.Empty, MatchWildcards, MatchCase);
+        _pattern = Pattern.Create(Text ?? string.Empty, MatchWildcards, MatchCase, MatchPhrase);
         _replacer = new Replacer(Replacement.Text ?? string.Empty, MatchWildcards);
 
         //Where the search starts and ends. Looking for the same thing again from the match carries on from its end.
@@ -1090,13 +1098,45 @@ public class FindWrapper
     //What is looked for: plain text, or a regular expression made from a pattern or from the codes that stand for a kind of character.
     private sealed class Pattern
     {
+        private static bool IsPhraseSpace(char c)
+        {
+            return c == ' ' || c == '\t' || c == '\v' || c == '\r' || c == '\f';
+        }
+
+        //Each run of white space in the text is a run of white space and control characters at least as long, the whole of it when text follows.
+        private static string ToPhraseRegex(string literal)
+        {
+            StringBuilder builder = new StringBuilder();
+            int i = 0;
+            while (i < literal.Length)
+            {
+                if (IsPhraseSpace(literal[i]))
+                {
+                    int start = i;
+                    while (i < literal.Length && IsPhraseSpace(literal[i]))
+                    {
+                        i++;
+                    }
+                    builder.Append(i < literal.Length
+                        ? string.Format(CultureInfo.InvariantCulture, "[ \t\v\r\f]{{{0},}}", i - start)
+                        : string.Format(CultureInfo.InvariantCulture, "[ \t\v\r\f]{{{0}}}", i - start));
+                }
+                else
+                {
+                    builder.Append(Regex.Escape(literal[i].ToString()));
+                    i++;
+                }
+            }
+            return builder.ToString();
+        }
+
         public string Literal { get; private set; }
 
         public Regex Regex { get; private set; }
 
         public StringComparison Comparison { get; private set; }
 
-        public static Pattern Create(string text, bool wildcards, bool matchCase)
+        public static Pattern Create(string text, bool wildcards, bool matchCase, bool phrase = false)
         {
             text = text.Replace('\n', '\v');
             Pattern pattern = new Pattern() { Comparison = matchCase ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase };
@@ -1115,6 +1155,10 @@ public class FindWrapper
             if (!wildcards && !kinds)
             {
                 pattern.Literal = Unescape(text);
+                if (phrase && pattern.Literal.Any(IsPhraseSpace))
+                {
+                    pattern.Regex = new Regex(ToPhraseRegex(pattern.Literal), RegexOptions.CultureInvariant | (matchCase ? RegexOptions.None : RegexOptions.IgnoreCase), TimeSpan.FromSeconds(30));
+                }
                 return pattern;
             }
 
