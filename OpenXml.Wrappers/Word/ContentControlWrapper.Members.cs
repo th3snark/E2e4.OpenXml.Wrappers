@@ -93,6 +93,17 @@ public partial class ContentControlWrapper
         return found;
     }
 
+    /// <summary>The binding of the control to custom XML, as <c>ContentControl.XMLMapping</c> in Word.</summary>
+    public XMLMapping XMLMapping
+    {
+        get { return new XMLMapping(this); }
+    }
+
+    internal void SetBinding(DataBinding binding)
+    {
+        Set("dataBinding", binding);
+    }
+
     /// <summary>Where the control is, as <c>ContentControl.Level</c> in Word.</summary>
     public ContentControlLevel Level
     {

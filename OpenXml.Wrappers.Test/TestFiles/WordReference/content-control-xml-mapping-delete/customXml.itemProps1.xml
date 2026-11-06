@@ -1,0 +1,5 @@
+<ds:datastoreItem xmlns:ds="http://schemas.openxmlformats.org/officeDocument/2006/customXml" ds:itemID="{store1}">
+  <ds:schemaRefs>
+    <ds:schemaRef ds:uri="urn:test" />
+  </ds:schemaRefs>
+</ds:datastoreItem>

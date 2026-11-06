@@ -1120,6 +1120,38 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $cc.DefaultTextStyle = 'Strong'
     }
 
+    'custom-xml-part-add'             = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello')
+        [void]$doc.CustomXMLParts.Add('<root xmlns="urn:test"><name>Bob</name></root>')
+    }
+
+    'content-control-xml-mapping'     = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $doc.Application.Selection.EndKey(6)
+        $part = $doc.CustomXMLParts.Add('<root xmlns="urn:test"><name>Bob</name></root>')
+        $cc = $doc.ContentControls.Add(1, $doc.Range(5, 5))
+        [void]$cc.XMLMapping.SetMapping('/ns:root/ns:name', "xmlns:ns='urn:test'", $part)
+    }
+
+    'content-control-xml-mapping-delete' = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $doc.Application.Selection.EndKey(6)
+        $part = $doc.CustomXMLParts.Add('<root xmlns="urn:test"><name>Bob</name></root>')
+        $cc = $doc.ContentControls.Add(1, $doc.Range(5, 5))
+        [void]$cc.XMLMapping.SetMapping('/ns:root/ns:name', "xmlns:ns='urn:test'", $part)
+        $cc.XMLMapping.Delete()
+    }
+
+    'custom-xml-part-delete'          = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello')
+        $part = $doc.CustomXMLParts.Add('<root xmlns="urn:test"><name>Bob</name></root>')
+        $part.Delete()
+    }
+
     'document-settings'               = {
         param($doc)
         $doc.DefaultTabStop = 54

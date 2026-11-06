@@ -57,7 +57,7 @@ public static class MarkupNormalizer
     /// The name a package entry is written under, or null when the entry is not compared: <c>[Content_Types].xml</c> becomes
     /// <c>content-types.xml</c>, <c>_rels/.rels</c> becomes <c>package.rels</c>, and an XML part under <c>word/</c> keeps its path below
     /// <c>word/</c> with <c>/</c> turned into <c>.</c> (<c>document.xml</c>, <c>theme.theme1.xml</c>, <c>document.xml.rels</c>). Document
-    /// properties, custom XML and binary parts are left out.
+    /// properties and binary parts are left out; custom XML parts are named <c>customXml.item1.xml</c>.
     /// </summary>
     public static string GetPartFileName(string entryName)
     {
@@ -69,8 +69,15 @@ public static class MarkupNormalizer
         {
             return "package.rels";
         }
-        if (!entryName.StartsWith("word/", StringComparison.Ordinal)
-            || !(entryName.EndsWith(".xml", StringComparison.Ordinal) || entryName.EndsWith(".rels", StringComparison.Ordinal)))
+        if (!(entryName.EndsWith(".xml", StringComparison.Ordinal) || entryName.EndsWith(".rels", StringComparison.Ordinal)))
+        {
+            return null;
+        }
+        if (entryName.StartsWith("customXml/", StringComparison.Ordinal))
+        {
+            return CanonicalPartName(entryName).Replace(RelationshipsFolder, string.Empty).Replace('/', '.');
+        }
+        if (!entryName.StartsWith("word/", StringComparison.Ordinal))
         {
             return null;
         }
@@ -310,6 +317,11 @@ public static class MarkupNormalizer
         {
             attribute.Value = placeholders.Get("guid", attribute.Value);
         }
+        else if (name.LocalName == "itemID" || name.LocalName == "storeItemID")
+        {
+            //The id of a custom XML part, in its properties and in the content controls bound to it.
+            attribute.Value = placeholders.Get("store", attribute.Value.ToUpperInvariant());
+        }
         else if (element.Name == W + "nsid" && name == W + "val")
         {
             attribute.Value = placeholders.Get("nsid", attribute.Value);
@@ -358,6 +370,12 @@ public static class MarkupNormalizer
         }
     }
 
+    //The Open XML SDK names the first custom XML part item.xml where Word names it item1.xml. The name means nothing, so it is compared as Word's.
+    private static string CanonicalPartName(string name)
+    {
+        return name.Replace("customXml/item.xml", "customXml/item1.xml").Replace("customXml/_rels/item.xml.rels", "customXml/_rels/item1.xml.rels");
+    }
+
     private static void NormalizeRelationships(XElement root, string source, Placeholders placeholders)
     {
         Dictionary<string, string> relationshipIds = placeholders.ForRelationshipsOf(source);
@@ -368,7 +386,7 @@ public static class MarkupNormalizer
             XAttribute target = relationship.Attribute("Target");
             if (target != null && (string)relationship.Attribute("TargetMode") != "External")
             {
-                target.Value = ResolveTarget(folder, target.Value);
+                target.Value = CanonicalPartName(ResolveTarget(folder, target.Value));
             }
         }
         relationships = relationships
@@ -429,7 +447,7 @@ public static class MarkupNormalizer
             string extension = Path.GetExtension(entryName).TrimStart('.').ToUpperInvariant();
             if (overrides.TryGetValue(partName, out string contentType) || defaults.TryGetValue(extension, out contentType))
             {
-                elements.Add(new XElement(ContentTypes + "Override", new XAttribute("PartName", partName), new XAttribute("ContentType", contentType)));
+                elements.Add(new XElement(ContentTypes + "Override", new XAttribute("PartName", CanonicalPartName(partName)), new XAttribute("ContentType", contentType)));
             }
         }
         root.ReplaceNodes(elements);
