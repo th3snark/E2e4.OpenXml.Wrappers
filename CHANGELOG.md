@@ -52,9 +52,11 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 - Document settings: `DefaultTabStop`, `AutoHyphenation`, `HyphenateCaps`, `ConsecutiveHyphensLimit`, `UpdateStylesOnOpen`, `EmbedTrueTypeFonts`, `SaveSubsetFonts`, `DoNotEmbedSystemFonts`, `RemovePersonalInformation` and `RemoveDateAndTime`, with Word 16's defaults and markup (a new reference scenario matches); `Type` (`WordDocumentType`), `SaveFormat`, `DeleteAllComments` and `SetCompatibilityMode`.
 
+- `PageNumbers.Add` takes `Inside` and `Outside`, and `PageNumbers` gets `Item` (a `PageNumber` with `Alignment`, read only), `IncludeChapterNumber`, `HeadingLevelForChapter`, `ChapterPageSeparator` (`SeparatorType`) and `ShowFirstPageNumber`. `TextColumns` gets `Add`, `Item` (a `TextColumn` with `Width` and `SpaceAfter`), enumeration and `FlowDirection` (`FlowDirection`). Eight new reference scenarios, all matching Word 16.
 - Page border options as Word 16 writes them: `Borders.AlwaysInFront`, `DistanceFrom` (`BorderDistanceFrom`), `EnableFirstPageInSection`, `EnableOtherPagesInSection`, `SurroundHeader` and `SurroundFooter`; and `PageSetup.TogglePortrait` and `SectionDirection` (`SectionDirection`; also on `Document.PageSetup`). Two new reference scenarios, both matching Word.
 
 ### Behaviour changes
+- Columns that stop being evenly spaced are written as Word writes them: `w:num` stays, `w:equalWidth` is `0`, and the widths drop the part of a twip that does not divide.
 - **The built-in table style is named "Table Normal"**, as Word names it (`NameLocal`), where it was "Normal Table", the name it is stored under; `Styles["Table Normal"]` now finds it. `Styles["Normal Table"]` still works.
 - **`Styles.Add` of a table style writes an empty `w:tblPr`**, as Word does.
 - **`Styles.Add` of a paragraph style adds its linked character style too** (`<name> Char`), and a new character or table style is based on the default of its type, as Word writes them. A style written with `w:customStyle="true"` is now written `1`.
@@ -70,6 +72,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 The markup the library writes now matches what Word 365 writes, checked against documents saved by Word itself. The public API has not changed, but much of what the library writes and how it behaves has, so read the behaviour changes below before upgrading.
 
 ### Behaviour changes
+- Columns that stop being evenly spaced are written as Word writes them: `w:num` stays, `w:equalWidth` is `0`, and the widths drop the part of a twip that does not divide.
 - `Create` (and `InitializeMainDocumentPart`) now make what Word 365 writes for a new blank document, rather than a body and a compatibility setting: styles with document defaults and latent styles (33 styles, among them Normal, Heading 1 to 9, Title and Quote), the current Office theme (Aptos), font table, settings, web settings and document properties. Text in a new document is therefore Aptos 12 point rather than Times New Roman 10 point, and margins are one inch all round.
 - **Code that adds one of these parts itself after `Create` now throws** "Only one instance of the type is allowed for this parent": change the part that is there (`MainDocumentPart.StyleDefinitionsPart`) instead of calling `AddNewPart<StyleDefinitionsPart>()`. Code that counted on a new document having no styles (`Styles.Count`, `Styles.Exists`) sees Word's. A document that was opened rather than created is not affected.
 - A new document takes its paper size, header and footer distance, column spacing, language and decimal and list separators from `CultureInfo.CurrentCulture`, as Word takes them from Windows' regional settings: A4 and 1.25 cm in en-GB, Letter and half an inch in en-US. Set the page up explicitly if a document must not depend on the machine.

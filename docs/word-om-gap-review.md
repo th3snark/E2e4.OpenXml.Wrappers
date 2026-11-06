@@ -433,8 +433,8 @@ A cell given a width of its own makes the table ragged, as in Word: the grid get
 
 | Status | Members |
 |---|---|
-| Done | `Add` (without Inside and Outside alignment), `Count`, `NumberStyle`, `RestartNumberingAtSection`, `StartingNumber` |
-| Planned, step 10 | `Item`, `ChapterPageSeparator`, `HeadingLevelForChapter`, `IncludeChapterNumber`, `ShowFirstPageNumber`, `Parent` |
+| Done | `Add`, `Count`, `Item`, `ChapterPageSeparator`, `HeadingLevelForChapter`, `IncludeChapterNumber`, `NumberStyle`, `RestartNumberingAtSection`, `ShowFirstPageNumber`, `StartingNumber` |
+| Decided against | `Parent` |
 | Decided against | `DoubleQuote` (Hebrew numbering only) |
 
 <!-- learn: pagenumber -->
@@ -443,7 +443,8 @@ A cell given a width of its own makes the table ragged, as in Word: the grid get
 
 | Status | Members |
 |---|---|
-| Planned | `Delete`, `Alignment`, `Index`, `Parent` (10); `Select` (19) |
+| Done | `Alignment` (read only: setting it in Word adds another page number) |
+| Planned | `Delete`, `Index`, `Parent` (10); `Select` (19) |
 | Out of scope | `Copy`, `Cut` (clipboard) |
 
 <!-- learn: linenumbering -->
@@ -461,8 +462,8 @@ A cell given a width of its own makes the table ragged, as in Word: the grid get
 
 | Status | Members |
 |---|---|
-| Done | `SetCount`, `Count`, `EvenlySpaced`, `LineBetween`, `Spacing`, `Width` |
-| Planned, step 10 | `Add`, `Item`, `FlowDirection`, `Parent` |
+| Done | `Add`, `Count`, `EvenlySpaced`, `FlowDirection`, `Item`, `LineBetween`, `SetCount`, `Spacing`, `Width` |
+| Decided against | `Parent` |
 
 <!-- learn: textcolumn -->
 
@@ -470,7 +471,8 @@ A cell given a width of its own makes the table ragged, as in Word: the grid get
 
 | Status | Members |
 |---|---|
-| Planned, step 10 | `SpaceAfter`, `Width`, `Parent` |
+| Done | `SpaceAfter`, `Width` |
+| Decided against | `Parent` |
 
 ### 3.15 Borders, Border, Shading
 <!-- learn: borders -->

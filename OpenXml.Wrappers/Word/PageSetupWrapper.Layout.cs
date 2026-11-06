@@ -450,7 +450,7 @@ public class LineNumberingWrapper
 /// The columns of text of a section, as <c>TextColumns</c> in Word. Columns that are all the same width are described by their number and
 /// the space between them.
 /// </summary>
-public class TextColumnsWrapper
+public partial class TextColumnsWrapper
 {
     private readonly PageSetupWrapper _setup;
 
@@ -500,19 +500,8 @@ public class TextColumnsWrapper
             else if (!columns.Elements<Column>().Any())
             {
                 //Columns that can differ are listed one by one.
-                int count = Count;
-                double each = (_setup.GetTextWidth() - Spacing * (count - 1)) / count;
-                columns.EqualWidth = false;
-                columns.ColumnCount = null;
-                for (int i = 0; i < count; i++)
-                {
-                    Column column = new Column() { Width = ((uint)Math.Round(each * 20)).ToString(CultureInfo.InvariantCulture) };
-                    if (i < count - 1)
-                    {
-                        column.Space = ((uint)Math.Round(Spacing * 20)).ToString(CultureInfo.InvariantCulture);
-                    }
-                    columns.AppendChild(column);
-                }
+                Materialize();
+
             }
         }
     }
@@ -606,7 +595,7 @@ public class TextColumnsWrapper
                 return twips / 20;
             }
             int count = Count;
-            return (_setup.GetTextWidth() - Spacing * (count - 1)) / count;
+            return EvenTwips(_setup.GetTextWidth(), Spacing, count) / 20.0;
         }
     }
 }
@@ -614,7 +603,7 @@ public class TextColumnsWrapper
 /// <summary>
 /// The page numbers of a header or footer, as <c>PageNumbers</c> in Word. The numbering options belong to the section.
 /// </summary>
-public class PageNumbersWrapper
+public partial class PageNumbersWrapper
 {
     private readonly HeaderFooterWrapper _headerFooter;
 
@@ -644,16 +633,11 @@ public class PageNumbersWrapper
     /// there indented to make room for it. Word works out the number when it opens the document. Without <paramref name="firstPage"/> the first
     /// page has no number: the section gets a different first page header and footer.
     /// </summary>
-    /// <exception cref="NotSupportedException">The alignment is Inside or Outside.</exception>
     public FieldWrapper Add(PageNumberAlignment alignment = PageNumberAlignment.Right, bool firstPage = true)
     {
         if (!EnumCompat.IsDefined(alignment))
         {
             throw new ArgumentOutOfRangeException(nameof(alignment));
-        }
-        if (alignment == PageNumberAlignment.Inside || alignment == PageNumberAlignment.Outside)
-        {
-            throw new NotSupportedException("Inside and outside page numbers are not supported.");
         }
 
         //The number is in a frame of its own at the start, lined up as asked, and the text that was there makes room for it.
@@ -678,6 +662,10 @@ public class PageNumbersWrapper
         {
             textProperties.Indentation = new Indentation() { FirstLine = "360" };
         }
+        else if (alignment == PageNumberAlignment.Inside || alignment == PageNumberAlignment.Outside)
+        {
+            textProperties.Indentation = new Indentation() { Right = "360", FirstLine = "360" };
+        }
 
         FrameProperties frame = new FrameProperties() { Wrap = TextWrappingValues.Around, VerticalPosition = VerticalAnchorValues.Text, HorizontalPosition = HorizontalAnchorValues.Margin, Y = "1" };
         if (alignment == PageNumberAlignment.Right)
@@ -687,6 +675,14 @@ public class PageNumbersWrapper
         else if (alignment == PageNumberAlignment.Center)
         {
             frame.XAlign = HorizontalAlignmentValues.Center;
+        }
+        else if (alignment == PageNumberAlignment.Inside)
+        {
+            frame.XAlign = HorizontalAlignmentValues.Inside;
+        }
+        else if (alignment == PageNumberAlignment.Outside)
+        {
+            frame.XAlign = HorizontalAlignmentValues.Outside;
         }
         ParagraphProperties numberProperties = new ParagraphProperties()
         {
