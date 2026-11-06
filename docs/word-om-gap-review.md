@@ -819,7 +819,8 @@ A table of contents is a `TOC` field. `Update` rebuilds its entries from the hea
 | Status | Members |
 |---|---|
 | Done (step 17) | `Delete` (the headings keep their `_Toc` bookmarks, as in Word), `Update` (rebuilds the entries from the heading styles and, with `\u`, the outline levels; an entry that was there keeps its page number, a new one gets 1 and Word works it out when the document is opened), `HidePageNumbersInWeb`, `IncludePageNumbers`, `LowerHeadingLevel`, `UpperHeadingLevel`, `Parent`, `Range`, `RightAlignPageNumbers`, `TabLeader`, `TableID`, `UseFields`, `UseHeadingStyles`, `UseHyperlinks`. The settings live in the `TOC` field code, in Word's order of switches |
-| Planned later | `HeadingStyles` (extra styles, the `\t` switch); TC fields are not read by `Update` |
+| Done (step 17b) | `HeadingStyles` (`Add`, `Item`, `Count`, enumeration; `HeadingStyle.Style`, `Level`, `Delete`): the `\t` switch of the field. Changing them rebuilds the entries, as Word does, and the range of heading levels is kept. Added styles make no entries when the table uses the outline levels (`\u`), as measured in Word 16 |
+| Planned later | TC fields are not read by `Update` |
 | Out of scope | `UpdatePageNumbers` (layout) |
 
 <!-- learn: tablesofcontents,tablesoffigures -->
@@ -829,7 +830,8 @@ A table of contents is a `TOC` field. `Update` rebuilds its entries from the hea
 | Status | Members |
 |---|---|
 | Done (step 17) | `TablesOfContents`: `Add` (at the start of a paragraph; the entries go in front of it and the end of the field at its start, as Word writes it), `Item` (0-based), `Count`, `Parent`, enumeration on `Document` and `Range`. A document without headings gets the fldSimple with Word's "No table of contents entries found." |
-| Planned later | `TablesOfFigures`, `MarkEntry`, `Format`; `Add` in the middle of a paragraph (Word splits the paragraph in a way that is not worth copying) and the `AddedStyles` argument |
+| Planned later | `TablesOfFigures`, `MarkEntry`, `Format`; `Add` in the middle of a paragraph (Word splits the paragraph in a way that is not worth copying) |
+| Done (step 17b) | The `AddedStyles` argument of `Add` (pairs of a style name and a level separated by the list separator). The switches of the field code are written in the order Word writes them (`\o \f \n \p \h \z \u \t`) |
 
 ### 4.7 Floating shapes (step 18)
 <!-- learn: shape -->

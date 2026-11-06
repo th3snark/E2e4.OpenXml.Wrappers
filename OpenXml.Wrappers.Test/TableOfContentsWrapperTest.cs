@@ -164,7 +164,7 @@ public class TableOfContentsWrapperTest : IDisposable
     public void TheArgumentsAreChecked()
     {
         Assert.Throws<NotSupportedException>(() => _document.TablesOfContents.Add(_document.Range(2, 2)));
-        Assert.Throws<NotSupportedException>(() => _document.TablesOfContents.Add(_document.Range(0, 0), true, 1, 3, false, null, true, true, "Quote"));
+        Assert.Throws<ArgumentException>(() => _document.TablesOfContents.Add(_document.Range(0, 0), true, 1, 3, false, null, true, true, "Quote"));
         Assert.Throws<ArgumentOutOfRangeException>(() => _document.TablesOfContents.Add(_document.Range(0, 0), true, 0));
         Assert.Throws<ArgumentOutOfRangeException>(() => _document.TablesOfContents.Add(_document.Range(0, 0), true, 3, 2));
         Assert.Throws<ArgumentNullException>(() => _document.TablesOfContents.Add(null));

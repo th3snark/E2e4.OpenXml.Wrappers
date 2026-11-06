@@ -27,6 +27,36 @@ internal sealed class TocSettings
     internal bool UseHyperlinks;
     internal bool HidePageNumbersInWeb;
     internal bool UseOutlineLevels;
+    internal List<KeyValuePair<string, int>> AddedStyles = new List<KeyValuePair<string, int>>();
+
+    private static string Separator
+    {
+        get { return CultureInfo.CurrentCulture.TextInfo.ListSeparator; }
+    }
+
+    //The styles of the \t switch: pairs of a style name and a level, separated by the list separator.
+    internal static List<KeyValuePair<string, int>> ParseStyles(string text)
+    {
+        List<KeyValuePair<string, int>> styles = new List<KeyValuePair<string, int>>();
+        if (string.IsNullOrEmpty(text))
+        {
+            return styles;
+        }
+        string[] parts = text.Split(new[] { Separator }, StringSplitOptions.None);
+        if (parts.Length % 2 != 0)
+        {
+            throw new ArgumentException("The styles must be pairs of a style name and a level.", nameof(text));
+        }
+        for (int i = 0; i < parts.Length; i += 2)
+        {
+            if (!int.TryParse(parts[i + 1].Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out int level) || level < 1 || level > 9)
+            {
+                throw new ArgumentException("The level of a style must be from 1 to 9.", nameof(text));
+            }
+            styles.Add(new KeyValuePair<string, int>(parts[i].Trim(), level));
+        }
+        return styles;
+    }
 
     internal string ToCode()
     {
@@ -43,10 +73,6 @@ internal sealed class TocSettings
                 code.Append(' ').Append(TableId);
             }
         }
-        if (UseHyperlinks)
-        {
-            code.Append(" \\h");
-        }
         if (!IncludePageNumbers)
         {
             code.Append(" \\n");
@@ -55,6 +81,10 @@ internal sealed class TocSettings
         {
             code.Append(" \\p \" \"");
         }
+        if (UseHyperlinks)
+        {
+            code.Append(" \\h");
+        }
         if (HidePageNumbersInWeb)
         {
             code.Append(" \\z");
@@ -62,6 +92,10 @@ internal sealed class TocSettings
         if (UseOutlineLevels)
         {
             code.Append(" \\u");
+        }
+        if (AddedStyles.Count > 0)
+        {
+            code.Append(" \\t \"").Append(string.Join(Separator, AddedStyles.Select(s => s.Key + Separator + s.Value.ToString(CultureInfo.InvariantCulture)))).Append('"');
         }
         return code.Append(' ').ToString();
     }
@@ -84,6 +118,11 @@ internal sealed class TocSettings
         settings.RightAlign = !Regex.IsMatch(code, "\\\\p\\b");
         settings.HidePageNumbersInWeb = Regex.IsMatch(code, "\\\\z\\b");
         settings.UseOutlineLevels = Regex.IsMatch(code, "\\\\u\\b");
+        Match added = Regex.Match(code, "\\\\t\\s+\"(?<v>[^\"]*)\"");
+        if (added.Success)
+        {
+            settings.AddedStyles = ParseStyles(added.Groups["v"].Value);
+        }
         return settings;
     }
 }
@@ -119,6 +158,27 @@ public class TableOfContentsWrapper : IEquatable<TableOfContentsWrapper>
         TocSettings settings = Settings;
         change(settings);
         _field.CodeText = settings.ToCode().Trim();
+    }
+
+    /// <summary>
+    /// The styles the table makes entries from besides the heading styles, as <c>TableOfContents.HeadingStyles</c> in Word (the <c>\t</c>
+    /// switch of the field). Changing them changes the field code and makes the entries again, as <see cref="Update"/> does.
+    /// </summary>
+    public HeadingStyleWrapperCollection HeadingStyles
+    {
+        get { return new HeadingStyleWrapperCollection(this); }
+    }
+
+    internal List<KeyValuePair<string, int>> AddedStyles()
+    {
+        return Settings.AddedStyles;
+    }
+
+    internal void ChangeAddedStyles(Action<List<KeyValuePair<string, int>>> change)
+    {
+        //Word makes the entries again as soon as the styles change.
+        Change(settings => change(settings.AddedStyles));
+        Update();
     }
 
     /// <summary>The table of contents, from the start of its field to its end, as <c>TableOfContents.Range</c> in Word.</summary>
@@ -429,20 +489,17 @@ public class TableOfContentsWrapperCollection : IEnumerable<TableOfContentsWrapp
     /// <param name="tableID">The identifier of the kind of TC fields.</param>
     /// <param name="rightAlignPageNumbers">True to put the page numbers at the right margin.</param>
     /// <param name="includePageNumbers">True to give the entries page numbers.</param>
-    /// <param name="addedStyles">Other styles to make entries from; not supported.</param>
+    /// <param name="addedStyles">Other styles to make entries from, as pairs of a style name and a level separated by the list separator (<c>Title,1,Subtitle,2</c>).</param>
     /// <param name="useHyperlinks">True to make the entries hyperlinks to the headings.</param>
     /// <param name="hidePageNumbersInWeb">True to leave the page numbers out of a web page.</param>
     /// <param name="useOutlineLevels">True to make entries from paragraphs with an outline level too.</param>
-    /// <exception cref="NotSupportedException">The range is not at the start of a paragraph, or <paramref name="addedStyles"/> is given.</exception>
+    /// <exception cref="NotSupportedException">The range is not at the start of a paragraph.</exception>
+    /// <exception cref="ArgumentException"><paramref name="addedStyles"/> is not pairs of a style name and a level from 1 to 9.</exception>
     public TableOfContentsWrapper Add(RangeWrapper range, bool useHeadingStyles = true, int upperHeadingLevel = 1, int lowerHeadingLevel = 9,
         bool useFields = false, string tableID = null, bool rightAlignPageNumbers = true, bool includePageNumbers = true, string addedStyles = null,
         bool useHyperlinks = false, bool hidePageNumbersInWeb = false, bool useOutlineLevels = false)
     {
         Guard.ThrowIfNull(range);
-        if (addedStyles != null)
-        {
-            throw new NotSupportedException("Added styles are not supported.");
-        }
         if (upperHeadingLevel < 1 || upperHeadingLevel > 9)
         {
             throw new ArgumentOutOfRangeException(nameof(upperHeadingLevel));
@@ -471,7 +528,8 @@ public class TableOfContentsWrapperCollection : IEnumerable<TableOfContentsWrapp
             IncludePageNumbers = includePageNumbers,
             UseHyperlinks = useHyperlinks,
             HidePageNumbersInWeb = hidePageNumbersInWeb,
-            UseOutlineLevels = useOutlineLevels
+            UseOutlineLevels = useOutlineLevels,
+            AddedStyles = TocSettings.ParseStyles(addedStyles)
         };
         return Build(paragraph, settings, TabLeader.Dots, new Dictionary<string, string>());
     }
@@ -526,6 +584,18 @@ public class TableOfContentsWrapperCollection : IEnumerable<TableOfContentsWrapp
                 if (level >= settings.Upper && level <= settings.Lower)
                 {
                     return level;
+                }
+            }
+        }
+        //With the outline levels Word makes no entries from the added styles.
+        if (styleId != null && settings.AddedStyles.Count > 0 && !settings.UseOutlineLevels)
+        {
+            string styleName = StyleHelper.GetStyleName(paragraph, styleId);
+            foreach (KeyValuePair<string, int> added in settings.AddedStyles)
+            {
+                if (string.Equals(added.Key, styleName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return added.Value;
                 }
             }
         }
