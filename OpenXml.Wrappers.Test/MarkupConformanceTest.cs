@@ -901,7 +901,82 @@ public class MarkupConformanceTest
                 d.Paragraphs[1].Range.ListFormat.ApplyListTemplate(template, false);
                 d.Paragraphs[2].Range.ListFormat.ApplyListTemplate(template, false);
             },
-            ListParts()),        new Scenario("footnote-add",
+            ListParts()),        new Scenario("selection-insert-rows-below",
+            d =>
+            {
+                d.Content.InsertAfter("Before\r");
+                TableWrapper table = d.Tables.Add(d.Range(d.Content.End - 1, d.Content.End - 1), 2, 2);
+                table.Cell(0, 0).Range.Text = "a";
+                table.Cell(1, 0).Range.Text = "c";
+                table.Cell(0, 0).Select();
+                d.Selection.InsertRowsBelow(2);
+            },
+            Body()),
+        new Scenario("selection-insert-rows-above",
+            d =>
+            {
+                d.Content.InsertAfter("Before\r");
+                TableWrapper table = d.Tables.Add(d.Range(d.Content.End - 1, d.Content.End - 1), 2, 2);
+                table.Cell(0, 0).Range.Text = "a";
+                table.Cell(1, 0).Range.Text = "c";
+                table.Cell(1, 0).Select();
+                d.Selection.InsertRowsAbove(1);
+            },
+            Body()),
+        new Scenario("selection-clear-character",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.Range(0, 5).Style = "Strong";
+                d.Range(0, 5).Font.Size = 20;
+                d.Range(6, 11).Style = "Strong";
+                d.Range(6, 11).Font.Size = 20;
+                d.Range(0, 5).Select();
+                d.Selection.ClearCharacterStyle();
+                d.Range(6, 11).Select();
+                d.Selection.ClearCharacterDirectFormatting();
+            },
+            Body(), Part("styles.xml")),
+        new Scenario("selection-clear-character-all",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.Range(0, 5).Style = "Strong";
+                d.Range(0, 5).Font.Size = 20;
+                d.Range(0, 5).Select();
+                d.Selection.ClearCharacterAllFormatting();
+            },
+            Body()),
+        new Scenario("selection-clear-paragraph",
+            d =>
+            {
+                d.Content.InsertAfter("One\rTwo\rThree");
+                for (int i = 0; i < 3; i++)
+                {
+                    d.Paragraphs[i].Style = "Heading 1";
+                    d.Paragraphs[i].Range.ParagraphFormat.Alignment = ParagraphAlignment.Center;
+                }
+                d.Paragraphs[0].Range.Select();
+                d.Selection.ClearParagraphStyle();
+                d.Paragraphs[1].Range.Select();
+                d.Selection.ClearParagraphDirectFormatting();
+                d.Paragraphs[2].Range.Select();
+                d.Selection.ClearParagraphAllFormatting();
+            },
+            Body()),
+        new Scenario("selection-bold-run",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.Range(0, 5).Select();
+                d.Selection.BoldRun();
+                d.Range(6, 11).Select();
+                d.Selection.BoldRun();
+                d.Selection.BoldRun();
+                d.Range(12, 17).Select();
+                d.Selection.ItalicRun();
+            },
+            Body()),        new Scenario("footnote-add",
             d =>
             {
                 d.Content.InsertAfter("Hello world again");

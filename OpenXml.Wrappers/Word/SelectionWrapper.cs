@@ -49,7 +49,7 @@ public enum KeyUnit
 /// the edits made to the story, and that typing, deleting and moving act on. There is no view here, so movement by lines, screens and
 /// pages is not available.
 /// </summary>
-public class SelectionWrapper
+public partial class SelectionWrapper
 {
     private readonly WordprocessingDocumentWrapper _document;
     private RangeWrapper _range;

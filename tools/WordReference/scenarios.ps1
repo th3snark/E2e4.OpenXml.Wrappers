@@ -884,6 +884,74 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         Write-Host ('after convert: lists {0}; text "{1}"' -f $doc.Lists.Count, $doc.Content.Text.Replace("`r", '|').Replace("`t", '>'))
     }
 
+    'selection-insert-rows-below'     = {
+        param($doc)
+        $doc.Content.InsertAfter("Before`r")
+        $t = $doc.Tables.Add($doc.Range($doc.Content.End - 1, $doc.Content.End - 1), 2, 2)
+        $t.Cell(1, 1).Range.Text = 'a'
+        $t.Cell(2, 1).Range.Text = 'c'
+        $t.Cell(1, 1).Select()
+        $doc.Application.Selection.InsertRowsBelow(2)
+    }
+
+    'selection-insert-rows-above'     = {
+        param($doc)
+        $doc.Content.InsertAfter("Before`r")
+        $t = $doc.Tables.Add($doc.Range($doc.Content.End - 1, $doc.Content.End - 1), 2, 2)
+        $t.Cell(1, 1).Range.Text = 'a'
+        $t.Cell(2, 1).Range.Text = 'c'
+        $t.Cell(2, 1).Select()
+        $doc.Application.Selection.InsertRowsAbove(1)
+    }
+
+    'selection-clear-character'       = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $doc.Range(0, 5).Style = 'Strong'
+        $doc.Range(0, 5).Font.Size = 20
+        $doc.Range(6, 11).Style = 'Strong'
+        $doc.Range(6, 11).Font.Size = 20
+        $doc.Range(0, 5).Select()
+        $doc.Application.Selection.ClearCharacterStyle()
+        $doc.Range(6, 11).Select()
+        $doc.Application.Selection.ClearCharacterDirectFormatting()
+    }
+
+    'selection-clear-character-all'   = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $doc.Range(0, 5).Style = 'Strong'
+        $doc.Range(0, 5).Font.Size = 20
+        $doc.Range(0, 5).Select()
+        $doc.Application.Selection.ClearCharacterAllFormatting()
+    }
+
+    'selection-clear-paragraph'       = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo`rThree")
+        foreach ($i in 1, 2, 3) {
+            $doc.Paragraphs.Item($i).Style = 'Heading 1'
+            $doc.Paragraphs.Item($i).Range.ParagraphFormat.Alignment = 1
+        }
+        $doc.Paragraphs.Item(1).Range.Select()
+        $doc.Application.Selection.ClearParagraphStyle()
+        $doc.Paragraphs.Item(2).Range.Select()
+        $doc.Application.Selection.ClearParagraphDirectFormatting()
+        $doc.Paragraphs.Item(3).Range.Select()
+        $doc.Application.Selection.ClearParagraphAllFormatting()
+    }
+    'selection-bold-run'              = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $doc.Range(0, 5).Select()
+        $doc.Application.Selection.BoldRun()
+        $doc.Range(6, 11).Select()
+        $doc.Application.Selection.BoldRun()
+        $doc.Application.Selection.BoldRun()
+        $doc.Range(12, 17).Select()
+        $doc.Application.Selection.ItalicRun()
+    }
+
     'footnote-add'                    = {
         param($doc)
         $doc.Content.InsertAfter('Hello world again')

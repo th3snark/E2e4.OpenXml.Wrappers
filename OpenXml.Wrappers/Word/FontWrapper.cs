@@ -352,6 +352,12 @@ public partial class FontWrapper
         });
     }
 
+    //Takes the character style off, keeping the direct formatting.
+    internal void ClearStyle()
+    {
+        Apply(properties => properties.RemoveRunProperty("rStyle"));
+    }
+
     private static double? ReadSpacing(OpenXmlCompositeElement properties)
     {
         long? twips = properties?.Elements<Spacing>().FirstOrDefault()?.Val?.Value;
