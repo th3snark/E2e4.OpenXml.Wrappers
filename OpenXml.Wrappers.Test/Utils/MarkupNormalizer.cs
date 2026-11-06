@@ -345,6 +345,12 @@ public static class MarkupNormalizer
             //The id of a custom XML part, in its properties and in the content controls bound to it.
             attribute.Value = placeholders.Get("store", attribute.Value.ToUpperInvariant());
         }
+        else if (name == W + "val" && (element.Name == W + "docPart" || (element.Name == W + "name" && element.Parent?.Name == W + "docPartPr"))
+            && System.Text.RegularExpressions.Regex.IsMatch(attribute.Value, "^[0-9A-F]{32}$"))
+        {
+            //The name Word gives a placeholder the user wrote, in the glossary document and in the control that uses it.
+            attribute.Value = placeholders.Get("docpart", attribute.Value);
+        }
         else if (element.Name == W + "tmpl" && name == W + "val")
         {
             attribute.Value = placeholders.Get("tmpl", attribute.Value);

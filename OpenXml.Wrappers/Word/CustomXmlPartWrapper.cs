@@ -92,6 +92,18 @@ public class CustomXMLPart : IEquatable<CustomXMLPart>
         return SelectNodes(xPath).FirstOrDefault();
     }
 
+    /// <summary>Adds a node inside another node of the part, as <c>CustomXMLPart.AddNode</c> in Word.</summary>
+    /// <param name="parent">The element to add the node to.</param>
+    /// <param name="name">The name; not used for text, CDATA and comments.</param>
+    /// <param name="namespaceUri">The namespace of the name.</param>
+    /// <param name="nodeType">What to add.</param>
+    /// <param name="nodeValue">The text or value of the new node.</param>
+    /// <exception cref="ArgumentNullException">The parent is null.</exception>
+    public void AddNode(CustomXMLNode parent, string name, string namespaceUri = "", CustomXMLNodeType nodeType = CustomXMLNodeType.Element, string nodeValue = "")
+    {
+        Guard.ThrowIfNull(parent);
+        parent.AppendChildNode(name, namespaceUri, nodeType, nodeValue);
+    }
     /// <summary>The nodes an XPath expression matches, as <c>CustomXMLPart.SelectNodes</c> in Word. The prefixes are those of <see cref="NamespaceManager"/>.</summary>
     /// <exception cref="ArgumentNullException">The expression is null.</exception>
     public CustomXMLNodes SelectNodes(string xPath)
