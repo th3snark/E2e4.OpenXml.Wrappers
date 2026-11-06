@@ -51,6 +51,12 @@ public class BookmarkWrapper : System.IEquatable<BookmarkWrapper>
         get { return Range.End; }
     }
 
+    /// <summary>True if the bookmark covers columns of a table, as <c>Bookmark.Column</c> in Word.</summary>
+    public bool Column
+    {
+        get { return _bookmarkStart.ColumnFirst != null && _bookmarkStart.ColumnFirst.HasValue; }
+    }
+
     /// <summary>True if the bookmark covers no text, only a point in the document (<c>Bookmark.Empty</c> in Word).</summary>
     public bool Empty
     {

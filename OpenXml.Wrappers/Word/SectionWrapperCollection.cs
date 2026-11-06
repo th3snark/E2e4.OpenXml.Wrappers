@@ -17,6 +17,12 @@ public class SectionWrapperCollection : IEnumerable<SectionWrapper>
     private readonly int _first;
     private readonly int _last;
 
+    /// <summary>The page setup of all the sections together, as <c>Sections.PageSetup</c> in Word: see <see cref="WordprocessingDocumentWrapper.PageSetup"/>.</summary>
+    public DocumentPageSetupWrapper PageSetup
+    {
+        get { return new DocumentPageSetupWrapper(this); }
+    }
+
     public SectionWrapperCollection(Body body)
         : this(body, 0, int.MaxValue)
     {

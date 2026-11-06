@@ -14,7 +14,7 @@ namespace OpenXml.Wrappers.Word;
 /// the end of the body. A document may not have the latter, in which case the last section has the defaults of Word until a
 /// <see cref="PageSetup"/> value is set.
 /// </remarks>
-public class SectionWrapper : System.IEquatable<SectionWrapper>
+public partial class SectionWrapper : System.IEquatable<SectionWrapper>
 {
     private readonly Body _body;
     private readonly SectionProperties _sectionProperties;

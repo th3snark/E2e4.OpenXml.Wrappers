@@ -120,7 +120,7 @@ The API follows the shape of the Word object model, but it is C# over Open XML r
 - Legacy horizontal merges (`hMerge`) are not supported. `Table.Sort`, `Table.ConvertToText`, `Range.ConvertToTable` and `Rows.DistributeHeight` are not implemented, and `Cell.Delete` shifts cells left only.
 - `Field.Code` and `Field.Result` have `Text`, `Range` (a span of their characters; the range of a simple field's code is empty) and `Font`. A range of a code does not show the code in its `Text`, as in Word.
 - `PageNumber.Alignment` can only be read, and `Document.PageSetup` forwards only the common members (columns, line numbering and page borders are set per section).
-- `Document.Saved` and `Comment.Reference` are not implemented.
+- `Document.Saved` is not implemented.
 
 ## Editing a range
 

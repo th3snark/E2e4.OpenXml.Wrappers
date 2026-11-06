@@ -580,6 +580,24 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $doc.PageSetup.TextColumns.FlowDirection = 1  # wdFlowRtl
     }
 
+
+    'section-protected-for-forms'     = {
+        param($doc)
+        $doc.Content.InsertAfter('a')
+        [void]$doc.Sections.Add()
+        $doc.Sections.Item(1).ProtectedForForms = $false
+        $doc.Sections.Item(2).ProtectedForForms = $false
+        $doc.Sections.Item(2).ProtectedForForms = $true
+    }
+
+    'fields-unlink'                   = {
+        param($doc)
+        $doc.Content.InsertAfter('text')
+        [void]$doc.Fields.Add($doc.Range(0, 0), -1, 'SEQ a', $false)
+        [void]$doc.Fields.Add($doc.Range(0, 0), -1, 'SEQ b', $false)
+        $doc.Fields.Unlink()
+    }
+
     'document-settings'               = {
         param($doc)
         $doc.DefaultTabStop = 54

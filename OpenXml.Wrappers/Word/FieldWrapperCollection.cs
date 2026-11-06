@@ -147,6 +147,15 @@ public class FieldWrapperCollection : IEnumerable<FieldWrapper>
         }
     }
 
+    /// <summary>Replaces every field by its result as ordinary text, as <c>Fields.Unlink</c> in Word: see <see cref="FieldWrapper.Unlink"/>.</summary>
+    public void Unlink()
+    {
+        foreach (FieldWrapper field in GetElementList())
+        {
+            field.Unlink();
+        }
+    }
+
     /// <summary>True if every field is locked, false if none is, and null if some are.</summary>
     public bool? Locked
     {

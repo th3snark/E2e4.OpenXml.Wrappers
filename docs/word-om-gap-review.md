@@ -327,8 +327,8 @@ A cell given a width of its own makes the table ragged, as in Word: the grid get
 
 | Status | Members |
 |---|---|
-| Done | `Copy`, `Delete`, `Empty`, `End`, `Name`, `Parent`, `Range`, `Start` |
-| Planned | `Column` (10), `StoryType` (11), `Select` (19) |
+| Done | `Column` (read only: it reads the columns of a bookmark Word made over table cells; `Bookmarks.Add` over cells still writes an ordinary bookmark, where Word writes `colFirst`/`colLast` and puts the end after the row), `Copy`, `Delete`, `Empty`, `End`, `Name`, `Parent`, `Range`, `Start` |
+| Planned | `StoryType` (11), `Select` (19) |
 
 <!-- learn: bookmarks -->
 
@@ -344,8 +344,8 @@ A cell given a width of its own makes the table ragged, as in Word: the grid get
 
 | Status | Members |
 |---|---|
-| Done | `Ancestor`, `Date`, `Done`, `Index`, `Parent`, `Range`, `Replies`, `Scope` |
-| Planned, step 10 | `DeleteRecursively`, `Reference`, `Contact` (a small object over the author, initials and the people part) |
+| Done | `Ancestor`, `Date`, `DeleteRecursively`, `Done`, `Index`, `Parent`, `Range`, `Reference`, `Replies`, `Scope` |
+| Decided against | `Contact` (an object over what `Author` and `Initial` already give) |
 | Out of scope | `Edit` (opens the comment pane), `IsInk` (ink) |
 
 <!-- learn: comments -->
@@ -364,9 +364,10 @@ A cell given a width of its own makes the table ragged, as in Word: the grid get
 
 | Status | Members |
 |---|---|
-| Done | `Delete`, `Unlink`, `Update`, `Code`, `Index`, `Locked`, `Next`, `Parent`, `Previous`, `Result`, `Type` |
-| Planned | `Data`, `Kind` (10); `InlineShape` (16); `Select` (19) |
+| Done | `Delete`, `Unlink`, `Update`, `Code`, `Index`, `Kind`, `Locked`, `Next`, `Parent`, `Previous`, `Result`, `Type` |
+| Planned | `InlineShape` (16); `Select` (19) |
 | Out of scope | `Copy`, `Cut` (clipboard), `DoClick` (UI), `ShowCodes` (view state), `LinkFormat`, `OLEFormat` (OLE links) |
+| Decided against | `Data` (the data of mail-merge and similar fields) |
 | Decided against | `UpdateSource` (writes a result back into a linked file) |
 
 <!-- learn: fields -->
@@ -375,8 +376,7 @@ A cell given a width of its own makes the table ragged, as in Word: the grid get
 
 | Status | Members |
 |---|---|
-| Done | `Add`, `Item`, `Update`, `Count`, `Locked` (with `Lock` and `Unlock`), `Parent` |
-| Planned, step 10 | `Unlink` |
+| Done | `Add`, `Item`, `Update`, `Count`, `Locked` (with `Lock` and `Unlock`), `Parent`, `Unlink` |
 | Out of scope | `ToggleShowCodes` (view state) |
 | Decided against | `UpdateSource` (as on `Field`) |
 
@@ -387,8 +387,7 @@ A cell given a width of its own makes the table ragged, as in Word: the grid get
 
 | Status | Members |
 |---|---|
-| Done | `Borders`, `Footers`, `Headers`, `Index`, `PageSetup`, `Parent`, `Range` |
-| Planned, step 10 | `ProtectedForForms` |
+| Done | `Borders`, `Footers`, `Headers`, `Index`, `PageSetup`, `Parent`, `ProtectedForForms`, `Range` |
 
 <!-- learn: sections -->
 
@@ -396,8 +395,7 @@ A cell given a width of its own makes the table ragged, as in Word: the grid get
 
 | Status | Members |
 |---|---|
-| Done | `Add`, `Item`, `Count`, `First`, `Last`, `Parent` |
-| Planned, step 10 | `PageSetup` |
+| Done | `Add`, `Item`, `Count`, `First`, `Last`, `PageSetup`, `Parent` |
 
 <!-- learn: headerfooter -->
 
