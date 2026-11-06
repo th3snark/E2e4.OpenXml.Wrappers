@@ -187,6 +187,12 @@ public partial class WordprocessingDocumentWrapper
         get { return new TableOfContentsWrapperCollection(Content); }
     }
 
+    /// <summary>The tables of figures in the main text, as <c>Document.TablesOfFigures</c> in Word.</summary>
+    public TableOfFiguresWrapperCollection TablesOfFigures
+    {
+        get { return new TableOfFiguresWrapperCollection(Content); }
+    }
+
     /// <summary>The inline shapes (pictures) in the main text, as <c>Document.InlineShapes</c> in Word.</summary>
     public InlineShapeWrapperCollection InlineShapes
     {

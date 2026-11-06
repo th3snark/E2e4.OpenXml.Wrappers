@@ -29,6 +29,10 @@ internal sealed class TocSettings
     internal bool UseOutlineLevels;
     internal List<KeyValuePair<string, int>> AddedStyles = new List<KeyValuePair<string, int>>();
 
+    //For a table of figures: the label of the captions it lists, and whether the entries keep the label and number.
+    internal string Caption;
+    internal bool IncludeLabel = true;
+
     private static string Separator
     {
         get { return CultureInfo.CurrentCulture.TextInfo.ListSeparator; }
@@ -85,6 +89,10 @@ internal sealed class TocSettings
         {
             code.Append(" \\h");
         }
+        if (Caption != null)
+        {
+            code.Append(IncludeLabel ? " \\c \"" : " \\a \"").Append(Caption).Append('"');
+        }
         if (HidePageNumbersInWeb)
         {
             code.Append(" \\z");
@@ -118,6 +126,12 @@ internal sealed class TocSettings
         settings.RightAlign = !Regex.IsMatch(code, "\\\\p\\b");
         settings.HidePageNumbersInWeb = Regex.IsMatch(code, "\\\\z\\b");
         settings.UseOutlineLevels = Regex.IsMatch(code, "\\\\u\\b");
+        Match caption = Regex.Match(code, "\\\\(?<s>[ca])\\s+\"(?<v>[^\"]*)\"");
+        if (caption.Success)
+        {
+            settings.Caption = caption.Groups["v"].Value;
+            settings.IncludeLabel = caption.Groups["s"].Value == "c";
+        }
         Match added = Regex.Match(code, "\\\\t\\s+\"(?<v>[^\"]*)\"");
         if (added.Success)
         {
@@ -270,6 +284,27 @@ public class TableOfContentsWrapper : IEquatable<TableOfContentsWrapper>
     {
         get { return Settings.TableId ?? string.Empty; }
         set { Change(s => s.TableId = string.IsNullOrEmpty(value) ? null : value); }
+    }
+
+    //For a table of figures: the label of the captions, and whether the entries keep the label and number. Changing them makes the entries again.
+    internal string CaptionLabel
+    {
+        get { return Settings.Caption ?? string.Empty; }
+        set
+        {
+            Change(s => s.Caption = value);
+            Update();
+        }
+    }
+
+    internal bool CaptionIncludesLabel
+    {
+        get { return Settings.IncludeLabel; }
+        set
+        {
+            Change(s => s.IncludeLabel = value);
+            Update();
+        }
     }
 
     private IEnumerable<Paragraph> EntryParagraphs()
@@ -435,7 +470,7 @@ internal static class RangeParagraphExtensions
 /// <summary>
 /// The tables of contents of a range or a document, as <c>TablesOfContents</c> in Word.
 /// </summary>
-public class TableOfContentsWrapperCollection : IEnumerable<TableOfContentsWrapper>
+public partial class TableOfContentsWrapperCollection : IEnumerable<TableOfContentsWrapper>
 {
     private readonly RangeWrapper _range;
 
@@ -571,7 +606,7 @@ public class TableOfContentsWrapperCollection : IEnumerable<TableOfContentsWrapp
         return pages;
     }
 
-    private static int LevelOf(Paragraph paragraph, TocSettings settings, Styles styles)
+    internal static int LevelOf(Paragraph paragraph, TocSettings settings, Styles styles)
     {
         string styleId = paragraph.ParagraphProperties?.ParagraphStyleId?.Val?.Value;
         if (settings.UseHeadingStyles && styleId != null)
@@ -619,7 +654,7 @@ public class TableOfContentsWrapperCollection : IEnumerable<TableOfContentsWrapp
         return 0;
     }
 
-    private static string TextOf(Paragraph paragraph)
+    internal static string TextOf(Paragraph paragraph)
     {
         return string.Concat(paragraph.Descendants<Text>().Where(t => !t.Ancestors<FieldCode>().Any()).Select(t => t.Text));
     }
@@ -634,21 +669,13 @@ public class TableOfContentsWrapperCollection : IEnumerable<TableOfContentsWrapp
         Styles styles = main?.StyleDefinitionsPart?.Styles;
         string code = settings.ToCode();
 
-        List<(Paragraph Heading, int Level)> headings = new List<(Paragraph, int)>();
-        foreach (Paragraph paragraph in root.Descendants<Paragraph>())
-        {
-            int level = LevelOf(paragraph, settings, styles);
-            if (level > 0 && !paragraph.Ancestors<Hyperlink>().Any())
-            {
-                headings.Add((paragraph, level));
-            }
-        }
+        List<TocItem> items = CollectItems(root, settings, styles);
 
-        if (headings.Count == 0)
+        if (items.Count == 0)
         {
             SimpleField none = new SimpleField(new Run(
                 new RunProperties(new Bold(), new BoldComplexScript(), new NoProof(), new Languages { Val = "en-US" }),
-                OpenXmlExtensions.NewText("No table of contents entries found.")))
+                OpenXmlExtensions.NewText(settings.Caption != null ? "No table of figures entries found." : "No table of contents entries found.")))
             { Instruction = code };
             OpenXmlElement properties = target.ParagraphProperties;
             if (properties != null)
@@ -678,33 +705,14 @@ public class TableOfContentsWrapperCollection : IEnumerable<TableOfContentsWrapp
 
         FieldChar beginChar = null;
         bool first = true;
-        foreach ((Paragraph heading, int level) in headings)
+        foreach (TocItem item in items)
         {
-            BookmarkStart bookmark = heading.Elements<BookmarkStart>().FirstOrDefault(b => b.Name?.Value != null && b.Name.Value.StartsWith("_Toc", StringComparison.Ordinal));
-            if (bookmark == null)
-            {
-                bookmark = new BookmarkStart
-                {
-                    Id = (nextBookmark++).ToString(CultureInfo.InvariantCulture),
-                    Name = "_Toc" + (nextName++).ToString(CultureInfo.InvariantCulture)
-                };
-                BookmarkEnd bookmarkEnd = new BookmarkEnd { Id = bookmark.Id.Value };
-                OpenXmlElement properties = heading.ParagraphProperties;
-                if (properties != null)
-                {
-                    properties.InsertAfterSelf(bookmark);
-                }
-                else
-                {
-                    heading.PrependChild(bookmark);
-                }
-                heading.AppendChild(bookmarkEnd);
-            }
-            string name = bookmark.Name.Value;
+            int level = item.Level;
+            string name = item.TcBegin != null ? EnsureTcBookmark(item, ref nextBookmark, ref nextName) : EnsureCaptionBookmark(item, ref nextBookmark, ref nextName);
 
-            Style tocStyle = BuiltInStyles.GetOrCreate(main, "toc " + level.ToString(CultureInfo.InvariantCulture));
+            Style tocStyle = BuiltInStyles.GetOrCreate(main, settings.Caption != null ? "table of figures" : "toc " + level.ToString(CultureInfo.InvariantCulture));
             Paragraph entry = new Paragraph(new ParagraphProperties(
-                new ParagraphStyleId { Val = tocStyle?.StyleId?.Value ?? "TOC" + level.ToString(CultureInfo.InvariantCulture) },
+                new ParagraphStyleId { Val = tocStyle?.StyleId?.Value ?? (settings.Caption != null ? "TableofFigures" : "TOC" + level.ToString(CultureInfo.InvariantCulture)) },
                 new Tabs(new TabStop { Val = TabStopValues.Right, Leader = TableOfContentsWrapper.ToLeader(leader), Position = width }),
                 MarkProperties(updating)));
 
@@ -725,7 +733,7 @@ public class TableOfContentsWrapperCollection : IEnumerable<TableOfContentsWrapp
                 entry.AppendChild(link);
                 container = link;
             }
-            Run text = NoProofRun(OpenXmlExtensions.NewText(TextOf(heading)));
+            Run text = NoProofRun(OpenXmlExtensions.NewText(item.Text));
             if (settings.UseHyperlinks)
             {
                 text.RunProperties.InsertAt(new RunStyle { Val = "Hyperlink" }, 0);

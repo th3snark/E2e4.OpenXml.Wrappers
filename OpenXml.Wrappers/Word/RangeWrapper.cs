@@ -76,6 +76,12 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
         get { return new TableOfContentsWrapperCollection(this); }
     }
 
+    /// <summary>The tables of figures in the range, as <c>Range.TablesOfFigures</c> in Word.</summary>
+    public TableOfFiguresWrapperCollection TablesOfFigures
+    {
+        get { return new TableOfFiguresWrapperCollection(this); }
+    }
+
     /// <summary>The inline shapes (pictures) in the range, as <c>Range.InlineShapes</c> in Word.</summary>
     public InlineShapeWrapperCollection InlineShapes
     {
