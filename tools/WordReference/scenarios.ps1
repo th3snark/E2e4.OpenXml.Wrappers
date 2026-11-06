@@ -1023,6 +1023,103 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $cc.Delete($true)
     }
 
+    'content-control-check-box-checked' = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $doc.Application.Selection.EndKey(6)
+        $cc = $doc.ContentControls.Add(8, $doc.Range(6, 6))
+        $cc.Checked = $true
+    }
+
+    'content-control-check-box-symbols' = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $doc.Application.Selection.EndKey(6)
+        $cc = $doc.ContentControls.Add(8, $doc.Range(6, 6))
+        $cc.SetCheckedSymbol(10004, 'Segoe UI Symbol')
+        $cc.SetUncheckedSymbol(10006, 'Segoe UI Symbol')
+        $cc.Checked = $true
+    }
+
+    'content-control-dropdown-entries' = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $doc.Application.Selection.EndKey(6)
+        $cc = $doc.ContentControls.Add(4, $doc.Range(5, 5))
+        [void]$cc.DropdownListEntries.Add('One', '1')
+        [void]$cc.DropdownListEntries.Add('Two')
+        [void]$cc.DropdownListEntries.Add('Zero', '0', 1)
+    }
+
+    'content-control-dropdown-select' = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $doc.Application.Selection.EndKey(6)
+        $cc = $doc.ContentControls.Add(4, $doc.Range(5, 5))
+        [void]$cc.DropdownListEntries.Add('One', '1')
+        [void]$cc.DropdownListEntries.Add('Two', '2')
+        $cc.DropdownListEntries.Item(2).Select()
+    }
+
+    'content-control-dropdown-clear' = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $doc.Application.Selection.EndKey(6)
+        $cc = $doc.ContentControls.Add(4, $doc.Range(5, 5))
+        [void]$cc.DropdownListEntries.Add('One', '1')
+        [void]$cc.DropdownListEntries.Add('Two', '2')
+        $cc.DropdownListEntries.Item(1).Delete()
+        [void]$cc.DropdownListEntries.Add('Three', '3')
+        $cc.DropdownListEntries.Item(1).MoveDown()
+    }
+
+    'content-control-combo-entries' = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $doc.Application.Selection.EndKey(6)
+        $cc = $doc.ContentControls.Add(3, $doc.Range(5, 5))
+        [void]$cc.DropdownListEntries.Add('One', '1')
+        [void]$cc.DropdownListEntries.Add('Two', '2')
+        $cc.DropdownListEntries.Clear()
+        [void]$cc.DropdownListEntries.Add('Only', 'only')
+    }
+
+    'content-control-date-format' = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $doc.Application.Selection.EndKey(6)
+        $cc = $doc.ContentControls.Add(6, $doc.Range(5, 5))
+        $cc.DateDisplayFormat = 'dddd, d MMMM yyyy'
+        $cc.DateStorageFormat = 1
+        $cc.DateDisplayLocale = 1041
+        $cc.DateCalendarType = 4
+    }
+
+    'content-control-multiline' = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $doc.Application.Selection.EndKey(6)
+        $cc = $doc.ContentControls.Add(1, $doc.Range(5, 5))
+        $cc.MultiLine = $true
+    }
+
+    'content-control-color-temporary' = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $doc.Application.Selection.EndKey(6)
+        $cc = $doc.ContentControls.Add(0, $doc.Range(6, 11))
+        $cc.Color = 255
+        $cc.Temporary = $true
+    }
+
+    'content-control-default-text-style' = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $doc.Application.Selection.EndKey(6)
+        $cc = $doc.ContentControls.Add(1, $doc.Range(6, 11))
+        $cc.DefaultTextStyle = 'Strong'
+    }
+
     'document-settings'               = {
         param($doc)
         $doc.DefaultTabStop = 54
