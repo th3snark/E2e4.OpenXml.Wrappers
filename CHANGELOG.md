@@ -2,7 +2,7 @@
 
 All notable changes are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/) and the project uses [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.6.0] - 2026-11-06
 
 ### Added
 - Selection: `ClearFormatting`, `ClearCharacterAllFormatting`, `ClearCharacterDirectFormatting`, `ClearCharacterStyle`, `ClearParagraphAllFormatting`, `ClearParagraphDirectFormatting`, `ClearParagraphStyle`, `BoldRun`, `ItalicRun`, `InsertRowsAbove` and `InsertRowsBelow`. Six new reference scenarios, all matching Word 16.
