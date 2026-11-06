@@ -1417,6 +1417,7 @@ public class MarkupConformanceTest
                 ContentControlWrapper point = d.ContentControls.Add(ContentControlType.Text, d.Range(5, 5));
                 point.SetPlaceholderText(null, null, "Type here");
                 around.SetPlaceholderText(null, null, "Other");
+                around.Range.Text = string.Empty;
                 point.SetPlaceholderText(null, null, "Changed");
             },
             Body(), Part("glossary.document.xml")),

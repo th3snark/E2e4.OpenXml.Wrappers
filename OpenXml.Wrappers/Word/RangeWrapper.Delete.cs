@@ -27,7 +27,9 @@ public partial class RangeWrapper
     {
         if (_isSpan)
         {
+            OpenXmlElement story = StoryMap.FindRoot(AnchorElement);
             DeleteSpan();
+            ContentControlWrapper.RestoreEmptyPlaceholders(story);
         }
         else if (_startOpenXmlElement is Paragraph)
         {

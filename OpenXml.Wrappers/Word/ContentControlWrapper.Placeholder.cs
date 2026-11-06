@@ -28,6 +28,70 @@ public class BuildingBlockWrapper
 
 public partial class ContentControlWrapper
 {
+    //Makes the control show its placeholder again: the text of its entry in the placeholder style, and the mark that says so.
+    internal void ShowPlaceholder()
+    {
+        BuildingBlockWrapper entry = PlaceholderText;
+        SdtContentRun content = (_sdt as SdtRun)?.SdtContentRun;
+        if (entry == null || content == null)
+        {
+            return;
+        }
+        content.RemoveAllChildren();
+        content.AppendChild(new Run(new RunProperties(new RunStyle() { Val = ContentControlParts.PlaceholderStyle }), OpenXmlExtensions.NewText(entry.Value)));
+        SdtProperties properties = GetProperties(true);
+        if (properties.GetFirstChild<ShowingPlaceholder>() == null)
+        {
+            Place(properties, new ShowingPlaceholder());
+        }
+    }
+
+    /// <summary>
+    /// Word shows the placeholder of a control again as soon as the control is empty. This looks at the controls of a story after text was
+    /// changed or deleted in it.
+    /// </summary>
+    internal static void RestoreEmptyPlaceholders(DocumentFormat.OpenXml.OpenXmlElement story)
+    {
+        foreach (SdtRun sdt in story.Descendants<SdtRun>().ToList())
+        {
+            SdtProperties properties = sdt.SdtProperties;
+            if (properties != null && properties.GetFirstChild<ShowingPlaceholder>() != null)
+            {
+                //Text typed over the placeholder replaces it: the mark goes, and so does the style of the placeholder text.
+                string shown = string.Concat(sdt.SdtContentRun?.Descendants<Text>().Select(t => t.Text) ?? Enumerable.Empty<string>());
+                if (shown.Length == 0)
+                {
+                    new ContentControlWrapper(sdt).ShowPlaceholder();
+                }
+                else if (shown != new ContentControlWrapper(sdt).PlaceholderText?.Value && sdt.SdtContentRun != null)
+                {
+                    properties.RemoveAllChildren<ShowingPlaceholder>();
+                    foreach (RunProperties run in sdt.SdtContentRun.Descendants<Run>().Select(r => r.RunProperties).Where(r => r?.RunStyle?.Val?.Value == ContentControlParts.PlaceholderStyle).ToList())
+                    {
+                        run.RunStyle = null;
+                        if (!run.HasChildren)
+                        {
+                            run.Remove();
+                        }
+                    }
+                }
+                continue;
+            }
+            if (properties == null || properties.GetFirstChild<SdtPlaceholder>() == null)
+            {
+                continue;
+            }
+            SdtContentRun content = sdt.SdtContentRun;
+            bool empty = content == null || (!content.Descendants<Text>().Any(t => t.Text.Length > 0)
+                && !content.Descendants<TabChar>().Any() && !content.Descendants<Break>().Any() && !content.Descendants<Drawing>().Any()
+                && !content.Descendants<SymbolChar>().Any() && !content.Descendants<FieldChar>().Any());
+            if (empty)
+            {
+                new ContentControlWrapper(sdt).ShowPlaceholder();
+            }
+        }
+    }
+
     /// <summary>The entry that holds the placeholder text of the control, as <c>ContentControl.PlaceholderText</c> in Word; null if there is none.</summary>
     public BuildingBlockWrapper PlaceholderText
     {

@@ -1364,6 +1364,8 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         Write-Host ('point: showing {0} text "{1}" placeholder name "{2}" value "{3}"' -f $cc.ShowingPlaceholderText, $cc.Range.Text, $cc.PlaceholderText.Name, $cc.PlaceholderText.Value)
         Set-PlaceholderText $tc $null 'Other'
         Write-Host ('around text: showing {0} text "{1}" placeholder "{2}"' -f $tc.ShowingPlaceholderText, $tc.Range.Text, $tc.PlaceholderText.Value)
+        $tc.Range.Text = ''
+        Write-Host ('emptied: showing {0} text "{1}"' -f $tc.ShowingPlaceholderText, $tc.Range.Text)
         Set-PlaceholderText $cc $null 'Changed'
         Write-Host ('changed: showing {0} text "{1}" value "{2}"' -f $cc.ShowingPlaceholderText, $cc.Range.Text, $cc.PlaceholderText.Value)
         Write-Host ('parent: {0}' -f $cc.Parent.GetType().FullName)

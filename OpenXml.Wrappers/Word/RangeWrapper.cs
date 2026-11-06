@@ -222,7 +222,9 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
 
             if (_isSpan)
             {
+                OpenXmlElement story = StoryMap.FindRoot(AnchorElement);
                 SetSpanText(text);
+                ContentControlWrapper.RestoreEmptyPlaceholders(story);
             }
             else if (_startOpenXmlElement is TableCell)
             {
