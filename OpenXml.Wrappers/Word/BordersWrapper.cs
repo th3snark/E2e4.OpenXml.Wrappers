@@ -16,7 +16,7 @@ namespace OpenXml.Wrappers.Word;
 /// <see cref="BorderPosition.Vertical"/> are the lines between the rows and between the columns. The diagonals only exist for cells. A row has
 /// no inside horizontal border (it is a single row) and its borders are written to its cells: see <see cref="BorderWrapper"/>.
 /// </remarks>
-public class BordersWrapper
+public partial class BordersWrapper
 {
     //The order of the border elements in the schema, which is the same in table and cell borders.
     private static readonly string[] SchemaOrder = { "top", "left", "start", "bottom", "right", "end", "insideH", "insideV", "tl2br", "tr2bl" };

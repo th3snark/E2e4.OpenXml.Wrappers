@@ -52,6 +52,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 - Document settings: `DefaultTabStop`, `AutoHyphenation`, `HyphenateCaps`, `ConsecutiveHyphensLimit`, `UpdateStylesOnOpen`, `EmbedTrueTypeFonts`, `SaveSubsetFonts`, `DoNotEmbedSystemFonts`, `RemovePersonalInformation` and `RemoveDateAndTime`, with Word 16's defaults and markup (a new reference scenario matches); `Type` (`WordDocumentType`), `SaveFormat`, `DeleteAllComments` and `SetCompatibilityMode`.
 
+- Page border options as Word 16 writes them: `Borders.AlwaysInFront`, `DistanceFrom` (`BorderDistanceFrom`), `EnableFirstPageInSection`, `EnableOtherPagesInSection`, `SurroundHeader` and `SurroundFooter`; and `PageSetup.TogglePortrait` and `SectionDirection` (`SectionDirection`; also on `Document.PageSetup`). Two new reference scenarios, both matching Word.
+
 ### Behaviour changes
 - **The built-in table style is named "Table Normal"**, as Word names it (`NameLocal`), where it was "Normal Table", the name it is stored under; `Styles["Table Normal"]` now finds it. `Styles["Normal Table"]` still works.
 - **`Styles.Add` of a table style writes an empty `w:tblPr`**, as Word does.

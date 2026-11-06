@@ -423,7 +423,8 @@ A cell given a width of its own makes the table ragged, as in Word: the grid get
 | Status | Members |
 |---|---|
 | Done | `BottomMargin`, `DifferentFirstPageHeaderFooter`, `FooterDistance`, `Gutter`, `GutterPos`, `HeaderDistance`, `LeftMargin`, `LineNumbering`, `MirrorMargins`, `OddAndEvenPagesHeaderFooter`, `Orientation`, `PageHeight`, `PageWidth`, `PaperSize`, `RightMargin`, `SectionStart`, `SuppressEndnotes`, `TextColumns`, `TopMargin`, `VerticalAlignment` |
-| Planned, step 10 | `TogglePortrait`, `SectionDirection`, `CharsLine`, `LinesPage`, `LayoutMode`, `GutterStyle`, `Parent` |
+| Done (step 10b) | `TogglePortrait`, `SectionDirection` (`SectionDirection`: `Rtl` writes `w:bidi`, `Ltr` is the default and writes nothing; also on `Document.PageSetup`) |
+| Decided against | `CharsLine`, `LinesPage`, `LayoutMode`, `GutterStyle` (Word 16 derives `w:docGrid` pitch and character space from layout, and `GutterStyle` did not change what it wrote), `Parent` |
 | Out of scope | Printing: `TwoPagesOnOne`, `BookFoldPrinting`, `BookFoldRevPrinting`, `BookFoldPrintingSheets`, `FirstPageTray`, `OtherPagesTray`. View: `ShowGrid`. Templates: `SetAsTemplateDefault` |
 
 <!-- learn: pagenumbers -->
@@ -483,7 +484,8 @@ A cell given a width of its own makes the table ragged, as in Word: the grid get
 | Done | `Item`, `Count`, `Enable`, `InsideColor`, `InsideLineStyle`, `InsideLineWidth`, `OutsideColor`, `OutsideLineStyle`, `OutsideLineWidth` |
 | Planned, step 7 | `InsideColorIndex`, `OutsideColorIndex`, `Shadow`, `DistanceFromBottom`, `DistanceFromLeft`, `DistanceFromRight`, `DistanceFromTop`, `Parent` |
 | Planned, step 8 | `HasHorizontal`, `HasVertical` |
-| Planned, step 10 | `ApplyPageBordersToAllSections`, `AlwaysInFront`, `DistanceFrom`, `EnableFirstPageInSection`, `EnableOtherPagesInSection`, `JoinBorders`, `SurroundFooter`, `SurroundHeader` |
+| Done (step 10b) | `AlwaysInFront` (false is `w:zOrder="back"`), `DistanceFrom` (`BorderDistanceFrom`: text is 0, page edge 1), `EnableFirstPageInSection`, `EnableOtherPagesInSection` (`w:display`; Word keeps at least one on: turning one off while the other is off turns the other on), `SurroundHeader`, `SurroundFooter` (the document setting `w:bordersDoNotSurroundHeader` and `Footer`). Page borders only; the others throw `NotSupportedException` |
+| Decided against | `JoinBorders` (Word 16 reads it back but writes nothing), `ApplyPageBordersToAllSections` (Word 16 left no page borders in either section after it in a two-section document, so there is nothing to match) |
 
 <!-- learn: border -->
 
