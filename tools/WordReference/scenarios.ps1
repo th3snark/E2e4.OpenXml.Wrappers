@@ -521,11 +521,15 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
 
     # Each built-in style the library can add (BuiltInStyle, plus Table Grid), applied in turn: Word writes the definition of each, and of
     # the linked character style of a paragraph style. These are also the definitions the library adds (OpenXml.Wrappers/Word/Templates).
+    # The list styles that carry numbering (List Bullet and List Number, 1 to 5) are left out until lists are done: Word writes a numbering part for them.
     # Keep the list in step with BuiltInStylesScenario in MarkupConformanceTest.
     'built-in-styles'                 = {
         param($doc)
         $styles = @(-2, -3, -4, -5, -6, -7, -8, -9, -10, -20, -21, -22, -23, -24, -25, -26, -27, -28, -30, -31, -32, -33, -35, -39, -40, -41,
             -42, -43, -44, -63, -64, -65, -67, -68, -75, -76, -77, -81, -82, -86, -87, -88, -89, -91, -180, -181, -182, -261, -262, -263, -264, -265,
+            -11, -12, -13, -14, -15, -16, -17, -18, -19, -29, -34, -36, -37, -38, -45, -46, -47, -48, -51, -52, -53, -54,
+            -69, -70, -71, -72, -73, -74, -78, -79, -80, -83, -84, -85, -90, -95, -96, -97, -98, -99, -100, -101, -102,
+            -103, -104, -105, -158,
             'Comment Subject')  # no WdBuiltinStyle constant; Word adds it with a comment
         foreach ($id in $styles) {
             $style = $doc.Styles.Item([object]$id)
@@ -540,6 +544,9 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
             $doc.Content.InsertParagraphAfter()
         }
         $table = $doc.Tables.Add($doc.Paragraphs.Item($doc.Paragraphs.Count).Range, 1, 1)
+        foreach ($id in -159..-178) {  # the table styles
+            $table.Style = $doc.Styles.Item([object]$id)
+        }
         $table.Style = 'Table Grid'
     }
 

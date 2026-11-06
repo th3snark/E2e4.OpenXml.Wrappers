@@ -177,6 +177,7 @@ Borders and shading of styles as Word 16 writes them: a paragraph style has `w:p
 | Status | Members |
 |---|---|
 | Done | `Add`, `Item` (by index, name or `BuiltInStyle`), `Count` |
+| Done (step 9g) | `BuiltInStyle` covers all of `WdBuiltinStyle` except List Bullet and List Number (1 to 5), whose numbering Word writes as a numbering part (planned with lists, step 13): index, TOA, list, list continue, envelope, HTML, body text variants, Message Header, Note Heading, Macro Text, Normal Indent, Block Text, Document Map, Normal (Web), `NormalObject` (Word 365 shows No Spacing for it) and the 20 built-in table styles, checked in the `built-in-styles` scenario |
 | Planned, step 9 | `Parent` |
 
 <!-- learn: tablestyle -->

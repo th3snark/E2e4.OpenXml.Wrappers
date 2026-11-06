@@ -46,6 +46,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 - `Range.CharacterStyle`, `ParagraphStyle` and `TableStyle` (read only, as in Word; names, with `...Object` forms that return the style), and `Document.DefaultTableStyle` and `SetDefaultTableStyle` (written as `w:defaultTableStyle`, in a new reference scenario that matches Word). The rules are Word 16's: `CharacterStyle` is "Default Paragraph Font" for plain text and null where characters differ, a collapsed range takes the character before it (after it at the start of a paragraph), and spaces at the end of a range are not looked at; `TableStyle` is the table's style inside one table and "Table Normal" anywhere else.
 
+- `BuiltInStyle` grows from 55 to 122 values: the rest of `WdBuiltinStyle` that does not need numbering (index, table of figures and authorities, list and list continue, envelope, HTML, the body text variants, Normal Indent, Block Text, Document Map, Normal (Web), No Spacing as `NormalObject`, and the twenty built-in table styles such as Light Shading - Accent 1). Word's own definitions, in the extended `built-in-styles` scenario, which matches. List Bullet and List Number are left out until lists are done.
+
 ### Behaviour changes
 - **The built-in table style is named "Table Normal"**, as Word names it (`NameLocal`), where it was "Normal Table", the name it is stored under; `Styles["Table Normal"]` now finds it. `Styles["Normal Table"]` still works.
 - **`Styles.Add` of a table style writes an empty `w:tblPr`**, as Word does.
