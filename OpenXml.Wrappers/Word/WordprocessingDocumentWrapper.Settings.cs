@@ -175,6 +175,12 @@ public partial class WordprocessingDocumentWrapper
         get { return new ContentControlWrapperCollection(Content); }
     }
 
+    /// <summary>The floating shapes in the main text, as <c>Document.Shapes</c> in Word.</summary>
+    public ShapeWrapperCollection Shapes
+    {
+        get { return new ShapeWrapperCollection(Content); }
+    }
+
     /// <summary>The tables of contents in the main text, as <c>Document.TablesOfContents</c> in Word.</summary>
     public TableOfContentsWrapperCollection TablesOfContents
     {

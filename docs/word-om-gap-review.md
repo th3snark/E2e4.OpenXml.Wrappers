@@ -791,7 +791,8 @@ Step 11 laid the groundwork every new story needs: `StoryType` (which already te
 | Done (step 16) | `AlternativeText`, `Delete` (a picture file nothing uses any more leaves the package), `Height`, `LockAspectRatio`, `Range`, `ScaleHeight`, `ScaleWidth`, `Title`, `Type` (picture, linked picture, chart, locked canvas, SmartArt), `Width`. Sizes are in points and come from the file (PNG `pHYs`, JPEG JFIF density, BMP resolution; 96 dpi otherwise), as Word measures them |
 | Planned later | `Borders`, `Field`, `Hyperlink`, `Parent`, `PictureFormat` (crop, brightness and the like need picture formatting) |
 | Decided against | `Reset`: in Word 16 it left the size of a resized picture alone (it resets picture formatting, which the library does not model) |
-| Planned, steps 18 and 19 | `ConvertToShape` (18), `Select` (19) |
+| Done (step 18a) | `ConvertToShape` (the shape is put at the anchor with offsets 0, since where the picture was on the page needs layout; sizes go to whole twips as in Word) |
+| Planned, step 19 | `Select` |
 | Out of scope | Charts and SmartArt: `Chart`, `HasChart`, `SmartArt`, `HasSmartArt`. OLE: `OLEFormat`, `LinkFormat`. HTML: `Script` |
 | Decided against | Picture effects, each an object of its own: `Fill`, `Glow`, `Line`, `Reflection`, `Shadow`, `SoftEdge`, `TextEffect`. `GroupItems`, `HorizontalLineFormat`, `IsPictureBullet` (legacy VML) |
 
@@ -835,7 +836,8 @@ A table of contents is a `TOC` field. `Update` rebuilds its entries from the hea
 
 | Status | Members |
 |---|---|
-| Planned, step 18 | `ConvertToInlineShape`, `Delete`, `Duplicate`, `Flip`, `IncrementLeft`, `IncrementRotation`, `IncrementTop`, `ScaleHeight`, `ScaleWidth`, `Ungroup`, `ZOrder`, `AlternativeText`, `Anchor`, `AutoShapeType`, `Child`, `Decorative`, `Fill`, `GroupItems`, `Height`, `HeightRelative`, `HorizontalFlip`, `Hyperlink`, `ID`, `LayoutInCell`, `Left`, `LeftRelative`, `Line`, `LockAnchor`, `LockAspectRatio`, `Name`, `Parent`, `ParentGroup`, `PictureFormat`, `RelativeHorizontalPosition`, `RelativeHorizontalSize`, `RelativeVerticalPosition`, `RelativeVerticalSize`, `Rotation`, `TextFrame`, `Title`, `Top`, `TopRelative`, `Type`, `VerticalFlip`, `Visible`, `Width`, `WidthRelative`, `WrapFormat`, `ZOrderPosition` |
+| Done (step 18a, pictures) | `ConvertToInlineShape`, `Delete`, `ZOrder`, `ZOrderPosition` (from 1, as in Word), `AlternativeText`, `Anchor`, `Height`, `ID`, `Left`, `LockAnchor`, `LockAspectRatio`, `Name`, `RelativeHorizontalPosition`, `RelativeVerticalPosition`, `Rotation` (with the room a rotated picture needs, in steps of 1.5 pt), `Title`, `Top`, `Type` (picture, linked picture), `Visible`, `Width`, `WrapFormat`. `Left` and `Top` are offsets from `RelativeHorizontalPosition` and `RelativeVerticalPosition`; changing those does not move the shape on the page, as no layout is known. A picture is anchored at the start of the paragraph of the anchor range, as Word does |
+| Planned, step 18b | `Fill`, `Line`, `TextFrame` and `AutoShapeType` (text boxes and drawn shapes: Word writes a `wps` shape with a VML fallback including a binary `o:gfxdata` blob, which is not copied), `Duplicate`, `Flip`, `HorizontalFlip`, `VerticalFlip`, `IncrementLeft`, `IncrementRotation`, `IncrementTop`, `ScaleHeight`, `ScaleWidth`, `Decorative`, `LayoutInCell`, `Hyperlink`, `PictureFormat`, `Parent`, `Child`, `ParentGroup`, `Ungroup`, `GroupItems`, `HeightRelative`, `LeftRelative`, `TopRelative`, `WidthRelative`, `RelativeHorizontalSize`, `RelativeVerticalSize` |
 | Planned, step 19 | `Select` |
 | Out of scope | Charts, SmartArt, OLE and 3D: `Chart`, `HasChart`, `SmartArt`, `HasSmartArt`, `OLEFormat`, `LinkFormat`, `Model3D`. HTML: `Script`. Theme-based styles: `ShapeStyle`, `BackgroundStyle`, `GraphicStyle`. The format painter: `Apply`, `PickUp` |
 | Decided against | Drawing canvases: `CanvasItems`, `CanvasCropBottom`, `CanvasCropLeft`, `CanvasCropRight`, `CanvasCropTop`. Geometry editing: `Adjustments`, `Nodes`, `Vertices`, `Callout`. Effects: `Glow`, `Reflection`, `Shadow`, `SoftEdge`, `ThreeD`, `TextEffect`. `TextFrame2` (the Office text frame, which TextFrame covers), `SetShapesDefaultProperties` |
@@ -846,7 +848,8 @@ A table of contents is a `TOC` field. `Update` rebuilds its entries from the hea
 
 | Status | Members |
 |---|---|
-| Planned, step 18 | `AddLabel`, `AddLine`, `AddPicture`, `AddShape`, `AddTextbox`, `Item`, `Count`, `Parent` |
+| Done (step 18a) | `AddPicture` (anchored at the start of the paragraph, in front of the text; a file already in the document is shared), `Item` (0-based, lowest in the stack first), `Count`, `Parent`, enumeration. `Document.Shapes` and `HeaderFooter.Shapes` |
+| Planned, step 18b | `AddLabel`, `AddLine`, `AddShape`, `AddTextbox` |
 | Planned, step 19 | `SelectAll` |
 | Out of scope | `AddChart2`, `AddSmartArt`, `Add3DModel` (charts, SmartArt, 3D), `AddOLEControl`, `AddOLEObject` (OLE) |
 | Decided against | `AddCallout`, `AddCanvas`, `AddCurve`, `AddPolyline`, `BuildFreeform`, `AddTextEffect` (WordArt), `AddWebVideo`, `Range` (multi-shape ranges) |
@@ -867,7 +870,8 @@ A table of contents is a `TOC` field. `Update` rebuilds its entries from the hea
 
 | Status | Members |
 |---|---|
-| Planned, step 18 | `AllowOverlap`, `DistanceBottom`, `DistanceLeft`, `DistanceRight`, `DistanceTop`, `Parent`, `Side`, `Type` |
+| Done (step 18a) | `AllowOverlap`, `DistanceBottom`, `DistanceLeft`, `DistanceRight`, `DistanceTop`, `Side`, `Type` (square, tight, through, none, top and bottom, behind; inline through `ConvertToInlineShape`). Word writes `behindDoc` for tight wrapping too, and so does the library |
+| Planned later | `Parent` |
 
 ### 4.8 Selection (step 19)
 <!-- learn: selection-range -->

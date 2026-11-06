@@ -1,5 +1,6 @@
 using System;
 
+using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 
 namespace OpenXml.Wrappers.Word;
@@ -172,6 +173,30 @@ internal sealed class PictureFile
             at += 2 + length;
         }
         throw new ArgumentException("The JPEG picture has no frame header.", nameof(bytes));
+    }
+
+    /// <summary>
+    /// Takes the picture file or link out of the package when no picture in the story uses it any more.
+    /// </summary>
+    internal static void Release(OpenXmlElement root, OpenXmlPartContainer container, string embed, string link)
+    {
+        if (container == null)
+        {
+            return;
+        }
+        System.Collections.Generic.List<DocumentFormat.OpenXml.Drawing.Blip> remaining = new System.Collections.Generic.List<DocumentFormat.OpenXml.Drawing.Blip>(root.Descendants<DocumentFormat.OpenXml.Drawing.Blip>());
+        if (embed != null && !System.Linq.Enumerable.Any(remaining, b => b.Embed?.Value == embed))
+        {
+            OpenXmlPart part = System.Linq.Enumerable.FirstOrDefault(System.Linq.Enumerable.Select(System.Linq.Enumerable.Where(container.Parts, p => p.RelationshipId == embed), p => p.OpenXmlPart));
+            if (part != null)
+            {
+                container.DeletePart(part);
+            }
+        }
+        if (link != null && !System.Linq.Enumerable.Any(remaining, b => b.Link?.Value == link))
+        {
+            container.DeleteExternalRelationship(link);
+        }
     }
 
     /// <summary>The kind of image part that holds a picture with the content type.</summary>

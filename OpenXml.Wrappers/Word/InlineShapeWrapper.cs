@@ -276,6 +276,18 @@ public class InlineShapeWrapper : IEquatable<InlineShapeWrapper>
     }
 
     /// <summary>
+    /// Makes the shape a floating one, anchored where it is, in front of the text, as <c>InlineShape.ConvertToShape</c> in Word. Without
+    /// layout its position is not known, so it is put at the anchor (Word keeps the place it had on the page).
+    /// </summary>
+    public ShapeWrapper ConvertToShape()
+    {
+        Drawing anchored = ShapeWrapper.NewAnchored(_drawing, 0, 0, ShapeWrapperCollection.NextRelativeHeight(_drawing), true);
+        _drawing.InsertBeforeSelf(anchored);
+        _drawing.Remove();
+        return new ShapeWrapper(anchored);
+    }
+
+    /// <summary>
     /// Takes the shape out of the text, as <c>InlineShape.Delete</c> in Word. A picture file nothing uses any more goes out of the package.
     /// </summary>
     public void Delete()
@@ -288,23 +300,7 @@ public class InlineShapeWrapper : IEquatable<InlineShapeWrapper>
 
         Range.Delete();
 
-        if (container == null)
-        {
-            return;
-        }
-        List<A.Blip> remaining = root.Descendants<A.Blip>().ToList();
-        if (embed != null && !remaining.Any(b => b.Embed?.Value == embed))
-        {
-            OpenXmlPart part = container.Parts.Where(p => p.RelationshipId == embed).Select(p => p.OpenXmlPart).FirstOrDefault();
-            if (part != null)
-            {
-                container.DeletePart(part);
-            }
-        }
-        if (link != null && !remaining.Any(b => b.Link?.Value == link))
-        {
-            container.DeleteExternalRelationship(link);
-        }
+        PictureFile.Release(root, container, embed, link);
     }
 
     /// <inheritdoc/>

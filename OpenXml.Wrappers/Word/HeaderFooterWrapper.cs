@@ -127,6 +127,12 @@ public class HeaderFooterWrapper : System.IEquatable<HeaderFooterWrapper>
         }
     }
 
+    /// <summary>The floating shapes in the header or footer, as <c>HeaderFooter.Shapes</c> in Word.</summary>
+    public ShapeWrapperCollection Shapes
+    {
+        get { return new ShapeWrapperCollection(Range); }
+    }
+
     /// <summary>
     /// The content of the header or footer, as <c>HeaderFooter.Range</c> in Word. Reading it changes nothing that is saved: when the section
     /// and the sections before it have no header or footer there is an empty one to read and write, as in Word, where the story is always
