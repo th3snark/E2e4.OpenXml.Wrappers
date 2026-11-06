@@ -111,7 +111,7 @@ The API follows the shape of the Word object model, but it is C# over Open XML r
 
 **Needs a layout engine.** Nothing here measures or paginates text, so `Pages` and `Lines` statistics (`ComputeStatistics`), the page and line items of `Range.Information`, `Selection`, printing and spelling are not available. Fields that depend on layout (`PAGE`, `NUMPAGES`, `PAGEREF`, `TOC`) are left for Word to update; `Fields.Update` does not compute them and `Field.Update` returns `false`.
 
-**Objects that do not exist yet.** Footnotes and endnotes (and their stories), lists and `ListFormat`, content controls, pictures and other shapes, revisions (`Revisions`) and tables of contents.
+**Objects that do not exist yet.** Footnotes and endnotes (and their stories), applying and changing lists (lists can be read), content controls, pictures and other shapes, revisions (`Revisions`) and tables of contents.
 
 **Known limits of objects that do exist.**
 

@@ -613,7 +613,8 @@ A cell given a width of its own makes the table ragged, as in Word: the grid get
 
 | Status | Members |
 |---|---|
-| Planned, step 13 | `ApplyBulletDefault`, `ApplyListTemplate`, `ApplyListTemplateWithLevel`, `ApplyNumberDefault`, `ApplyOutlineNumberDefault`, `CanContinuePreviousList`, `ConvertNumbersToText`, `CountNumberedItems`, `ListIndent`, `ListOutdent`, `RemoveNumbers`, `List`, `ListLevelNumber`, `ListString`, `ListTemplate`, `ListType`, `ListValue`, `Parent`, `SingleList`, `SingleListTemplate` |
+| Done (step 13a) | Reading: `CountNumberedItems`, `List`, `ListLevelNumber` (from 1, as Word), `ListString`, `ListTemplate`, `ListType`, `ListValue`, `Parent`, `SingleList`, `SingleListTemplate`. The values are worked out as Word works them out (counters per template, deeper levels starting again, letters that repeat, roman numbers); checked against the numbers Word gave for its default bullet, number and outline lists |
+| Planned, step 13b | `ApplyBulletDefault`, `ApplyListTemplate`, `ApplyListTemplateWithLevel`, `ApplyNumberDefault`, `ApplyOutlineNumberDefault`, `CanContinuePreviousList`, `ConvertNumbersToText`, `ListIndent`, `ListOutdent`, `RemoveNumbers`, and setting `ListLevelNumber` |
 | Decided against | `ListPictureBullet` (legacy picture bullets) |
 
 <!-- learn: list -->
@@ -622,7 +623,8 @@ A cell given a width of its own makes the table ragged, as in Word: the grid get
 
 | Status | Members |
 |---|---|
-| Planned, step 13 | `ApplyListTemplate`, `ApplyListTemplateWithLevel`, `CanContinuePreviousList`, `ConvertNumbersToText`, `CountNumberedItems`, `RemoveNumbers`, `ListParagraphs`, `Parent`, `Range`, `SingleListTemplate`, `StyleName` |
+| Done (step 13a) | `CountNumberedItems`, `ListParagraphs`, `SingleListTemplate`, `StyleName` (empty: the library does not link lists to styles) |
+| Planned, step 13b | `ApplyListTemplate`, `ApplyListTemplateWithLevel`, `CanContinuePreviousList`, `ConvertNumbersToText`, `RemoveNumbers`, `Range`, `Parent` |
 
 <!-- learn: lists,listparagraphs,listlevels -->
 
@@ -630,7 +632,7 @@ A cell given a width of its own makes the table ragged, as in Word: the grid get
 
 | Status | Members |
 |---|---|
-| Planned, step 13 | `Item`, `Count`, `Parent` |
+| Done (step 13a) | `Item` (0-based), `Count`, `Parent` for `Lists` and `ListLevels`; `Item` and `Count` for `ListParagraphs`. A list is the paragraphs that share a `w:num`, in the order they first appear. `Document.Lists` and `ListParagraphs` look at the main text |
 
 <!-- learn: listtemplate -->
 
@@ -638,7 +640,8 @@ A cell given a width of its own makes the table ragged, as in Word: the grid get
 
 | Status | Members |
 |---|---|
-| Planned, step 13 | `Convert`, `ListLevels`, `Name`, `OutlineNumbered`, `Parent` |
+| Done (step 13a) | `ListLevels`, `Name`, `OutlineNumbered` |
+| Planned, step 13b | `Convert`, `Parent` |
 
 <!-- learn: listtemplates -->
 
@@ -646,7 +649,8 @@ A cell given a width of its own makes the table ragged, as in Word: the grid get
 
 | Status | Members |
 |---|---|
-| Planned, step 13 | `Add`, `Item`, `Count`, `Parent` |
+| Done (step 13a) | `Item` (0-based), `Count`, `Parent`, enumeration |
+| Planned, step 13b | `Add` |
 
 <!-- learn: listlevel -->
 
@@ -654,7 +658,8 @@ A cell given a width of its own makes the table ragged, as in Word: the grid get
 
 | Status | Members |
 |---|---|
-| Planned, step 13 | `Alignment`, `Font`, `Index`, `LinkedStyle`, `NumberFormat`, `NumberPosition`, `NumberStyle`, `Parent`, `ResetOnHigher`, `StartAt`, `TabPosition`, `TextPosition`, `TrailingCharacter` |
+| Done (step 13a) | `Alignment`, `Index` (0-based), `NumberFormat`, `NumberPosition`, `NumberStyle`, `Parent`, `ResetOnHigher`, `StartAt`, `TabPosition` (read only), `TextPosition`, `TrailingCharacter`, `LinkedStyle` (read only) |
+| Planned, step 13b | `Font`, setting `TabPosition`, `ResetOnHigher` beyond the default, `LinkedStyle` |
 | Decided against | `ApplyPictureBullet`, `PictureBullet` (legacy picture bullets) |
 
 ### 4.3 Footnotes and endnotes (steps 11 and 14)
