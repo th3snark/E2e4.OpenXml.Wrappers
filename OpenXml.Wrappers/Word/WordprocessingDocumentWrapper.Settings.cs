@@ -175,6 +175,12 @@ public partial class WordprocessingDocumentWrapper
         get { return new ContentControlWrapperCollection(Content); }
     }
 
+    /// <summary>The custom XML parts of the document, as <c>Document.CustomXMLParts</c> in Word.</summary>
+    public CustomXMLParts CustomXMLParts
+    {
+        get { return new CustomXMLParts(WordprocessingDocument.MainDocumentPart); }
+    }
+
     /// <summary>The content controls with a tag, as <c>Document.SelectContentControlsByTag</c> in Word.</summary>
     public ContentControlWrapperCollection SelectContentControlsByTag(string tag)
     {

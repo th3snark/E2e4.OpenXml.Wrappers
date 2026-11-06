@@ -1257,6 +1257,43 @@ public class MarkupConformanceTest
             },
             Body()),
 
+        new Scenario("custom-xml-part-add",
+            d =>
+            {
+                d.Content.InsertAfter("Hello");
+                d.CustomXMLParts.Add("<root xmlns=\"urn:test\"><name>Bob</name></root>");
+            },
+            CustomXmlParts()),
+
+        new Scenario("custom-xml-part-delete",
+            d =>
+            {
+                d.Content.InsertAfter("Hello");
+                d.CustomXMLParts.Add("<root xmlns=\"urn:test\"><name>Bob</name></root>").Delete();
+            },
+            Part("document.xml.rels"), Part("content-types.xml")),
+
+        new Scenario("content-control-xml-mapping",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                CustomXMLPart part = d.CustomXMLParts.Add("<root xmlns=\"urn:test\"><name>Bob</name></root>");
+                ContentControlWrapper cc = d.ContentControls.Add(ContentControlType.Text, d.Range(5, 5));
+                cc.XMLMapping.SetMapping("/ns:root/ns:name", "xmlns:ns='urn:test'", part);
+            },
+            Body(), Part("glossary.document.xml"), Part("customXml.itemProps1.xml")),
+
+        new Scenario("content-control-xml-mapping-delete",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                CustomXMLPart part = d.CustomXMLParts.Add("<root xmlns=\"urn:test\"><name>Bob</name></root>");
+                ContentControlWrapper cc = d.ContentControls.Add(ContentControlType.Text, d.Range(5, 5));
+                cc.XMLMapping.SetMapping("/ns:root/ns:name", "xmlns:ns='urn:test'", part);
+                cc.XMLMapping.Delete();
+            },
+            Body(), Part("glossary.document.xml")),
+
         new Scenario("document-settings",
             d =>
             {
@@ -2622,6 +2659,15 @@ public class MarkupConformanceTest
     private static Comparison[] ControlParts()
     {
         return new[] { Body(), Part("glossary.document.xml") };
+    }
+
+    private static Comparison[] CustomXmlParts()
+    {
+        return new[]
+        {
+            Body(), Part("customXml.item1.xml"), Part("customXml.itemProps1.xml"), Part("customXml.item1.xml.rels"),
+            Part("document.xml.rels"), Part("content-types.xml")
+        };
     }
 
     private static Comparison[] CommentParts()
