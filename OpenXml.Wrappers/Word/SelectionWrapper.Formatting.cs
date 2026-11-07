@@ -89,6 +89,57 @@ public partial class SelectionWrapper
         Font.ItalicBi = on;
     }
 
+    /// <summary>Makes the paragraphs of the selection read right to left, as <c>Selection.RtlPara</c> in Word.</summary>
+    public void RtlPara()
+    {
+        ParagraphFormat.ReadingOrder = ReadingOrder.RightToLeft;
+    }
+
+    /// <summary>Makes the paragraphs of the selection read left to right, as <c>Selection.LtrPara</c> in Word.</summary>
+    public void LtrPara()
+    {
+        ParagraphFormat.ReadingOrder = ReadingOrder.LeftToRight;
+    }
+
+    /// <summary>Marks the selected text as reading right to left, as <c>Selection.RtlRun</c> in Word.</summary>
+    public void RtlRun()
+    {
+        SetRunDirection(true);
+    }
+
+    /// <summary>Marks the selected text as reading left to right, as <c>Selection.LtrRun</c> in Word.</summary>
+    public void LtrRun()
+    {
+        SetRunDirection(false);
+    }
+
+    //Word marks the paragraph mark too when the selection reaches the end of the text of its paragraph.
+    private void SetRunDirection(bool rightToLeft)
+    {
+        Font.RightToLeftRun = rightToLeft;
+        if (_range.End == _range.Start)
+        {
+            return;
+        }
+        RangeWrapper last = _range.Duplicate();
+        last.SetRange(_range.End, _range.End);
+        ParagraphWrapper paragraph = last.Paragraphs[0];
+        if (paragraph.Range.End - 1 != _range.End)
+        {
+            return;
+        }
+        ParagraphMarkRunProperties mark = paragraph.Paragraph.GetOrAddParagraphMarkRunProperties();
+        mark.RemoveRunProperty("rtl");
+        if (rightToLeft)
+        {
+            mark.SetRunProperty(new RightToLeftText());
+        }
+        if (!mark.HasChildren)
+        {
+            mark.Remove();
+        }
+        paragraph.Paragraph.RemoveEmptyProperties();
+    }
     #endregion
 
     #region Rows

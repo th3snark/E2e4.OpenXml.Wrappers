@@ -949,6 +949,57 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $doc.Application.Selection.InsertRows(2)
     }
 
+    'selection-split-table'           = {
+        param($doc)
+        $doc.Content.InsertAfter("Before`r")
+        $t = $doc.Tables.Add($doc.Range($doc.Content.End - 1, $doc.Content.End - 1), 3, 2)
+        for ($r = 1; $r -le 3; $r++) { for ($c = 1; $c -le 2; $c++) { $t.Cell($r, $c).Range.Text = "r$r" + "c$c" } }
+        $t.Cell(2, 2).Select()
+        $doc.Application.Selection.SplitTable()
+        Write-Host ('after SplitTable: tables {0}; sel {1}-{2}' -f $doc.Tables.Count, $doc.Application.Selection.Start, $doc.Application.Selection.End)
+    }
+
+    'selection-rtl-para'              = {
+        param($doc)
+        $doc.Content.InsertAfter("One two three`rFour")
+        $doc.Application.Selection.SetRange(4, 7)
+        $doc.Application.Selection.RtlPara()
+    }
+
+    'selection-rtl-run'               = {
+        param($doc)
+        $doc.Content.InsertAfter("One two three`rFour")
+        $sel = $doc.Application.Selection
+        $sel.SetRange(0, 13)
+        $sel.RtlRun()
+        $sel.SetRange(4, 7)
+        $sel.LtrRun()
+    }
+
+    'selection-split-table-first'     = {
+        param($doc)
+        $doc.Content.InsertAfter("Before`r")
+        $t = $doc.Tables.Add($doc.Range($doc.Content.End - 1, $doc.Content.End - 1), 2, 2)
+        for ($r = 1; $r -le 2; $r++) { for ($c = 1; $c -le 2; $c++) { $t.Cell($r, $c).Range.Text = "r$r" + "c$c" } }
+        $t.Cell(1, 2).Select()
+        $sel = $doc.Application.Selection
+        $sel.SplitTable()
+        Write-Host ('first row split: tables {0}; sel {1}-{2}; text "{3}"' -f $doc.Tables.Count, $sel.Start, $sel.End, ($doc.Content.Text -replace "`r", '\r' -replace "`a", '\a'))
+    }
+
+    # Printing-only (no snapshot): which row the split is before when rows are selected, and the error outside a table.
+    'selection-split-table-range'     = {
+        param($doc)
+        $doc.Content.InsertAfter("Before`r")
+        $t = $doc.Tables.Add($doc.Range($doc.Content.End - 1, $doc.Content.End - 1), 4, 2)
+        for ($r = 1; $r -le 4; $r++) { for ($c = 1; $c -le 2; $c++) { $t.Cell($r, $c).Range.Text = "r$r" + "c$c" } }
+        $sel = $doc.Application.Selection
+        $sel.SetRange($t.Cell(2, 1).Range.Start, $t.Cell(3, 2).Range.End - 1)
+        $sel.SplitTable()
+        Write-Host ('range split: tables {0}; first has {1} rows; sel {2}-{3}' -f $doc.Tables.Count, $doc.Tables.Item(1).Rows.Count, $sel.Start, $sel.End)
+        $sel.SetRange(0, 0)
+        try { $sel.SplitTable(); Write-Host 'outside: no error' } catch { Write-Host ('outside: ' + $_.Exception.Message) }
+    }
     'selection-extend-case'           = {
         param($doc)
         $doc.Content.InsertAfter("one Two three Four")

@@ -29,6 +29,30 @@ public partial class SelectionWrapper
         SetRange(first.Start, last.End);
     }
 
+    /// <summary>
+    /// Splits the table in two before the row the insertion point or the start of the selection is in, as <c>Selection.SplitTable</c> in
+    /// Word: that row becomes the first of the new table, and a paragraph is left between the two (before the table for its first row), and the insertion point is in that paragraph.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The selection is not in a table.</exception>
+    public void SplitTable()
+    {
+        TableRowWrapper row = SelectedCells()[0].Row;
+        Table table = (Table)row.TableRow.Parent;
+        Paragraph separator;
+        if (row.TableRow.PreviousSibling<TableRow>() == null)
+        {
+            //Before the first row Word puts an empty paragraph before the table.
+            separator = new Paragraph();
+            table.InsertBeforeSelf(separator);
+        }
+        else
+        {
+            separator = (Paragraph)new TableWrapper(table).Split(row).Table.PreviousSibling();
+        }
+        int at = new ParagraphWrapper(separator).Range.Start;
+        SetRange(at, at);
+    }
+
     /// <summary>Selects the column of the table the selection is in, as <c>Selection.SelectColumn</c> in Word.</summary>
     /// <exception cref="InvalidOperationException">The selection is not in a table.</exception>
     public void SelectColumn()

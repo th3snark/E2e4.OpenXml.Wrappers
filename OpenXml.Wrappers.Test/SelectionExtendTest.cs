@@ -344,4 +344,40 @@ public class SelectionExtendTest : IDisposable
         Assert.Throws<InvalidOperationException>(() => Sel.SelectColumn());
         Assert.Throws<ArgumentOutOfRangeException>(() => Sel.InsertRows(0));
     }
+
+    [Fact]
+    public void SplitTableMatchesWord()
+    {
+        _document.Content.InsertAfter("Before\r");
+        TableWrapper table = _document.Tables.Add(_document.Range(_document.Content.End - 1, _document.Content.End - 1), 4, 2);
+        for (int r = 0; r < 4; r++)
+        {
+            for (int c = 0; c < 2; c++)
+            {
+                table.Cell(r, c).Range.Text = "r" + (r + 1) + "c" + (c + 1);
+            }
+        }
+        Sel.SetRange(table.Cell(1, 0).Range.Start, table.Cell(2, 1).Range.End - 1);
+        Sel.SplitTable();
+        //Word splits before the first selected row and leaves the insertion point in the paragraph between the tables.
+        Assert.Equal(2, _document.Tables.Count);
+        Assert.Equal(1, _document.Tables[0].Rows.Count);
+        Assert.Equal(3, _document.Tables[1].Rows.Count);
+        Assert.Equal((18, 18), (Sel.Start, Sel.End));
+
+        _document.Selection.SetRange(0, 0);
+        Assert.Throws<InvalidOperationException>(() => Sel.SplitTable());
+    }
+
+    [Fact]
+    public void SplitTableAtTheFirstRowAddsAParagraphBefore()
+    {
+        _document.Content.InsertAfter("Before\r");
+        TableWrapper table = _document.Tables.Add(_document.Range(_document.Content.End - 1, _document.Content.End - 1), 2, 2);
+        table.Cell(0, 1).Select();
+        Sel.SplitTable();
+        Assert.Single(_document.Tables);
+        Assert.Equal(2, _document.Tables[0].Rows.Count);
+        Assert.Equal((7, 7), (Sel.Start, Sel.End));
+    }
 }
