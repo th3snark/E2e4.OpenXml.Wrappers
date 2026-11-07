@@ -482,7 +482,7 @@ public partial class ShapeWrapper
 
     internal Wps.WordprocessingShape Shape
     {
-        get { return AnchorElement?.Descendants<Wps.WordprocessingShape>().FirstOrDefault(); }
+        get { return _child ?? (IsGroup ? null : AnchorElement?.Descendants<Wps.WordprocessingShape>().FirstOrDefault()); }
     }
 
     internal Wps.ShapeProperties ShapeProperties
