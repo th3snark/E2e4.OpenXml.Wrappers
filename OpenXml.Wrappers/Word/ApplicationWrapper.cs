@@ -13,7 +13,7 @@ namespace OpenXml.Wrappers.Word;
 /// <see cref="WordprocessingDocumentWrapper.Create(string, bool, bool)"/> belongs to an application of its own, which
 /// <see cref="WordprocessingDocumentWrapper.Application"/> gives.
 /// </summary>
-public class ApplicationWrapper : IDisposable
+public partial class ApplicationWrapper : IDisposable
 {
     private readonly List<WordprocessingDocumentWrapper> _documents = new List<WordprocessingDocumentWrapper>();
     private WordprocessingDocumentWrapper _active;

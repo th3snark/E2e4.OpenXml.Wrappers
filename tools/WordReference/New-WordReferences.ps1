@@ -69,6 +69,9 @@ try {
         UserInitials     = $application.UserInitials
         UseLocalUserInfo = $application.Options.UseLocalUserInfo
     }
+    # If the script is stopped before it can restore them, the values to put back are here (outside the repository).
+    $savedFile = Join-Path ([IO.Path]::GetTempPath()) 'WordReference-user-before-run.json'
+    $saved | ConvertTo-Json | Set-Content -LiteralPath $savedFile -Encoding UTF8
     try {
         $application.Options.UseLocalUserInfo = $true
         $application.UserName = 'Reference'
@@ -110,6 +113,7 @@ if ($userInfoAfter.UserName -ne $userInfo.UserName -or $userInfoAfter.UserInitia
         $userInfoAfter.UserName, $userInfoAfter.UserInitials)
 }
 Write-Host 'The Office user name and initials are unchanged.'
+Remove-Item -LiteralPath (Join-Path ([IO.Path]::GetTempPath()) 'WordReference-user-before-run.json') -ErrorAction SilentlyContinue
 
 if (-not $Scenario -and (Test-Path -LiteralPath $outputRoot)) {
     Get-ChildItem -LiteralPath $outputRoot -Directory | Remove-Item -Recurse -Force

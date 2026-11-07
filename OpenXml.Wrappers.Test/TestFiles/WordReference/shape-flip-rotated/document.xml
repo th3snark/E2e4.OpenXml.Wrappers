@@ -1,0 +1,170 @@
+<w:document xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape" mc:Ignorable="w14">
+  <w:body>
+    <w:p>
+      <w:r>
+        <w:t>Hello</w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <mc:AlternateContent>
+          <mc:Choice Requires="wps">
+            <w:drawing>
+              <wp:anchor allowOverlap="1" behindDoc="0" distB="0" distL="114300" distR="114300" distT="0" layoutInCell="1" locked="0" relativeHeight="251660288" simplePos="0">
+                <wp:simplePos x="0" y="0" />
+                <wp:positionH relativeFrom="column">
+                  <wp:posOffset>-660400</wp:posOffset>
+                </wp:positionH>
+                <wp:positionV relativeFrom="paragraph">
+                  <wp:posOffset>228600</wp:posOffset>
+                </wp:positionV>
+                <wp:extent cx="1016000" cy="508000" />
+                <wp:effectExtent b="38100" l="0" r="76200" t="12700" />
+                <wp:wrapNone />
+                <wp:docPr id="{docPr1}" name="Arrow: Right 2" />
+                <wp:cNvGraphicFramePr />
+                <a:graphic>
+                  <a:graphicData uri="http://schemas.microsoft.com/office/word/2010/wordprocessingShape">
+                    <wps:wsp>
+                      <wps:cNvSpPr />
+                      <wps:spPr>
+                        <a:xfrm flipH="1" flipV="1" rot="6000000">
+                          <a:off x="0" y="0" />
+                          <a:ext cx="1016000" cy="508000" />
+                        </a:xfrm>
+                        <a:prstGeom prst="rightArrow">
+                          <a:avLst />
+                        </a:prstGeom>
+                      </wps:spPr>
+                      <wps:style>
+                        <a:lnRef idx="2">
+                          <a:schemeClr val="accent1">
+                            <a:shade val="15000" />
+                          </a:schemeClr>
+                        </a:lnRef>
+                        <a:fillRef idx="1">
+                          <a:schemeClr val="accent1" />
+                        </a:fillRef>
+                        <a:effectRef idx="0">
+                          <a:schemeClr val="accent1" />
+                        </a:effectRef>
+                        <a:fontRef idx="minor">
+                          <a:schemeClr val="lt1" />
+                        </a:fontRef>
+                      </wps:style>
+                      <wps:bodyPr anchor="ctr" anchorCtr="0" bIns="45720" compatLnSpc="1" forceAA="0" fromWordArt="0" horzOverflow="overflow" lIns="91440" numCol="1" rIns="91440" rot="0" rtlCol="0" spcCol="0" spcFirstLastPara="0" tIns="45720" vert="horz" vertOverflow="overflow" wrap="square">
+                        <a:prstTxWarp prst="textNoShape">
+                          <a:avLst />
+                        </a:prstTxWarp>
+                        <a:noAutofit />
+                      </wps:bodyPr>
+                    </wps:wsp>
+                  </a:graphicData>
+                </a:graphic>
+              </wp:anchor>
+            </w:drawing>
+          </mc:Choice>
+          <mc:Fallback>
+            <w:pict>
+              <v:shapetype adj="16200,5400" coordsize="21600,21600" id="_x0000_t13" path="m@0,l@0@1,0@1,0@2@0@2@0,21600,21600,10800xe" o:spt="13" w14:anchorId="1154181C">
+                <v:stroke joinstyle="miter" />
+                <v:formulas>
+                  <v:f eqn="val #0" />
+                  <v:f eqn="val #1" />
+                  <v:f eqn="sum height 0 #1" />
+                  <v:f eqn="sum 10800 0 #1" />
+                  <v:f eqn="sum width 0 #0" />
+                  <v:f eqn="prod @4 @3 10800" />
+                  <v:f eqn="sum width 0 @5" />
+                </v:formulas>
+                <v:path textboxrect="0,@1,@6,@2" o:connectangles="270,180,90,0" o:connectlocs="@0,0;0,10800;@0,21600;21600,10800" o:connecttype="custom" />
+                <v:handles>
+                  <v:h position="#0,#1" xrange="0,21600" yrange="0,10800" />
+                </v:handles>
+              </v:shapetype>
+              <v:shape fillcolor="#156082 [3204]" id="Arrow: Right 2" strokecolor="#030e13 [484]" strokeweight="1.5pt" style="position:absolute;margin-left:-52pt;margin-top:18pt;width:80pt;height:40pt;rotation:100;flip:x y;z-index:251660288;visibility:visible;mso-wrap-style:square;mso-wrap-distance-left:9pt;mso-wrap-distance-top:0;mso-wrap-distance-right:9pt;mso-wrap-distance-bottom:0;mso-position-horizontal:absolute;mso-position-horizontal-relative:text;mso-position-vertical:absolute;mso-position-vertical-relative:text;v-text-anchor:middle" type="#_x0000_t13" o:gfxdata="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&#xA;" o:spid="_x0000_s1026" />
+            </w:pict>
+          </mc:Fallback>
+        </mc:AlternateContent>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <mc:AlternateContent>
+          <mc:Choice Requires="wps">
+            <w:drawing>
+              <wp:anchor allowOverlap="1" behindDoc="0" distB="0" distL="114300" distR="114300" distT="0" layoutInCell="1" locked="0" relativeHeight="251659264" simplePos="0">
+                <wp:simplePos x="0" y="0" />
+                <wp:positionH relativeFrom="column">
+                  <wp:posOffset>-660400</wp:posOffset>
+                </wp:positionH>
+                <wp:positionV relativeFrom="paragraph">
+                  <wp:posOffset>-533400</wp:posOffset>
+                </wp:positionV>
+                <wp:extent cx="1016000" cy="508000" />
+                <wp:effectExtent b="139700" l="19050" r="0" t="114300" />
+                <wp:wrapNone />
+                <wp:docPr id="{docPr2}" name="Arrow: Right 1" />
+                <wp:cNvGraphicFramePr />
+                <a:graphic>
+                  <a:graphicData uri="http://schemas.microsoft.com/office/word/2010/wordprocessingShape">
+                    <wps:wsp>
+                      <wps:cNvSpPr />
+                      <wps:spPr>
+                        <a:xfrm flipV="1" rot="19800000">
+                          <a:off x="0" y="0" />
+                          <a:ext cx="1016000" cy="508000" />
+                        </a:xfrm>
+                        <a:prstGeom prst="rightArrow">
+                          <a:avLst />
+                        </a:prstGeom>
+                      </wps:spPr>
+                      <wps:style>
+                        <a:lnRef idx="2">
+                          <a:schemeClr val="accent1">
+                            <a:shade val="15000" />
+                          </a:schemeClr>
+                        </a:lnRef>
+                        <a:fillRef idx="1">
+                          <a:schemeClr val="accent1" />
+                        </a:fillRef>
+                        <a:effectRef idx="0">
+                          <a:schemeClr val="accent1" />
+                        </a:effectRef>
+                        <a:fontRef idx="minor">
+                          <a:schemeClr val="lt1" />
+                        </a:fontRef>
+                      </wps:style>
+                      <wps:bodyPr anchor="ctr" anchorCtr="0" bIns="45720" compatLnSpc="1" forceAA="0" fromWordArt="0" horzOverflow="overflow" lIns="91440" numCol="1" rIns="91440" rot="0" rtlCol="0" spcCol="0" spcFirstLastPara="0" tIns="45720" vert="horz" vertOverflow="overflow" wrap="square">
+                        <a:prstTxWarp prst="textNoShape">
+                          <a:avLst />
+                        </a:prstTxWarp>
+                        <a:noAutofit />
+                      </wps:bodyPr>
+                    </wps:wsp>
+                  </a:graphicData>
+                </a:graphic>
+              </wp:anchor>
+            </w:drawing>
+          </mc:Choice>
+          <mc:Fallback>
+            <w:pict>
+              <v:shape fillcolor="#156082 [3204]" id="Arrow: Right 1" strokecolor="#030e13 [484]" strokeweight="1.5pt" style="position:absolute;margin-left:-52pt;margin-top:-42pt;width:80pt;height:40pt;rotation:30;flip:y;z-index:251659264;visibility:visible;mso-wrap-style:square;mso-wrap-distance-left:9pt;mso-wrap-distance-top:0;mso-wrap-distance-right:9pt;mso-wrap-distance-bottom:0;mso-position-horizontal:absolute;mso-position-horizontal-relative:text;mso-position-vertical:absolute;mso-position-vertical-relative:text;v-text-anchor:middle" type="#_x0000_t13" o:gfxdata="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&#xA;" o:spid="_x0000_s1026" w14:anchorId="01CFBF04" />
+            </w:pict>
+          </mc:Fallback>
+        </mc:AlternateContent>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> world again</w:t>
+      </w:r>
+    </w:p>
+    <w:sectPr>
+      <w:pgSz w:h="16838" w:w="11906" />
+      <w:pgMar w:bottom="1440" w:footer="708" w:gutter="0" w:header="708" w:left="1440" w:right="1440" w:top="1440" />
+      <w:cols w:space="708" />
+      <w:docGrid w:linePitch="360" />
+    </w:sectPr>
+  </w:body>
+</w:document>

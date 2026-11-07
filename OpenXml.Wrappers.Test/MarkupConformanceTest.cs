@@ -1892,7 +1892,270 @@ public class MarkupConformanceTest
                 c.Fill.Transparency = 0.5;
             },
             DrawingElements("wsp", "docPr")),
-        new Scenario("shape-delete",
+        new Scenario("list-linked-style",
+            d =>
+            {
+                d.Content.InsertAfter("One\rTwo");
+                ListTemplateWrapper template = d.ListTemplates.Add(true, "Linked");
+                template.ListLevels[0].LinkedStyle = "Heading 1";
+                template.ListLevels[1].LinkedStyle = "Heading 2";
+            },
+            new[] { Body(), Part("numbering.xml"), Part("styles.xml") }),
+        new Scenario("list-linked-style-applied",
+            d =>
+            {
+                d.Content.InsertAfter("One\rTwo");
+                ListTemplateWrapper template = d.ListTemplates.Add(true, "Linked");
+                template.ListLevels[0].LinkedStyle = "Heading 1";
+                d.Paragraphs[0].Range.ListFormat.ApplyListTemplate(template);
+                template.ListLevels[0].LinkedStyle = string.Empty;
+            },
+            new[] { Body(), Part("numbering.xml"), Part("styles.xml") }),
+        new Scenario("list-convert-outline",
+            d =>
+            {
+                d.Content.InsertAfter("One\rTwo");
+                d.ListTemplates.Add(true, "Outline").Convert();
+            },
+            ListParts()),
+        new Scenario("list-convert-single",
+            d =>
+            {
+                d.Content.InsertAfter("One\rTwo");
+                d.ListTemplates.Add(false, "Single").Convert();
+            },
+            ListParts()),
+        new Scenario("list-convert-level",
+            d =>
+            {
+                d.Content.InsertAfter("One\rTwo");
+                d.ListTemplates.Add(true, "Outline3").Convert(3);
+            },
+            ListParts()),
+        new Scenario("toc-format-1",
+            d =>
+            {
+                HeadedDocument(d, "First\rSome text\rSecond\rMore text\rSub heading\rEnd", (0, "Heading 1"), (2, "Heading 1"), (4, "Heading 2"));
+                d.TablesOfContents.Add(d.Range(0, 0));
+                d.TablesOfContents.Format = TocFormat.Classic;
+                Assert.Equal(TocFormat.Classic, d.TablesOfContents.Format);
+            },
+            new[] { Body(), Part("styles.xml") }),
+        new Scenario("toc-format-2",
+            d =>
+            {
+                HeadedDocument(d, "First\rSome text\rSecond\rMore text\rSub heading\rEnd", (0, "Heading 1"), (2, "Heading 1"), (4, "Heading 2"));
+                d.TablesOfContents.Add(d.Range(0, 0));
+                d.TablesOfContents.Format = TocFormat.Distinctive;
+                Assert.Equal(TocFormat.Distinctive, d.TablesOfContents.Format);
+            },
+            new[] { Body(), Part("styles.xml") }),
+        new Scenario("toc-format-3",
+            d =>
+            {
+                HeadedDocument(d, "First\rSome text\rSecond\rMore text\rSub heading\rEnd", (0, "Heading 1"), (2, "Heading 1"), (4, "Heading 2"));
+                d.TablesOfContents.Add(d.Range(0, 0));
+                d.TablesOfContents.Format = TocFormat.Fancy;
+                Assert.Equal(TocFormat.Fancy, d.TablesOfContents.Format);
+            },
+            new[] { Body(), Part("styles.xml") }),
+        new Scenario("toc-format-4",
+            d =>
+            {
+                HeadedDocument(d, "First\rSome text\rSecond\rMore text\rSub heading\rEnd", (0, "Heading 1"), (2, "Heading 1"), (4, "Heading 2"));
+                d.TablesOfContents.Add(d.Range(0, 0));
+                d.TablesOfContents.Format = TocFormat.Modern;
+                Assert.Equal(TocFormat.Modern, d.TablesOfContents.Format);
+            },
+            new[] { Body(), Part("styles.xml") }),
+        new Scenario("toc-format-5",
+            d =>
+            {
+                HeadedDocument(d, "First\rSome text\rSecond\rMore text\rSub heading\rEnd", (0, "Heading 1"), (2, "Heading 1"), (4, "Heading 2"));
+                d.TablesOfContents.Add(d.Range(0, 0));
+                d.TablesOfContents.Format = TocFormat.Formal;
+                Assert.Equal(TocFormat.Formal, d.TablesOfContents.Format);
+            },
+            new[] { Body(), Part("styles.xml") }),
+        new Scenario("toc-format-6",
+            d =>
+            {
+                HeadedDocument(d, "First\rSome text\rSecond\rMore text\rSub heading\rEnd", (0, "Heading 1"), (2, "Heading 1"), (4, "Heading 2"));
+                d.TablesOfContents.Add(d.Range(0, 0));
+                d.TablesOfContents.Format = TocFormat.Simple;
+                Assert.Equal(TocFormat.Simple, d.TablesOfContents.Format);
+            },
+            new[] { Body(), Part("styles.xml") }),
+        new Scenario("toc-format-template",
+            d =>
+            {
+                HeadedDocument(d, "First\rSome text\rSecond\rMore text\rSub heading\rEnd", (0, "Heading 1"), (2, "Heading 1"), (4, "Heading 2"));
+                d.TablesOfContents.Add(d.Range(0, 0));
+                d.TablesOfContents.Format = TocFormat.Fancy;
+                d.TablesOfContents.Format = TocFormat.Template;
+            },
+            new[] { Body(), Part("styles.xml") }),
+        new Scenario("application-list-gallery-bullet",
+            d =>
+            {
+                d.Content.InsertAfter("One\rTwo");
+                d.Paragraphs[0].Range.ListFormat.ApplyListTemplate(d.Application.ListGalleries[ListGalleryType.Bullet].ListTemplates[1], false);
+            },
+            new[] { Body(), Part("numbering.xml"), Part("styles.xml") }),
+        new Scenario("application-list-gallery-outline",
+            d =>
+            {
+                d.Content.InsertAfter("One\rTwo");
+                d.Paragraphs[0].Range.ListFormat.ApplyListTemplate(d.Application.ListGalleries[ListGalleryType.Outline].ListTemplates[1], false);
+            },
+            new[] { Body(), Part("numbering.xml"), Part("styles.xml") }),        new Scenario("application-list-gallery-one",
+            d =>
+            {
+                d.Content.InsertAfter("One\rTwo");
+                d.Paragraphs[0].Range.ListFormat.ApplyListTemplate(d.Application.ListGalleries[ListGalleryType.Number].ListTemplates[2], false);
+                d.Paragraphs[1].Range.ListFormat.ApplyListTemplate(d.Application.ListGalleries[ListGalleryType.Outline].ListTemplates[3], false);
+            },
+            new[] { Body(), Part("numbering.xml"), Part("styles.xml") }),        new Scenario("shape-more-autoshapes",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                foreach (AutoShapeType type in new[] { AutoShapeType.Parallelogram, AutoShapeType.Trapezoid, AutoShapeType.Octagon, AutoShapeType.RightTriangle, AutoShapeType.Cross, AutoShapeType.Can, AutoShapeType.Cube, AutoShapeType.SmileyFace, AutoShapeType.Donut, AutoShapeType.NoSymbol, AutoShapeType.Heart, AutoShapeType.LightningBolt, AutoShapeType.Sun, AutoShapeType.Moon, AutoShapeType.LeftArrow, AutoShapeType.UpArrow, AutoShapeType.DownArrow, AutoShapeType.LeftRightArrow, AutoShapeType.Pentagon, AutoShapeType.FlowchartProcess, AutoShapeType.FlowchartDecision, AutoShapeType.Star5, AutoShapeType.Cloud })
+                {
+                    d.Shapes.AddShape(type, 20, 30, 80, 40, d.Range(5, 5));
+                }
+            },
+            DrawingElements("wsp", "docPr")),
+        new Scenario("shape-flip",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                ShapeWrapper a = d.Shapes.AddShape(AutoShapeType.RightArrow, 20, 30, 80, 40, d.Range(5, 5));
+                a.Flip(FlipCommand.Horizontal);
+                ShapeWrapper b = d.Shapes.AddShape(AutoShapeType.RightArrow, 20, 90, 80, 40, d.Range(5, 5));
+                b.Flip(FlipCommand.Vertical);
+                ShapeWrapper c = d.Shapes.AddShape(AutoShapeType.RightArrow, 20, 150, 80, 40, d.Range(5, 5));
+                c.Flip(FlipCommand.Horizontal);
+                c.Flip(FlipCommand.Vertical);
+                ShapeWrapper e = d.Shapes.AddShape(AutoShapeType.RightArrow, 20, 210, 80, 40, d.Range(5, 5));
+                e.Flip(FlipCommand.Horizontal);
+                e.Flip(FlipCommand.Horizontal);
+                e.Rotation = 30;
+                e.Flip(FlipCommand.Horizontal);
+            },
+            DrawingElements("wsp", "docPr")),
+        new Scenario("shape-flip-rotated",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                ShapeWrapper e = d.Shapes.AddShape(AutoShapeType.RightArrow, 20, 30, 80, 40, d.Range(5, 5));
+                e.Rotation = 30;
+                e.Flip(FlipCommand.Vertical);
+                ShapeWrapper f = d.Shapes.AddShape(AutoShapeType.RightArrow, 20, 90, 80, 40, d.Range(5, 5));
+                f.Rotation = 100;
+                f.Flip(FlipCommand.Horizontal);
+                f.Flip(FlipCommand.Vertical);
+            },
+            DrawingElements("wsp", "docPr")),
+        new Scenario("shape-increments",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                ShapeWrapper a = d.Shapes.AddShape(AutoShapeType.Rectangle, 20, 30, 80, 40, d.Range(5, 5));
+                a.IncrementLeft(10);
+                a.IncrementTop(-5);
+                a.IncrementRotation(30);
+                a.IncrementRotation(350);
+            },
+            DrawingElements("wsp", "docPr")),
+        new Scenario("shape-scale",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                ShapeWrapper a = d.Shapes.AddShape(AutoShapeType.Rectangle, 20, 30, 80, 40, d.Range(5, 5));
+                a.ScaleWidth(2);
+                a.ScaleHeight(0.5);
+                ShapeWrapper b = d.Shapes.AddShape(AutoShapeType.Rectangle, 20, 100, 80, 40, d.Range(5, 5));
+                b.ScaleWidth(2);
+                b.ScaleHeight(2, false, ScaleFrom.BottomRight);
+                ShapeWrapper c = d.Shapes.AddShape(AutoShapeType.Rectangle, 20, 170, 80, 40, d.Range(5, 5));
+                c.ScaleWidth(1.5, false, ScaleFrom.Middle);
+            },
+            DrawingElements("wsp", "docPr")),
+        new Scenario("shape-textframe",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                ShapeWrapper a = d.Shapes.AddTextbox(TextOrientation.Horizontal, 20, 30, 120, 60, d.Range(5, 5));
+                a.TextFrame.TextRange.Text = "Boxed";
+                a.TextFrame.MarginLeft = 10;
+                a.TextFrame.MarginRight = 12;
+                a.TextFrame.MarginTop = 3;
+                a.TextFrame.MarginBottom = 4;
+                a.TextFrame.VerticalAnchor = VerticalAnchor.Middle;
+                a.TextFrame.WordWrap = false;
+                ShapeWrapper b = d.Shapes.AddShape(AutoShapeType.Rectangle, 20, 120, 80, 40, d.Range(5, 5));
+                b.TextFrame.TextRange.Text = "Rect";
+                b.TextFrame.AutoSize = true;
+                b.TextFrame.HorizontalAnchor = HorizontalAnchor.Center;
+                b.TextFrame.Orientation = TextOrientation.Vertical;
+            },
+            DrawingElements("wsp", "docPr")),
+        new Scenario("shape-orientations",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                foreach (TextOrientation orientation in new[] { TextOrientation.Horizontal, TextOrientation.Upward, TextOrientation.Downward,
+                    TextOrientation.VerticalFarEast, TextOrientation.Vertical })
+                {
+                    d.Shapes.AddTextbox(TextOrientation.Horizontal, 20, 30, 120, 60, d.Range(5, 5)).TextFrame.Orientation = orientation;
+                }
+                foreach (VerticalAnchor anchor in new[] { VerticalAnchor.Top, VerticalAnchor.Middle, VerticalAnchor.Bottom })
+                {
+                    d.Shapes.AddTextbox(TextOrientation.Horizontal, 20, 30, 120, 60, d.Range(5, 5)).TextFrame.VerticalAnchor = anchor;
+                }
+            },
+            DrawingElements("wsp", "docPr")),
+        new Scenario("shape-textbox-orientation",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.Shapes.AddTextbox(TextOrientation.Vertical, 20, 30, 120, 60, d.Range(5, 5));
+            },
+            DrawingElements("wsp", "docPr")),
+        new Scenario("shape-lines-directions",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.Shapes.AddLine(100, 70, 20, 30, d.Range(5, 5));
+                d.Shapes.AddLine(20, 70, 100, 30, d.Range(5, 5));
+                d.Shapes.AddLine(100, 30, 20, 70, d.Range(5, 5));
+            },
+            DrawingElements("wsp", "docPr")),
+        new Scenario("shape-add-label",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                d.Shapes.AddLabel(TextOrientation.Horizontal, 20, 30, 120, 40, d.Range(5, 5)).TextFrame.TextRange.Text = "Label";
+            },
+            DrawingElements("wsp", "docPr")),
+        new Scenario("shape-duplicate",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                ShapeWrapper a = d.Shapes.AddShape(AutoShapeType.Rectangle, 20, 30, 80, 40, d.Range(5, 5));
+                a.Fill.ForeColor.RGB = 255;
+                a.Duplicate();
+            },
+            DrawingElements("wsp", "docPr")),
+        new Scenario("shape-layout-in-cell",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                ShapeWrapper a = d.Shapes.AddShape(AutoShapeType.Rectangle, 20, 30, 80, 40, d.Range(5, 5));
+                a.LayoutInCell = false;
+                a.Decorative = true;
+            },
+            DrawingElements("wsp", "docPr")),        new Scenario("shape-delete",
             d =>
             {
                 d.Content.InsertAfter("Hello world again");

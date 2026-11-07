@@ -1,0 +1,100 @@
+<w:document xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape" mc:Ignorable="w14">
+  <w:body>
+    <w:p>
+      <w:r>
+        <w:t>Hello</w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <mc:AlternateContent>
+          <mc:Choice Requires="wps">
+            <w:drawing>
+              <wp:anchor allowOverlap="1" behindDoc="0" distB="0" distL="114300" distR="114300" distT="0" layoutInCell="1" locked="0" relativeHeight="251659264" simplePos="0">
+                <wp:simplePos x="0" y="0" />
+                <wp:positionH relativeFrom="column">
+                  <wp:posOffset>-660400</wp:posOffset>
+                </wp:positionH>
+                <wp:positionV relativeFrom="paragraph">
+                  <wp:posOffset>-533400</wp:posOffset>
+                </wp:positionV>
+                <wp:extent cx="1524000" cy="508000" />
+                <wp:effectExtent b="25400" l="0" r="19050" t="0" />
+                <wp:wrapNone />
+                <wp:docPr id="{docPr1}" name="Text Box 1" />
+                <wp:cNvGraphicFramePr />
+                <a:graphic>
+                  <a:graphicData uri="http://schemas.microsoft.com/office/word/2010/wordprocessingShape">
+                    <wps:wsp>
+                      <wps:cNvSpPr txBox="1" />
+                      <wps:spPr>
+                        <a:xfrm>
+                          <a:off x="0" y="0" />
+                          <a:ext cx="1524000" cy="508000" />
+                        </a:xfrm>
+                        <a:prstGeom prst="rect">
+                          <a:avLst />
+                        </a:prstGeom>
+                        <a:noFill />
+                        <a:ln w="6350">
+                          <a:solidFill>
+                            <a:prstClr val="black" />
+                          </a:solidFill>
+                        </a:ln>
+                      </wps:spPr>
+                      <wps:txbx>
+                        <w:txbxContent>
+                          <w:p>
+                            <w:r>
+                              <w:t>Label</w:t>
+                            </w:r>
+                          </w:p>
+                        </w:txbxContent>
+                      </wps:txbx>
+                      <wps:bodyPr anchor="t" anchorCtr="0" bIns="45720" compatLnSpc="1" forceAA="0" fromWordArt="0" horzOverflow="overflow" lIns="91440" numCol="1" rIns="91440" rot="0" rtlCol="0" spcCol="0" spcFirstLastPara="0" tIns="45720" vert="horz" vertOverflow="overflow" wrap="square">
+                        <a:prstTxWarp prst="textNoShape">
+                          <a:avLst />
+                        </a:prstTxWarp>
+                        <a:noAutofit />
+                      </wps:bodyPr>
+                    </wps:wsp>
+                  </a:graphicData>
+                </a:graphic>
+              </wp:anchor>
+            </w:drawing>
+          </mc:Choice>
+          <mc:Fallback>
+            <w:pict>
+              <v:shapetype coordsize="21600,21600" id="_x0000_t202" path="m,l,21600r21600,l21600,xe" o:spt="202" w14:anchorId="737B6EA0">
+                <v:stroke joinstyle="miter" />
+                <v:path gradientshapeok="t" o:connecttype="rect" />
+              </v:shapetype>
+              <v:shape filled="f" id="Text Box 1" strokeweight=".5pt" style="position:absolute;margin-left:-52pt;margin-top:-42pt;width:120pt;height:40pt;z-index:251659264;visibility:visible;mso-wrap-style:square;mso-wrap-distance-left:9pt;mso-wrap-distance-top:0;mso-wrap-distance-right:9pt;mso-wrap-distance-bottom:0;mso-position-horizontal:absolute;mso-position-horizontal-relative:text;mso-position-vertical:absolute;mso-position-vertical-relative:text;v-text-anchor:top" type="#_x0000_t202" o:gfxdata="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&#xA;" o:spid="_x0000_s1026">
+                <v:fill o:detectmouseclick="t" />
+                <v:textbox>
+                  <w:txbxContent>
+                    <w:p>
+                      <w:r>
+                        <w:t>Label</w:t>
+                      </w:r>
+                    </w:p>
+                  </w:txbxContent>
+                </v:textbox>
+              </v:shape>
+            </w:pict>
+          </mc:Fallback>
+        </mc:AlternateContent>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> world again</w:t>
+      </w:r>
+    </w:p>
+    <w:sectPr>
+      <w:pgSz w:h="16838" w:w="11906" />
+      <w:pgMar w:bottom="1440" w:footer="708" w:gutter="0" w:header="708" w:left="1440" w:right="1440" w:top="1440" />
+      <w:cols w:space="708" />
+      <w:docGrid w:linePitch="360" />
+    </w:sectPr>
+  </w:body>
+</w:document>

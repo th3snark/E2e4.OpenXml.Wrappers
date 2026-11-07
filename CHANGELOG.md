@@ -5,6 +5,12 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 ## [Unreleased]
 
 ### Added
+- Application: `CleanString`, and `ListGalleries` with `ListGallery` (`ListTemplates`, `Modified`, `Reset`) and the new `ListGalleryType`: the 21 templates of Word 16's three galleries. Applying one adds it to the document with the styles its levels link to (the fourth bullet template has a picture bullet, which falls back on its character). Four new reference scenarios matching Word 16.
+- Custom XML: `SelectNodes` and `SelectSingleNode` on a node, with the node as the context of the XPath expression.
+- Shapes: 23 more shapes of the gallery for `AddShape` (`AutoShapeType`), matching Word 16's markup.
+- Shapes: `Flip` with `HorizontalFlip` and `VerticalFlip`, `IncrementLeft`, `IncrementTop`, `IncrementRotation`, `ScaleWidth` and `ScaleHeight`, `Duplicate`, `LayoutInCell`, `Decorative`, `Shapes.AddLabel`, lines that go up or to the left, the orientation of `AddTextbox`, and the text frame settings (`MarginLeft`, `MarginRight`, `MarginTop`, `MarginBottom`, `VerticalAnchor`, `HorizontalAnchor`, `WordWrap`, `AutoSize`, `Orientation`, `DeleteText`, `Parent`). Text typed into a shape of the gallery is centred, as in Word. Twelve new reference scenarios matching Word 16.
+- Lists: setting `ListLevel.LinkedStyle` (the style points back at a list of the template; applying a template with a linked level gives the paragraphs the style) and `ListTemplate.Convert`. Five new reference scenarios matching Word 16.
+- Tables of contents: `TablesOfContents.Format` with the new `TocFormat`. Seven new reference scenarios matching Word 16.
 - Selection: `InsertCells` (with the new `InsertCellsShift`), `InsertFormula` and `HeaderFooter`, as measured in Word. A selection from one cell to another now counts as the block of cells between them for the table members. Three new reference scenarios matching Word 16.
 - Selection: `SplitTable` (splits before the first selected row; an empty paragraph is added before the table at its first row), `RtlPara`, `LtrPara`, `RtlRun` and `LtrRun`, as measured in Word. Four new reference scenarios matching Word 16.
 - Selection: `ExtendMode`, `Extend` (by unit, or up to a character), `Shrink`, `NextField`, `PreviousField`, `SelectColumn`, `InsertRows`, `InsertColumns` and `InsertColumnsRight`, as measured in Word. The table insertions select what they add, and a selection of whole rows reports `SelectionType.Row`.

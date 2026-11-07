@@ -36,14 +36,95 @@ public enum AutoShapeType
     Hexagon = 10,
 
     /// <summary>An arrow pointing right.</summary>
-    RightArrow = 33
+    RightArrow = 33,
+
+    /// <summary>A parallelogram.</summary>
+    Parallelogram = 2,
+
+    /// <summary>A trapezoid.</summary>
+    Trapezoid = 3,
+
+    /// <summary>An octagon.</summary>
+    Octagon = 6,
+
+    /// <summary>A triangle with a right angle.</summary>
+    RightTriangle = 8,
+
+    /// <summary>A cross.</summary>
+    Cross = 11,
+
+    /// <summary>A cylinder.</summary>
+    Can = 13,
+
+    /// <summary>A cube.</summary>
+    Cube = 14,
+
+    /// <summary>A smiley face.</summary>
+    SmileyFace = 17,
+
+    /// <summary>A ring.</summary>
+    Donut = 18,
+
+    /// <summary>A circle with a bar across it.</summary>
+    NoSymbol = 19,
+
+    /// <summary>A heart.</summary>
+    Heart = 21,
+
+    /// <summary>A lightning bolt.</summary>
+    LightningBolt = 22,
+
+    /// <summary>A sun.</summary>
+    Sun = 23,
+
+    /// <summary>A moon.</summary>
+    Moon = 24,
+
+    /// <summary>An arrow pointing left.</summary>
+    LeftArrow = 34,
+
+    /// <summary>An arrow pointing up.</summary>
+    UpArrow = 35,
+
+    /// <summary>An arrow pointing down.</summary>
+    DownArrow = 36,
+
+    /// <summary>An arrow pointing left and right.</summary>
+    LeftRightArrow = 37,
+
+    /// <summary>A pentagon that points right, like an arrow.</summary>
+    Pentagon = 51,
+
+    /// <summary>The flowchart symbol for a process.</summary>
+    FlowchartProcess = 61,
+
+    /// <summary>The flowchart symbol for a decision.</summary>
+    FlowchartDecision = 63,
+
+    /// <summary>A star with five points.</summary>
+    Star5 = 92,
+
+    /// <summary>A cloud.</summary>
+    Cloud = 179
 }
 
 /// <summary>The direction of the text in a text box, as <c>MsoTextOrientation</c> in Office (with the same value; only the usual one).</summary>
 public enum TextOrientation
 {
     /// <summary>Left to right.</summary>
-    Horizontal = 1
+    Horizontal = 1,
+
+    /// <summary>Upward, from the bottom of the shape to the top.</summary>
+    Upward = 2,
+
+    /// <summary>Downward, from the top of the shape to the bottom.</summary>
+    Downward = 3,
+
+    /// <summary>Vertical text for Asian languages.</summary>
+    VerticalFarEast = 4,
+
+    /// <summary>Vertical, with the letters upright.</summary>
+    Vertical = 5
 }
 
 /// <summary>
@@ -254,7 +335,7 @@ public class LineFormatWrapper
 /// <summary>
 /// The text inside a shape, as <c>TextFrame</c> in Word.
 /// </summary>
-public class TextFrameWrapper
+public partial class TextFrameWrapper
 {
     private readonly ShapeWrapper _shape;
 
@@ -371,7 +452,9 @@ public partial class ShapeWrapper
         TextBoxContent content = TextBoxContent;
         if (content == null)
         {
-            Wps.TextBoxInfo2 box = new Wps.TextBoxInfo2(new TextBoxContent(new Paragraph()));
+            //Text in a shape of the gallery is centred, as Word starts it; in a text box it is not.
+            Paragraph first = IsTextBox ? new Paragraph() : new Paragraph(new ParagraphProperties(new Justification() { Val = JustificationValues.Center }));
+            Wps.TextBoxInfo2 box = new Wps.TextBoxInfo2(new TextBoxContent(first));
             Shape.GetFirstChild<Wps.TextBodyProperties>().InsertBeforeSelf(box);
             content = box.GetFirstChild<TextBoxContent>();
         }
@@ -413,7 +496,30 @@ public partial class ShapeWrapper
         (AutoShapeType.IsoscelesTriangle, "triangle", "Isosceles Triangle"),
         (AutoShapeType.Oval, "ellipse", "Oval"),
         (AutoShapeType.Hexagon, "hexagon", "Hexagon"),
-        (AutoShapeType.RightArrow, "rightArrow", "Arrow: Right")
+        (AutoShapeType.RightArrow, "rightArrow", "Arrow: Right"),
+        (AutoShapeType.Parallelogram, "parallelogram", "Parallelogram"),
+        (AutoShapeType.Trapezoid, "trapezoid", "Trapezoid"),
+        (AutoShapeType.Octagon, "octagon", "Octagon"),
+        (AutoShapeType.RightTriangle, "rtTriangle", "Right Triangle"),
+        (AutoShapeType.Cross, "plus", "Cross"),
+        (AutoShapeType.Can, "can", "Cylinder"),
+        (AutoShapeType.Cube, "cube", "Cube"),
+        (AutoShapeType.SmileyFace, "smileyFace", "Smiley Face"),
+        (AutoShapeType.Donut, "donut", "Circle: Hollow"),
+        (AutoShapeType.NoSymbol, "noSmoking", "\"Not Allowed\" Symbol"),
+        (AutoShapeType.Heart, "heart", "Heart"),
+        (AutoShapeType.LightningBolt, "lightningBolt", "Lightning Bolt"),
+        (AutoShapeType.Sun, "sun", "Sun"),
+        (AutoShapeType.Moon, "moon", "Moon"),
+        (AutoShapeType.LeftArrow, "leftArrow", "Arrow: Left"),
+        (AutoShapeType.UpArrow, "upArrow", "Arrow: Up"),
+        (AutoShapeType.DownArrow, "downArrow", "Arrow: Down"),
+        (AutoShapeType.LeftRightArrow, "leftRightArrow", "Arrow: Left-Right"),
+        (AutoShapeType.Pentagon, "homePlate", "Arrow: Pentagon"),
+        (AutoShapeType.FlowchartProcess, "flowChartProcess", "Flowchart: Process"),
+        (AutoShapeType.FlowchartDecision, "flowChartDecision", "Flowchart: Decision"),
+        (AutoShapeType.Star5, "star5", "Star: 5 Points"),
+        (AutoShapeType.Cloud, "cloud", "Cloud")
     };
 
     internal static (AutoShapeType Type, string Preset, string Name) PresetOf(AutoShapeType type)
@@ -504,7 +610,20 @@ public partial class ShapeWrapperCollection
         {
             throw new ArgumentOutOfRangeException(nameof(orientation));
         }
-        return AddDrawn("textbox", "rect", "Text Box", left, top, width, height, anchor);
+        ShapeWrapper box = AddDrawn("textbox", "rect", "Text Box", left, top, width, height, anchor);
+        if (orientation != TextOrientation.Horizontal)
+        {
+            box.TextFrame.Orientation = orientation;
+        }
+        return box;
+    }
+
+    /// <summary>
+    /// Adds a label, as <c>Shapes.AddLabel</c> in Word: the same text box as <see cref="AddTextbox"/> makes. See there for the position.
+    /// </summary>
+    public ShapeWrapper AddLabel(TextOrientation orientation, double left, double top, double width, double height, RangeWrapper anchor = null)
+    {
+        return AddTextbox(orientation, left, top, width, height, anchor);
     }
 
     /// <summary>
@@ -520,16 +639,27 @@ public partial class ShapeWrapperCollection
 
     /// <summary>
     /// Adds a straight line from one point to another, as <c>Shapes.AddLine</c> in Word, anchored at the start of the paragraph of the anchor.
-    /// See <see cref="AddTextbox"/> for the position. A line that goes up or left is not supported.
+    /// See <see cref="AddTextbox"/> for the position. A line that goes up or to the left is a line that is turned over, as in Word.
     /// </summary>
-    /// <exception cref="ArgumentOutOfRangeException">The end is above or left of the start.</exception>
     public ShapeWrapper AddLine(double beginX, double beginY, double endX, double endY, RangeWrapper anchor = null)
     {
-        if (endX < beginX || endY < beginY)
+        foreach (double value in new[] { beginX, beginY, endX, endY })
         {
-            throw new ArgumentOutOfRangeException(nameof(endX), "A line that goes up or to the left is not supported.");
+            if (double.IsNaN(value) || double.IsInfinity(value))
+            {
+                throw new ArgumentOutOfRangeException(nameof(beginX));
+            }
         }
-        return AddDrawn("line", "line", "Straight Connector", beginX, beginY, endX - beginX, endY - beginY, anchor);
+        ShapeWrapper line = AddDrawn("line", "line", "Straight Connector", Math.Min(beginX, endX), Math.Min(beginY, endY), Math.Abs(endX - beginX), Math.Abs(endY - beginY), anchor);
+        if (endX < beginX)
+        {
+            line.Flip(FlipCommand.Horizontal);
+        }
+        if (endY < beginY)
+        {
+            line.Flip(FlipCommand.Vertical);
+        }
+        return line;
     }
 
     private ShapeWrapper AddDrawn(string kind, string preset, string name, double left, double top, double width, double height, RangeWrapper anchor)

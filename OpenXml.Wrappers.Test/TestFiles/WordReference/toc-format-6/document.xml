@@ -1,0 +1,241 @@
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:body>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOC1" />
+        <w:tabs>
+          <w:tab w:leader="dot" w:pos="9016" w:val="right" />
+        </w:tabs>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:fldChar w:fldCharType="begin" />
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> TOC \o "1-9" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate" />
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:t>First</w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:tab />
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:fldChar w:fldCharType="begin" />
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:instrText xml:space="preserve"> PAGEREF _Toc{toc1} \h </w:instrText>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:fldChar w:fldCharType="separate" />
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:t>1</w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:fldChar w:fldCharType="end" />
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOC1" />
+        <w:tabs>
+          <w:tab w:leader="dot" w:pos="9016" w:val="right" />
+        </w:tabs>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:t>Second</w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:tab />
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:fldChar w:fldCharType="begin" />
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:instrText xml:space="preserve"> PAGEREF _Toc{toc2} \h </w:instrText>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:fldChar w:fldCharType="separate" />
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:t>1</w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:fldChar w:fldCharType="end" />
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOC2" />
+        <w:tabs>
+          <w:tab w:leader="dot" w:pos="9016" w:val="right" />
+        </w:tabs>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:t>Sub heading</w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:tab />
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:fldChar w:fldCharType="begin" />
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:instrText xml:space="preserve"> PAGEREF _Toc{toc3} \h </w:instrText>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:fldChar w:fldCharType="separate" />
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:t>1</w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:fldChar w:fldCharType="end" />
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Heading1" />
+      </w:pPr>
+      <w:r>
+        <w:fldChar w:fldCharType="end" />
+      </w:r>
+      <w:bookmarkStart w:id="{bookmark1}" w:name="_Toc{toc1}" />
+      <w:r>
+        <w:t>First</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="{bookmark1}" />
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t>Some text</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Heading1" />
+      </w:pPr>
+      <w:bookmarkStart w:id="{bookmark2}" w:name="_Toc{toc2}" />
+      <w:r>
+        <w:t>Second</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="{bookmark2}" />
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t>More text</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Heading2" />
+      </w:pPr>
+      <w:bookmarkStart w:id="{bookmark3}" w:name="_Toc{toc3}" />
+      <w:r>
+        <w:t>Sub heading</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="{bookmark3}" />
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t>End</w:t>
+      </w:r>
+    </w:p>
+    <w:sectPr>
+      <w:pgSz w:h="16838" w:w="11906" />
+      <w:pgMar w:bottom="1440" w:footer="708" w:gutter="0" w:header="708" w:left="1440" w:right="1440" w:top="1440" />
+      <w:cols w:space="708" />
+      <w:docGrid w:linePitch="360" />
+    </w:sectPr>
+  </w:body>
+</w:document>

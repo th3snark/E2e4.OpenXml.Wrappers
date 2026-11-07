@@ -88,6 +88,8 @@ internal static class Program
         }
         WriteListTemplates(inputFolder, templatesFolder);
         WriteGlossaryTemplates(inputFolder, templatesFolder);
+        WriteTocFormatTemplates(inputFolder, templatesFolder);
+        WriteListGalleryTemplates(inputFolder, templatesFolder);
         string styles = Path.Combine(inputFolder, "built-in-styles.docx");
         if (File.Exists(styles))
         {
@@ -100,6 +102,72 @@ internal static class Program
                 });
             }
         }
+    }
+
+    private static void WriteListGalleryTemplates(string inputFolder, string templatesFolder)
+    {
+        string galleries = Path.Combine(inputFolder, "application-list-galleries-apply.docx");
+        if (!File.Exists(galleries))
+        {
+            return;
+        }
+        using (ZipArchive package = ZipFile.OpenRead(galleries))
+        {
+            WriteTemplate(package, "word/numbering.xml", templatesFolder, "ListGalleries.xml", root =>
+            {
+                //The definitions of the 21 templates of the list galleries, in the order of the galleries: the bullets, the numbers and the
+                //outlines, seven of each. The list instances and the ids each definition was given are the document's own.
+                //Word writes them in an order of its own, so they are put in the order they were applied in, which the lists say: list 1
+                //uses the first, list 2 the second, and so on. The picture bullet of the last bullet template stays out (the picture is a part
+                //of its own), leaving the character it falls back on.
+                List<XElement> definitions = root.Elements(W + "abstractNum").ToList();
+                List<XElement> ordered = root.Elements(W + "num").OrderBy(n => (int)n.Attribute(W + "numId"))
+                    .Select(n => definitions.First(a => (string)a.Attribute(W + "abstractNumId") == (string)n.Element(W + "abstractNumId").Attribute(W + "val"))).ToList();
+                root.Elements().Remove();
+                root.Add(ordered);
+                root.Descendants(W + "nsid").Remove();
+                root.Descendants(W + "lvlPicBulletId").Remove();
+            });
+        }
+    }
+
+    private static void WriteTocFormatTemplates(string inputFolder, string templatesFolder)
+    {
+        //The nine styles of the table of contents that each of the formats of the Table of Contents dialog gives (TablesOfContents.Format 1 to 6).
+        XElement formats = new XElement("formats", new XAttribute(XNamespace.Xmlns + "w", W.NamespaceName));
+        for (int value = 1; value <= 6; value++)
+        {
+            string path = Path.Combine(inputFolder, "toc-format-" + value.ToString(CultureInfo.InvariantCulture) + ".docx");
+            if (!File.Exists(path))
+            {
+                return;
+            }
+            using (ZipArchive package = ZipFile.OpenRead(path))
+            {
+                XDocument styles;
+                using (Stream stream = package.GetEntry("word/styles.xml").Open())
+                {
+                    styles = XDocument.Load(stream);
+                }
+                XElement format = new XElement("format", new XAttribute("value", value));
+                foreach (XElement style in styles.Root.Elements(W + "style").Where(e => ((string)e.Attribute(W + "styleId") ?? string.Empty).StartsWith("TOC", StringComparison.Ordinal)
+                    && ((string)e.Attribute(W + "type")) == "paragraph"))
+                {
+                    XElement copy = new XElement(style);
+                    copy.DescendantsAndSelf().Attributes().Where(a => a.Name.Namespace == W && a.Name.LocalName.StartsWith("rsid", StringComparison.Ordinal)).Remove();
+                    copy.Descendants().Where(e => e.Name == W + "rsid").Remove();
+                    format.Add(copy);
+                }
+                formats.Add(format);
+            }
+        }
+        Directory.CreateDirectory(templatesFolder);
+        XmlWriterSettings settings = new XmlWriterSettings() { Encoding = new UTF8Encoding(false), Indent = false };
+        using (XmlWriter writer = XmlWriter.Create(Path.Combine(templatesFolder, "TocFormats.xml"), settings))
+        {
+            new XDocument(formats).Save(writer);
+        }
+        Console.WriteLine("Template TocFormats.xml from toc-format-1 to toc-format-6");
     }
 
     private static void WriteGlossaryTemplates(string inputFolder, string templatesFolder)
