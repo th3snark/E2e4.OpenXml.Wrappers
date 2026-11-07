@@ -57,6 +57,8 @@ public partial class ShapeWrapper
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="flipCmd"/> is not a value of <see cref="FlipCommand"/>.</exception>
     public void Flip(FlipCommand flipCmd)
     {
+        ThrowIfChild();
+        ThrowIfGroup();
         if (!EnumCompat.IsDefined(flipCmd))
         {
             throw new ArgumentOutOfRangeException(nameof(flipCmd));
@@ -151,6 +153,7 @@ public partial class ShapeWrapper
     /// </summary>
     public ShapeWrapper Duplicate()
     {
+        ThrowIfChild();
         Run run = _drawing.Ancestors<Run>().FirstOrDefault() ?? throw new InvalidOperationException("The shape is not in the text.");
         MainDocumentPart main = StyleHelper.GetMainDocumentPart(run) ?? throw new NotSupportedException("A shape can be duplicated only in a document.");
         Run copy = (Run)run.CloneNode(true);

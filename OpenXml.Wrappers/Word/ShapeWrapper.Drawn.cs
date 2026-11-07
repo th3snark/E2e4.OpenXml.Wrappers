@@ -216,7 +216,175 @@ public enum AutoShapeType
     Tear = 160,
 
     /// <summary>A chord of a circle.</summary>
-    Chord = 161
+    Chord = 161,
+
+    /// <summary>A curved arrow pointing left.</summary>
+    CurvedLeftArrow = 46,
+
+    /// <summary>A curved arrow pointing up.</summary>
+    CurvedUpArrow = 47,
+
+    /// <summary>A curved arrow pointing down.</summary>
+    CurvedDownArrow = 48,
+
+    /// <summary>A callout with an arrow pointing right.</summary>
+    RightArrowCallout = 53,
+
+    /// <summary>A callout with an arrow pointing left.</summary>
+    LeftArrowCallout = 54,
+
+    /// <summary>A callout with an arrow pointing up.</summary>
+    UpArrowCallout = 55,
+
+    /// <summary>A callout with an arrow pointing down.</summary>
+    DownArrowCallout = 56,
+
+    /// <summary>A callout with arrows pointing left and right.</summary>
+    LeftRightArrowCallout = 57,
+
+    /// <summary>A callout with arrows pointing up and down.</summary>
+    UpDownArrowCallout = 58,
+
+    /// <summary>A callout with arrows pointing in four directions.</summary>
+    QuadArrowCallout = 59,
+
+    /// <summary>A circular arrow.</summary>
+    CircularArrow = 60,
+
+    /// <summary>The flowchart symbol for internal storage.</summary>
+    FlowchartInternalStorage = 66,
+
+    /// <summary>The flowchart symbol for several documents.</summary>
+    FlowchartMultidocument = 68,
+
+    /// <summary>The flowchart symbol for a preparation.</summary>
+    FlowchartPreparation = 70,
+
+    /// <summary>The flowchart symbol for manual input.</summary>
+    FlowchartManualInput = 71,
+
+    /// <summary>The flowchart symbol for a manual operation.</summary>
+    FlowchartManualOperation = 72,
+
+    /// <summary>The flowchart symbol for a connector to another page.</summary>
+    FlowchartOffpageConnector = 74,
+
+    /// <summary>The flowchart symbol for a card.</summary>
+    FlowchartCard = 75,
+
+    /// <summary>The flowchart symbol for punched tape.</summary>
+    FlowchartPunchedTape = 76,
+
+    /// <summary>The flowchart symbol for a summing junction.</summary>
+    FlowchartSummingJunction = 77,
+
+    /// <summary>The flowchart symbol for or.</summary>
+    FlowchartOr = 78,
+
+    /// <summary>The flowchart symbol for collating.</summary>
+    FlowchartCollate = 79,
+
+    /// <summary>The flowchart symbol for sorting.</summary>
+    FlowchartSort = 80,
+
+    /// <summary>The flowchart symbol for extracting.</summary>
+    FlowchartExtract = 81,
+
+    /// <summary>The flowchart symbol for merging.</summary>
+    FlowchartMerge = 82,
+
+    /// <summary>The flowchart symbol for stored data.</summary>
+    FlowchartStoredData = 83,
+
+    /// <summary>The flowchart symbol for a delay.</summary>
+    FlowchartDelay = 84,
+
+    /// <summary>The flowchart symbol for sequential access storage.</summary>
+    FlowchartSequentialAccessStorage = 85,
+
+    /// <summary>The flowchart symbol for a magnetic disk.</summary>
+    FlowchartMagneticDisk = 86,
+
+    /// <summary>The flowchart symbol for direct access storage.</summary>
+    FlowchartDirectAccessStorage = 87,
+
+    /// <summary>The flowchart symbol for a display.</summary>
+    FlowchartDisplay = 88,
+
+    /// <summary>An explosion with eight points.</summary>
+    Explosion1 = 89,
+
+    /// <summary>An explosion with fourteen points.</summary>
+    Explosion2 = 90,
+
+    /// <summary>A star with twenty-four points.</summary>
+    Star24 = 95,
+
+    /// <summary>A ribbon tilted up.</summary>
+    UpRibbon = 97,
+
+    /// <summary>A ribbon tilted down.</summary>
+    DownRibbon = 98,
+
+    /// <summary>A curved ribbon tilted up.</summary>
+    CurvedUpRibbon = 99,
+
+    /// <summary>A curved ribbon tilted down.</summary>
+    CurvedDownRibbon = 100,
+
+    /// <summary>A double wave.</summary>
+    DoubleWave = 104,
+
+    /// <summary>A callout with a line.</summary>
+    LineCallout1 = 109,
+
+    /// <summary>A callout with a bent line.</summary>
+    LineCallout2 = 111,
+
+    /// <summary>A callout with a line bent twice.</summary>
+    LineCallout3 = 112,
+
+    /// <summary>A callout with a line and no border.</summary>
+    LineCallout1NoBorder = 113,
+
+    /// <summary>A callout with a line and an accent bar.</summary>
+    LineCallout1AccentBar = 114,
+
+    /// <summary>A callout with a bent line and an accent bar.</summary>
+    LineCallout2AccentBar = 115,
+
+    /// <summary>A callout with a line bent twice and an accent bar.</summary>
+    LineCallout3AccentBar = 116,
+
+    /// <summary>A callout with a bent line and no border.</summary>
+    LineCallout2NoBorder = 119,
+
+    /// <summary>A callout with a line bent twice and no border.</summary>
+    LineCallout3NoBorder = 120,
+
+    /// <summary>A blank action button.</summary>
+    ActionButtonBlank = 125,
+
+    /// <summary>An action button for going home.</summary>
+    ActionButtonHome = 126,
+
+    /// <summary>An action button for help.</summary>
+    ActionButtonHelp = 127,
+
+    /// <summary>An action button for information.</summary>
+    ActionButtonInformation = 128,
+
+    /// <summary>An action button for going back.</summary>
+    ActionButtonBackPrevious = 129,
+
+    /// <summary>An action button for going forward.</summary>
+    ActionButtonForwardNext = 130,
+
+    /// <summary>An action button for going to the beginning.</summary>
+    ActionButtonBeginning = 131,
+
+    /// <summary>An action button for going to the end.</summary>
+    ActionButtonEnd = 132
 }
 
 /// <summary>The direction of the text in a text box, as <c>MsoTextOrientation</c> in Office (with the same value; only the usual one).</summary>
@@ -482,7 +650,7 @@ public partial class ShapeWrapper
 
     internal Wps.WordprocessingShape Shape
     {
-        get { return AnchorElement?.Descendants<Wps.WordprocessingShape>().FirstOrDefault(); }
+        get { return _child ?? (IsGroup ? null : AnchorElement?.Descendants<Wps.WordprocessingShape>().FirstOrDefault()); }
     }
 
     internal Wps.ShapeProperties ShapeProperties
@@ -667,7 +835,63 @@ public partial class ShapeWrapper
         (AutoShapeType.CloudCallout, "cloudCallout", "Thought Bubble: Cloud"),
         (AutoShapeType.Frame, "frame", "Frame"),
         (AutoShapeType.Tear, "teardrop", "Teardrop"),
-        (AutoShapeType.Chord, "chord", "Chord")
+        (AutoShapeType.Chord, "chord", "Chord"),
+        (AutoShapeType.CurvedLeftArrow, "curvedLeftArrow", "Arrow: Curved Left"),
+        (AutoShapeType.CurvedUpArrow, "curvedUpArrow", "Arrow: Curved Up"),
+        (AutoShapeType.CurvedDownArrow, "curvedDownArrow", "Arrow: Curved Down"),
+        (AutoShapeType.RightArrowCallout, "rightArrowCallout", "Callout: Right Arrow"),
+        (AutoShapeType.LeftArrowCallout, "leftArrowCallout", "Callout: Left Arrow"),
+        (AutoShapeType.UpArrowCallout, "upArrowCallout", "Callout: Up Arrow"),
+        (AutoShapeType.DownArrowCallout, "downArrowCallout", "Callout: Down Arrow"),
+        (AutoShapeType.LeftRightArrowCallout, "leftRightArrowCallout", "Callout: Left-Right Arrow"),
+        (AutoShapeType.UpDownArrowCallout, "upDownArrowCallout", "Callout: Up-Down Arrow"),
+        (AutoShapeType.QuadArrowCallout, "quadArrowCallout", "Callout: Quad Arrow"),
+        (AutoShapeType.CircularArrow, "circularArrow", "Arrow: Circular"),
+        (AutoShapeType.FlowchartInternalStorage, "flowChartInternalStorage", "Flowchart: Internal Storage"),
+        (AutoShapeType.FlowchartMultidocument, "flowChartMultidocument", "Flowchart: Multidocument"),
+        (AutoShapeType.FlowchartPreparation, "flowChartPreparation", "Flowchart: Preparation"),
+        (AutoShapeType.FlowchartManualInput, "flowChartManualInput", "Flowchart: Manual Input"),
+        (AutoShapeType.FlowchartManualOperation, "flowChartManualOperation", "Flowchart: Manual Operation"),
+        (AutoShapeType.FlowchartOffpageConnector, "flowChartOffpageConnector", "Flowchart: Off-page Connector"),
+        (AutoShapeType.FlowchartCard, "flowChartPunchedCard", "Flowchart: Card"),
+        (AutoShapeType.FlowchartPunchedTape, "flowChartPunchedTape", "Flowchart: Punched Tape"),
+        (AutoShapeType.FlowchartSummingJunction, "flowChartSummingJunction", "Flowchart: Summing Junction"),
+        (AutoShapeType.FlowchartOr, "flowChartOr", "Flowchart: Or"),
+        (AutoShapeType.FlowchartCollate, "flowChartCollate", "Flowchart: Collate"),
+        (AutoShapeType.FlowchartSort, "flowChartSort", "Flowchart: Sort"),
+        (AutoShapeType.FlowchartExtract, "flowChartExtract", "Flowchart: Extract"),
+        (AutoShapeType.FlowchartMerge, "flowChartMerge", "Flowchart: Merge"),
+        (AutoShapeType.FlowchartStoredData, "flowChartOnlineStorage", "Flowchart: Stored Data"),
+        (AutoShapeType.FlowchartDelay, "flowChartDelay", "Flowchart: Delay"),
+        (AutoShapeType.FlowchartSequentialAccessStorage, "flowChartMagneticTape", "Flowchart: Sequential Access Storage"),
+        (AutoShapeType.FlowchartMagneticDisk, "flowChartMagneticDisk", "Flowchart: Magnetic Disk"),
+        (AutoShapeType.FlowchartDirectAccessStorage, "flowChartMagneticDrum", "Flowchart: Direct Access Storage"),
+        (AutoShapeType.FlowchartDisplay, "flowChartDisplay", "Flowchart: Display"),
+        (AutoShapeType.Explosion1, "irregularSeal1", "Explosion: 8 Points"),
+        (AutoShapeType.Explosion2, "irregularSeal2", "Explosion: 14 Points"),
+        (AutoShapeType.Star24, "star24", "Star: 24 Points"),
+        (AutoShapeType.UpRibbon, "ribbon2", "Ribbon: Tilted Up"),
+        (AutoShapeType.DownRibbon, "ribbon", "Ribbon: Tilted Down"),
+        (AutoShapeType.CurvedUpRibbon, "ellipseRibbon2", "Ribbon: Curved and Tilted Up"),
+        (AutoShapeType.CurvedDownRibbon, "ellipseRibbon", "Ribbon: Curved and Tilted Down"),
+        (AutoShapeType.DoubleWave, "doubleWave", "Double Wave"),
+        (AutoShapeType.LineCallout1, "borderCallout1", "Callout: Line"),
+        (AutoShapeType.LineCallout2, "borderCallout2", "Callout: Bent Line"),
+        (AutoShapeType.LineCallout3, "borderCallout3", "Callout: Double Bent Line"),
+        (AutoShapeType.LineCallout1NoBorder, "callout1", "Callout: Line with No Border"),
+        (AutoShapeType.LineCallout1AccentBar, "accentCallout1", "Callout: Line with Accent Bar"),
+        (AutoShapeType.LineCallout2AccentBar, "accentCallout2", "Callout: Bent Line with Accent Bar"),
+        (AutoShapeType.LineCallout3AccentBar, "accentCallout3", "Callout: Double Bent Line with Accent Bar"),
+        (AutoShapeType.LineCallout2NoBorder, "callout2", "Callout: Bent Line with No Border"),
+        (AutoShapeType.LineCallout3NoBorder, "callout3", "Callout: Double Bent Line with No Border"),
+        (AutoShapeType.ActionButtonBlank, "actionButtonBlank", "Action Button: Blank"),
+        (AutoShapeType.ActionButtonHome, "actionButtonHome", "Action Button: Go Home"),
+        (AutoShapeType.ActionButtonHelp, "actionButtonHelp", "Action Button: Help"),
+        (AutoShapeType.ActionButtonInformation, "actionButtonInformation", "Action Button: Get Information"),
+        (AutoShapeType.ActionButtonBackPrevious, "actionButtonBackPrevious", "Action Button: Go Back or Previous"),
+        (AutoShapeType.ActionButtonForwardNext, "actionButtonForwardNext", "Action Button: Go Forward or Next"),
+        (AutoShapeType.ActionButtonBeginning, "actionButtonBeginning", "Action Button: Go to Beginning"),
+        (AutoShapeType.ActionButtonEnd, "actionButtonEnd", "Action Button: Go to End")
     };
 
     internal static (AutoShapeType Type, string Preset, string Name) PresetOf(AutoShapeType type)
@@ -689,7 +913,7 @@ public partial class ShapeWrapper
         + "forceAA=\"0\" compatLnSpc=\"1\"><a:prstTxWarp prst=\"textNoShape\"><a:avLst/></a:prstTxWarp><a:noAutofit/></wps:bodyPr>";
 
     //The speech and thought bubbles start with an empty, centred paragraph, which the other shapes of the gallery get only when text is put in.
-    private static readonly string[] Callouts = { "wedgeRectCallout", "wedgeRoundRectCallout", "wedgeEllipseCallout", "cloudCallout" };
+    private static readonly string[] Callouts = { "wedgeRectCallout", "wedgeRoundRectCallout", "wedgeEllipseCallout", "cloudCallout", "borderCallout1", "borderCallout2", "borderCallout3", "callout1", "callout2", "callout3", "accentCallout1", "accentCallout2", "accentCallout3" };
 
     //The brackets, the braces and the arc are only outlines: they take the style of a line.
     private static readonly string[] Unfilled = { "leftBracket", "rightBracket", "leftBrace", "rightBrace", "arc" };

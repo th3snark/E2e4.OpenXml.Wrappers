@@ -2506,79 +2506,48 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
             Write-Host ('autoshape {0}: name "{1}" back {2}' -f $t, $s.Name, $s.AutoShapeType)
         }
     }
-    # Printing-only (no snapshot): what grouping two shapes does in Word 16. The group is a wpg:wgp inside an mc:AlternateContent with a
-    # VML copy, its children are wps:wsp elements with ids of their own, and Ungroup gives the two shapes back.
     'shape-group'                     = {
         param($doc)
         $doc.Content.InsertAfter('Hello world again')
         $a = $doc.Shapes.AddShape(1, 20, 30, 80, 40, $doc.Range(5, 5))
-        $b = $doc.Shapes.AddShape(9, 120, 60, 60, 60, $doc.Range(5, 5))
+        $b = $doc.Shapes.AddShape(1, 120, 60, 60, 60, $doc.Range(5, 5))
         $a.Name = 'A'
         $b.Name = 'B'
+        Write-Host ('before: a {0},{1} {2}x{3}; b {4},{5} {6}x{7}' -f $a.Left, $a.Top, $a.Width, $a.Height, $b.Left, $b.Top, $b.Width, $b.Height)
         $g = $doc.Shapes.Range([object[]]@('A', 'B')).Group()
-        Write-Host ('group: type {0}; name "{1}"; count {2}; items {3}; w {4} h {5}; left {6} top {7}' -f $g.Type, $g.Name, $doc.Shapes.Count, $g.GroupItems.Count, $g.Width, $g.Height, $g.Left, $g.Top)
-        Write-Host ('child: "{0}" type {1} left {2} top {3} parentgroup "{4}" child {5}' -f $g.GroupItems.Item(1).Name, $g.GroupItems.Item(1).Type, $g.GroupItems.Item(1).Left, $g.GroupItems.Item(1).Top, $g.GroupItems.Item(1).ParentGroup.Name, $g.GroupItems.Item(1).Child)
+        Write-Host ('group: type {0}; name "{1}"; count {2}; items {3}; w {4} h {5}; left {6} top {7}; wrap {8}; z {9}' -f $g.Type, $g.Name, $doc.Shapes.Count, $g.GroupItems.Count, $g.Width, $g.Height, $g.Left, $g.Top, $g.WrapFormat.Type, $g.ZOrderPosition)
+        foreach ($i in 1..$g.GroupItems.Count) {
+            $c = $g.GroupItems.Item($i)
+            Write-Host ('child {0}: "{1}" type {2} left {3} top {4} w {5} h {6} parentgroup "{7}" child {8} autoshape {9}' -f $i, $c.Name, $c.Type, $c.Left, $c.Top, $c.Width, $c.Height, $c.ParentGroup.Name, $c.Child, $c.AutoShapeType)
+        }
+        $g.Left = $g.Left + 10
+        $g.Width = $g.Width * 2
+        Write-Host ('moved: group left {0} w {1}; child 1 left {2} w {3}' -f $g.Left, $g.Width, $g.GroupItems.Item(1).Left, $g.GroupItems.Item(1).Width)
     }
 
     'shape-ungroup'                   = {
         param($doc)
         $doc.Content.InsertAfter('Hello world again')
         $a = $doc.Shapes.AddShape(1, 20, 30, 80, 40, $doc.Range(5, 5))
-        $b = $doc.Shapes.AddShape(9, 120, 60, 60, 60, $doc.Range(5, 5))
+        $b = $doc.Shapes.AddShape(1, 120, 60, 60, 60, $doc.Range(5, 5))
         $a.Name = 'A'
         $b.Name = 'B'
         $g = $doc.Shapes.Range([object[]]@('A', 'B')).Group()
         $r = $g.Ungroup()
-        Write-Host ('ungroup: count {0}; returned {1}; names {2}' -f $doc.Shapes.Count, $r.Count, (($doc.Shapes | ForEach-Object { $_.Name }) -join ','))
-    }
-    'shape-hyperlink'                 = {
-        param($doc)
-        $doc.Content.InsertAfter('Hello world again')
-        $s = $doc.Shapes.AddShape(1, 20, 30, 80, 40, $doc.Range(5, 5))
-        $p = $doc.Shapes.AddPicture($script:Picture, $false, $true, 20, 90, 60, 30, $doc.Range(5, 5))
-        $l = $doc.Hyperlinks.Add($s, 'https://example.com/a', '', 'Tip')
-        $m = $doc.Hyperlinks.Add($p, 'https://example.com/b', 'Mark')
-        Write-Host ('links {0}; shape link: "{1}" tip "{2}" type {3}; picture link: "{4}" sub "{5}"' -f $doc.Hyperlinks.Count, $s.Hyperlink.Address, $s.Hyperlink.ScreenTip, $s.Hyperlink.Type, $p.Hyperlink.Address, $p.Hyperlink.SubAddress)
+        Write-Host ('ungroup: count {0}; returned {1}; names {2}' -f $doc.Shapes.Count, $r.Count, (($doc.Shapes | ForEach-Object { $_.Name + '@' + $_.Left + ',' + $_.Top + ' ' + $_.Width + 'x' + $_.Height }) -join ' | '))
     }
 
-    # Printing-only (no snapshot): cropping a picture. Word stores the crop as a share of the picture's own size (a:srcRect, with rounding of
-    # its own, so 6 points of a 30 point wide picture become 19997) and shrinks the shape by the same share.
-    'shape-picture-crop'              = {
+    'shape-last-autoshapes'           = {
         param($doc)
         $doc.Content.InsertAfter('Hello world again')
-        $p = $doc.Shapes.AddPicture($script:Picture, $false, $true, 20, 30, 60, 30, $doc.Range(5, 5))
-        $p.PictureFormat.CropLeft = 6
-        $p.PictureFormat.CropTop = 3
-        $p.PictureFormat.CropRight = 3
-        $p.PictureFormat.CropBottom = 1.5
-        Write-Host ('crop: {0} {1} {2} {3}; size {4}x{5}' -f $p.PictureFormat.CropLeft, $p.PictureFormat.CropTop, $p.PictureFormat.CropRight, $p.PictureFormat.CropBottom, $p.Width, $p.Height)
-    }
-
-    # Printing-only (no snapshot): sizes and places relative to the page or a margin, which Word writes as wp14 elements in an
-    # mc:AlternateContent pair next to the absolute ones.
-    'shape-relative-size'             = {
-        param($doc)
-        $doc.Content.InsertAfter('Hello world again')
-        $s = $doc.Shapes.AddShape(1, 20, 30, 80, 40, $doc.Range(5, 5))
-        $s.WidthRelative = 50
-        $s.HeightRelative = 25
-        Write-Host ('relative: w {0} h {1}; rel size {2} {3}; width {4} height {5}' -f $s.WidthRelative, $s.HeightRelative, $s.RelativeHorizontalSize, $s.RelativeVerticalSize, $s.Width, $s.Height)
-        $s.RelativeHorizontalSize = 1
-        $s.RelativeVerticalSize = 2
-        $s.LeftRelative = 10
-        $s.TopRelative = 20
-        Write-Host ('after: rel size {0} {1}; left {2} top {3}; leftrel {4} toprel {5}' -f $s.RelativeHorizontalSize, $s.RelativeVerticalSize, $s.Left, $s.Top, $s.LeftRelative, $s.TopRelative)
-    }
-    'shape-rest-autoshapes'           = {
-        param($doc)
-        $doc.Content.InsertAfter('Hello world again')
-        foreach ($t in 12, 15, 16, 20, 25, 29, 30, 31, 32, 38, 39, 41, 42, 45, 49, 50, 52, 62, 64, 65, 67, 69, 73, 91, 93, 94, 96, 101, 102, 103, 105, 106, 107, 108, 158, 160, 161) {
+        foreach ($t in 46, 47, 48, 53, 54, 55, 56, 57, 58, 59, 60, 66, 68, 70, 71, 72, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 95, 97, 98, 99, 100, 104, 109, 111, 112, 113, 114, 115, 116, 119, 120, 125, 126, 127, 128, 129, 130, 131, 132) {
             try {
                 $s = $doc.Shapes.AddShape($t, 20, 30, 80, 40, $doc.Range(5, 5))
                 Write-Host ('autoshape {0}: name "{1}" back {2}' -f $t, $s.Name, $s.AutoShapeType)
             } catch { Write-Host ('autoshape {0}: {1}' -f $t, $_.Exception.Message) }
         }
     }
+
     'shape-delete'                    = {
         param($doc)
         $doc.Content.InsertAfter('Hello world again')
