@@ -1137,6 +1137,70 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $t.Cell(2, 2).Select()
         $doc.Application.Selection.InsertCells(1)
     }
+    # Printing-only (no snapshot): the application's CleanString for every code and the list galleries.
+    'application-clean-string'        = {
+        param($doc)
+        $app = $doc.Application
+        $rows = New-Object System.Collections.Generic.List[string]
+        foreach ($code in 0..255) {
+            $r = $app.CleanString([string][char]$code)
+            $codes = ($r.ToCharArray() | ForEach-Object { [int]$_ }) -join '+'
+            if ($codes -ne [string]$code) { $rows.Add(('{0}>{1}' -f $code, $codes)) }
+        }
+        Write-Host ('changed: ' + ($rows -join ' '))
+        Write-Host ('word: [{0}]' -f ($app.CleanString("a" + [char]160 + "b" + [char]1 + "c") -replace [char]160, '<nbsp>'))
+    }
+
+    'application-list-galleries'      = {
+        param($doc)
+        $app = $doc.Application
+        foreach ($g in 1..3) {
+            $gallery = $app.ListGalleries.Item($g)
+            Write-Host ('gallery {0}: modified {1}, templates {2}' -f $g, $gallery.Modified(1), $gallery.ListTemplates.Count)
+            foreach ($i in 1..$gallery.ListTemplates.Count) {
+                $tpl = $gallery.ListTemplates.Item($i)
+                $levels = foreach ($l in 1..$tpl.ListLevels.Count) {
+                    $lv = $tpl.ListLevels.Item($l)
+                    ('{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}' -f $lv.NumberFormat, $lv.NumberStyle, $lv.NumberPosition, $lv.TextPosition, $lv.TabPosition, $lv.TrailingCharacter, $lv.Font.Name, $lv.StartAt)
+                }
+                Write-Host ('  g{0}t{1}: outline {2} name "{3}" levels {4}: {5}' -f $g, $i, $tpl.OutlineNumbered, $tpl.Name, $tpl.ListLevels.Count, ($levels -join ' ; '))
+            }
+        }
+    }
+    # Printing-only (no snapshot): the 21 templates of the list galleries, each applied to a paragraph of its own, in the order of the galleries.
+    # The harness writes their definitions to ListGalleries.xml, and the library applies them from there. The fourth bullet template has a
+    # picture bullet, which the library does not copy, so the conformance scenario below leaves it out.
+    'application-list-galleries-apply' = {
+        param($doc)
+        $doc.Content.InsertAfter((1..21 | ForEach-Object { "Item $_" }) -join "`r")
+        $app = $doc.Application
+        $n = 1
+        foreach ($g in 1..3) {
+            foreach ($i in 1..7) {
+                $doc.Paragraphs.Item($n).Range.ListFormat.ApplyListTemplate($app.ListGalleries.Item($g).ListTemplates.Item($i), $false, 0)
+                $n++
+            }
+        }
+    }
+
+    'application-list-gallery-bullet' = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo")
+        $doc.Paragraphs.Item(1).Range.ListFormat.ApplyListTemplate($doc.Application.ListGalleries.Item(1).ListTemplates.Item(2), $false, 0)
+    }
+
+    'application-list-gallery-outline' = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo")
+        $doc.Paragraphs.Item(1).Range.ListFormat.ApplyListTemplate($doc.Application.ListGalleries.Item(3).ListTemplates.Item(2), $false, 0)
+    }
+    'application-list-gallery-one'    = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo")
+        $doc.Paragraphs.Item(1).Range.ListFormat.ApplyListTemplate($doc.Application.ListGalleries.Item(2).ListTemplates.Item(3), $false, 0)
+        $doc.Paragraphs.Item(2).Range.ListFormat.ApplyListTemplate($doc.Application.ListGalleries.Item(3).ListTemplates.Item(4), $false, 0)
+        Write-Host ('doc templates {0}; lists {1}' -f $doc.ListTemplates.Count, $doc.Lists.Count)
+    }
     'selection-extend-case'           = {
         param($doc)
         $doc.Content.InsertAfter("one Two three Four")
@@ -1752,6 +1816,25 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $cc = $doc.ContentControls.Add(1, $doc.Range(5, 5))
         Set-PlaceholderText $cc $doc.Range(6, 11) ''
         Write-Host ('from range: showing {0} text "{1}" value "{2}"' -f $cc.ShowingPlaceholderText, $cc.Range.Text, $cc.PlaceholderText.Value)
+    }
+    # Printing-only (no snapshot): XPath relative to a node.
+    'custom-xml-node-select'          = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello')
+        $part = $doc.CustomXMLParts.Add('<root xmlns="urn:test"><a><b>1</b><b>2</b></a><c id="x"><b>3</b></c></root>')
+        $part.NamespaceManager.AddNamespace('ns', 'urn:test')
+        $a = $part.SelectSingleNode('/ns:root/ns:a')
+        function Show($label, $nodes) { Write-Host ('{0}: {1}' -f $label, (($nodes | ForEach-Object { $_.XML }) -join ' | ')) }
+        Show 'relative b' $a.SelectNodes('ns:b')
+        Show 'child path' $a.SelectNodes('./ns:b')
+        Show 'descendants' $a.SelectNodes('.//ns:b')
+        Show 'absolute from node' $a.SelectNodes('/ns:root/ns:c/ns:b')
+        Show 'parent' $a.SelectNodes('..')
+        Show 'attribute' $part.SelectSingleNode('/ns:root/ns:c').SelectNodes('@id')
+        Write-Host ('single: {0}' -f $a.SelectSingleNode('ns:b[2]').Text)
+        Write-Host ('none: {0}' -f ($null -eq $a.SelectSingleNode('ns:zzz')))
+        Write-Host ('prefix of the node: {0}' -f $a.NamespaceURI)
+        try { Show 'no prefix' $a.SelectNodes('b') } catch { Write-Host ('no prefix: ' + $_.Exception.Message) }
     }
     'custom-xml-node-edit'            = {
         param($doc)

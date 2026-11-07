@@ -1995,7 +1995,27 @@ public class MarkupConformanceTest
                 d.TablesOfContents.Format = TocFormat.Template;
             },
             new[] { Body(), Part("styles.xml") }),
-        new Scenario("shape-flip",
+        new Scenario("application-list-gallery-bullet",
+            d =>
+            {
+                d.Content.InsertAfter("One\rTwo");
+                d.Paragraphs[0].Range.ListFormat.ApplyListTemplate(d.Application.ListGalleries[ListGalleryType.Bullet].ListTemplates[1], false);
+            },
+            new[] { Body(), Part("numbering.xml"), Part("styles.xml") }),
+        new Scenario("application-list-gallery-outline",
+            d =>
+            {
+                d.Content.InsertAfter("One\rTwo");
+                d.Paragraphs[0].Range.ListFormat.ApplyListTemplate(d.Application.ListGalleries[ListGalleryType.Outline].ListTemplates[1], false);
+            },
+            new[] { Body(), Part("numbering.xml"), Part("styles.xml") }),        new Scenario("application-list-gallery-one",
+            d =>
+            {
+                d.Content.InsertAfter("One\rTwo");
+                d.Paragraphs[0].Range.ListFormat.ApplyListTemplate(d.Application.ListGalleries[ListGalleryType.Number].ListTemplates[2], false);
+                d.Paragraphs[1].Range.ListFormat.ApplyListTemplate(d.Application.ListGalleries[ListGalleryType.Outline].ListTemplates[3], false);
+            },
+            new[] { Body(), Part("numbering.xml"), Part("styles.xml") }),        new Scenario("shape-flip",
             d =>
             {
                 d.Content.InsertAfter("Hello world again");
