@@ -2419,6 +2419,39 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $s = $doc.Shapes.AddTextbox(5, 20, 30, 120, 60, $doc.Range(5, 5))
         Write-Host ('textbox orientation {0}' -f $s.TextFrame.Orientation)
     }
+    'shape-more-autoshapes'           = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        foreach ($t in 2, 3, 6, 8, 11, 13, 14, 17, 18, 19, 21, 22, 23, 24, 34, 35, 36, 37, 51, 61, 63, 92, 179) {
+            $s = $doc.Shapes.AddShape($t, 20, 30, 80, 40, $doc.Range(5, 5))
+            Write-Host ('autoshape {0}: name "{1}" back {2}' -f $t, $s.Name, $s.AutoShapeType)
+        }
+    }
+    # Printing-only (no snapshot): what grouping two shapes does in Word 16. The group is a wpg:wgp inside an mc:AlternateContent with a
+    # VML copy, its children are wps:wsp elements with ids of their own, and Ungroup gives the two shapes back.
+    'shape-group'                     = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $a = $doc.Shapes.AddShape(1, 20, 30, 80, 40, $doc.Range(5, 5))
+        $b = $doc.Shapes.AddShape(9, 120, 60, 60, 60, $doc.Range(5, 5))
+        $a.Name = 'A'
+        $b.Name = 'B'
+        $g = $doc.Shapes.Range([object[]]@('A', 'B')).Group()
+        Write-Host ('group: type {0}; name "{1}"; count {2}; items {3}; w {4} h {5}; left {6} top {7}' -f $g.Type, $g.Name, $doc.Shapes.Count, $g.GroupItems.Count, $g.Width, $g.Height, $g.Left, $g.Top)
+        Write-Host ('child: "{0}" type {1} left {2} top {3} parentgroup "{4}" child {5}' -f $g.GroupItems.Item(1).Name, $g.GroupItems.Item(1).Type, $g.GroupItems.Item(1).Left, $g.GroupItems.Item(1).Top, $g.GroupItems.Item(1).ParentGroup.Name, $g.GroupItems.Item(1).Child)
+    }
+
+    'shape-ungroup'                   = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $a = $doc.Shapes.AddShape(1, 20, 30, 80, 40, $doc.Range(5, 5))
+        $b = $doc.Shapes.AddShape(9, 120, 60, 60, 60, $doc.Range(5, 5))
+        $a.Name = 'A'
+        $b.Name = 'B'
+        $g = $doc.Shapes.Range([object[]]@('A', 'B')).Group()
+        $r = $g.Ungroup()
+        Write-Host ('ungroup: count {0}; returned {1}; names {2}' -f $doc.Shapes.Count, $r.Count, (($doc.Shapes | ForEach-Object { $_.Name }) -join ','))
+    }
     'shape-delete'                    = {
         param($doc)
         $doc.Content.InsertAfter('Hello world again')

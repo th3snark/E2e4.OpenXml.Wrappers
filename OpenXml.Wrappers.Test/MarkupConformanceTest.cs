@@ -2015,7 +2015,17 @@ public class MarkupConformanceTest
                 d.Paragraphs[0].Range.ListFormat.ApplyListTemplate(d.Application.ListGalleries[ListGalleryType.Number].ListTemplates[2], false);
                 d.Paragraphs[1].Range.ListFormat.ApplyListTemplate(d.Application.ListGalleries[ListGalleryType.Outline].ListTemplates[3], false);
             },
-            new[] { Body(), Part("numbering.xml"), Part("styles.xml") }),        new Scenario("shape-flip",
+            new[] { Body(), Part("numbering.xml"), Part("styles.xml") }),        new Scenario("shape-more-autoshapes",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                foreach (AutoShapeType type in new[] { AutoShapeType.Parallelogram, AutoShapeType.Trapezoid, AutoShapeType.Octagon, AutoShapeType.RightTriangle, AutoShapeType.Cross, AutoShapeType.Can, AutoShapeType.Cube, AutoShapeType.SmileyFace, AutoShapeType.Donut, AutoShapeType.NoSymbol, AutoShapeType.Heart, AutoShapeType.LightningBolt, AutoShapeType.Sun, AutoShapeType.Moon, AutoShapeType.LeftArrow, AutoShapeType.UpArrow, AutoShapeType.DownArrow, AutoShapeType.LeftRightArrow, AutoShapeType.Pentagon, AutoShapeType.FlowchartProcess, AutoShapeType.FlowchartDecision, AutoShapeType.Star5, AutoShapeType.Cloud })
+                {
+                    d.Shapes.AddShape(type, 20, 30, 80, 40, d.Range(5, 5));
+                }
+            },
+            DrawingElements("wsp", "docPr")),
+        new Scenario("shape-flip",
             d =>
             {
                 d.Content.InsertAfter("Hello world again");
