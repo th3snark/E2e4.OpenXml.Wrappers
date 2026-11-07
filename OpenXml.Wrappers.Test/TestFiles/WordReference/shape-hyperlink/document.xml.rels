@@ -1,0 +1,10 @@
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="{rId4}" Target="/word/fontTable.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/fontTable" />
+  <Relationship Id="{rId3}" Target="https://example.com/a" TargetMode="External" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" />
+  <Relationship Id="{rId1}" Target="https://example.com/b#Mark" TargetMode="External" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" />
+  <Relationship Id="{rId2}" Target="/word/media/image1.png" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" />
+  <Relationship Id="{rId5}" Target="/word/settings.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/settings" />
+  <Relationship Id="{rId6}" Target="/word/styles.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" />
+  <Relationship Id="{rId7}" Target="/word/theme/theme1.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme" />
+  <Relationship Id="{rId8}" Target="/word/webSettings.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/webSettings" />
+</Relationships>

@@ -1964,6 +1964,53 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         [void]$doc.InlineShapes.AddPicture($script:Picture, $false, $true, $doc.Range(6, 11))
     }
 
+    'cross-reference-heading'         = {
+        param($doc)
+        $doc.Content.InsertAfter("First`rSome text`rSecond`rSee: ")
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+        $doc.Paragraphs.Item(3).Style = 'Heading 1'
+        $items = $doc.GetCrossReferenceItems(1)
+        Write-Host ('heading items: {0}' -f (($items | ForEach-Object { '[' + $_ + ']' }) -join ' '))
+        $end = $doc.Paragraphs.Item(4).Range
+        $end.MoveEnd(1, -1) | Out-Null
+        $end.Collapse(0)
+        $end.InsertCrossReference(1, -1, 2, $true)
+        $end = $doc.Paragraphs.Item(4).Range
+        $end.MoveEnd(1, -1) | Out-Null
+        $end.Collapse(0)
+        $end.InsertCrossReference(1, 7, 1, $true)
+        Write-Host ('text "{0}"' -f ($doc.Content.Text -replace "`r", '\r'))
+    }
+
+    'cross-reference-bookmark'        = {
+        param($doc)
+        $doc.Content.InsertAfter("Alpha beta gamma`rSee: ")
+        [void]$doc.Bookmarks.Add('Mark', $doc.Range(6, 10))
+        $items = $doc.GetCrossReferenceItems(2)
+        Write-Host ('bookmark items: {0}' -f (($items | ForEach-Object { '[' + $_ + ']' }) -join ' '))
+        $end = $doc.Paragraphs.Item(2).Range
+        $end.MoveEnd(1, -1) | Out-Null
+        $end.Collapse(0)
+        $end.InsertCrossReference(2, -1, 'Mark', $false)
+        Write-Host ('text "{0}"' -f ($doc.Content.Text -replace "`r", '\r'))
+    }
+
+    'cross-reference-caption'         = {
+        param($doc)
+        $doc.Content.InsertAfter("Body`rSee: ")
+        $doc.Paragraphs.Item(1).Range.InsertCaption('Figure', ': first', '', 0, $false)
+        $items = $doc.GetCrossReferenceItems('Figure')
+        Write-Host ('figure items: {0}' -f (($items | ForEach-Object { '[' + $_ + ']' }) -join ' '))
+        $end = $doc.Paragraphs.Item($doc.Paragraphs.Count).Range
+        $end.MoveEnd(1, -1) | Out-Null
+        $end.Collapse(0)
+        $end.InsertCrossReference('Figure', 2, 1, $true)
+        $end = $doc.Paragraphs.Item($doc.Paragraphs.Count).Range
+        $end.MoveEnd(1, -1) | Out-Null
+        $end.Collapse(0)
+        $end.InsertCrossReference('Figure', 3, 1, $true)
+        Write-Host ('text "{0}"' -f ($doc.Content.Text -replace "`r", '\r'))
+    }
     'toc-add'                         = {
         param($doc)
         $doc.Content.InsertAfter("First`rSome text`rSecond`rMore text`rSub heading`rEnd")
@@ -2483,6 +2530,54 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $g = $doc.Shapes.Range([object[]]@('A', 'B')).Group()
         $r = $g.Ungroup()
         Write-Host ('ungroup: count {0}; returned {1}; names {2}' -f $doc.Shapes.Count, $r.Count, (($doc.Shapes | ForEach-Object { $_.Name }) -join ','))
+    }
+    'shape-hyperlink'                 = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $s = $doc.Shapes.AddShape(1, 20, 30, 80, 40, $doc.Range(5, 5))
+        $p = $doc.Shapes.AddPicture($script:Picture, $false, $true, 20, 90, 60, 30, $doc.Range(5, 5))
+        $l = $doc.Hyperlinks.Add($s, 'https://example.com/a', '', 'Tip')
+        $m = $doc.Hyperlinks.Add($p, 'https://example.com/b', 'Mark')
+        Write-Host ('links {0}; shape link: "{1}" tip "{2}" type {3}; picture link: "{4}" sub "{5}"' -f $doc.Hyperlinks.Count, $s.Hyperlink.Address, $s.Hyperlink.ScreenTip, $s.Hyperlink.Type, $p.Hyperlink.Address, $p.Hyperlink.SubAddress)
+    }
+
+    # Printing-only (no snapshot): cropping a picture. Word stores the crop as a share of the picture's own size (a:srcRect, with rounding of
+    # its own, so 6 points of a 30 point wide picture become 19997) and shrinks the shape by the same share.
+    'shape-picture-crop'              = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $p = $doc.Shapes.AddPicture($script:Picture, $false, $true, 20, 30, 60, 30, $doc.Range(5, 5))
+        $p.PictureFormat.CropLeft = 6
+        $p.PictureFormat.CropTop = 3
+        $p.PictureFormat.CropRight = 3
+        $p.PictureFormat.CropBottom = 1.5
+        Write-Host ('crop: {0} {1} {2} {3}; size {4}x{5}' -f $p.PictureFormat.CropLeft, $p.PictureFormat.CropTop, $p.PictureFormat.CropRight, $p.PictureFormat.CropBottom, $p.Width, $p.Height)
+    }
+
+    # Printing-only (no snapshot): sizes and places relative to the page or a margin, which Word writes as wp14 elements in an
+    # mc:AlternateContent pair next to the absolute ones.
+    'shape-relative-size'             = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $s = $doc.Shapes.AddShape(1, 20, 30, 80, 40, $doc.Range(5, 5))
+        $s.WidthRelative = 50
+        $s.HeightRelative = 25
+        Write-Host ('relative: w {0} h {1}; rel size {2} {3}; width {4} height {5}' -f $s.WidthRelative, $s.HeightRelative, $s.RelativeHorizontalSize, $s.RelativeVerticalSize, $s.Width, $s.Height)
+        $s.RelativeHorizontalSize = 1
+        $s.RelativeVerticalSize = 2
+        $s.LeftRelative = 10
+        $s.TopRelative = 20
+        Write-Host ('after: rel size {0} {1}; left {2} top {3}; leftrel {4} toprel {5}' -f $s.RelativeHorizontalSize, $s.RelativeVerticalSize, $s.Left, $s.Top, $s.LeftRelative, $s.TopRelative)
+    }
+    'shape-rest-autoshapes'           = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        foreach ($t in 12, 15, 16, 20, 25, 29, 30, 31, 32, 38, 39, 41, 42, 45, 49, 50, 52, 62, 64, 65, 67, 69, 73, 91, 93, 94, 96, 101, 102, 103, 105, 106, 107, 108, 158, 160, 161) {
+            try {
+                $s = $doc.Shapes.AddShape($t, 20, 30, 80, 40, $doc.Range(5, 5))
+                Write-Host ('autoshape {0}: name "{1}" back {2}' -f $t, $s.Name, $s.AutoShapeType)
+            } catch { Write-Host ('autoshape {0}: {1}' -f $t, $_.Exception.Message) }
+        }
     }
     'shape-delete'                    = {
         param($doc)

@@ -34,6 +34,7 @@ public class HyperlinkWrapper : IEquatable<HyperlinkWrapper>
     private const string StyleId = "Hyperlink";
     private readonly Hyperlink _hyperlink;
     private readonly FieldWrapper _field;
+    private readonly DocumentFormat.OpenXml.Drawing.Wordprocessing.DocProperties _shape;
 
     internal HyperlinkWrapper(Hyperlink hyperlink)
     {
@@ -45,9 +46,81 @@ public class HyperlinkWrapper : IEquatable<HyperlinkWrapper>
         _field = field;
     }
 
+    //The link of a shape or picture: a click on it, kept in the properties of its drawing.
+    internal HyperlinkWrapper(DocumentFormat.OpenXml.Drawing.Wordprocessing.DocProperties shape)
+    {
+        _shape = shape;
+    }
+
     private OpenXmlPart Part
     {
-        get { return (_hyperlink.GetRoot() as OpenXmlPartRootElement)?.OpenXmlPart; }
+        get { return ((_hyperlink ?? (OpenXmlElement)_shape).GetRoot() as OpenXmlPartRootElement)?.OpenXmlPart; }
+    }
+
+    private void ThrowIfShape()
+    {
+        if (_shape != null)
+        {
+            throw new NotSupportedException("The hyperlink of a shape has no text, frame or range.");
+        }
+    }
+
+    //The clicks of a shape: one in the properties of the drawing and, for a picture, one in the picture's own properties.
+    private IEnumerable<DocumentFormat.OpenXml.Drawing.HyperlinkOnClick> Clicks
+    {
+        get
+        {
+            yield return _shape.GetFirstChild<DocumentFormat.OpenXml.Drawing.HyperlinkOnClick>();
+            DocumentFormat.OpenXml.Drawing.Pictures.NonVisualDrawingProperties picture = _shape.Parent?.Descendants<DocumentFormat.OpenXml.Drawing.Pictures.NonVisualDrawingProperties>().FirstOrDefault();
+            if (picture != null)
+            {
+                yield return picture.GetFirstChild<DocumentFormat.OpenXml.Drawing.HyperlinkOnClick>();
+            }
+        }
+    }
+
+    //The address and the place of the link of a shape are kept together in the target, as address#place.
+    private void SetShapeTarget(string address, string place)
+    {
+        OpenXmlPart part = Part;
+        HyperlinkRelationship existing = GetRelationship();
+        string tip = _shape.GetFirstChild<DocumentFormat.OpenXml.Drawing.HyperlinkOnClick>()?.Tooltip?.Value;
+        if (existing != null)
+        {
+            part.DeleteReferenceRelationship(existing);
+        }
+        foreach (DocumentFormat.OpenXml.Drawing.HyperlinkOnClick old in Clicks.Where(c => c != null).ToList())
+        {
+            old.Remove();
+        }
+        if (string.IsNullOrEmpty(address) && string.IsNullOrEmpty(place))
+        {
+            return;
+        }
+        if (string.IsNullOrEmpty(address))
+        {
+            throw new NotSupportedException("A shape can go to a place in the document only through an address.");
+        }
+        string target = string.IsNullOrEmpty(place) ? address : address + "#" + place;
+        string id = part.AddHyperlinkRelationship(new Uri(target, UriKind.RelativeOrAbsolute), true).Id;
+        DocumentFormat.OpenXml.Drawing.HyperlinkOnClick click = new DocumentFormat.OpenXml.Drawing.HyperlinkOnClick() { Id = id };
+        if (!string.IsNullOrEmpty(tip))
+        {
+            click.Tooltip = tip;
+        }
+        _shape.HyperlinkOnClick = click;
+        DocumentFormat.OpenXml.Drawing.Pictures.NonVisualDrawingProperties picture = _shape.Parent?.Descendants<DocumentFormat.OpenXml.Drawing.Pictures.NonVisualDrawingProperties>().FirstOrDefault();
+        if (picture != null)
+        {
+            picture.HyperlinkOnClick = (DocumentFormat.OpenXml.Drawing.HyperlinkOnClick)_shape.HyperlinkOnClick.CloneNode(true);
+            //Word gives the picture the name of the drawing once it is a link.
+            picture.Name = _shape.Name;
+        }
+    }
+
+    private string ShapeTarget
+    {
+        get { return GetRelationship()?.Uri.OriginalString ?? string.Empty; }
     }
 
     private void ThrowIfField()
@@ -60,7 +133,7 @@ public class HyperlinkWrapper : IEquatable<HyperlinkWrapper>
 
     private HyperlinkRelationship GetRelationship()
     {
-        string id = _hyperlink.Id?.Value;
+        string id = _shape != null ? _shape.GetFirstChild<DocumentFormat.OpenXml.Drawing.HyperlinkOnClick>()?.Id?.Value : _hyperlink.Id?.Value;
         return string.IsNullOrEmpty(id) ? null : Part?.HyperlinkRelationships.FirstOrDefault(r => r.Id == id);
     }
 
@@ -95,6 +168,11 @@ public class HyperlinkWrapper : IEquatable<HyperlinkWrapper>
             }
 
             string address = GetRelationship()?.Uri.OriginalString ?? string.Empty;
+            if (_shape != null)
+            {
+                int hash = address.IndexOf('#');
+                return hash < 0 ? address : address.Substring(0, hash);
+            }
             int query = address.IndexOf("?subject=", StringComparison.Ordinal);
             if (query < 0)
             {
@@ -107,6 +185,11 @@ public class HyperlinkWrapper : IEquatable<HyperlinkWrapper>
         set
         {
             ThrowIfField();
+            if (_shape != null)
+            {
+                SetShapeTarget(value, SubAddress);
+                return;
+            }
             SetAddress(value);
         }
     }
@@ -134,10 +217,24 @@ public class HyperlinkWrapper : IEquatable<HyperlinkWrapper>
     /// <summary>The place in the document or the bookmark the hyperlink goes to, as <c>Hyperlink.SubAddress</c> in Word.</summary>
     public string SubAddress
     {
-        get { return _field != null ? FieldSwitch("\\l") : _hyperlink.Anchor?.Value ?? string.Empty; }
+        get
+        {
+            if (_shape != null)
+            {
+                string target = ShapeTarget;
+                int hash = target.IndexOf('#');
+                return hash < 0 ? string.Empty : target.Substring(hash + 1);
+            }
+            return _field != null ? FieldSwitch("\\l") : _hyperlink.Anchor?.Value ?? string.Empty;
+        }
         set
         {
             ThrowIfField();
+            if (_shape != null)
+            {
+                SetShapeTarget(Address, value);
+                return;
+            }
             _hyperlink.Anchor = string.IsNullOrEmpty(value) ? null : value;
         }
     }
@@ -145,10 +242,32 @@ public class HyperlinkWrapper : IEquatable<HyperlinkWrapper>
     /// <summary>The text shown when the pointer rests on the hyperlink, as <c>Hyperlink.ScreenTip</c> in Word.</summary>
     public string ScreenTip
     {
-        get { return _field != null ? FieldSwitch("\\o") : _hyperlink.Tooltip?.Value ?? string.Empty; }
+        get
+        {
+            if (_shape != null)
+            {
+                return _shape.GetFirstChild<DocumentFormat.OpenXml.Drawing.HyperlinkOnClick>()?.Tooltip?.Value ?? string.Empty;
+            }
+            return _field != null ? FieldSwitch("\\o") : _hyperlink.Tooltip?.Value ?? string.Empty;
+        }
         set
         {
             ThrowIfField();
+            if (_shape != null)
+            {
+                foreach (DocumentFormat.OpenXml.Drawing.HyperlinkOnClick click in Clicks.Where(c => c != null))
+                {
+                    if (string.IsNullOrEmpty(value))
+                    {
+                        click.Tooltip = null;
+                    }
+                    else
+                    {
+                        click.Tooltip = value;
+                    }
+                }
+                return;
+            }
             _hyperlink.Tooltip = string.IsNullOrEmpty(value) ? null : value;
         }
     }
@@ -156,10 +275,11 @@ public class HyperlinkWrapper : IEquatable<HyperlinkWrapper>
     /// <summary>The frame or window the target opens in, as <c>Hyperlink.Target</c> in Word.</summary>
     public string Target
     {
-        get { return _field != null ? FieldSwitch("\\t") : _hyperlink.TargetFrame?.Value ?? string.Empty; }
+        get { return _shape != null ? string.Empty : _field != null ? FieldSwitch("\\t") : _hyperlink.TargetFrame?.Value ?? string.Empty; }
         set
         {
             ThrowIfField();
+            ThrowIfShape();
             _hyperlink.TargetFrame = string.IsNullOrEmpty(value) ? null : value;
         }
     }
@@ -178,6 +298,7 @@ public class HyperlinkWrapper : IEquatable<HyperlinkWrapper>
         set
         {
             ThrowIfField();
+            ThrowIfShape();
             string address = GetRelationship()?.Uri.OriginalString ?? string.Empty;
             int query = address.IndexOf('?');
             if (query >= 0)
@@ -202,7 +323,7 @@ public class HyperlinkWrapper : IEquatable<HyperlinkWrapper>
     /// <summary>What the hyperlink is attached to, as <c>Hyperlink.Type</c> in Word; always <see cref="HyperlinkType.Range"/> here.</summary>
     public HyperlinkType Type
     {
-        get { return HyperlinkType.Range; }
+        get { return _shape == null ? HyperlinkType.Range : _shape.Parent is DocumentFormat.OpenXml.Drawing.Wordprocessing.Inline ? HyperlinkType.InlineShape : HyperlinkType.Shape; }
     }
 
     /// <summary>
@@ -212,6 +333,10 @@ public class HyperlinkWrapper : IEquatable<HyperlinkWrapper>
     {
         get
         {
+            if (_shape != null)
+            {
+                return string.Empty;
+            }
             if (_field != null)
             {
                 return _field.Result.Text;
@@ -222,6 +347,7 @@ public class HyperlinkWrapper : IEquatable<HyperlinkWrapper>
         set
         {
             ThrowIfField();
+            ThrowIfShape();
             string text = value ?? string.Empty;
             if (!_hyperlink.Elements<Run>().Any())
             {
@@ -240,6 +366,7 @@ public class HyperlinkWrapper : IEquatable<HyperlinkWrapper>
     {
         get
         {
+            ThrowIfShape();
             if (_field != null)
             {
                 return _field.Range;
@@ -252,7 +379,11 @@ public class HyperlinkWrapper : IEquatable<HyperlinkWrapper>
     /// <summary>A range over the paragraph or other element the hyperlink is in, as <c>Hyperlink.Parent</c> in Word for text.</summary>
     public RangeWrapper Parent
     {
-        get { return new RangeWrapper(_field != null ? _field.Range.AnchorElement.Parent : _hyperlink.Parent); }
+        get
+        {
+            ThrowIfShape();
+            return new RangeWrapper(_field != null ? _field.Range.AnchorElement.Parent : _hyperlink.Parent);
+        }
     }
 
     //The span of the hyperlink: its code, its text and its end, or only the text.
@@ -300,6 +431,11 @@ public class HyperlinkWrapper : IEquatable<HyperlinkWrapper>
         if (_field != null)
         {
             _field.Unlink();
+            return;
+        }
+        if (_shape != null)
+        {
+            SetShapeTarget(null, null);
             return;
         }
 
@@ -352,7 +488,7 @@ public class HyperlinkWrapper : IEquatable<HyperlinkWrapper>
 
     private object Key
     {
-        get { return _hyperlink != null ? (object)_hyperlink : _field.Key; }
+        get { return _hyperlink != null ? (object)_hyperlink : _shape != null ? _shape : _field.Key; }
     }
 
     public static bool operator ==(HyperlinkWrapper left, HyperlinkWrapper right)
@@ -372,7 +508,7 @@ public class HyperlinkWrapper : IEquatable<HyperlinkWrapper>
 /// The hyperlinks of a range or a document, as <c>Hyperlinks</c> in Word: <c>w:hyperlink</c> elements and HYPERLINK fields, in the order they
 /// are in the text.
 /// </summary>
-public class HyperlinkWrapperCollection : IEnumerable<HyperlinkWrapper>
+public partial class HyperlinkWrapperCollection : IEnumerable<HyperlinkWrapper>
 {
     private readonly RangeWrapper _range;
 

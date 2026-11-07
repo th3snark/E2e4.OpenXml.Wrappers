@@ -5,6 +5,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 ## [Unreleased]
 
 ### Added
+- Cross references: `Range.InsertCrossReference` for headings, bookmarks and caption labels (new `CrossReferenceType` and `CrossReferenceKind`) and `Document.GetCrossReferenceItems`. Three new reference scenarios matching Word 16.
+- Shapes: `Shape.Hyperlink` and `Hyperlinks.Add` with a shape, and 37 more shapes of the gallery for `AddShape`, matching Word 16's markup.
 - Application: `CleanString`, and `ListGalleries` with `ListGallery` (`ListTemplates`, `Modified`, `Reset`) and the new `ListGalleryType`: the 21 templates of Word 16's three galleries. Applying one adds it to the document with the styles its levels link to (the fourth bullet template has a picture bullet, which falls back on its character). Four new reference scenarios matching Word 16.
 - Custom XML: `SelectNodes` and `SelectSingleNode` on a node, with the node as the context of the XPath expression.
 - Shapes: 23 more shapes of the gallery for `AddShape` (`AutoShapeType`), matching Word 16's markup.
