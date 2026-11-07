@@ -280,7 +280,11 @@ public class ShapeWrapperTest : IDisposable
         Assert.Throws<InvalidOperationException>(() => line.AutoShapeType);
         Assert.Throws<InvalidOperationException>(() => line.TextFrame);
         Assert.Throws<ArgumentOutOfRangeException>(() => _document.Shapes.AddShape((AutoShapeType)99, 0, 0, 10, 10));
-        Assert.Throws<ArgumentOutOfRangeException>(() => _document.Shapes.AddLine(10, 10, 5, 20));
+        ShapeWrapper up = _document.Shapes.AddLine(10, 20, 5, 10);
+        Assert.True(up.HorizontalFlip);
+        Assert.True(up.VerticalFlip);
+        Assert.Equal(5, up.Width, 3);
+        Assert.Equal(10, up.Height, 3);
         Assert.Throws<ArgumentOutOfRangeException>(() => _document.Shapes.AddTextbox((TextOrientation)9, 0, 0, 10, 10));
         AssertValid();
     }

@@ -803,6 +803,49 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $doc.Content.ListFormat.ApplyListTemplate($t)
     }
 
+    'list-linked-style'               = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo")
+        $t = $doc.ListTemplates.Add($true, 'Linked')
+        $t.ListLevels.Item(1).LinkedStyle = 'Heading 1'
+        $t.ListLevels.Item(2).LinkedStyle = 'Heading 2'
+        Write-Host ('linked: 1 "{0}" 2 "{1}"' -f $t.ListLevels.Item(1).LinkedStyle, $t.ListLevels.Item(2).LinkedStyle)
+    }
+
+    'list-linked-style-applied'       = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo")
+        $t = $doc.ListTemplates.Add($true, 'Linked')
+        $t.ListLevels.Item(1).LinkedStyle = 'Heading 1'
+        $doc.Paragraphs.Item(1).Range.ListFormat.ApplyListTemplate($t)
+        Write-Host ('applied: lists {0}; style of p1 "{1}"' -f $doc.Lists.Count, $doc.Paragraphs.Item(1).Style.NameLocal)
+        $t.ListLevels.Item(1).LinkedStyle = ''
+        Write-Host ('cleared: "{0}"' -f $t.ListLevels.Item(1).LinkedStyle)
+    }
+
+    'list-convert-outline'            = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo")
+        $t = $doc.ListTemplates.Add($true, 'Outline')
+        $t.Convert()
+        Write-Host ('after convert: outline {0} levels {1}' -f $t.OutlineNumbered, $t.ListLevels.Count)
+    }
+
+    'list-convert-single'             = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo")
+        $u = $doc.ListTemplates.Add($false, 'Single')
+        $u.Convert()
+        Write-Host ('single after convert: outline {0} levels {1}' -f $u.OutlineNumbered, $u.ListLevels.Count)
+    }
+
+    'list-convert-level'              = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo")
+        $v = $doc.ListTemplates.Add($true, 'Outline3')
+        $v.Convert(3)
+        Write-Host ('outline convert level 3: outline {0} levels {1}; level1 fmt "{2}" style {3}' -f $v.OutlineNumbered, $v.ListLevels.Count, $v.ListLevels.Item(1).NumberFormat, $v.ListLevels.Item(1).NumberStyle)
+    }
     'list-template-add-unnamed'       = {
         param($doc)
         $doc.Content.InsertAfter('One')
@@ -1816,6 +1859,84 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         Write-Host ('toc: count {0}, upper {1}, lower {2}, pages {3}, hyper {4}, right {5}, headings {6}, fields {7}, leader {8}, id "{9}"' -f $doc.TablesOfContents.Count, $toc.UpperHeadingLevel, $toc.LowerHeadingLevel, $toc.IncludePageNumbers, $toc.UseHyperlinks, $toc.RightAlignPageNumbers, $toc.UseHeadingStyles, $toc.UseFields, $toc.TabLeader, $toc.TableID)
     }
 
+    'toc-format-1'                     = {
+        param($doc)
+        $doc.Content.InsertAfter("FirstSome textSecondMore textSub headingEnd")
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+        $doc.Paragraphs.Item(3).Style = 'Heading 1'
+        $doc.Paragraphs.Item(5).Style = 'Heading 2'
+        $toc = $doc.TablesOfContents.Add($doc.Range(0, 0))
+        $doc.TablesOfContents.Format = 1
+        Write-Host ('format: {0}; pages {1}; right {2}; leader {3}' -f $doc.TablesOfContents.Format, $toc.IncludePageNumbers, $toc.RightAlignPageNumbers, $toc.TabLeader)
+    }
+
+    'toc-format-2'                     = {
+        param($doc)
+        $doc.Content.InsertAfter("FirstSome textSecondMore textSub headingEnd")
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+        $doc.Paragraphs.Item(3).Style = 'Heading 1'
+        $doc.Paragraphs.Item(5).Style = 'Heading 2'
+        $toc = $doc.TablesOfContents.Add($doc.Range(0, 0))
+        $doc.TablesOfContents.Format = 2
+        Write-Host ('format: {0}; pages {1}; right {2}; leader {3}' -f $doc.TablesOfContents.Format, $toc.IncludePageNumbers, $toc.RightAlignPageNumbers, $toc.TabLeader)
+    }
+
+    'toc-format-3'                     = {
+        param($doc)
+        $doc.Content.InsertAfter("FirstSome textSecondMore textSub headingEnd")
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+        $doc.Paragraphs.Item(3).Style = 'Heading 1'
+        $doc.Paragraphs.Item(5).Style = 'Heading 2'
+        $toc = $doc.TablesOfContents.Add($doc.Range(0, 0))
+        $doc.TablesOfContents.Format = 3
+        Write-Host ('format: {0}; pages {1}; right {2}; leader {3}' -f $doc.TablesOfContents.Format, $toc.IncludePageNumbers, $toc.RightAlignPageNumbers, $toc.TabLeader)
+    }
+
+    'toc-format-4'                     = {
+        param($doc)
+        $doc.Content.InsertAfter("FirstSome textSecondMore textSub headingEnd")
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+        $doc.Paragraphs.Item(3).Style = 'Heading 1'
+        $doc.Paragraphs.Item(5).Style = 'Heading 2'
+        $toc = $doc.TablesOfContents.Add($doc.Range(0, 0))
+        $doc.TablesOfContents.Format = 4
+        Write-Host ('format: {0}; pages {1}; right {2}; leader {3}' -f $doc.TablesOfContents.Format, $toc.IncludePageNumbers, $toc.RightAlignPageNumbers, $toc.TabLeader)
+    }
+
+    'toc-format-5'                     = {
+        param($doc)
+        $doc.Content.InsertAfter("FirstSome textSecondMore textSub headingEnd")
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+        $doc.Paragraphs.Item(3).Style = 'Heading 1'
+        $doc.Paragraphs.Item(5).Style = 'Heading 2'
+        $toc = $doc.TablesOfContents.Add($doc.Range(0, 0))
+        $doc.TablesOfContents.Format = 5
+        Write-Host ('format: {0}; pages {1}; right {2}; leader {3}' -f $doc.TablesOfContents.Format, $toc.IncludePageNumbers, $toc.RightAlignPageNumbers, $toc.TabLeader)
+    }
+
+    'toc-format-6'                     = {
+        param($doc)
+        $doc.Content.InsertAfter("FirstSome textSecondMore textSub headingEnd")
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+        $doc.Paragraphs.Item(3).Style = 'Heading 1'
+        $doc.Paragraphs.Item(5).Style = 'Heading 2'
+        $toc = $doc.TablesOfContents.Add($doc.Range(0, 0))
+        $doc.TablesOfContents.Format = 6
+        Write-Host ('format: {0}; pages {1}; right {2}; leader {3}' -f $doc.TablesOfContents.Format, $toc.IncludePageNumbers, $toc.RightAlignPageNumbers, $toc.TabLeader)
+    }
+
+    'toc-format-template'             = {
+        param($doc)
+        $doc.Content.InsertAfter("First`rSome text`rSecond`rMore text`rSub heading`rEnd")
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+        $doc.Paragraphs.Item(3).Style = 'Heading 1'
+        $doc.Paragraphs.Item(5).Style = 'Heading 2'
+        $toc = $doc.TablesOfContents.Add($doc.Range(0, 0))
+        $doc.TablesOfContents.Format = 3
+        $doc.TablesOfContents.Format = 0
+        Write-Host ('format: {0}' -f $doc.TablesOfContents.Format)
+    }
+
     'toc-added-styles'                = {
         param($doc)
         $doc.Content.InsertAfter("First`rSome text`rTitled`rMore text`rSub`rEnd")
@@ -2091,6 +2212,129 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $c.Fill.ForeColor.RGB = 16711680
         $c.Fill.Transparency = 0.5
         Write-Host ('a fill {0} {1} line {2} {3} {4}; c fill {5} {6} tr {7} line {8} {9}' -f $a.Fill.Visible, $a.Fill.ForeColor.RGB, $a.Line.Visible, $a.Line.ForeColor.RGB, $a.Line.Weight, $c.Fill.Visible, $c.Fill.ForeColor.RGB, $c.Fill.Transparency, $c.Line.Visible, $c.Line.Weight)
+    }
+    'shape-flip'                      = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $a = $doc.Shapes.AddShape(33, 20, 30, 80, 40, $doc.Range(5, 5))
+        $a.Flip(0)
+        $b = $doc.Shapes.AddShape(33, 20, 90, 80, 40, $doc.Range(5, 5))
+        $b.Flip(1)
+        $c = $doc.Shapes.AddShape(33, 20, 150, 80, 40, $doc.Range(5, 5))
+        $c.Flip(0); $c.Flip(1)
+        $d = $doc.Shapes.AddShape(33, 20, 210, 80, 40, $doc.Range(5, 5))
+        $d.Flip(0); $d.Flip(0)
+        $d.Rotation = 30; $d.Flip(0)
+        Write-Host ('flips: a {0} {1}; b {2} {3}; c {4} {5}; d {6} {7} rot {8}' -f $a.HorizontalFlip, $a.VerticalFlip, $b.HorizontalFlip, $b.VerticalFlip, $c.HorizontalFlip, $c.VerticalFlip, $d.HorizontalFlip, $d.VerticalFlip, $d.Rotation)
+    }
+
+    'shape-increments'                = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $a = $doc.Shapes.AddShape(1, 20, 30, 80, 40, $doc.Range(5, 5))
+        $a.IncrementLeft(10)
+        $a.IncrementTop(-5)
+        $a.IncrementRotation(30)
+        $a.IncrementRotation(350)
+        Write-Host ('increments: left {0} top {1} rot {2}' -f $a.Left, $a.Top, $a.Rotation)
+    }
+
+    'shape-scale'                     = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $a = $doc.Shapes.AddShape(1, 20, 30, 80, 40, $doc.Range(5, 5))
+        $a.ScaleWidth(2, 0, 0)
+        $a.ScaleHeight(0.5, 0, 0)
+        $b = $doc.Shapes.AddShape(1, 20, 100, 80, 40, $doc.Range(5, 5))
+        $b.ScaleWidth(2, 0, 0)
+        $b.ScaleHeight(2, 0, 2)
+        $c = $doc.Shapes.AddShape(1, 20, 170, 80, 40, $doc.Range(5, 5))
+        $c.ScaleWidth(1.5, 0, 1)
+        Write-Host ('scale: a {0}x{1} {2},{3}; b {4}x{5} {6},{7}; c {8}x{9} {10},{11}' -f $a.Width, $a.Height, $a.Left, $a.Top, $b.Width, $b.Height, $b.Left, $b.Top, $c.Width, $c.Height, $c.Left, $c.Top)
+    }
+
+    'shape-textframe'                 = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $a = $doc.Shapes.AddTextbox(1, 20, 30, 120, 60, $doc.Range(5, 5))
+        $a.TextFrame.TextRange.Text = 'Boxed'
+        $a.TextFrame.MarginLeft = 10
+        $a.TextFrame.MarginRight = 12
+        $a.TextFrame.MarginTop = 3
+        $a.TextFrame.MarginBottom = 4
+        $a.TextFrame.VerticalAnchor = 3
+        $a.TextFrame.WordWrap = 0
+        $b = $doc.Shapes.AddShape(1, 20, 120, 80, 40, $doc.Range(5, 5))
+        $b.TextFrame.TextRange.Text = 'Rect'
+        $b.TextFrame.AutoSize = -1
+        $b.TextFrame.HorizontalAnchor = 2
+        $b.TextFrame.Orientation = 5
+        Write-Host ('textframe a: margins {0} {1} {2} {3}, vanchor {4}, hanchor {5}, wrap {6}, autosize {7}, orient {8}; b: margins {9} {10} {11} {12}, vanchor {13}, hanchor {14}, wrap {15}, autosize {16}, orient {17}' -f $a.TextFrame.MarginLeft, $a.TextFrame.MarginRight, $a.TextFrame.MarginTop, $a.TextFrame.MarginBottom, $a.TextFrame.VerticalAnchor, $a.TextFrame.HorizontalAnchor, $a.TextFrame.WordWrap, $a.TextFrame.AutoSize, $a.TextFrame.Orientation, $b.TextFrame.MarginLeft, $b.TextFrame.MarginRight, $b.TextFrame.MarginTop, $b.TextFrame.MarginBottom, $b.TextFrame.VerticalAnchor, $b.TextFrame.HorizontalAnchor, $b.TextFrame.WordWrap, $b.TextFrame.AutoSize, $b.TextFrame.Orientation)
+    }
+
+    'shape-lines-directions'          = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $a = $doc.Shapes.AddLine(100, 70, 20, 30, $doc.Range(5, 5))
+        $b = $doc.Shapes.AddLine(20, 70, 100, 30, $doc.Range(5, 5))
+        $c = $doc.Shapes.AddLine(100, 30, 20, 70, $doc.Range(5, 5))
+        Write-Host ('lines: a {0}x{1} @{2},{3} hf {4} vf {5}; b {6}x{7} @{8},{9} hf {10} vf {11}; c {12}x{13} @{14},{15} hf {16} vf {17}' -f $a.Width, $a.Height, $a.Left, $a.Top, $a.HorizontalFlip, $a.VerticalFlip, $b.Width, $b.Height, $b.Left, $b.Top, $b.HorizontalFlip, $b.VerticalFlip, $c.Width, $c.Height, $c.Left, $c.Top, $c.HorizontalFlip, $c.VerticalFlip)
+    }
+
+    'shape-add-label'                 = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $s = $doc.Shapes.AddLabel(1, 20, 30, 120, 40, $doc.Range(5, 5))
+        $s.TextFrame.TextRange.Text = 'Label'
+        Write-Host ('label: type {0}, name "{1}", fill {2} line {3}' -f $s.Type, $s.Name, $s.Fill.Visible, $s.Line.Visible)
+    }
+
+    'shape-duplicate'                 = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $a = $doc.Shapes.AddShape(1, 20, 30, 80, 40, $doc.Range(5, 5))
+        $a.Fill.ForeColor.RGB = 255
+        $b = $a.Duplicate()
+        Write-Host ('duplicate: count {0}; b name "{1}" id {2} at {3},{4}; a name "{5}" id {6} at {7},{8}' -f $doc.Shapes.Count, $b.Name, $b.ID, $b.Left, $b.Top, $a.Name, $a.ID, $a.Left, $a.Top)
+    }
+    'shape-orientations'              = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        foreach ($o in 1, 2, 3, 4, 5) {
+            $s = $doc.Shapes.AddTextbox(1, 20, 30, 120, 60, $doc.Range(5, 5))
+            $s.TextFrame.Orientation = $o
+            Write-Host ('orientation {0} -> {1}' -f $o, $s.TextFrame.Orientation)
+        }
+        foreach ($a in 1, 3, 4) {
+            $s = $doc.Shapes.AddTextbox(1, 20, 30, 120, 60, $doc.Range(5, 5))
+            $s.TextFrame.VerticalAnchor = $a
+            Write-Host ('vertical anchor {0} -> {1}' -f $a, $s.TextFrame.VerticalAnchor)
+        }
+    }
+
+    'shape-flip-rotated'              = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $e = $doc.Shapes.AddShape(33, 20, 30, 80, 40, $doc.Range(5, 5))
+        $e.Rotation = 30; $e.Flip(1)
+        $f = $doc.Shapes.AddShape(33, 20, 90, 80, 40, $doc.Range(5, 5))
+        $f.Rotation = 100; $f.Flip(0); $f.Flip(1)
+        Write-Host ('rotated flips: e {0} {1} rot {2}; f {3} {4} rot {5}' -f $e.HorizontalFlip, $e.VerticalFlip, $e.Rotation, $f.HorizontalFlip, $f.VerticalFlip, $f.Rotation)
+    }
+
+    'shape-layout-in-cell'            = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $a = $doc.Shapes.AddShape(1, 20, 30, 80, 40, $doc.Range(5, 5))
+        $a.LayoutInCell = 0
+        $a.Decorative = -1
+        Write-Host ('layoutInCell {0}; decorative {1}' -f $a.LayoutInCell, $a.Decorative)
+    }
+    'shape-textbox-orientation'       = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $s = $doc.Shapes.AddTextbox(5, 20, 30, 120, 60, $doc.Range(5, 5))
+        Write-Host ('textbox orientation {0}' -f $s.TextFrame.Orientation)
     }
     'shape-delete'                    = {
         param($doc)

@@ -628,7 +628,7 @@ A cell given a width of its own makes the table ragged, as in Word: the grid get
 | Status | Members |
 |---|---|
 | Done (step 13a) | `CountNumberedItems`, `ListParagraphs`, `SingleListTemplate`, `StyleName` (empty: the library does not link lists to styles) |
-| Done (step 13c) | `ApplyListTemplate`, `ApplyListTemplateWithLevel`, `CanContinuePreviousList`, `ConvertNumbersToText`, `RemoveNumbers`, `Range` (from the start of the first paragraph to the end of the last); they work on that range, as Word does for the whole list |
++
 | Planned later | `Parent` |
 
 <!-- learn: lists,listparagraphs,listlevels -->
@@ -646,7 +646,7 @@ A cell given a width of its own makes the table ragged, as in Word: the grid get
 | Status | Members |
 |---|---|
 | Done (step 13a) | `ListLevels`, `Name`, `OutlineNumbered` |
-| Planned later | `Convert`, `Parent` |
+| Done (step 20a) | `Convert` (an outline becomes a template of one level, the level given, formatted as it was; a single level becomes an outline whose other eight levels are those of a new outline): measured in Word 16 (three scenarios) |
 
 <!-- learn: listtemplates -->
 
@@ -665,7 +665,7 @@ A cell given a width of its own makes the table ragged, as in Word: the grid get
 |---|---|
 | Done (step 13a) | `Alignment`, `Index` (0-based), `NumberFormat`, `NumberPosition`, `NumberStyle`, `Parent`, `ResetOnHigher`, `StartAt`, `TabPosition` (read only), `TextPosition`, `TrailingCharacter`, `LinkedStyle` (read only) |
 | Done (step 13c) | `Font` (the character properties; its borders and shading are not available for a list level), setting `TabPosition` (9999999 takes the tab stop away) |
-| Planned later | Setting `LinkedStyle` |
+| Done (step 20a) | Setting `LinkedStyle`: the level names the style, the style gets a `numPr` that points at a list of the template (one is made when there is none; a level other than the first also gets its `ilvl`), a style belongs to one level only, and an empty string takes the link away (the list stays). Built-in styles are created as Word does, and the name read back is the one Word shows (`Heading 1`). Two scenarios |
 | Decided against | `ApplyPictureBullet`, `PictureBullet` (legacy picture bullets) |
 
 ### 4.3 Footnotes and endnotes (steps 11 and 14)
@@ -836,7 +836,7 @@ A table of contents is a `TOC` field. `Update` rebuilds its entries from the hea
 |---|---|
 | Done (step 17) | `TablesOfContents`: `Add` (at the start of a paragraph; the entries go in front of it and the end of the field at its start, as Word writes it), `Item` (0-based), `Count`, `Parent`, enumeration on `Document` and `Range`. A document without headings gets the fldSimple with Word's "No table of contents entries found." |
 | Done (step 17c) | `TablesOfFigures` on `Document` and `Range` (`Add`, `Item`, `Count`, enumeration) and `TableOfFigures` (`Caption`, `IncludeLabel`, `IncludePageNumbers`, `RightAlignPageNumbers`, `UseHyperlinks`, `HidePageNumbersInWeb`, `TabLeader`, `TableID`, `UseFields`, `Range`, `Parent`, `Delete`, `Update`): the `TOC` field with `\c "label"` (or `\a` without the label and number), the entries in the Table of Figures style, and the bookmark of a table without labels starting where the entry does. `MarkEntry` writes the `TC` field (`\f` table, `\l` level, C and 1 by default) after the range, and a table that uses fields lists the `TC` entries of its identifier, the bookmark going round the entry inside the field code |
-| Planned later | `Format` (the table styles of the Word dialog), `UpdatePageNumbers`; `Add` in the middle of a paragraph (Word splits the paragraph in a way that is not worth copying); `MarkEntry` with `EntryAutoText` |
+| Done (step 20a) | `TablesOfContents.Format` (`TocFormat`: Classic, Distinctive, Fancy, Modern, Formal, Simple replace the definitions of the nine styles `TOC 1` to `TOC 9`, which are kept in `TocFormats.xml` written by the harness from seven scenarios; Template changes nothing, as in Word; reading gives the look the styles have) | of a paragraph (Word splits the paragraph in a way that is not worth copying); `MarkEntry` with `EntryAutoText` |
 | Done (step 17b) | The `AddedStyles` argument of `Add` (pairs of a style name and a level separated by the list separator). The switches of the field code are written in the order Word writes them (`\o \f \n \p \h \z \u \t`) |
 
 ### 4.7 Floating shapes (step 18)
@@ -848,7 +848,7 @@ A table of contents is a `TOC` field. `Update` rebuilds its entries from the hea
 |---|---|
 | Done (step 18a, pictures) | `ConvertToInlineShape`, `Delete`, `ZOrder`, `ZOrderPosition` (from 1, as in Word), `AlternativeText`, `Anchor`, `Height`, `ID`, `Left`, `LockAnchor`, `LockAspectRatio`, `Name`, `RelativeHorizontalPosition`, `RelativeVerticalPosition`, `Rotation` (with the room a rotated picture needs, in steps of 1.5 pt), `Title`, `Top`, `Type` (picture, linked picture), `Visible`, `Width`, `WrapFormat`. `Left` and `Top` are offsets from `RelativeHorizontalPosition` and `RelativeVerticalPosition`; changing those does not move the shape on the page, as no layout is known. A picture is anchored at the start of the paragraph of the anchor range, as Word does |
 | Done (step 18b) | `AutoShapeType` (rectangle, diamond, rounded rectangle, isosceles triangle, oval, hexagon, right arrow), `Fill` and `Line` (`Visible`, `ForeColor.RGB`, `Transparency`, `Weight`), `TextFrame`, and `Type` for text boxes (17), shapes of the gallery (1) and lines (9). The markup of the shape itself (`wps:wsp`) is Word 16's, checked by five scenarios; Word also writes a copy for versions before 2010 with a binary blob, which the library leaves out, and the room around the shape (`effectExtent`) is left at zero. Word measures `Left` and `Top` of a new shape from the page and stores them from the column and the paragraph; the library takes the paragraph to be at the top margin |
-| Planned later | `Duplicate`, `Flip`, `HorizontalFlip`, `VerticalFlip`, `IncrementLeft`, `IncrementRotation`, `IncrementTop`, `ScaleHeight`, `ScaleWidth`, `Decorative`, `LayoutInCell`, `Hyperlink`, `PictureFormat`, `Parent`, `Child`, `ParentGroup`, `Ungroup`, `GroupItems`, `HeightRelative`, `LeftRelative`, `TopRelative`, `WidthRelative`, `RelativeHorizontalSize`, `RelativeVerticalSize` |
+| Done (step 20a) | `Flip`, `HorizontalFlip`, `VerticalFlip` (a rotated shape also gets the mirror image of its rotation), `IncrementLeft`, `IncrementTop`, `IncrementRotation`, `ScaleWidth`, `ScaleHeight` (from the top left, the middle or the bottom right; scaling relative to the original size is not supported), `Duplicate` (same name and place, in front), `LayoutInCell`, `Decorative`: eight scenarios | `PictureFormat`, `Parent`, `Child`, `ParentGroup`, `Ungroup`, `GroupItems`, `HeightRelative`, `LeftRelative`, `TopRelative`, `WidthRelative`, `RelativeHorizontalSize`, `RelativeVerticalSize` |
 | Planned, step 19 | `Select` |
 | Out of scope | Charts, SmartArt, OLE and 3D: `Chart`, `HasChart`, `SmartArt`, `HasSmartArt`, `OLEFormat`, `LinkFormat`, `Model3D`. HTML: `Script`. Theme-based styles: `ShapeStyle`, `BackgroundStyle`, `GraphicStyle`. The format painter: `Apply`, `PickUp` |
 | Decided against | Drawing canvases: `CanvasItems`, `CanvasCropBottom`, `CanvasCropLeft`, `CanvasCropRight`, `CanvasCropTop`. Geometry editing: `Adjustments`, `Nodes`, `Vertices`, `Callout`. Effects: `Glow`, `Reflection`, `Shadow`, `SoftEdge`, `ThreeD`, `TextEffect`. `TextFrame2` (the Office text frame, which TextFrame covers), `SetShapesDefaultProperties` |
@@ -861,7 +861,7 @@ A table of contents is a `TOC` field. `Update` rebuilds its entries from the hea
 |---|---|
 | Done (step 18a) | `AddPicture` (anchored at the start of the paragraph, in front of the text; a file already in the document is shared), `Item` (0-based, lowest in the stack first), `Count`, `Parent`, enumeration. `Document.Shapes` and `HeaderFooter.Shapes` |
 | Done (step 18b) | `AddLine` (a line that goes down and right), `AddShape` (seven shapes of the gallery), `AddTextbox` |
-| Planned later | `AddLabel`, the other shapes of the gallery, lines that go up or left |
+| Done (step 20a) | `AddLabel` (the same text box as `AddTextbox`), lines that go up or left (a line that is turned over), the orientation argument of `AddTextbox` |
 | Planned, step 19 | `SelectAll` |
 | Out of scope | `AddChart2`, `AddSmartArt`, `Add3DModel` (charts, SmartArt, 3D), `AddOLEControl`, `AddOLEObject` (OLE) |
 | Decided against | `AddCallout`, `AddCanvas`, `AddCurve`, `AddPolyline`, `BuildFreeform`, `AddTextEffect` (WordArt), `AddWebVideo`, `Range` (multi-shape ranges) |
@@ -873,7 +873,7 @@ A table of contents is a `TOC` field. `Update` rebuilds its entries from the hea
 | Status | Members |
 |---|---|
 | Done (step 18b) | `HasText`, `TextRange` (set and read as text; a range over the text of a shape supports `Text` only) |
-| Planned later | `DeleteText`, `AutoSize`, `ContainingRange`, `HorizontalAnchor`, `MarginBottom`, `MarginLeft`, `MarginRight`, `MarginTop`, `NoTextRotation`, `Orientation`, `Parent`, `VerticalAnchor`, `WordWrap` |
+| Done (step 20a) | `DeleteText`, `AutoSize`, `HorizontalAnchor`, `MarginBottom`, `MarginLeft`, `MarginRight`, `MarginTop`, `Orientation` (horizontal, upward, downward, vertical, vertical for Asian languages), `Parent`, `VerticalAnchor` (top, middle, bottom), `WordWrap`. Text in a shape of the gallery starts centred, as in Word |
 | Out of scope | `Overflowing` (layout) |
 | Decided against | Linked text boxes: `BreakForwardLink`, `ValidLinkTarget`, `Next`, `Previous`. `Column`, and the WordArt formats `PathFormat`, `WarpFormat`, `ThreeD` |
 

@@ -43,7 +43,19 @@ public enum AutoShapeType
 public enum TextOrientation
 {
     /// <summary>Left to right.</summary>
-    Horizontal = 1
+    Horizontal = 1,
+
+    /// <summary>Upward, from the bottom of the shape to the top.</summary>
+    Upward = 2,
+
+    /// <summary>Downward, from the top of the shape to the bottom.</summary>
+    Downward = 3,
+
+    /// <summary>Vertical text for Asian languages.</summary>
+    VerticalFarEast = 4,
+
+    /// <summary>Vertical, with the letters upright.</summary>
+    Vertical = 5
 }
 
 /// <summary>
@@ -254,7 +266,7 @@ public class LineFormatWrapper
 /// <summary>
 /// The text inside a shape, as <c>TextFrame</c> in Word.
 /// </summary>
-public class TextFrameWrapper
+public partial class TextFrameWrapper
 {
     private readonly ShapeWrapper _shape;
 
@@ -371,7 +383,9 @@ public partial class ShapeWrapper
         TextBoxContent content = TextBoxContent;
         if (content == null)
         {
-            Wps.TextBoxInfo2 box = new Wps.TextBoxInfo2(new TextBoxContent(new Paragraph()));
+            //Text in a shape of the gallery is centred, as Word starts it; in a text box it is not.
+            Paragraph first = IsTextBox ? new Paragraph() : new Paragraph(new ParagraphProperties(new Justification() { Val = JustificationValues.Center }));
+            Wps.TextBoxInfo2 box = new Wps.TextBoxInfo2(new TextBoxContent(first));
             Shape.GetFirstChild<Wps.TextBodyProperties>().InsertBeforeSelf(box);
             content = box.GetFirstChild<TextBoxContent>();
         }
@@ -504,7 +518,20 @@ public partial class ShapeWrapperCollection
         {
             throw new ArgumentOutOfRangeException(nameof(orientation));
         }
-        return AddDrawn("textbox", "rect", "Text Box", left, top, width, height, anchor);
+        ShapeWrapper box = AddDrawn("textbox", "rect", "Text Box", left, top, width, height, anchor);
+        if (orientation != TextOrientation.Horizontal)
+        {
+            box.TextFrame.Orientation = orientation;
+        }
+        return box;
+    }
+
+    /// <summary>
+    /// Adds a label, as <c>Shapes.AddLabel</c> in Word: the same text box as <see cref="AddTextbox"/> makes. See there for the position.
+    /// </summary>
+    public ShapeWrapper AddLabel(TextOrientation orientation, double left, double top, double width, double height, RangeWrapper anchor = null)
+    {
+        return AddTextbox(orientation, left, top, width, height, anchor);
     }
 
     /// <summary>
@@ -520,16 +547,27 @@ public partial class ShapeWrapperCollection
 
     /// <summary>
     /// Adds a straight line from one point to another, as <c>Shapes.AddLine</c> in Word, anchored at the start of the paragraph of the anchor.
-    /// See <see cref="AddTextbox"/> for the position. A line that goes up or left is not supported.
+    /// See <see cref="AddTextbox"/> for the position. A line that goes up or to the left is a line that is turned over, as in Word.
     /// </summary>
-    /// <exception cref="ArgumentOutOfRangeException">The end is above or left of the start.</exception>
     public ShapeWrapper AddLine(double beginX, double beginY, double endX, double endY, RangeWrapper anchor = null)
     {
-        if (endX < beginX || endY < beginY)
+        foreach (double value in new[] { beginX, beginY, endX, endY })
         {
-            throw new ArgumentOutOfRangeException(nameof(endX), "A line that goes up or to the left is not supported.");
+            if (double.IsNaN(value) || double.IsInfinity(value))
+            {
+                throw new ArgumentOutOfRangeException(nameof(beginX));
+            }
         }
-        return AddDrawn("line", "line", "Straight Connector", beginX, beginY, endX - beginX, endY - beginY, anchor);
+        ShapeWrapper line = AddDrawn("line", "line", "Straight Connector", Math.Min(beginX, endX), Math.Min(beginY, endY), Math.Abs(endX - beginX), Math.Abs(endY - beginY), anchor);
+        if (endX < beginX)
+        {
+            line.Flip(FlipCommand.Horizontal);
+        }
+        if (endY < beginY)
+        {
+            line.Flip(FlipCommand.Vertical);
+        }
+        return line;
     }
 
     private ShapeWrapper AddDrawn(string kind, string preset, string name, double left, double top, double width, double height, RangeWrapper anchor)

@@ -319,12 +319,26 @@ public partial class ListFormatWrapper
         }
 
         MainDocumentPart main = GetMain();
-        BuiltInStyles.GetOrCreate(main, "ListParagraph");
         Numbering numbering = ListDefaults.GetOrCreateNumbering(main);
         if (!ReferenceEquals(template.AbstractNum.Parent, numbering))
         {
             throw new ArgumentException("The template is not one of this document.", nameof(template));
         }
+
+        //A level that is linked to a style numbers the paragraphs through the style: they get the style and no numbering of their own.
+        string linkedId = ListNumbering.FindLevel(template.AbstractNum, level)?.ParagraphStyleIdInLevel?.Val?.Value;
+        if (!string.IsNullOrEmpty(linkedId))
+        {
+            foreach (Paragraph paragraph in paragraphs)
+            {
+                ParagraphProperties properties = paragraph.GetOrAddParagraphProperties();
+                properties.NumberingProperties = null;
+                properties.ParagraphStyleId = new ParagraphStyleId() { Val = linkedId };
+                paragraph.RemoveEmptyProperties();
+            }
+            return;
+        }
+        BuiltInStyles.GetOrCreate(main, "ListParagraph");
 
         NumberingInstance num = null;
         if (continuePreviousList)

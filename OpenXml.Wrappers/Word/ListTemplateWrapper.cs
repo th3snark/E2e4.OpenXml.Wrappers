@@ -108,7 +108,7 @@ public enum ListType
 /// <summary>
 /// A list template, as <c>ListTemplate</c> in Word: the definition of how the items of a list are numbered (a <c>w:abstractNum</c>).
 /// </summary>
-public class ListTemplateWrapper : IEquatable<ListTemplateWrapper>
+public partial class ListTemplateWrapper : IEquatable<ListTemplateWrapper>
 {
     private readonly AbstractNum _abstractNum;
 
@@ -172,7 +172,7 @@ public class ListTemplateWrapper : IEquatable<ListTemplateWrapper>
 /// <summary>
 /// The list templates of a document, as <c>ListTemplates</c> in Word.
 /// </summary>
-public class ListTemplateWrapperCollection : IEnumerable<ListTemplateWrapper>
+public partial class ListTemplateWrapperCollection : IEnumerable<ListTemplateWrapper>
 {
     private readonly WordprocessingDocumentWrapper _document;
 
@@ -221,12 +221,9 @@ public class ListTemplateWrapperCollection : IEnumerable<ListTemplateWrapper>
 
         if (outlineNumbered)
         {
-            NumberFormatValues[] formats = { NumberFormatValues.Decimal, NumberFormatValues.LowerLetter, NumberFormatValues.LowerRoman };
-            string[] texts = { "%{0})", "%{0})", "%{0})", "(%{0})", "(%{0})", "(%{0})", "%{0}.", "%{0}.", "%{0}." };
-            for (int level = 0; level < 9; level++)
+            foreach (Level level in OutlineLevels())
             {
-                template.AppendChild(NewLevel(level, formats[level % 3], texts[level].Replace("{0}", (level + 1).ToString(CultureInfo.InvariantCulture)),
-                    level == 0 ? 360 : 360 * (level + 1)));
+                template.AppendChild(level);
             }
         }
         else
@@ -244,6 +241,20 @@ public class ListTemplateWrapperCollection : IEnumerable<ListTemplateWrapper>
             numbering.AppendChild(template);
         }
         return new ListTemplateWrapper(template);
+    }
+
+    //The nine levels of a new outline.
+    internal static List<Level> OutlineLevels()
+    {
+        NumberFormatValues[] formats = { NumberFormatValues.Decimal, NumberFormatValues.LowerLetter, NumberFormatValues.LowerRoman };
+        string[] texts = { "%{0})", "%{0})", "%{0})", "(%{0})", "(%{0})", "(%{0})", "%{0}.", "%{0}.", "%{0}." };
+        List<Level> levels = new List<Level>();
+        for (int level = 0; level < 9; level++)
+        {
+            levels.Add(NewLevel(level, formats[level % 3], texts[level].Replace("{0}", (level + 1).ToString(CultureInfo.InvariantCulture)),
+                level == 0 ? 360 : 360 * (level + 1)));
+        }
+        return levels;
     }
 
     private static Level NewLevel(int index, NumberFormatValues format, string text, int left)
@@ -343,7 +354,7 @@ public class ListLevelWrapperCollection : IEnumerable<ListLevelWrapper>
 /// <summary>
 /// One level of a list template, as <c>ListLevel</c> in Word. Lengths are in points.
 /// </summary>
-public class ListLevelWrapper
+public partial class ListLevelWrapper
 {
     //What Word answers where a level has no tab stop.
     private const int Undefined = 9999999;
@@ -626,9 +637,15 @@ public class ListLevelWrapper
         }
     }
 
-    /// <summary>The name of the paragraph style that makes a paragraph part of this level, as <c>ListLevel.LinkedStyle</c> in Word; empty if none.</summary>
+    /// <summary>
+    /// The name of the paragraph style that makes a paragraph part of this level, as <c>ListLevel.LinkedStyle</c> in Word; empty if none.
+    /// Setting it links the style, which the style then points back at (and a list is made for the template if it has none). An empty
+    /// string takes the link away.
+    /// </summary>
+    /// <exception cref="ArgumentException">There is no paragraph style of that name.</exception>
     public string LinkedStyle
     {
+        set { SetLinkedStyle(value); }
         get
         {
             string id = _level.ParagraphStyleIdInLevel?.Val?.Value;
@@ -637,7 +654,7 @@ public class ListLevelWrapper
                 return string.Empty;
             }
             Style style = StyleHelper.GetStyles(_template.AbstractNum)?.Elements<Style>().FirstOrDefault(s => s.StyleId?.Value == id);
-            return style?.StyleName?.Val?.Value ?? id;
+            return style == null ? id : StyleHelper.IsCustom(style) ? style.StyleName?.Val?.Value ?? id : BuiltInStyles.GetDisplayName(style.StyleName?.Val?.Value) ?? id;
         }
     }
 }

@@ -282,11 +282,13 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
             }
             else if (_startOpenXmlElement is TextBoxContent)
             {
-                //The text of a shape is replaced by one plain paragraph for each line.
+                //The text of a shape is replaced by one paragraph for each line: plain in a text box, centred in a shape of the gallery.
                 _startOpenXmlElement.RemoveAllChildren();
+                bool centred = _startOpenXmlElement.Ancestors<DocumentFormat.OpenXml.Office2010.Word.DrawingShape.WordprocessingShape>().FirstOrDefault()
+                    ?.GetFirstChild<DocumentFormat.OpenXml.Office2010.Word.DrawingShape.NonVisualDrawingShapeProperties>()?.TextBox?.Value != true;
                 foreach (string line in text.TrimEnd('\r').Split('\r'))
                 {
-                    Paragraph paragraph = new Paragraph();
+                    Paragraph paragraph = centred ? new Paragraph(new ParagraphProperties(new Justification() { Val = JustificationValues.Center })) : new Paragraph();
                     foreach (Run run in BuildNewRunListFromText(line, paragraph))
                     {
                         paragraph.AppendChild(run);
