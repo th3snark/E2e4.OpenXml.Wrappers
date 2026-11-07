@@ -105,7 +105,118 @@ public enum AutoShapeType
     Star5 = 92,
 
     /// <summary>A cloud.</summary>
-    Cloud = 179
+    Cloud = 179,
+
+    /// <summary>A regular pentagon.</summary>
+    RegularPentagon = 12,
+
+    /// <summary>A rectangle with beveled edges.</summary>
+    Bevel = 15,
+
+    /// <summary>A rectangle with a folded corner.</summary>
+    FoldedCorner = 16,
+
+    /// <summary>A thick arc.</summary>
+    BlockArc = 20,
+
+    /// <summary>An arc.</summary>
+    Arc = 25,
+
+    /// <summary>A left bracket.</summary>
+    LeftBracket = 29,
+
+    /// <summary>A right bracket.</summary>
+    RightBracket = 30,
+
+    /// <summary>A left brace.</summary>
+    LeftBrace = 31,
+
+    /// <summary>A right brace.</summary>
+    RightBrace = 32,
+
+    /// <summary>An arrow pointing up and down.</summary>
+    UpDownArrow = 38,
+
+    /// <summary>An arrow pointing in four directions.</summary>
+    QuadArrow = 39,
+
+    /// <summary>A bent arrow.</summary>
+    BentArrow = 41,
+
+    /// <summary>A U-turn arrow.</summary>
+    UTurnArrow = 42,
+
+    /// <summary>A curved arrow pointing right.</summary>
+    CurvedRightArrow = 45,
+
+    /// <summary>A striped arrow pointing right.</summary>
+    StripedRightArrow = 49,
+
+    /// <summary>A notched arrow pointing right.</summary>
+    NotchedRightArrow = 50,
+
+    /// <summary>A chevron.</summary>
+    Chevron = 52,
+
+    /// <summary>The flowchart symbol for an alternate process.</summary>
+    FlowchartAlternateProcess = 62,
+
+    /// <summary>The flowchart symbol for data.</summary>
+    FlowchartData = 64,
+
+    /// <summary>The flowchart symbol for a predefined process.</summary>
+    FlowchartPredefinedProcess = 65,
+
+    /// <summary>The flowchart symbol for a document.</summary>
+    FlowchartDocument = 67,
+
+    /// <summary>The flowchart symbol for a terminator.</summary>
+    FlowchartTerminator = 69,
+
+    /// <summary>The flowchart symbol for a connector.</summary>
+    FlowchartConnector = 73,
+
+    /// <summary>A star with four points.</summary>
+    Star4 = 91,
+
+    /// <summary>A star with eight points.</summary>
+    Star8 = 93,
+
+    /// <summary>A star with sixteen points.</summary>
+    Star16 = 94,
+
+    /// <summary>A star with thirty-two points.</summary>
+    Star32 = 96,
+
+    /// <summary>A vertical scroll.</summary>
+    VerticalScroll = 101,
+
+    /// <summary>A horizontal scroll.</summary>
+    HorizontalScroll = 102,
+
+    /// <summary>A wave.</summary>
+    Wave = 103,
+
+    /// <summary>A rectangular speech bubble.</summary>
+    RectangularCallout = 105,
+
+    /// <summary>A speech bubble with rounded corners.</summary>
+    RoundedRectangularCallout = 106,
+
+    /// <summary>An oval speech bubble.</summary>
+    OvalCallout = 107,
+
+    /// <summary>A thought bubble.</summary>
+    CloudCallout = 108,
+
+    /// <summary>A frame.</summary>
+    Frame = 158,
+
+    /// <summary>A teardrop.</summary>
+    Tear = 160,
+
+    /// <summary>A chord of a circle.</summary>
+    Chord = 161
 }
 
 /// <summary>The direction of the text in a text box, as <c>MsoTextOrientation</c> in Office (with the same value; only the usual one).</summary>
@@ -519,7 +630,44 @@ public partial class ShapeWrapper
         (AutoShapeType.FlowchartProcess, "flowChartProcess", "Flowchart: Process"),
         (AutoShapeType.FlowchartDecision, "flowChartDecision", "Flowchart: Decision"),
         (AutoShapeType.Star5, "star5", "Star: 5 Points"),
-        (AutoShapeType.Cloud, "cloud", "Cloud")
+        (AutoShapeType.Cloud, "cloud", "Cloud"),
+        (AutoShapeType.RegularPentagon, "pentagon", "Pentagon"),
+        (AutoShapeType.Bevel, "bevel", "Rectangle: Beveled"),
+        (AutoShapeType.FoldedCorner, "foldedCorner", "Rectangle: Folded Corner"),
+        (AutoShapeType.BlockArc, "blockArc", "Block Arc"),
+        (AutoShapeType.Arc, "arc", "Arc"),
+        (AutoShapeType.LeftBracket, "leftBracket", "Left Bracket"),
+        (AutoShapeType.RightBracket, "rightBracket", "Right Bracket"),
+        (AutoShapeType.LeftBrace, "leftBrace", "Left Brace"),
+        (AutoShapeType.RightBrace, "rightBrace", "Right Brace"),
+        (AutoShapeType.UpDownArrow, "upDownArrow", "Arrow: Up-Down"),
+        (AutoShapeType.QuadArrow, "quadArrow", "Arrow: Quad"),
+        (AutoShapeType.BentArrow, "bentArrow", "Arrow: Bent"),
+        (AutoShapeType.UTurnArrow, "uturnArrow", "Arrow: U-Turn"),
+        (AutoShapeType.CurvedRightArrow, "curvedRightArrow", "Arrow: Curved Right"),
+        (AutoShapeType.StripedRightArrow, "stripedRightArrow", "Arrow: Striped Right"),
+        (AutoShapeType.NotchedRightArrow, "notchedRightArrow", "Arrow: Notched Right"),
+        (AutoShapeType.Chevron, "chevron", "Arrow: Chevron"),
+        (AutoShapeType.FlowchartAlternateProcess, "flowChartAlternateProcess", "Flowchart: Alternate Process"),
+        (AutoShapeType.FlowchartData, "flowChartInputOutput", "Flowchart: Data"),
+        (AutoShapeType.FlowchartPredefinedProcess, "flowChartPredefinedProcess", "Flowchart: Predefined Process"),
+        (AutoShapeType.FlowchartDocument, "flowChartDocument", "Flowchart: Document"),
+        (AutoShapeType.FlowchartTerminator, "flowChartTerminator", "Flowchart: Terminator"),
+        (AutoShapeType.FlowchartConnector, "flowChartConnector", "Flowchart: Connector"),
+        (AutoShapeType.Star4, "star4", "Star: 4 Points"),
+        (AutoShapeType.Star8, "star8", "Star: 8 Points"),
+        (AutoShapeType.Star16, "star16", "Star: 16 Points"),
+        (AutoShapeType.Star32, "star32", "Star: 32 Points"),
+        (AutoShapeType.VerticalScroll, "verticalScroll", "Scroll: Vertical"),
+        (AutoShapeType.HorizontalScroll, "horizontalScroll", "Scroll: Horizontal"),
+        (AutoShapeType.Wave, "wave", "Wave"),
+        (AutoShapeType.RectangularCallout, "wedgeRectCallout", "Speech Bubble: Rectangle"),
+        (AutoShapeType.RoundedRectangularCallout, "wedgeRoundRectCallout", "Speech Bubble: Rectangle with Corners Rounded"),
+        (AutoShapeType.OvalCallout, "wedgeEllipseCallout", "Speech Bubble: Oval"),
+        (AutoShapeType.CloudCallout, "cloudCallout", "Thought Bubble: Cloud"),
+        (AutoShapeType.Frame, "frame", "Frame"),
+        (AutoShapeType.Tear, "teardrop", "Teardrop"),
+        (AutoShapeType.Chord, "chord", "Chord")
     };
 
     internal static (AutoShapeType Type, string Preset, string Name) PresetOf(AutoShapeType type)
@@ -539,6 +687,14 @@ public partial class ShapeWrapper
     private const string BodyProperties = "<wps:bodyPr rot=\"0\" spcFirstLastPara=\"0\" vertOverflow=\"overflow\" horzOverflow=\"overflow\" vert=\"horz\" wrap=\"square\" "
         + "lIns=\"91440\" tIns=\"45720\" rIns=\"91440\" bIns=\"45720\" numCol=\"1\" spcCol=\"0\" rtlCol=\"0\" fromWordArt=\"0\" anchor=\"{0}\" anchorCtr=\"0\" "
         + "forceAA=\"0\" compatLnSpc=\"1\"><a:prstTxWarp prst=\"textNoShape\"><a:avLst/></a:prstTxWarp><a:noAutofit/></wps:bodyPr>";
+
+    //The speech and thought bubbles start with an empty, centred paragraph, which the other shapes of the gallery get only when text is put in.
+    private static readonly string[] Callouts = { "wedgeRectCallout", "wedgeRoundRectCallout", "wedgeEllipseCallout", "cloudCallout" };
+
+    //The brackets, the braces and the arc are only outlines: they take the style of a line.
+    private static readonly string[] Unfilled = { "leftBracket", "rightBracket", "leftBrace", "rightBrace", "arc" };
+
+    private const string EmptyCenteredText = "<wps:txbx><w:txbxContent><w:p><w:pPr><w:jc w:val=\"center\"/></w:pPr></w:p></w:txbxContent></wps:txbx>";
 
     private const string FilledStyle = "<wps:style><a:lnRef idx=\"2\"><a:schemeClr val=\"accent1\"><a:shade val=\"15000\"/></a:schemeClr></a:lnRef>"
         + "<a:fillRef idx=\"1\"><a:schemeClr val=\"accent1\"/></a:fillRef><a:effectRef idx=\"0\"><a:schemeClr val=\"accent1\"/></a:effectRef>"
@@ -565,7 +721,8 @@ public partial class ShapeWrapper
         else
         {
             shape = "<wps:wsp><wps:cNvSpPr/><wps:spPr><a:xfrm><a:off x=\"0\" y=\"0\"/><a:ext cx=\"{0}\" cy=\"{1}\"/></a:xfrm>"
-                + "<a:prstGeom prst=\"" + preset + "\"><a:avLst/></a:prstGeom></wps:spPr>" + FilledStyle + BodyProperties.Replace("{0}", "ctr") + "</wps:wsp>";
+                + "<a:prstGeom prst=\"" + preset + "\"><a:avLst/></a:prstGeom></wps:spPr>" + (Unfilled.Contains(preset) ? LineStyle : FilledStyle) + (Callouts.Contains(preset) ? EmptyCenteredText : string.Empty)
+                + BodyProperties.Replace("{0}", "ctr") + "</wps:wsp>";
         }
         shape = string.Format(CultureInfo.InvariantCulture, shape, cx, cy);
 

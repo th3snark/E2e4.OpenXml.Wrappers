@@ -1640,7 +1640,44 @@ public class MarkupConformanceTest
             },
             Body()),
 
-        new Scenario("toc-add",
+        new Scenario("cross-reference-heading",
+            d =>
+            {
+                HeadedDocument(d, "First\rSome text\rSecond\rSee: ", (0, "Heading 1"), (2, "Heading 1"));
+                Assert.Equal(new[] { "First", "Second" }, d.GetCrossReferenceItems(CrossReferenceType.Heading).ToArray());
+                RangeWrapper end = d.Paragraphs[3].Range;
+                end.SetRange(end.End - 1, end.End - 1);
+                end.InsertCrossReference(CrossReferenceType.Heading, CrossReferenceKind.ContentText, 1, true);
+                end = d.Paragraphs[3].Range;
+                end.SetRange(end.End - 1, end.End - 1);
+                end.InsertCrossReference(CrossReferenceType.Heading, CrossReferenceKind.PageNumber, 0, true);
+            },
+            Body()),
+        new Scenario("cross-reference-bookmark",
+            d =>
+            {
+                d.Content.InsertAfter("Alpha beta gamma\rSee: ");
+                d.Bookmarks.Add("Mark", d.Range(6, 10));
+                Assert.Equal(new[] { "Mark" }, d.GetCrossReferenceItems(CrossReferenceType.Bookmark).ToArray());
+                RangeWrapper end = d.Paragraphs[1].Range;
+                end.SetRange(end.End - 1, end.End - 1);
+                end.InsertCrossReference("Mark", CrossReferenceKind.ContentText, false);
+            },
+            Body()),
+        new Scenario("cross-reference-caption",
+            d =>
+            {
+                d.Content.InsertAfter("Body\rSee: ");
+                d.Paragraphs[0].Range.InsertCaption("Figure", ": first", string.Empty, CaptionPosition.Above, false);
+                Assert.Equal(new[] { "Figure 1: first" }, d.GetCrossReferenceItems("Figure").ToArray());
+                RangeWrapper end = d.Paragraphs[d.Paragraphs.Count - 1].Range;
+                end.SetRange(end.End - 1, end.End - 1);
+                end.InsertCrossReference("Figure", CrossReferenceKind.EntireCaption, 0, true);
+                end = d.Paragraphs[d.Paragraphs.Count - 1].Range;
+                end.SetRange(end.End - 1, end.End - 1);
+                end.InsertCrossReference("Figure", CrossReferenceKind.OnlyLabelAndNumber, 0, true);
+            },
+            Body()),        new Scenario("toc-add",
             d =>
             {
                 HeadedDocument(d, "First\rSome text\rSecond\rMore text\rSub heading\rEnd", (0, "Heading 1"), (2, "Heading 1"), (4, "Heading 2"));
@@ -2020,6 +2057,28 @@ public class MarkupConformanceTest
             {
                 d.Content.InsertAfter("Hello world again");
                 foreach (AutoShapeType type in new[] { AutoShapeType.Parallelogram, AutoShapeType.Trapezoid, AutoShapeType.Octagon, AutoShapeType.RightTriangle, AutoShapeType.Cross, AutoShapeType.Can, AutoShapeType.Cube, AutoShapeType.SmileyFace, AutoShapeType.Donut, AutoShapeType.NoSymbol, AutoShapeType.Heart, AutoShapeType.LightningBolt, AutoShapeType.Sun, AutoShapeType.Moon, AutoShapeType.LeftArrow, AutoShapeType.UpArrow, AutoShapeType.DownArrow, AutoShapeType.LeftRightArrow, AutoShapeType.Pentagon, AutoShapeType.FlowchartProcess, AutoShapeType.FlowchartDecision, AutoShapeType.Star5, AutoShapeType.Cloud })
+                {
+                    d.Shapes.AddShape(type, 20, 30, 80, 40, d.Range(5, 5));
+                }
+            },
+            DrawingElements("wsp", "docPr")),
+        new Scenario("shape-hyperlink",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                ShapeWrapper shape = d.Shapes.AddShape(AutoShapeType.Rectangle, 20, 30, 80, 40, d.Range(5, 5));
+                ShapeWrapper picture = d.Shapes.AddPicture(PicturePath, false, true, 20, 90, 60, 30, d.Range(5, 5));
+                d.Hyperlinks.Add(shape, "https://example.com/a", null, "Tip");
+                d.Hyperlinks.Add(picture, "https://example.com/b", "Mark");
+                Assert.Equal(HyperlinkType.Shape, shape.Hyperlink.Type);
+                Assert.Equal("https://example.com/b", picture.Hyperlink.Address);
+                Assert.Equal("Mark", picture.Hyperlink.SubAddress);
+            },
+            new[] { DrawingElements("wsp", "docPr", "cNvPr"), Part("document.xml.rels") }),        new Scenario("shape-rest-autoshapes",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                foreach (AutoShapeType type in new[] { AutoShapeType.RegularPentagon, AutoShapeType.Bevel, AutoShapeType.FoldedCorner, AutoShapeType.BlockArc, AutoShapeType.Arc, AutoShapeType.LeftBracket, AutoShapeType.RightBracket, AutoShapeType.LeftBrace, AutoShapeType.RightBrace, AutoShapeType.UpDownArrow, AutoShapeType.QuadArrow, AutoShapeType.BentArrow, AutoShapeType.UTurnArrow, AutoShapeType.CurvedRightArrow, AutoShapeType.StripedRightArrow, AutoShapeType.NotchedRightArrow, AutoShapeType.Chevron, AutoShapeType.FlowchartAlternateProcess, AutoShapeType.FlowchartData, AutoShapeType.FlowchartPredefinedProcess, AutoShapeType.FlowchartDocument, AutoShapeType.FlowchartTerminator, AutoShapeType.FlowchartConnector, AutoShapeType.Star4, AutoShapeType.Star8, AutoShapeType.Star16, AutoShapeType.Star32, AutoShapeType.VerticalScroll, AutoShapeType.HorizontalScroll, AutoShapeType.Wave, AutoShapeType.RectangularCallout, AutoShapeType.RoundedRectangularCallout, AutoShapeType.OvalCallout, AutoShapeType.CloudCallout, AutoShapeType.Frame, AutoShapeType.Tear, AutoShapeType.Chord })
                 {
                     d.Shapes.AddShape(type, 20, 30, 80, 40, d.Range(5, 5));
                 }

@@ -78,7 +78,7 @@ public class HyperlinkWrapperTest : IDisposable
     public void AddingNeedsAnAddressOrAPlace()
     {
         Assert.Throws<ArgumentException>(() => _document.Hyperlinks.Add(_document.Range(0, 5), string.Empty));
-        Assert.Throws<ArgumentNullException>(() => _document.Hyperlinks.Add(null, "https://example.com/"));
+        Assert.Throws<ArgumentNullException>(() => _document.Hyperlinks.Add((RangeWrapper)null, "https://example.com/"));
     }
 
     [Fact]
