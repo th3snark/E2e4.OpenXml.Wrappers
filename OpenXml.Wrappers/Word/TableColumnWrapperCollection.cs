@@ -97,6 +97,72 @@ public partial class TableColumnWrapperCollection : IEnumerable<TableColumnWrapp
         return new TableColumnWrapper(gridColumn);
     }
 
+    /// <summary>
+    /// Inserts columns before a column of the grid of a table (after the last one when the index is the number of columns). The new
+    /// columns have the width of the column at <paramref name="templateIndex"/>. A row where a cell spans the place gets no cell: that
+    /// cell grows. Returns the new cells, row by row.
+    /// </summary>
+    internal static List<TableCell> InsertColumns(Table table, int index, int count, int templateIndex)
+    {
+        TableGrid grid = table.Elements<TableGrid>().FirstOrDefault();
+        List<GridColumn> columns = grid == null ? new List<GridColumn>() : grid.Elements<GridColumn>().ToList();
+        if (columns.Count == 0)
+        {
+            throw new InvalidOperationException("A column cannot be added to a table that has no columns to use as a template.");
+        }
+        index = Math.Min(index, columns.Count);
+        GridColumn template = columns[Math.Min(templateIndex, columns.Count - 1)];
+        for (int i = 0; i < count; i++)
+        {
+            GridColumn clone = (GridColumn)template.Clone();
+            if (index < columns.Count)
+            {
+                columns[index].InsertBeforeSelf(clone);
+            }
+            else
+            {
+                grid.Append(clone);
+            }
+        }
+
+        List<TableCell> added = new List<TableCell>();
+        foreach (TableRow row in table.Elements<TableRow>())
+        {
+            List<TableCell> cells = row.Elements<TableCell>().ToList();
+            if (cells.Count == 0)
+            {
+                continue;
+            }
+            TableCell before = cells.FirstOrDefault(c => TableCellWrapper.GetGridStart(c) == index);
+            TableCell spanning = before != null ? null : cells.FirstOrDefault(c => TableCellWrapper.GetGridStart(c) < index && index < TableCellWrapper.GetGridStart(c) + TableCellWrapper.Span(c));
+            if (spanning != null)
+            {
+                spanning.SetGridSpan(TableCellWrapper.Span(spanning) + count);
+                continue;
+            }
+            TableCell source = before ?? cells[cells.Count - 1];
+            for (int i = 0; i < count; i++)
+            {
+                TableCell cell = (TableCell)source.Clone();
+                cell.RemoveAnchors();
+                cell.ClearText();
+                cell.SetGridSpan(1);
+                if (before != null)
+                {
+                    before.InsertBeforeSelf(cell);
+                }
+                else
+                {
+                    cells[cells.Count - 1].InsertAfterSelf(cell);
+                }
+                added.Add(cell);
+            }
+        }
+
+        TableWrapper.ColumnsChanged(table);
+        return added;
+    }
+
     #region IEnumerable Members
 
     public IEnumerator<TableColumnWrapper> GetEnumerator()

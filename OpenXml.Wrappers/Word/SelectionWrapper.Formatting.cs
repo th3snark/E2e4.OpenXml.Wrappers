@@ -96,14 +96,13 @@ public partial class SelectionWrapper
     //The rows of the tables that the selection touches, in order, or the row of the cell the insertion point is in.
     private List<TableRowWrapper> SelectedRows()
     {
-        List<TableCellWrapper> cells = new RangeWrapper(StoryMap.FindRoot(_range.AnchorElement)).Cells
-            .Where(c => _range.Start == _range.End ? c.Range.Start <= _range.Start && _range.Start < c.Range.End : c.Range.Start < _range.End && _range.Start < c.Range.End)
-            .ToList();
-        if (cells.Count == 0)
-        {
-            throw new InvalidOperationException("The selection is not in a table.");
-        }
-        return cells.Select(c => c.Row).Distinct().ToList();
+        return SelectedCells().Select(c => c.Row).Distinct().ToList();
+    }
+
+    //Selects rows that were just added.
+    private void SelectAdded(List<TableRowWrapper> rows)
+    {
+        SelectBetween(rows[0].Range, rows[rows.Count - 1].Range);
     }
 
     /// <summary>
@@ -117,10 +116,12 @@ public partial class SelectionWrapper
         Guard.ThrowIfLessThan(numRows, 1);
         TableRowWrapper last = SelectedRows().Last();
         TableRowWrapper next = last.Next();
+        List<TableRowWrapper> added = new List<TableRowWrapper>();
         for (int i = 0; i < numRows; i++)
         {
-            last.Parent.Rows.Add(next);
+            added.Add(last.Parent.Rows.Add(next));
         }
+        SelectAdded(added);
     }
 
     /// <summary>
@@ -133,10 +134,12 @@ public partial class SelectionWrapper
     {
         Guard.ThrowIfLessThan(numRows, 1);
         TableRowWrapper first = SelectedRows().First();
+        List<TableRowWrapper> added = new List<TableRowWrapper>();
         for (int i = 0; i < numRows; i++)
         {
-            first.Parent.Rows.Add(first);
+            added.Add(first.Parent.Rows.Add(first));
         }
+        SelectAdded(added);
     }
 
     #endregion

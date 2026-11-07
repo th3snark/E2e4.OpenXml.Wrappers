@@ -923,6 +923,46 @@ public class MarkupConformanceTest
                 d.Selection.InsertRowsAbove(1);
             },
             Body()),
+        new Scenario("selection-insert-columns",
+            d =>
+            {
+                TableWrapper table = ColumnTable(d);
+                table.Cell(0, 1).Select();
+                d.Selection.InsertColumns();
+            },
+            Body()),
+        new Scenario("selection-insert-columns-right",
+            d =>
+            {
+                TableWrapper table = ColumnTable(d);
+                table.Cell(0, 1).Select();
+                d.Selection.InsertColumnsRight();
+            },
+            Body()),
+        new Scenario("selection-insert-columns-two",
+            d =>
+            {
+                TableWrapper table = ColumnTable(d);
+                d.Selection.SetRange(table.Cell(0, 1).Range.Start, table.Cell(0, 2).Range.End);
+                d.Selection.InsertColumns();
+            },
+            Body()),
+        new Scenario("selection-insert-rows",
+            d =>
+            {
+                d.Content.InsertAfter("Before\r");
+                TableWrapper table = d.Tables.Add(d.Range(d.Content.End - 1, d.Content.End - 1), 3, 2);
+                for (int r = 0; r < 3; r++)
+                {
+                    for (int c = 0; c < 2; c++)
+                    {
+                        table.Cell(r, c).Range.Text = string.Format(CultureInfo.InvariantCulture, "r{0}c{1}", r + 1, c + 1);
+                    }
+                }
+                table.Cell(1, 0).Select();
+                d.Selection.InsertRows(2);
+            },
+            Body()),
         new Scenario("selection-clear-character",
             d =>
             {
@@ -3081,6 +3121,20 @@ public class MarkupConformanceTest
     }
 
     //The content of the body, without the section properties of the last section (whose page size and margins are the new document's).
+    //The two-row, three-column table the column scenarios start from, after a line of text.
+    private static TableWrapper ColumnTable(WordprocessingDocumentWrapper d)
+    {
+        d.Content.InsertAfter("Before\r");
+        TableWrapper table = d.Tables.Add(d.Range(d.Content.End - 1, d.Content.End - 1), 2, 3);
+        for (int r = 0; r < 2; r++)
+        {
+            for (int c = 0; c < 3; c++)
+            {
+                table.Cell(r, c).Range.Text = string.Format(CultureInfo.InvariantCulture, "r{0}c{1}", r + 1, c + 1);
+            }
+        }
+        return table;
+    }
     private static Comparison Body()
     {
         return new Comparison("document.xml body", parts => "document.xml", root => root.Element(W + "body").Elements().Where(e => e.Name != W + "sectPr"));
