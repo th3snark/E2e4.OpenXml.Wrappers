@@ -1000,6 +1000,100 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $sel.SetRange(0, 0)
         try { $sel.SplitTable(); Write-Host 'outside: no error' } catch { Write-Host ('outside: ' + $_.Exception.Message) }
     }
+    'selection-insert-formula'        = {
+        param($doc)
+        $doc.Content.InsertAfter("Before`r")
+        $t = $doc.Tables.Add($doc.Range($doc.Content.End - 1, $doc.Content.End - 1), 3, 2)
+        $t.Cell(1, 1).Range.Text = '4'
+        $t.Cell(2, 1).Range.Text = '6'
+        $t.Cell(3, 1).Select()
+        $doc.Application.Selection.InsertFormula('=SUM(ABOVE)', '0.00')
+        $t.Cell(1, 2).Select()
+        $doc.Application.Selection.InsertFormula()
+    }
+
+    # Printing-only (no snapshot): which story HeaderFooter gives and what it does in the body.
+    'selection-header-footer'         = {
+        param($doc)
+        $doc.Content.InsertAfter("Body text")
+        $sel = $doc.Application.Selection
+        try { $h = $sel.HeaderFooter; Write-Host ('in body: ' + $h.IsHeader) } catch { Write-Host ('in body: ' + $_.Exception.Message) }
+        $doc.Sections.Item(1).Headers.Item(1).Range.Text = 'Head'
+        $doc.Sections.Item(1).Footers.Item(1).Range.Text = 'Foot'
+        $sel.WholeStory() | Out-Null
+        $doc.Sections.Item(1).Headers.Item(1).Range.Select()
+        $h = $sel.HeaderFooter
+        Write-Host ('in header: IsHeader {0}; text "{1}"; story {2}' -f $h.IsHeader, $h.Range.Text, $sel.StoryType)
+        $doc.Sections.Item(1).Footers.Item(1).Range.Select()
+        $h = $sel.HeaderFooter
+        Write-Host ('in footer: IsHeader {0}; text "{1}"; story {2}' -f $h.IsHeader, $h.Range.Text, $sel.StoryType)
+    }
+    # Printing-only (no snapshot): InsertFormula outside a table and over a selection, and what InsertCells does and leaves selected.
+    'selection-insert-formula-behaviour' = {
+        param($doc)
+        $doc.Content.InsertAfter("One two three")
+        $sel = $doc.Application.Selection
+        $sel.SetRange(4, 7)
+        try { $sel.InsertFormula(); Write-Host 'no formula outside a table: ok' } catch { Write-Host ('no formula outside a table: ' + $_.Exception.Message) }
+        Write-Host ('text "{0}"; sel {1}-{2}' -f ($doc.Content.Text -replace "`r", '\r'), $sel.Start, $sel.End)
+        $sel.SetRange(4, 7)
+        $sel.InsertFormula('=1+1')
+        Write-Host ('over selection: text "{0}"; sel {1}-{2}' -f ($doc.Content.Text -replace "`r", '\r'), $sel.Start, $sel.End)
+    }
+
+    # Printing-only (no snapshot): what each InsertCells option does to a 3 by 3 table and what it selects.
+    'selection-insert-cells-behaviour' = {
+        param($doc)
+        $doc.Content.InsertAfter("Before`r")
+        $sel = $doc.Application.Selection
+        function Fresh() {
+            $doc.Tables.Item(1).Delete()
+            $t = $doc.Tables.Add($doc.Range($doc.Content.End - 1, $doc.Content.End - 1), 3, 3)
+            for ($r = 1; $r -le 3; $r++) { for ($c = 1; $c -le 3; $c++) { $t.Cell($r, $c).Range.Text = "r$r" + "c$c" } }
+            return $t
+        }
+        function Grid($label) {
+            $t = $doc.Tables.Item(1)
+            $rows = foreach ($r in $t.Rows) { (($r.Cells | ForEach-Object { $_.Range.Text.TrimEnd([char]13, [char]7) }) -join ',') }
+            Write-Host ('{0}: {1} rows; [{2}]; sel {3}-{4} type {5}' -f $label, $t.Rows.Count, ($rows -join ' / '), $sel.Start, $sel.End, $sel.Type)
+        }
+        $t = $doc.Tables.Add($doc.Range($doc.Content.End - 1, $doc.Content.End - 1), 1, 1)
+        $t = Fresh
+        $t.Cell(2, 2).Select(); $sel.InsertCells(0); Grid 'shift right'
+        $t = Fresh
+        $t.Cell(2, 2).Select(); $sel.InsertCells(1); Grid 'shift down'
+        $t = Fresh
+        $t.Cell(2, 2).Select(); $sel.InsertCells(2); Grid 'entire row'
+        $t = Fresh
+        $t.Cell(2, 2).Select(); $sel.InsertCells(3); Grid 'entire column'
+        $t = Fresh
+        $sel.SetRange($t.Cell(1, 2).Range.Start, $t.Cell(2, 2).Range.End - 1); $sel.InsertCells(0); Grid 'shift right, two cells (column)'
+        $t = Fresh
+        $sel.SetRange($t.Cell(1, 2).Range.Start, $t.Cell(1, 3).Range.End - 1); $sel.InsertCells(1); Grid 'shift down, two cells (row)'
+        $t = Fresh
+        $sel.SetRange($t.Cell(2, 1).Range.Start, $t.Cell(3, 2).Range.End - 1); $sel.InsertCells(2); Grid 'entire row, block'
+        $t = Fresh
+        $sel.SetRange($t.Cell(2, 1).Range.Start, $t.Cell(3, 2).Range.End - 1); $sel.InsertCells(3); Grid 'entire column, block'
+        $t = Fresh
+        $t.Cell(3, 3).Select(); $sel.InsertCells(1); Grid 'shift down, last row'
+    }
+    'selection-insert-cells-right'    = {
+        param($doc)
+        $doc.Content.InsertAfter("Before`r")
+        $t = $doc.Tables.Add($doc.Range($doc.Content.End - 1, $doc.Content.End - 1), 3, 3)
+        for ($r = 1; $r -le 3; $r++) { for ($c = 1; $c -le 3; $c++) { $t.Cell($r, $c).Range.Text = "r$r" + "c$c" } }
+        $t.Cell(2, 2).Select()
+        $doc.Application.Selection.InsertCells(0)
+    }
+
+    'selection-insert-cells-down'     = {
+        param($doc)
+        $doc.Content.InsertAfter("Before`r")
+        $t = $doc.Tables.Add($doc.Range($doc.Content.End - 1, $doc.Content.End - 1), 3, 3)
+        for ($r = 1; $r -le 3; $r++) { for ($c = 1; $c -le 3; $c++) { $t.Cell($r, $c).Range.Text = "r$r" + "c$c" } }
+        $t.Cell(2, 2).Select()
+        $doc.Application.Selection.InsertCells(1)
+    }
     'selection-extend-case'           = {
         param($doc)
         $doc.Content.InsertAfter("one Two three Four")

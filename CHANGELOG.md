@@ -5,6 +5,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 ## [Unreleased]
 
 ### Added
+- Selection: `InsertCells` (with the new `InsertCellsShift`), `InsertFormula` and `HeaderFooter`, as measured in Word. A selection from one cell to another now counts as the block of cells between them for the table members. Three new reference scenarios matching Word 16.
 - Selection: `SplitTable` (splits before the first selected row; an empty paragraph is added before the table at its first row), `RtlPara`, `LtrPara`, `RtlRun` and `LtrRun`, as measured in Word. Four new reference scenarios matching Word 16.
 - Selection: `ExtendMode`, `Extend` (by unit, or up to a character), `Shrink`, `NextField`, `PreviousField`, `SelectColumn`, `InsertRows`, `InsertColumns` and `InsertColumnsRight`, as measured in Word. The table insertions select what they add, and a selection of whole rows reports `SelectionType.Row`.
 - Content controls: `ContentControl.SetPlaceholderText` and `PlaceholderText` (the text a control shows while it is empty, kept as an entry of the glossary document the way Word keeps it; a control that is emptied shows it again), and custom XML editing: `CustomXMLPart.AddNode` and, on a node, `AppendChildNode`, `AppendChildSubtree`, `InsertNodeBefore`, `InsertSubtreeBefore`, `ReplaceChildNode` and `ReplaceChildSubtree`. One new reference scenario matching Word 16.

@@ -9,6 +9,22 @@ using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
 
+/// <summary>Where the cells that are in the way go when cells are inserted, as <c>WdInsertCells</c> in Word (with the same values).</summary>
+public enum InsertCellsShift
+{
+    /// <summary>The cells move to the right: a cell is added in the row.</summary>
+    Right = 0,
+
+    /// <summary>The cells move down the column, and a row is added at the bottom for what no longer fits.</summary>
+    Down = 1,
+
+    /// <summary>Entire rows are inserted.</summary>
+    EntireRow = 2,
+
+    /// <summary>Entire columns are inserted.</summary>
+    EntireColumn = 3
+}
+
 /// <summary>
 /// What happens to the cells around a deleted cell, as <c>WdDeleteCells</c> in Word (with the same values).
 /// </summary>
