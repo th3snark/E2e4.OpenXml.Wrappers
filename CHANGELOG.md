@@ -5,6 +5,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 ## [Unreleased]
 
 ### Added
+- Shapes: 56 more shapes of the gallery for `AddShape` (curved arrows, arrow callouts, the circular arrow, more flowchart symbols, explosions, ribbons, line callouts and action buttons), matching Word 16's markup. `(AutoShapeType)99` is now the curved ribbon, so a value that was not a shape before may be one now.
+- Shapes: groups. `Shapes.Group`, `Shape.Ungroup`, `Shape.GroupItems` (with `GroupShapesCollection`), `Shape.Child`, `Shape.ParentGroup` and `ShapeType.Group`, for shapes of the gallery, text boxes and lines. Two new reference scenarios matching Word 16.
 - Cross references: `Range.InsertCrossReference` for headings, bookmarks and caption labels (new `CrossReferenceType` and `CrossReferenceKind`) and `Document.GetCrossReferenceItems`. Three new reference scenarios matching Word 16.
 - Shapes: `Shape.Hyperlink` and `Hyperlinks.Add` with a shape, and 37 more shapes of the gallery for `AddShape`, matching Word 16's markup.
 - Application: `CleanString`, and `ListGalleries` with `ListGallery` (`ListTemplates`, `Modified`, `Reset`) and the new `ListGalleryType`: the 21 templates of Word 16's three galleries. Applying one adds it to the document with the styles its levels link to (the fourth bullet template has a picture bullet, which falls back on its character). Four new reference scenarios matching Word 16.

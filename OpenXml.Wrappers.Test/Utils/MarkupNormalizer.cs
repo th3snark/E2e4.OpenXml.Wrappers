@@ -327,9 +327,9 @@ public static class MarkupNormalizer
         {
             attribute.Value = placeholders.Get("docPr", attribute.Value);
         }
-        else if (element.Name == Pic + "cNvPr" && name == "id")
+        else if ((element.Name == Pic + "cNvPr" || (element.Name.LocalName == "cNvPr" && element.Name.NamespaceName.EndsWith("wordprocessingShape", StringComparison.Ordinal))) && name == "id")
         {
-            //Word gives a picture a random id of its own.
+            //Word gives a picture, or a shape in a group, a random id of its own.
             attribute.Value = placeholders.Get("pic", attribute.Value);
         }
         else if (name == W15 + "paraId" || name == W15 + "paraIdParent" || name == W16cid + "paraId")

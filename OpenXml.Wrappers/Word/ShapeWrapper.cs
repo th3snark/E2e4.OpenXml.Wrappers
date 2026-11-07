@@ -33,6 +33,9 @@ public enum ShapeType
     /// <summary>A picture.</summary>
     Picture = 13,
 
+    /// <summary>A group of shapes.</summary>
+    Group = 6,
+
     /// <summary>A text box.</summary>
     TextBox = 17
 }
@@ -387,16 +390,21 @@ public partial class ShapeWrapper : IEquatable<ShapeWrapper>
     /// <summary>What the shape is, as <c>Shape.Type</c> in Word.</summary>
     public ShapeType Type
     {
-        get { return Shape != null ? (IsTextBox ? ShapeType.TextBox : Shape.GetFirstChild<Wps.NonVisualConnectorProperties>() != null ? ShapeType.Line : ShapeType.AutoShape) : Blip?.Link?.Value != null ? ShapeType.LinkedPicture : ShapeType.Picture; }
+        get { return IsGroup ? ShapeType.Group : Shape != null ? (IsTextBox ? ShapeType.TextBox : Shape.GetFirstChild<Wps.NonVisualConnectorProperties>() != null ? ShapeType.Line : ShapeType.AutoShape) : Blip?.Link?.Value != null ? ShapeType.LinkedPicture : ShapeType.Picture; }
     }
 
     /// <summary>The name of the shape, as <c>Shape.Name</c> in Word.</summary>
     public string Name
     {
-        get { return DocProperties.Name?.Value ?? string.Empty; }
+        get { return (_child != null ? _child.GetFirstChild<Wps.NonVisualDrawingProperties>()?.Name?.Value : DocProperties.Name?.Value) ?? string.Empty; }
         set
         {
             Guard.ThrowIfNull(value);
+            if (_child != null)
+            {
+                _child.GetFirstChild<Wps.NonVisualDrawingProperties>().Name = value;
+                return;
+            }
             DocProperties.Name = value;
             SyncPicture();
         }
@@ -405,7 +413,7 @@ public partial class ShapeWrapper : IEquatable<ShapeWrapper>
     /// <summary>The identifier of the shape, as <c>Shape.ID</c> in Word.</summary>
     public int ID
     {
-        get { return unchecked((int)(DocProperties.Id?.Value ?? 0U)); }
+        get { return unchecked((int)((_child != null ? _child.GetFirstChild<Wps.NonVisualDrawingProperties>()?.Id?.Value : DocProperties.Id?.Value) ?? 0U)); }
     }
 
     /// <summary>The text a screen reader says for the shape, as <c>Shape.AlternativeText</c> in Word.</summary>
@@ -494,10 +502,26 @@ public partial class ShapeWrapper : IEquatable<ShapeWrapper>
         get { return AnchorElement.Extent?.Cy?.Value ?? 0; }
     }
 
+    //The size of a shape in a group on the page: what it is drawn at in the group, scaled as the group is.
+    private double ChildExtent(bool horizontal)
+    {
+        A.Transform2D transform = _child.GetFirstChild<Wps.ShapeProperties>()?.GetFirstChild<A.Transform2D>();
+        ShapeWrapper group = new ShapeWrapper(_drawing);
+        (double X, double Y) scale = group.GroupScale();
+        return horizontal ? (transform?.Extents?.Cx?.Value ?? 0) * scale.X : (transform?.Extents?.Cy?.Value ?? 0) * scale.Y;
+    }
+
     private void SetSize(long cx, long cy)
     {
         AnchorElement.Extent.Cx = cx;
         AnchorElement.Extent.Cy = cy;
+        if (IsGroup)
+        {
+            //The shapes in the group keep their own measures: they grow with the group because the group's frame does.
+            A.TransformGroup frame = GroupElement.Descendants<A.TransformGroup>().First();
+            frame.Extents = new A.Extents() { Cx = cx, Cy = cy };
+            return;
+        }
         foreach (A.Extents extents in AnchorElement.Descendants<A.Extents>())
         {
             extents.Cx = cx;
@@ -518,9 +542,10 @@ public partial class ShapeWrapper : IEquatable<ShapeWrapper>
     /// <summary>The width in points, as <c>Shape.Width</c> in Word. With <see cref="LockAspectRatio"/> the height follows.</summary>
     public double Width
     {
-        get { return Cx / EmuPerPoint; }
+        get { return _child != null ? ChildExtent(true) / EmuPerPoint : Cx / EmuPerPoint; }
         set
         {
+            ThrowIfChild();
             long cx = ToEmu(value);
             SetSize(cx, LockAspectRatio && Cx > 0 ? (long)Math.Round((double)Cy * cx / Cx) : Cy);
         }
@@ -529,9 +554,10 @@ public partial class ShapeWrapper : IEquatable<ShapeWrapper>
     /// <summary>The height in points, as <c>Shape.Height</c> in Word. With <see cref="LockAspectRatio"/> the width follows.</summary>
     public double Height
     {
-        get { return Cy / EmuPerPoint; }
+        get { return _child != null ? ChildExtent(false) / EmuPerPoint : Cy / EmuPerPoint; }
         set
         {
+            ThrowIfChild();
             long cy = ToEmu(value);
             SetSize(LockAspectRatio && Cy > 0 ? (long)Math.Round((double)Cx * cy / Cy) : Cx, cy);
         }
@@ -540,9 +566,16 @@ public partial class ShapeWrapper : IEquatable<ShapeWrapper>
     /// <summary>The rotation in degrees (0 to 360), as <c>Shape.Rotation</c> in Word.</summary>
     public double Rotation
     {
-        get { return (AnchorElement.Descendants<A.Transform2D>().FirstOrDefault()?.Rotation?.Value ?? 0) / (double)RotationUnit; }
+        get
+        {
+            ThrowIfChild();
+            ThrowIfGroup();
+            return (AnchorElement.Descendants<A.Transform2D>().FirstOrDefault()?.Rotation?.Value ?? 0) / (double)RotationUnit;
+        }
         set
         {
+            ThrowIfChild();
+            ThrowIfGroup();
             if (double.IsNaN(value) || double.IsInfinity(value))
             {
                 throw new ArgumentOutOfRangeException(nameof(value));
@@ -652,9 +685,10 @@ public partial class ShapeWrapper : IEquatable<ShapeWrapper>
     /// </summary>
     public double Left
     {
-        get { return (AnchorElement.HorizontalPosition?.PositionOffset?.Text is string text && long.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out long emu) ? emu : 0) / EmuPerPoint; }
+        get { ThrowIfChild(); return (AnchorElement.HorizontalPosition?.PositionOffset?.Text is string text && long.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out long emu) ? emu : 0) / EmuPerPoint; }
         set
         {
+            ThrowIfChild();
             WpDrawing.HorizontalPosition position = AnchorElement.HorizontalPosition;
             position.RemoveAllChildren();
             position.AppendChild(new WpDrawing.PositionOffset(ToSigned(value).ToString(CultureInfo.InvariantCulture)));
@@ -666,9 +700,10 @@ public partial class ShapeWrapper : IEquatable<ShapeWrapper>
     /// </summary>
     public double Top
     {
-        get { return (AnchorElement.VerticalPosition?.PositionOffset?.Text is string text && long.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out long emu) ? emu : 0) / EmuPerPoint; }
+        get { ThrowIfChild(); return (AnchorElement.VerticalPosition?.PositionOffset?.Text is string text && long.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out long emu) ? emu : 0) / EmuPerPoint; }
         set
         {
+            ThrowIfChild();
             WpDrawing.VerticalPosition position = AnchorElement.VerticalPosition;
             position.RemoveAllChildren();
             position.AppendChild(new WpDrawing.PositionOffset(ToSigned(value).ToString(CultureInfo.InvariantCulture)));
@@ -687,7 +722,7 @@ public partial class ShapeWrapper : IEquatable<ShapeWrapper>
     /// <summary>How text wraps around the shape, as <c>Shape.WrapFormat</c> in Word.</summary>
     public WrapFormatWrapper WrapFormat
     {
-        get { return new WrapFormatWrapper(this); }
+        get { ThrowIfChild(); return new WrapFormatWrapper(this); }
     }
 
     private List<ShapeWrapper> Siblings()
@@ -767,6 +802,7 @@ public partial class ShapeWrapper : IEquatable<ShapeWrapper>
     /// </summary>
     public void Delete()
     {
+        ThrowIfChild();
         A.Blip blip = Blip;
         string embed = blip?.Embed?.Value;
         string link = blip?.Link?.Value;
@@ -782,6 +818,8 @@ public partial class ShapeWrapper : IEquatable<ShapeWrapper>
     /// </summary>
     public InlineShapeWrapper ConvertToInlineShape()
     {
+        ThrowIfChild();
+        ThrowIfGroup();
         WpDrawing.Anchor anchor = AnchorElement;
         WpDrawing.Inline inline = new WpDrawing.Inline() { DistanceFromTop = 0U, DistanceFromBottom = 0U, DistanceFromLeft = 0U, DistanceFromRight = 0U };
         inline.AppendChild((OpenXmlElement)anchor.Extent.CloneNode(true));
@@ -804,13 +842,13 @@ public partial class ShapeWrapper : IEquatable<ShapeWrapper>
     /// <inheritdoc/>
     public bool Equals(ShapeWrapper other)
     {
-        return !(other is null) && ReferenceEquals(_drawing, other._drawing);
+        return !(other is null) && ReferenceEquals(_drawing, other._drawing) && ReferenceEquals(_child, other._child);
     }
 
     /// <inheritdoc/>
     public override int GetHashCode()
     {
-        return _drawing.GetHashCode();
+        return _child != null ? _child.GetHashCode() : _drawing.GetHashCode();
     }
 
     public static bool operator ==(ShapeWrapper left, ShapeWrapper right)
