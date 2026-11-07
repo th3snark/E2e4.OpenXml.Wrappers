@@ -42,13 +42,20 @@ public partial class ListLevelWrapper
         }
         _level.ParagraphStyleIdInLevel = new ParagraphStyleIdInLevel() { Val = style.StyleId.Value };
 
-        int abstractId = _template.AbstractNum.AbstractNumberId.Value;
+        PointStyleAtList(numbering, _template.AbstractNum, Index, style);
+    }
+
+    //Makes the style number its paragraphs as a level of a template does: a list of the template is made if it has none, and the style points
+    //at it (and at the level, unless it is the first).
+    internal static void PointStyleAtList(Numbering numbering, AbstractNum template, int index, Style style)
+    {
+        int abstractId = template.AbstractNumberId.Value;
         NumberingInstance num = numbering.Elements<NumberingInstance>().FirstOrDefault(n => n.AbstractNumId?.Val?.Value == abstractId)
-            ?? ListDefaults.AddNum(numbering, _template.AbstractNum);
+            ?? ListDefaults.AddNum(numbering, template);
         NumberingProperties properties = new NumberingProperties() { NumberingId = new NumberingId() { Val = num.NumberID.Value } };
-        if (Index > 0)
+        if (index > 0)
         {
-            properties.NumberingLevelReference = new NumberingLevelReference() { Val = Index };
+            properties.NumberingLevelReference = new NumberingLevelReference() { Val = index };
         }
         StyleParagraphProperties paragraph = style.StyleParagraphProperties ?? (style.StyleParagraphProperties = new StyleParagraphProperties());
         paragraph.NumberingProperties = properties;
