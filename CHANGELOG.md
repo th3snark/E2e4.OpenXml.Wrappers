@@ -2,7 +2,9 @@
 
 All notable changes are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/) and the project uses [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.8.0] - 2026-11-07
+
+The versions 1.2.0 to 1.7.0 listed below were prepared but never published to nuget.org, so this release carries all of their changes too. The newest published version before it is 1.1.0.
 
 ### Added
 - Shapes: 56 more shapes of the gallery for `AddShape` (curved arrows, arrow callouts, the circular arrow, more flowchart symbols, explosions, ribbons, line callouts and action buttons), matching Word 16's markup. `(AutoShapeType)99` is now the curved ribbon, so a value that was not a shape before may be one now.

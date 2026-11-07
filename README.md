@@ -128,13 +128,13 @@ The API follows the shape of the Word object model, but it is C# over Open XML r
 
 **Needs a layout engine.** Nothing here measures or paginates text, so `Pages` and `Lines` statistics (`ComputeStatistics`), the page and line items of `Range.Information`, movement of the selection by lines or screens, printing and spelling are not available. Fields that depend on layout (`PAGE`, `NUMPAGES`, `PAGEREF`, `TOC`) are left for Word to update; `Fields.Update` does not compute them and `Field.Update` returns `false`.
 
-**Objects that do not exist yet.** Content controls of kinds other than rich text, text, lists, dates and check boxes, shapes other than the seven it draws and groups of shapes, and revisions (`Revisions`).
+**Objects that do not exist yet.** Content controls of kinds other than rich text, text, lists, dates and check boxes, shapes added in later versions of Office (the heptagon, the decagon, the pie, the math signs), groups of pictures and groups in groups, and revisions (`Revisions`).
 
 **Known limits of objects that do exist.**
 
 - `Find` cannot match sounds-like or word forms (it throws `NotSupportedException`).
 - **Tracked changes are not supported.** Edits made through the library are never recorded as revisions. `Document.TrackRevisions` can be read, and switched off, but setting it to true when it is off throws `NotSupportedException`, so that a document is never marked as tracking changes while being edited without tracking. A document that already tracks changes keeps the setting, and text that others have tracked is counted in positions as Word counts it. Recording revisions (and a `Revisions` object) is planned and will not need any change to code that works today.
-- Legacy horizontal merges (`hMerge`) are not supported. `Table.Sort`, `Table.ConvertToText`, `Range.ConvertToTable` and `Rows.DistributeHeight` are not implemented, and `Cell.Delete` shifts cells left only.
+- Legacy horizontal merges (`hMerge`) are converted to `gridSpan` when a table is changed; `Cell.Delete` shifts cells left or up.
 - `Field.Code` and `Field.Result` have `Text`, `Range` (a span of their characters; the range of a simple field's code is empty) and `Font`. A range of a code does not show the code in its `Text`, as in Word.
 - `PageNumber.Alignment` can only be read, and `Document.PageSetup` forwards only the common members (columns, line numbering and page borders are set per section).
 - `Document.Saved`, `Final`, `Compatibility` and `RemoveDocumentInformation` are not implemented.
