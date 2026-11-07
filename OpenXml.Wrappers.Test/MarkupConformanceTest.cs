@@ -2084,6 +2084,42 @@ public class MarkupConformanceTest
                 }
             },
             DrawingElements("wsp", "docPr")),
+        new Scenario("shape-group",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                ShapeWrapper a = d.Shapes.AddShape(AutoShapeType.Rectangle, 20, 30, 80, 40, d.Range(5, 5));
+                ShapeWrapper b = d.Shapes.AddShape(AutoShapeType.Rectangle, 120, 60, 60, 60, d.Range(5, 5));
+                a.Name = "A";
+                b.Name = "B";
+                ShapeWrapper group = d.Shapes.Group(new[] { a, b });
+                Assert.Equal(ShapeType.Group, group.Type);
+                Assert.Equal(2, group.GroupItems.Count);
+                Assert.Equal(160.2, group.Width, 3);
+                Assert.Equal(90, group.Height, 3);
+                Assert.Equal(-52.2, group.Left, 3);
+                Assert.Equal(1, d.Shapes.Count);
+                Assert.Equal(80, group.GroupItems[0].Width, 3);
+                group.Left = group.Left + 10;
+                group.Width = group.Width * 2;
+                Assert.Equal(160, group.GroupItems[0].Width, 3);
+            },
+            DrawingElements("wgp", "docPr", "positionH", "positionV", "extent")),
+        new Scenario("shape-ungroup",
+            d =>
+            {
+                d.Content.InsertAfter("Hello world again");
+                ShapeWrapper a = d.Shapes.AddShape(AutoShapeType.Rectangle, 20, 30, 80, 40, d.Range(5, 5));
+                ShapeWrapper b = d.Shapes.AddShape(AutoShapeType.Rectangle, 120, 60, 60, 60, d.Range(5, 5));
+                a.Name = "A";
+                b.Name = "B";
+                System.Collections.Generic.IList<ShapeWrapper> shapes = d.Shapes.Group(new[] { a, b }).Ungroup();
+                Assert.Equal(2, shapes.Count);
+                Assert.Equal(2, d.Shapes.Count);
+                Assert.Equal(-52.2, shapes[0].Left, 3);
+                Assert.Equal(48, shapes[1].Left, 3);
+            },
+            DrawingElements("wsp", "docPr", "positionH", "positionV", "extent")),
         new Scenario("shape-flip",
             d =>
             {
