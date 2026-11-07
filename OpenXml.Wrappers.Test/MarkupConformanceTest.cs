@@ -947,7 +947,33 @@ public class MarkupConformanceTest
                 d.Selection.InsertColumns();
             },
             Body()),
-        new Scenario("selection-split-table",
+        new Scenario("selection-insert-formula",
+            d =>
+            {
+                d.Content.InsertAfter("Before\r");
+                TableWrapper table = d.Tables.Add(d.Range(d.Content.End - 1, d.Content.End - 1), 3, 2);
+                table.Cell(0, 0).Range.Text = "4";
+                table.Cell(1, 0).Range.Text = "6";
+                table.Cell(2, 0).Select();
+                d.Selection.InsertFormula("=SUM(ABOVE)", "0.00");
+                table.Cell(0, 1).Select();
+                d.Selection.InsertFormula();
+            },
+            Body()),
+        new Scenario("selection-insert-cells-right",
+            d =>
+            {
+                ThreeByThree(d).Cell(1, 1).Select();
+                d.Selection.InsertCells(InsertCellsShift.Right);
+            },
+            Body()),
+        new Scenario("selection-insert-cells-down",
+            d =>
+            {
+                ThreeByThree(d).Cell(1, 1).Select();
+                d.Selection.InsertCells(InsertCellsShift.Down);
+            },
+            Body()),        new Scenario("selection-split-table",
             d =>
             {
                 d.Content.InsertAfter("Before\r");
@@ -3172,6 +3198,19 @@ public class MarkupConformanceTest
 
     //The content of the body, without the section properties of the last section (whose page size and margins are the new document's).
     //The two-row, three-column table the column scenarios start from, after a line of text.
+    private static TableWrapper ThreeByThree(WordprocessingDocumentWrapper d)
+    {
+        d.Content.InsertAfter("Before\r");
+        TableWrapper table = d.Tables.Add(d.Range(d.Content.End - 1, d.Content.End - 1), 3, 3);
+        for (int r = 0; r < 3; r++)
+        {
+            for (int c = 0; c < 3; c++)
+            {
+                table.Cell(r, c).Range.Text = string.Format(CultureInfo.InvariantCulture, "r{0}c{1}", r + 1, c + 1);
+            }
+        }
+        return table;
+    }
     private static TableWrapper ColumnTable(WordprocessingDocumentWrapper d)
     {
         d.Content.InsertAfter("Before\r");
