@@ -41,6 +41,13 @@ public partial class FontWrapper
         set { SetOnOff("bCs", value, off => new BoldComplexScript() { Val = off }, properties => ReadOnOff<BoldComplexScript>(properties, e => e.Val)); }
     }
 
+    //Whether the text is marked as reading right to left (w:rtl), which Selection.RtlRun and LtrRun set.
+    internal bool? RightToLeftRun
+    {
+        get { return GetOnOff<RightToLeftText>(e => e.Val); }
+        set { SetOnOff("rtl", value, off => new RightToLeftText() { Val = off }, properties => ReadOnOff<RightToLeftText>(properties, e => e.Val)); }
+    }
+
     /// <summary>Italic complex script text (<c>Font.ItalicBi</c> in Word).</summary>
     public bool? ItalicBi
     {

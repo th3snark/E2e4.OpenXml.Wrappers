@@ -947,6 +947,56 @@ public class MarkupConformanceTest
                 d.Selection.InsertColumns();
             },
             Body()),
+        new Scenario("selection-split-table",
+            d =>
+            {
+                d.Content.InsertAfter("Before\r");
+                TableWrapper table = d.Tables.Add(d.Range(d.Content.End - 1, d.Content.End - 1), 3, 2);
+                for (int r = 0; r < 3; r++)
+                {
+                    for (int c = 0; c < 2; c++)
+                    {
+                        table.Cell(r, c).Range.Text = string.Format(CultureInfo.InvariantCulture, "r{0}c{1}", r + 1, c + 1);
+                    }
+                }
+                table.Cell(1, 1).Select();
+                d.Selection.SplitTable();
+            },
+            Body()),
+        new Scenario("selection-split-table-first",
+            d =>
+            {
+                d.Content.InsertAfter("Before\r");
+                TableWrapper table = d.Tables.Add(d.Range(d.Content.End - 1, d.Content.End - 1), 2, 2);
+                for (int r = 0; r < 2; r++)
+                {
+                    for (int c = 0; c < 2; c++)
+                    {
+                        table.Cell(r, c).Range.Text = string.Format(CultureInfo.InvariantCulture, "r{0}c{1}", r + 1, c + 1);
+                    }
+                }
+                table.Cell(0, 1).Select();
+                d.Selection.SplitTable();
+            },
+            Body()),
+        new Scenario("selection-rtl-para",
+            d =>
+            {
+                d.Content.InsertAfter("One two three\rFour");
+                d.Selection.SetRange(4, 7);
+                d.Selection.RtlPara();
+            },
+            Body()),
+        new Scenario("selection-rtl-run",
+            d =>
+            {
+                d.Content.InsertAfter("One two three\rFour");
+                d.Selection.SetRange(0, 13);
+                d.Selection.RtlRun();
+                d.Selection.SetRange(4, 7);
+                d.Selection.LtrRun();
+            },
+            Body()),
         new Scenario("selection-insert-rows",
             d =>
             {
