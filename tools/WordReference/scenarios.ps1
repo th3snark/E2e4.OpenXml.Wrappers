@@ -1137,6 +1137,37 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $t.Cell(2, 2).Select()
         $doc.Application.Selection.InsertCells(1)
     }
+    # Printing-only (no snapshot): what the SelectCurrent members select, and what CreateTextbox does.
+    'selection-select-current'        = {
+        param($doc)
+        $doc.Content.InsertAfter("Plain one. Bold two. Plain three.`rCentered para`rLast para")
+        $doc.Range(11, 19).Font.Bold = $true
+        $doc.Paragraphs.Item(2).Alignment = 1
+        $doc.Paragraphs.Item(2).Range.ParagraphFormat.LeftIndent = 36
+        $sel = $doc.Application.Selection
+        function Show($label) { Write-Host ('{0}: {1}-{2} "{3}"' -f $label, $sel.Start, $sel.End, ($sel.Text -replace "`r", '\r')) }
+        foreach ($name in 'SelectCurrentFont', 'SelectCurrentAlignment', 'SelectCurrentColor', 'SelectCurrentIndent', 'SelectCurrentSpacing', 'SelectCurrentTabs') {
+            $sel.SetRange(14, 14)
+            $sel.$name()
+            Show ($name + ' from 14')
+            $sel.SetRange(35, 35)
+            $sel.$name()
+            Show ($name + ' from 35')
+            $sel.SetRange(5, 8)
+            $sel.$name()
+            Show ($name + ' from 5-8')
+        }
+    }
+
+    'selection-create-textbox'        = {
+        param($doc)
+        $doc.Content.InsertAfter("Before text")
+        $sel = $doc.Application.Selection
+        $sel.SetRange(6, 6)
+        $sel.CreateTextbox()
+        Write-Host ('shapes {0}; sel {1}-{2}; text "{3}"' -f $doc.Shapes.Count, $sel.Start, $sel.End, ($doc.Content.Text -replace "`r", '\r'))
+        if ($doc.Shapes.Count -gt 0) { $s = $doc.Shapes.Item(1); Write-Host ('shape type {0}; {1}x{2}; left {3} top {4}; wrap {5}' -f $s.Type, $s.Width, $s.Height, $s.Left, $s.Top, $s.WrapFormat.Type) }
+    }
     'selection-extend-case'           = {
         param($doc)
         $doc.Content.InsertAfter("one Two three Four")
