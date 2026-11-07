@@ -2537,6 +2537,17 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         Write-Host ('ungroup: count {0}; returned {1}; names {2}' -f $doc.Shapes.Count, $r.Count, (($doc.Shapes | ForEach-Object { $_.Name + '@' + $_.Left + ',' + $_.Top + ' ' + $_.Width + 'x' + $_.Height }) -join ' | '))
     }
 
+    'shape-last-autoshapes'           = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        foreach ($t in 46, 47, 48, 53, 54, 55, 56, 57, 58, 59, 60, 66, 68, 70, 71, 72, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 95, 97, 98, 99, 100, 104, 109, 111, 112, 113, 114, 115, 116, 119, 120, 125, 126, 127, 128, 129, 130, 131, 132) {
+            try {
+                $s = $doc.Shapes.AddShape($t, 20, 30, 80, 40, $doc.Range(5, 5))
+                Write-Host ('autoshape {0}: name "{1}" back {2}' -f $t, $s.Name, $s.AutoShapeType)
+            } catch { Write-Host ('autoshape {0}: {1}' -f $t, $_.Exception.Message) }
+        }
+    }
+
     'shape-delete'                    = {
         param($doc)
         $doc.Content.InsertAfter('Hello world again')
