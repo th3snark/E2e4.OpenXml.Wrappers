@@ -1168,6 +1168,71 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         Write-Host ('shapes {0}; sel {1}-{2}; text "{3}"' -f $doc.Shapes.Count, $sel.Start, $sel.End, ($doc.Content.Text -replace "`r", '\r'))
         if ($doc.Shapes.Count -gt 0) { $s = $doc.Shapes.Item(1); Write-Host ('shape type {0}; {1}x{2}; left {3} top {4}; wrap {5}' -f $s.Type, $s.Width, $s.Height, $s.Left, $s.Top, $s.WrapFormat.Type) }
     }
+
+    # Printing-only (no snapshot): the application's CleanString for every code and the list galleries.
+    'application-clean-string'        = {
+        param($doc)
+        $app = $doc.Application
+        $rows = New-Object System.Collections.Generic.List[string]
+        foreach ($code in 0..255) {
+            $r = $app.CleanString([string][char]$code)
+            $codes = ($r.ToCharArray() | ForEach-Object { [int]$_ }) -join '+'
+            if ($codes -ne [string]$code) { $rows.Add(('{0}>{1}' -f $code, $codes)) }
+        }
+        Write-Host ('changed: ' + ($rows -join ' '))
+        Write-Host ('word: [{0}]' -f ($app.CleanString("a" + [char]160 + "b" + [char]1 + "c") -replace [char]160, '<nbsp>'))
+    }
+
+    'application-list-galleries'      = {
+        param($doc)
+        $app = $doc.Application
+        foreach ($g in 1..3) {
+            $gallery = $app.ListGalleries.Item($g)
+            Write-Host ('gallery {0}: modified {1}, templates {2}' -f $g, $gallery.Modified(1), $gallery.ListTemplates.Count)
+            foreach ($i in 1..$gallery.ListTemplates.Count) {
+                $tpl = $gallery.ListTemplates.Item($i)
+                $levels = foreach ($l in 1..$tpl.ListLevels.Count) {
+                    $lv = $tpl.ListLevels.Item($l)
+                    ('{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}' -f $lv.NumberFormat, $lv.NumberStyle, $lv.NumberPosition, $lv.TextPosition, $lv.TabPosition, $lv.TrailingCharacter, $lv.Font.Name, $lv.StartAt)
+                }
+                Write-Host ('  g{0}t{1}: outline {2} name "{3}" levels {4}: {5}' -f $g, $i, $tpl.OutlineNumbered, $tpl.Name, $tpl.ListLevels.Count, ($levels -join ' ; '))
+            }
+        }
+    }
+    # Printing-only (no snapshot): the 21 templates of the list galleries, each applied to a paragraph of its own, in the order of the galleries.
+    # The harness writes their definitions to ListGalleries.xml, and the library applies them from there. The fourth bullet template has a
+    # picture bullet, which the library does not copy, so the conformance scenario below leaves it out.
+    'application-list-galleries-apply' = {
+        param($doc)
+        $doc.Content.InsertAfter((1..21 | ForEach-Object { "Item $_" }) -join "`r")
+        $app = $doc.Application
+        $n = 1
+        foreach ($g in 1..3) {
+            foreach ($i in 1..7) {
+                $doc.Paragraphs.Item($n).Range.ListFormat.ApplyListTemplate($app.ListGalleries.Item($g).ListTemplates.Item($i), $false, 0)
+                $n++
+            }
+        }
+    }
+
+    'application-list-gallery-bullet' = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo")
+        $doc.Paragraphs.Item(1).Range.ListFormat.ApplyListTemplate($doc.Application.ListGalleries.Item(1).ListTemplates.Item(2), $false, 0)
+    }
+
+    'application-list-gallery-outline' = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo")
+        $doc.Paragraphs.Item(1).Range.ListFormat.ApplyListTemplate($doc.Application.ListGalleries.Item(3).ListTemplates.Item(2), $false, 0)
+    }
+    'application-list-gallery-one'    = {
+        param($doc)
+        $doc.Content.InsertAfter("One`rTwo")
+        $doc.Paragraphs.Item(1).Range.ListFormat.ApplyListTemplate($doc.Application.ListGalleries.Item(2).ListTemplates.Item(3), $false, 0)
+        $doc.Paragraphs.Item(2).Range.ListFormat.ApplyListTemplate($doc.Application.ListGalleries.Item(3).ListTemplates.Item(4), $false, 0)
+        Write-Host ('doc templates {0}; lists {1}' -f $doc.ListTemplates.Count, $doc.Lists.Count)
+    }
     'selection-extend-case'           = {
         param($doc)
         $doc.Content.InsertAfter("one Two three Four")
@@ -1784,6 +1849,25 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         Set-PlaceholderText $cc $doc.Range(6, 11) ''
         Write-Host ('from range: showing {0} text "{1}" value "{2}"' -f $cc.ShowingPlaceholderText, $cc.Range.Text, $cc.PlaceholderText.Value)
     }
+    # Printing-only (no snapshot): XPath relative to a node.
+    'custom-xml-node-select'          = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello')
+        $part = $doc.CustomXMLParts.Add('<root xmlns="urn:test"><a><b>1</b><b>2</b></a><c id="x"><b>3</b></c></root>')
+        $part.NamespaceManager.AddNamespace('ns', 'urn:test')
+        $a = $part.SelectSingleNode('/ns:root/ns:a')
+        function Show($label, $nodes) { Write-Host ('{0}: {1}' -f $label, (($nodes | ForEach-Object { $_.XML }) -join ' | ')) }
+        Show 'relative b' $a.SelectNodes('ns:b')
+        Show 'child path' $a.SelectNodes('./ns:b')
+        Show 'descendants' $a.SelectNodes('.//ns:b')
+        Show 'absolute from node' $a.SelectNodes('/ns:root/ns:c/ns:b')
+        Show 'parent' $a.SelectNodes('..')
+        Show 'attribute' $part.SelectSingleNode('/ns:root/ns:c').SelectNodes('@id')
+        Write-Host ('single: {0}' -f $a.SelectSingleNode('ns:b[2]').Text)
+        Write-Host ('none: {0}' -f ($null -eq $a.SelectSingleNode('ns:zzz')))
+        Write-Host ('prefix of the node: {0}' -f $a.NamespaceURI)
+        try { Show 'no prefix' $a.SelectNodes('b') } catch { Write-Host ('no prefix: ' + $_.Exception.Message) }
+    }
     'custom-xml-node-edit'            = {
         param($doc)
         $doc.Content.InsertAfter('Hello')
@@ -2366,6 +2450,39 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $doc.Content.InsertAfter('Hello world again')
         $s = $doc.Shapes.AddTextbox(5, 20, 30, 120, 60, $doc.Range(5, 5))
         Write-Host ('textbox orientation {0}' -f $s.TextFrame.Orientation)
+    }
+    'shape-more-autoshapes'           = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        foreach ($t in 2, 3, 6, 8, 11, 13, 14, 17, 18, 19, 21, 22, 23, 24, 34, 35, 36, 37, 51, 61, 63, 92, 179) {
+            $s = $doc.Shapes.AddShape($t, 20, 30, 80, 40, $doc.Range(5, 5))
+            Write-Host ('autoshape {0}: name "{1}" back {2}' -f $t, $s.Name, $s.AutoShapeType)
+        }
+    }
+    # Printing-only (no snapshot): what grouping two shapes does in Word 16. The group is a wpg:wgp inside an mc:AlternateContent with a
+    # VML copy, its children are wps:wsp elements with ids of their own, and Ungroup gives the two shapes back.
+    'shape-group'                     = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $a = $doc.Shapes.AddShape(1, 20, 30, 80, 40, $doc.Range(5, 5))
+        $b = $doc.Shapes.AddShape(9, 120, 60, 60, 60, $doc.Range(5, 5))
+        $a.Name = 'A'
+        $b.Name = 'B'
+        $g = $doc.Shapes.Range([object[]]@('A', 'B')).Group()
+        Write-Host ('group: type {0}; name "{1}"; count {2}; items {3}; w {4} h {5}; left {6} top {7}' -f $g.Type, $g.Name, $doc.Shapes.Count, $g.GroupItems.Count, $g.Width, $g.Height, $g.Left, $g.Top)
+        Write-Host ('child: "{0}" type {1} left {2} top {3} parentgroup "{4}" child {5}' -f $g.GroupItems.Item(1).Name, $g.GroupItems.Item(1).Type, $g.GroupItems.Item(1).Left, $g.GroupItems.Item(1).Top, $g.GroupItems.Item(1).ParentGroup.Name, $g.GroupItems.Item(1).Child)
+    }
+
+    'shape-ungroup'                   = {
+        param($doc)
+        $doc.Content.InsertAfter('Hello world again')
+        $a = $doc.Shapes.AddShape(1, 20, 30, 80, 40, $doc.Range(5, 5))
+        $b = $doc.Shapes.AddShape(9, 120, 60, 60, 60, $doc.Range(5, 5))
+        $a.Name = 'A'
+        $b.Name = 'B'
+        $g = $doc.Shapes.Range([object[]]@('A', 'B')).Group()
+        $r = $g.Ungroup()
+        Write-Host ('ungroup: count {0}; returned {1}; names {2}' -f $doc.Shapes.Count, $r.Count, (($doc.Shapes | ForEach-Object { $_.Name }) -join ','))
     }
     'shape-delete'                    = {
         param($doc)

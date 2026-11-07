@@ -36,7 +36,76 @@ public enum AutoShapeType
     Hexagon = 10,
 
     /// <summary>An arrow pointing right.</summary>
-    RightArrow = 33
+    RightArrow = 33,
+
+    /// <summary>A parallelogram.</summary>
+    Parallelogram = 2,
+
+    /// <summary>A trapezoid.</summary>
+    Trapezoid = 3,
+
+    /// <summary>An octagon.</summary>
+    Octagon = 6,
+
+    /// <summary>A triangle with a right angle.</summary>
+    RightTriangle = 8,
+
+    /// <summary>A cross.</summary>
+    Cross = 11,
+
+    /// <summary>A cylinder.</summary>
+    Can = 13,
+
+    /// <summary>A cube.</summary>
+    Cube = 14,
+
+    /// <summary>A smiley face.</summary>
+    SmileyFace = 17,
+
+    /// <summary>A ring.</summary>
+    Donut = 18,
+
+    /// <summary>A circle with a bar across it.</summary>
+    NoSymbol = 19,
+
+    /// <summary>A heart.</summary>
+    Heart = 21,
+
+    /// <summary>A lightning bolt.</summary>
+    LightningBolt = 22,
+
+    /// <summary>A sun.</summary>
+    Sun = 23,
+
+    /// <summary>A moon.</summary>
+    Moon = 24,
+
+    /// <summary>An arrow pointing left.</summary>
+    LeftArrow = 34,
+
+    /// <summary>An arrow pointing up.</summary>
+    UpArrow = 35,
+
+    /// <summary>An arrow pointing down.</summary>
+    DownArrow = 36,
+
+    /// <summary>An arrow pointing left and right.</summary>
+    LeftRightArrow = 37,
+
+    /// <summary>A pentagon that points right, like an arrow.</summary>
+    Pentagon = 51,
+
+    /// <summary>The flowchart symbol for a process.</summary>
+    FlowchartProcess = 61,
+
+    /// <summary>The flowchart symbol for a decision.</summary>
+    FlowchartDecision = 63,
+
+    /// <summary>A star with five points.</summary>
+    Star5 = 92,
+
+    /// <summary>A cloud.</summary>
+    Cloud = 179
 }
 
 /// <summary>The direction of the text in a text box, as <c>MsoTextOrientation</c> in Office (with the same value; only the usual one).</summary>
@@ -427,7 +496,30 @@ public partial class ShapeWrapper
         (AutoShapeType.IsoscelesTriangle, "triangle", "Isosceles Triangle"),
         (AutoShapeType.Oval, "ellipse", "Oval"),
         (AutoShapeType.Hexagon, "hexagon", "Hexagon"),
-        (AutoShapeType.RightArrow, "rightArrow", "Arrow: Right")
+        (AutoShapeType.RightArrow, "rightArrow", "Arrow: Right"),
+        (AutoShapeType.Parallelogram, "parallelogram", "Parallelogram"),
+        (AutoShapeType.Trapezoid, "trapezoid", "Trapezoid"),
+        (AutoShapeType.Octagon, "octagon", "Octagon"),
+        (AutoShapeType.RightTriangle, "rtTriangle", "Right Triangle"),
+        (AutoShapeType.Cross, "plus", "Cross"),
+        (AutoShapeType.Can, "can", "Cylinder"),
+        (AutoShapeType.Cube, "cube", "Cube"),
+        (AutoShapeType.SmileyFace, "smileyFace", "Smiley Face"),
+        (AutoShapeType.Donut, "donut", "Circle: Hollow"),
+        (AutoShapeType.NoSymbol, "noSmoking", "\"Not Allowed\" Symbol"),
+        (AutoShapeType.Heart, "heart", "Heart"),
+        (AutoShapeType.LightningBolt, "lightningBolt", "Lightning Bolt"),
+        (AutoShapeType.Sun, "sun", "Sun"),
+        (AutoShapeType.Moon, "moon", "Moon"),
+        (AutoShapeType.LeftArrow, "leftArrow", "Arrow: Left"),
+        (AutoShapeType.UpArrow, "upArrow", "Arrow: Up"),
+        (AutoShapeType.DownArrow, "downArrow", "Arrow: Down"),
+        (AutoShapeType.LeftRightArrow, "leftRightArrow", "Arrow: Left-Right"),
+        (AutoShapeType.Pentagon, "homePlate", "Arrow: Pentagon"),
+        (AutoShapeType.FlowchartProcess, "flowChartProcess", "Flowchart: Process"),
+        (AutoShapeType.FlowchartDecision, "flowChartDecision", "Flowchart: Decision"),
+        (AutoShapeType.Star5, "star5", "Star: 5 Points"),
+        (AutoShapeType.Cloud, "cloud", "Cloud")
     };
 
     internal static (AutoShapeType Type, string Preset, string Name) PresetOf(AutoShapeType type)

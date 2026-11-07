@@ -305,6 +305,28 @@ public class CustomXMLNode : IEquatable<CustomXMLNode>
         get { return Wrap(Children(_part.LoadDocument())); }
     }
 
+    /// <summary>
+    /// The nodes an XPath expression matches, with the node as its context, as <c>CustomXMLNode.SelectNodes</c> in Word: <c>b</c> and
+    /// <c>./b</c> are its children, <c>..</c> its parent and <c>/</c> the root of the part. The prefixes are those of
+    /// <see cref="CustomXMLPart.NamespaceManager"/>; a name without a prefix has no namespace, so it does not match an element in one.
+    /// </summary>
+    /// <exception cref="ArgumentNullException">The expression is null.</exception>
+    public CustomXMLNodes SelectNodes(string xPath)
+    {
+        Guard.ThrowIfNull(xPath);
+        XObject target = Target(_part.LoadDocument());
+        object result = ((XNode)(target is XAttribute attribute ? attribute.Parent : target)).XPathEvaluate(xPath, _part.NamespaceManager.Manager());
+        IEnumerable<object> found = result is IEnumerable sequence && !(result is string) ? sequence.Cast<object>() : Enumerable.Empty<object>();
+        return new CustomXMLNodes(found.OfType<XObject>().Select(o => From(_part, o)).ToList());
+    }
+
+    /// <summary>The first node an XPath expression matches, as <c>CustomXMLNode.SelectSingleNode</c> in Word; null if there is none. See <see cref="SelectNodes"/>.</summary>
+    /// <exception cref="ArgumentNullException">The expression is null.</exception>
+    public CustomXMLNode SelectSingleNode(string xPath)
+    {
+        return SelectNodes(xPath).FirstOrDefault();
+    }
+
     /// <summary>The attributes of the node, as <c>CustomXMLNode.Attributes</c> in Word.</summary>
     public CustomXMLNodes Attributes
     {

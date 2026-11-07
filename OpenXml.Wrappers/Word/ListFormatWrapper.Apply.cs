@@ -320,6 +320,19 @@ public partial class ListFormatWrapper
 
         MainDocumentPart main = GetMain();
         Numbering numbering = ListDefaults.GetOrCreateNumbering(main);
+        if (template.AbstractNum.Parent is Numbering gallery && gallery.OpenXmlPart == null)
+        {
+            //A template of a gallery is added to the document when it is used, with the styles that its levels are linked to.
+            template = new ListTemplateWrapper(ListDefaults.AddCopy(numbering, template.AbstractNum));
+            foreach (Level linked in template.AbstractNum.Elements<Level>().Where(l => l.ParagraphStyleIdInLevel?.Val?.Value != null))
+            {
+                Style style = BuiltInStyles.GetOrCreate(main, linked.ParagraphStyleIdInLevel.Val.Value);
+                if (style != null)
+                {
+                    ListLevelWrapper.PointStyleAtList(numbering, template.AbstractNum, linked.LevelIndex?.Value ?? 0, style);
+                }
+            }
+        }
         if (!ReferenceEquals(template.AbstractNum.Parent, numbering))
         {
             throw new ArgumentException("The template is not one of this document.", nameof(template));
