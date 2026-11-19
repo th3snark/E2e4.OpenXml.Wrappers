@@ -2,6 +2,11 @@
 
 All notable changes are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- A `net11.0` build alongside `net10.0`, `net8.0` and `netstandard2.0`. The tests and samples also run on .NET 11, and building the repository needs the .NET 11 SDK.
+
 ## [1.8.0] - 2026-11-07
 
 The versions 1.2.0 to 1.7.0 listed below were prepared but never published to nuget.org, so this release carries all of their changes too. The newest published version before it is 1.1.0.

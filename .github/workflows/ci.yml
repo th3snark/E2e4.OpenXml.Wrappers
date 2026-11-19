@@ -22,10 +22,13 @@ jobs:
         with:
           fetch-depth: 0  # the version check compares with the release tags
 
-      - uses: actions/setup-dotnet@v6
+      # The SDK comes from global.json; the tests also run on the .NET 10 and .NET 8 runtimes.
+      - uses: actions/setup-dotnet@v6.1.0
         with:
           global-json-file: global.json
-          dotnet-version: 8.0.x
+          dotnet-version: |
+            8.0.x
+            10.0.x
 
       # CI=true is set by GitHub Actions, so warnings are errors (see Directory.Build.props).
       - name: Restore
@@ -69,7 +72,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-dotnet@v6
+      - uses: actions/setup-dotnet@v6.1.0
         with:
           global-json-file: global.json
           dotnet-version: 8.0.x
