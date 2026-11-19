@@ -153,7 +153,7 @@ public partial class FontWrapper
                 {
                     clear(fonts);
                     clearTheme(fonts);
-                    if (!fonts.GetAttributes().Any())
+                    if (fonts.GetAttributes().Count == 0)
                     {
                         properties.RemoveRunProperty("rFonts");
                     }

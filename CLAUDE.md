@@ -15,7 +15,7 @@ dotnet test E2e4.OpenXml.Wrappers.slnx --filter "FullyQualifiedName~ParagraphWra
 dotnet format E2e4.OpenXml.Wrappers.slnx --verify-no-changes
 ```
 
-- Needs the .NET 10 SDK (builds) and the .NET 8 runtime. The library targets `net10.0`, `net8.0` and `netstandard2.0`; tests and samples target `net10.0`, `net8.0` and `net48` (`net48` runs the `netstandard2.0` build, Windows only).
+- Needs the .NET 11 SDK (builds) and the .NET 10 and .NET 8 runtimes. The library targets `net10.0`, `net11.0`, `net8.0` and `netstandard2.0`; tests and samples target `net10.0`, `net11.0`, `net8.0` and `net48` (`net48` runs the `netstandard2.0` build, Windows only).
 - `DocumentFormat.OpenXml` 3.x must stay the library's only dependency. `Compat.cs` and `Polyfills.cs` supply the newer BCL members `netstandard2.0` lacks; use `Guard.ThrowIfNull` rather than `ArgumentNullException.ThrowIfNull`, and avoid `Span`, `Index`/`Range` and `HashCode`.
 - The build must have zero warnings (`AnalysisLevel` is `latest-recommended`; `CI=true` makes warnings errors). `Nullable` is deliberately disabled.
 - Shared settings live in `Directory.Build.props`; there are no `AssemblyInfo.cs` files.
