@@ -44,6 +44,29 @@ public class TableOfContentsWrapperTest : IDisposable
             .Select(p => string.Concat(p.Descendants<Text>().Select(t => t.Text))).ToArray();
     }
 
+    //Word leaves out a heading with no text, only spaces or a tab, or only a section break (#90).
+    [Fact]
+    public void HeadingsWithoutTextAreNotEntries()
+    {
+        foreach (string text in new[] { string.Empty, "   ", "\t" })
+        {
+            ParagraphWrapper empty = _document.Paragraphs.Add();
+            empty.Range.Text = text;
+            empty.Style = "Heading 1";
+        }
+        _document.Sections.Add(_document.Paragraphs.Last.Range);
+        _document.Paragraphs.Last.Style = "Heading 1";
+        _document.Paragraphs.Last.Range.InsertAfter("Last");
+
+        TableOfContentsWrapper toc = _document.TablesOfContents.Add(_document.Range(0, 0));
+
+        Assert.Equal(new[] { "First1", "Second1", "Sub heading1", "Last1" }, EntryTexts());
+        Assert.Equal(4, toc.Range.Fields.Count(f => f.Type == FieldType.PageRef));
+        toc.Update();
+        Assert.Equal(new[] { "First1", "Second1", "Sub heading1", "Last1" }, EntryTexts());
+        AssertValid();
+    }
+
     [Fact]
     public void ADefaultTableListsEveryHeadingWithItsPage()
     {
