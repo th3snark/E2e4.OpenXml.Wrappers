@@ -8,6 +8,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 - `Range.Fields` of a span of characters (a footnote's or endnote's `Range`, `Document.Range(start, end)` and the like) threw `NullReferenceException`, and so did the `TablesOfContents` and `TablesOfFigures` built on it. As in Word, a span now has the fields whose begin or end it covers; a span only within a field's code or result, or a collapsed span, has none (#88).
 - The whole text of a text box (`Shape.TextFrame.TextRange`) now takes `Fields.Add`, `InsertBefore`, `InsertAfter`, text with paragraph marks, `InsertParagraphBefore`/`After`, `Delete` and character formatting and styles, as a header or footer does; they threw `NotSupportedException`. Deleting it leaves one empty paragraph with the formatting of the last, as in Word (#89).
 - A table of contents no longer has an entry for a heading with no text, or only spaces, tabs or a section break (such as the paragraph `Sections.Add` leaves before a heading), as in Word (#90).
+- `Field.Update` of a SEQ field now applies `\s n`: the count starts again after a heading of level n or higher, as measured in Word (the field's own heading counts, and so does an empty one). Of `\c` and `\r` the first one written wins, and either is ignored after `\s`, as in Word; before, `\r` always won (#93).
 
 ## [1.9.0] - 2026-11-19
 

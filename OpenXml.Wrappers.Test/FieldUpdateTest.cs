@@ -189,6 +189,52 @@ public class FieldUpdateTest : IDisposable
         Assert.Equal("11", next.Result.Text);
     }
 
+    //Documents of headings and SEQ fields with \s, and the results Word gave for them (#93). Each line is "style|text|code|result".
+    [Theory]
+    [InlineData(
+        "Heading 1|A||", "Normal|f1 |SEQ F \\s 1|1", "Normal|f2 |SEQ F|2",
+        "Heading 1|B||", "Normal|f3 |SEQ F|3", "Normal|f4 |SEQ F \\s 1|4",
+        "Heading 2|C||", "Normal|f5 |SEQ F \\s 2|1", "Normal|f6 |SEQ F \\s 1|2",
+        "Heading 3|D||", "Normal|f7 |SEQ F \\s 2|3",
+        "Heading 1|E |SEQ F \\s 1|1", "Normal|f9 |SEQ F \\s 1|2",
+        "Heading 1|||", "Normal|f10 |SEQ F \\s 1|1",
+        "Normal|f11 |SEQ F \\s 1 \\r 5|2", "Normal|f12 |SEQ F \\s 1 \\c|3",
+        "Heading 1|G||", "Normal|f13 |SEQ F \\s 1 \\c|1", "Normal|f14 |SEQ G \\s 1|1")]
+    [InlineData(
+        "Heading 1|A||", "Normal|a1 |SEQ F|1", "Normal|a2 |SEQ F \\r 5|5", "Normal|a3 |SEQ F \\c|5",
+        "Normal|b1 |SEQ F \\r 7 \\s 1|7", "Normal|b2 |SEQ F \\c \\s 1|7", "Normal|b3 |SEQ F \\s 1 \\c|8", "Normal|b4 |SEQ F \\s 1 \\r 9|9",
+        "Normal|b5 |SEQ F \\s 1 \\h|", "Normal|b6 |SEQ F \\s 1 \\* ROMAN|XI", "Normal|b7 |SEQ F \\s 1 \\n|12",
+        "Heading 1|B||", "Normal|c1 |SEQ F \\s 1 \\r 3|1", "Normal|c2 |SEQ F \\s 1|2")]
+    [InlineData(
+        "Heading 1|A||", "Normal|x1 |SEQ F|1", "Normal|x2 |SEQ F|2",
+        "Heading 1|B||", "Normal|y1 |SEQ F \\n \\s 1|1", "Normal|y2 |SEQ F \\c \\r 9|1", "Normal|y3 |SEQ F \\r 20 \\c|20",
+        "Heading 1|C||", "Normal|z1 |SEQ F \\c \\s 1|0",
+        "Heading 1|D||", "Normal|w1 |SEQ F \\r 4 \\s 1|4",
+        "Heading 1|E||", "Normal|v1 |SEQ F \\h \\s 1|", "Normal|v2 |SEQ F \\s 1 \\n|2")]
+    public void SequenceNumbersStartAgainAfterAHeadingWithTheRestartSwitch(params string[] lines)
+    {
+        System.Collections.Generic.List<(FieldWrapper Field, string Expected)> fields = new System.Collections.Generic.List<(FieldWrapper, string)>();
+        foreach (string line in lines)
+        {
+            string[] parts = line.Split('|');
+            ParagraphWrapper paragraph = _document.Paragraphs.Add();
+            paragraph.Range.Text = parts[1];
+            paragraph.Style = parts[0];
+            if (parts[2].Length > 0)
+            {
+                fields.Add((Add(parts[2]), parts[3]));
+            }
+        }
+
+        _document.Fields.Update();
+
+        foreach ((FieldWrapper field, string expected) in fields)
+        {
+            Assert.True(expected == field.Result.Text, string.Format(CultureInfo.InvariantCulture, "{0}: expected '{1}', got '{2}'", field.Code.Text, expected, field.Result.Text));
+        }
+        AssertValid();
+    }
+
     [Fact]
     public void ARefFieldShowsTheTextOfItsBookmark()
     {
