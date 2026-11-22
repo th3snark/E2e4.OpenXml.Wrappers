@@ -236,7 +236,8 @@ public class FieldUpdateTest : IDisposable
     }
 
     //Formulas outside a table and the results Word gave for them (#92); null for those left as they are (Word words their errors in its own
-    //way, or the result needs digit grouping, a cell reference or a \* number format, which are not worked out here).
+    //way, or the result needs digit grouping or a cell reference, which are not worked out here). The \* number formats are in
+    //FieldNumberFormatTest.
     [Theory]
     [InlineData("= 2 + 3", "5")]
     [InlineData("= 2/3", "0.67")]
@@ -297,7 +298,7 @@ public class FieldUpdateTest : IDisposable
     [InlineData("= Big * 2", null)]
     [InlineData("= A1 + 1", null)]
     [InlineData("= 123456789012345", null)]
-    [InlineData("= 5 \\* CardText", null)]
+    [InlineData("= 5 \\* CardText", "five")]
     [InlineData("= SUM(1;2;3)", null)]
     [InlineData("= 1e3", null)]
     [InlineData("= 1,5 + 1", null)]

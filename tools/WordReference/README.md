@@ -9,6 +9,7 @@ run on a developer's machine; the tests and CI only read the snapshots committed
 | `New-WordReferences.ps1` | Runs every scenario in Word and rewrites the snapshots. `-Scenario <name>` runs only some. |
 | `scenarios.ps1` | The scenarios: named scriptblocks of Word object model calls on a new document. |
 | `Test-OpensInWord.ps1` | Opens every sample document in Word; fails on a COM error, a repair or a failed export to PDF, and reports `Range.Text` differences. `-Folder` opens other documents. |
+| `Measure-NumberFormats.ps1` | Measures what Word shows for the number formats of the `\*` switch (ARABIC, ROMAN, ALPHABETIC, Ordinal, CardText, OrdText, Hex, ArabicDash, DollarText and their case variants) on formula, SEQ and QUOTE fields, and writes `OpenXml.Wrappers.Test/TestFiles/NumberFormats.txt` for `FieldNumberFormatTest`. Slow: about 40 minutes. |
 | `Measure-RefNumbers.ps1` | Measures what Word's REF field shows with the list-number switches (`\n`, `\r`, `\w`, `\t`, `\p`) in documents of five list templates, and writes `OpenXml.Wrappers.Test/TestFiles/RefNumbers.txt` for `FieldReferenceNumberTest`. |
 | `Measure-StyleRefs.ps1` | Measures what Word's STYLEREF field shows in the main text (its search, text, list-number switches, errors) and writes `OpenXml.Wrappers.Test/TestFiles/StyleRefs.txt` for `FieldStyleReferenceTest`. |
 | `WordAutomation.ps1` | Shared helpers: starting and quitting Word, guarding `Normal.dotm`. |
