@@ -235,6 +235,88 @@ public class FieldUpdateTest : IDisposable
         AssertValid();
     }
 
+    //Formulas outside a table and the results Word gave for them (#92); null for those left as they are (Word words their errors in its own
+    //way, or the result needs digit grouping, a cell reference or a \* number format, which are not worked out here).
+    [Theory]
+    [InlineData("= 2 + 3", "5")]
+    [InlineData("= 2/3", "0.67")]
+    [InlineData("= 10/4", "2.5")]
+    [InlineData("= 1/3*3", "1")]
+    [InlineData("= 2^10", "1024")]
+    [InlineData("= 7 - 10", "-3")]
+    [InlineData("= -5", "-5")]
+    [InlineData("= 50%", "0.5")]
+    [InlineData("= 50% * 8", "4")]
+    [InlineData("= 2 + 3 * 4", "14")]
+    [InlineData("= (2 + 3) * 4", "20")]
+    [InlineData("= 1 = 1", "1")]
+    [InlineData("= 2 < 1", "0")]
+    [InlineData("= 3 <> 3", "0")]
+    [InlineData("= 3 >= 3", "1")]
+    [InlineData("= SUM(1, 2, 3)", "6")]
+    [InlineData("= AVERAGE(1, 2)", "1.5")]
+    [InlineData("= COUNT(1, 2, 5)", "3")]
+    [InlineData("= MAX(3, 9, 2)", "9")]
+    [InlineData("= MIN(3, 9, 2)", "2")]
+    [InlineData("= PRODUCT(2, 3, 4)", "24")]
+    [InlineData("= ABS(-4)", "4")]
+    [InlineData("= INT(5.7)", "5")]
+    [InlineData("= INT(-5.7)", "-5")]
+    [InlineData("= MOD(7, 3)", "1")]
+    [InlineData("= MOD(-7, 3)", "-1")]
+    [InlineData("= ROUND(2.567, 2)", "2.57")]
+    [InlineData("= ROUND(2.5, 0)", "3")]
+    [InlineData("= ROUND(-2.5, 0)", "-3")]
+    [InlineData("= ROUND(1234, -2)", "1200")]
+    [InlineData("= SIGN(-3)", "-1")]
+    [InlineData("= SIGN(0)", "0")]
+    [InlineData("= IF(1 > 0, 10, 20)", "10")]
+    [InlineData("= IF(0, 10, 20)", "20")]
+    [InlineData("= AND(1, 0)", "0")]
+    [InlineData("= OR(1, 0)", "1")]
+    [InlineData("= NOT(1)", "0")]
+    [InlineData("= TRUE", "1")]
+    [InlineData("= FALSE", "0")]
+    [InlineData("= DEFINED(Price)", "1")]
+    [InlineData("= DEFINED(Nope)", "0")]
+    [InlineData("= Price * Qty", "50")]
+    [InlineData("= Price + 1", "13.5")]
+    [InlineData("= Txt + 1", "1")]
+    [InlineData("= Nope + 1", "!Undefined Bookmark, NOPE")]
+    [InlineData("= 1 / 0", "!Zero Divide")]
+    [InlineData("= 2 +", "!Unexpected End of Formula")]
+    [InlineData("= SUM(ABOVE)", "!The Formula Not In Table")]
+    [InlineData("= 1000000", "1000000")]
+    [InlineData("= 1234567.891", "1234567.891")]
+    [InlineData("= 0.1 + 0.2", "0.3")]
+    [InlineData("= 1/7", "0.14")]
+    [InlineData("= 2 + 3 \\# \"0.00\"", "5.00")]
+    [InlineData("= 1234.5 \\# \"#,##0.00\"", "1,234.50")]
+    [InlineData("= 3.0", "3")]
+    [InlineData("= .5 + 1", "1.5")]
+    [InlineData("= Big * 2", null)]
+    [InlineData("= A1 + 1", null)]
+    [InlineData("= 123456789012345", null)]
+    [InlineData("= 5 \\* CardText", null)]
+    [InlineData("= SUM(1;2;3)", null)]
+    [InlineData("= 1e3", null)]
+    [InlineData("= 1,5 + 1", null)]
+    public void FormulasOutsideATableAreWorkedOut(string code, string expected)
+    {
+        _document.Content.Text = "Price 12.5 and qty 4 and text abc and big 1,234.5.";
+        _document.Bookmarks.Add("Price", _document.Range(6, 10));
+        _document.Bookmarks.Add("Qty", _document.Range(19, 20));
+        _document.Bookmarks.Add("Txt", _document.Range(30, 33));
+        _document.Bookmarks.Add("Big", _document.Range(42, 49));
+        FieldWrapper field = Add(code);
+        field.Result.Text = "?";
+
+        bool updated = field.Update();
+
+        Assert.Equal(expected ?? "?", field.Result.Text);
+        Assert.Equal(expected != null, updated);
+    }
+
     [Fact]
     public void ARefFieldShowsTheTextOfItsBookmark()
     {

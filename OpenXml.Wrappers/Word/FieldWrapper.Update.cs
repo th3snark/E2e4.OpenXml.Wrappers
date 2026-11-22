@@ -124,7 +124,7 @@ public partial class FieldWrapper
     /// <summary>
     /// Works out the result of the field again, as <c>Field.Update</c> in Word, and returns whether it did. Fields that do not depend on how
     /// the pages are laid out are worked out: the date and time, document properties (author, title, DOCPROPERTY and so on), file name, user
-    /// name, number of words and characters, SEQ, REF, IF and QUOTE. The switches for the format of the result (<c>\@</c> for dates and
+    /// name, number of words and characters, SEQ, REF, IF, QUOTE and formulas (<c>=</c>, in a table or not). The switches for the format of the result (<c>\@</c> for dates and
     /// <c>\*</c> for case and numbers) are applied. A locked field, and fields such as PAGE, NUMPAGES, PAGEREF, TOC and MERGEFIELD, are left as
     /// they are (the latter are marked for Word to update when the document is opened) and report false.
     /// </summary>
@@ -318,7 +318,14 @@ internal static class FieldUpdater
         if (instruction.Name.Length > 0 && instruction.Name[0] == '=')
         {
             string expression = instruction.Name + string.Concat(instruction.Arguments);
-            return TableFormulas.Compute(field.Key.Ancestors<TableCell>().FirstOrDefault(), expression, instruction.GetSwitch("#"));
+            TableCell cell = field.Key.Ancestors<TableCell>().FirstOrDefault();
+            //A number format of \* (such as CardText) is not applied to a formula here, so such a field is left as it is.
+            if (instruction.Switches.Any(s => s.Key == "*" && s.Value != null && !IsTextFormat(s.Value)))
+            {
+                return null;
+            }
+            return TableFormulas.Compute(cell, expression, instruction.GetSwitch("#"))
+                ?? FieldFormulas.Compute(expression.Substring(1), field.Key.GetRoot(), cell != null, instruction.GetSwitch("#"));
         }
 
         switch (instruction.Name)
@@ -629,6 +636,12 @@ internal static class FieldUpdater
     #region Formats
 
     //The format switches of a field: \* Upper, Lower, FirstCap and Caps for text, and ARABIC, roman, ROMAN, alphabetic and ALPHABETIC for numbers.
+    //The \* formats that change the case of the text, or keep its formatting, rather than write a number.
+    private static bool IsTextFormat(string format)
+    {
+        return new[] { "Upper", "Lower", "FirstCap", "Caps", "MERGEFORMAT", "CHARFORMAT" }.Contains(format, StringComparer.OrdinalIgnoreCase);
+    }
+
     private static string ApplyFormat(string text, Instruction instruction)
     {
         foreach (KeyValuePair<string, string> pair in instruction.Switches)
