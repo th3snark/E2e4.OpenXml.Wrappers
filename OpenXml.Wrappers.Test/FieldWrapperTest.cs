@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using DocumentFormat.OpenXml.Wordprocessing;
 using OpenXml.Wrappers.Word;
@@ -164,6 +166,109 @@ public class FieldWrapperTest
 
         Assert.Single(range.Fields);
         Assert.Equal("Page  of 9", range.Text.TrimEnd('\r'));
+    }
+
+    //"Before X after." with a PAGE field at 7, as Word lays it out: begin 7, code 8-14, separator 14, result 15, end 16. The counts are what
+    //Word gives for Document.Range(start, end).Fields.Count: a span has a field when it covers the field's begin or end.
+    [Theory]
+    [InlineData(0, 3, 0)]
+    [InlineData(0, 7, 0)]
+    [InlineData(0, 8, 1)]
+    [InlineData(0, 17, 1)]
+    [InlineData(5, 9, 1)]
+    [InlineData(6, 7, 0)]
+    [InlineData(7, 7, 0)]
+    [InlineData(7, 8, 1)]
+    [InlineData(8, 8, 0)]
+    [InlineData(10, 12, 0)]
+    [InlineData(14, 14, 0)]
+    [InlineData(15, 16, 0)]
+    [InlineData(16, 16, 0)]
+    [InlineData(16, 17, 1)]
+    [InlineData(17, 20, 0)]
+    public void FieldsOfASpanAreThoseWhoseBeginOrEndItCovers(int start, int end, int expected)
+    {
+        using MemoryStream stream = new MemoryStream();
+        using WordprocessingDocumentWrapper document = WordprocessingDocumentWrapper.Create(stream, true, false);
+        document.Paragraphs[0].Range.Text = "Before X after.";
+        FieldWrapper field = document.Fields.Add(document.Range(7, 7), FieldType.Empty, "PAGE", false);
+        field.Result.Text = "1";
+        Assert.Equal(8, field.Code.Range.Start);
+        Assert.Equal(14, field.Code.Range.End);
+        Assert.Equal(15, field.Result.Range.Start);
+        Assert.Equal(16, field.Result.Range.End);
+
+        FieldWrapperCollection fields = document.Range(start, end).Fields;
+
+        Assert.Equal(expected, fields.Count);
+        Assert.Equal(expected, fields.ToList().Count);
+        if (expected == 1)
+        {
+            Assert.Equal(field, fields[0]);
+        }
+    }
+
+    [Fact]
+    public void FieldsOfASpanIncludeSimpleAndNestedFieldsInOrder()
+    {
+        Body body = CreateBody();
+        Paragraph nested = new Paragraph(
+            FieldCharRun(FieldCharValues.Begin),
+            new Run(new FieldCode(" IF ")),
+            FieldCharRun(FieldCharValues.Begin),
+            new Run(new FieldCode(" PAGE ")),
+            FieldCharRun(FieldCharValues.Separate),
+            new Run(new Text("1")),
+            FieldCharRun(FieldCharValues.End),
+            new Run(new FieldCode(" = 1 yes no ")),
+            FieldCharRun(FieldCharValues.Separate),
+            new Run(new Text("yes")),
+            FieldCharRun(FieldCharValues.End));
+        body.AppendChild(nested);
+        StoryMap map = StoryMap.Build(body);
+        List<FieldWrapper> all = new RangeWrapper(body).Fields.ToList();
+        Assert.Equal(5, all.Count);
+
+        //The whole story.
+        Assert.Equal(all, RangeWrapper.FromMap(map, 0, map.Length).Fields.ToList());
+
+        //The date field, written as one element, from its begin or its end.
+        FieldWrapper date = all[2];
+        SimpleField simple = body.Descendants<SimpleField>().Single();
+        Atom begin = map.Atoms.Single(a => ReferenceEquals(a.Element, simple));
+        Atom end = map.Atoms.Single(a => a.Kind == AtomKind.FieldMark && ReferenceEquals(a.Element.Parent, simple));
+        Assert.Equal(new[] { date }, RangeWrapper.FromMap(map, begin.Start, begin.Start + 1).Fields.ToList());
+        Assert.Equal(new[] { date }, RangeWrapper.FromMap(map, end.Start, end.End).Fields.ToList());
+        Assert.Empty(RangeWrapper.FromMap(map, begin.End, end.Start).Fields);
+
+        //From the end of the inner field to the end of the outer one: both, outer first.
+        FieldWrapper outer = all[3];
+        FieldWrapper inner = all[4];
+        Assert.Equal(new[] { outer, inner }, RangeWrapper.FromMap(map, inner.Result.Range.End, outer.Result.Range.End + 1).Fields.ToList());
+    }
+
+    [Fact]
+    public void FieldsOfTheRangeOfANote()
+    {
+        using MemoryStream stream = new MemoryStream();
+        using WordprocessingDocumentWrapper document = WordprocessingDocumentWrapper.Create(stream, true, false);
+        ParagraphWrapper paragraph = document.Paragraphs[0];
+        paragraph.Range.Text = "A claim.";
+        FootnoteWrapper footnote = paragraph.Range.Footnotes.Add(paragraph.Range, null, "See page ");
+        EndnoteWrapper endnote = paragraph.Range.Endnotes.Add(paragraph.Range, null, "See page ");
+        Assert.Empty(footnote.Range.Fields);
+        Assert.Empty(endnote.Range.Fields);
+
+        RangeWrapper footnoteText = footnote.Range;
+        FieldWrapper inFootnote = footnoteText.Fields.Add(footnoteText, "PAGE");
+        inFootnote.Result.Text = "1";
+        RangeWrapper endnoteText = endnote.Range;
+        FieldWrapper inEndnote = endnoteText.Fields.Add(endnoteText, "PAGE");
+        inEndnote.Result.Text = "1";
+
+        Assert.Equal(inFootnote, footnote.Range.Fields.Single());
+        Assert.Equal(inEndnote, endnote.Range.Fields.Single());
+        Assert.Equal("See page 1", footnote.Range.Text);
     }
 
     [Fact]

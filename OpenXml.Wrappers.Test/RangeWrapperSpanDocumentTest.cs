@@ -189,4 +189,35 @@ public class RangeWrapperSpanDocumentTest : IDisposable
             AssertValid(document);
         }
     }
+
+    //Every collection of a span (part of the main text, and a note's text) can be listed: each used to read the range's elements, which a
+    //span does not have.
+    [Fact]
+    public void EveryCollectionOfASpanCanBeListed()
+    {
+        using (WordprocessingDocumentWrapper document = CreateDocument("Hello world", "Second"))
+        {
+            RangeWrapper first = document.Paragraphs[0].Range;
+            FootnoteWrapper footnote = first.Footnotes.Add(first, null, "A footnote.");
+            EndnoteWrapper endnote = first.Endnotes.Add(first, null, "An endnote.");
+
+            foreach (RangeWrapper range in new[] { document.Range(2, 9), footnote.Range, endnote.Range })
+            {
+                Assert.Empty(range.Fields);
+                Assert.Empty(range.TablesOfContents);
+                Assert.Empty(range.TablesOfFigures);
+                Assert.Empty(range.InlineShapes);
+                Assert.Empty(range.ContentControls);
+                Assert.Empty(range.Hyperlinks);
+                Assert.Empty(range.Bookmarks);
+                Assert.Empty(range.Comments);
+                Assert.Empty(range.Tables);
+                Assert.Single(range.Paragraphs);
+            }
+            Assert.Single(document.Range(2, 9).Sections);
+            Assert.Empty(footnote.Range.Footnotes);
+            Assert.Empty(endnote.Range.Endnotes);
+            AssertValid(document);
+        }
+    }
 }

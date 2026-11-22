@@ -50,6 +50,11 @@ public class FieldWrapperCollection : IEnumerable<FieldWrapper>
 
     private IList<FieldWrapper> GetElementList()
     {
+        if (_range.IsSpan)
+        {
+            return GetSpanElementList();
+        }
+
         List<OpenXmlElement> starts = new List<OpenXmlElement>();
         starts.AddRange(_range.StartElement.GetElements<Run>(_range.EndElement)
             .SelectMany(r => r.Elements<FieldChar>())
@@ -59,6 +64,63 @@ public class FieldWrapperCollection : IEnumerable<FieldWrapper>
         //Complex fields and simple fields are found separately, so put them back in document order.
         starts.Sort((a, b) => ReferenceEquals(a, b) ? 0 : a.IsBefore(b) ? -1 : 1);
         return starts.Select(e => e is SimpleField ? new FieldWrapper((SimpleField)e) : new FieldWrapper((FieldChar)e)).ToList();
+    }
+
+    //The fields of a span of characters. As in Word, a field is in the span when the span covers its begin or its end: a span that is only
+    //within its code or its result, or a collapsed span, has none.
+    private List<FieldWrapper> GetSpanElementList()
+    {
+        OpenXmlElement root = StoryMap.FindRoot(_range.AnchorElement);
+        StoryMap map = StoryMap.Build(root);
+        _range.GetStoryPositions(out int rangeStart, out int rangeEnd);
+
+        List<FieldWrapper> fields = new List<FieldWrapper>();
+        HashSet<OpenXmlElement> added = new HashSet<OpenXmlElement>();
+        Stack<FieldChar> open = new Stack<FieldChar>();
+        foreach (Atom atom in map.Atoms)
+        {
+            OpenXmlElement field = null;
+            int mark = -1;
+            if (atom.Kind == AtomKind.FieldMark && atom.Element is FieldChar fieldChar)
+            {
+                FieldCharValues type = fieldChar.FieldCharType?.Value ?? FieldCharValues.Begin;
+                if (type == FieldCharValues.Begin)
+                {
+                    open.Push(fieldChar);
+                    field = fieldChar;
+                    mark = atom.Start;
+                }
+                else if (type == FieldCharValues.End && open.Count > 0)
+                {
+                    field = open.Pop();
+                    mark = atom.Start;
+                }
+            }
+            else if (atom.Kind == AtomKind.FieldCode && atom.Element is SimpleField simpleField)
+            {
+                field = simpleField;
+                mark = atom.Start;
+                //A field with no result has its end in the same piece as its begin.
+                if (simpleField.LastChild == null && rangeStart <= atom.End - 1 && atom.End - 1 < rangeEnd)
+                {
+                    mark = atom.End - 1;
+                }
+            }
+            else if (atom.Kind == AtomKind.FieldMark && atom.Element.Parent is SimpleField endOfSimple)
+            {
+                field = endOfSimple;
+                mark = atom.Start;
+            }
+
+            if (field != null && rangeStart <= mark && mark < rangeEnd && added.Add(field))
+            {
+                fields.Add(field is SimpleField simple ? new FieldWrapper(simple) : new FieldWrapper((FieldChar)field));
+            }
+        }
+
+        //A field found by its end comes after the fields that begin within it, so put them back in the order of their begins.
+        fields.Sort((a, b) => ReferenceEquals(a.Key, b.Key) ? 0 : a.Key.IsBefore(b.Key) ? -1 : 1);
+        return fields;
     }
 
     /// <summary>
