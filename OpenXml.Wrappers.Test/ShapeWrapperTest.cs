@@ -262,6 +262,39 @@ public class ShapeWrapperTest : IDisposable
         AssertValid();
     }
 
+    //The whole text of a text box takes fields, text and paragraphs, as a header does (#89). Deleting it leaves one empty paragraph with the
+    //formatting of the last, as in Word.
+    [Fact]
+    public void TheWholeTextOfATextBoxCanBeEdited()
+    {
+        ShapeWrapper box = _document.Shapes.AddTextbox(TextOrientation.Horizontal, 20, 30, 120, 60, _document.Range(5, 5));
+
+        FieldWrapper field = _document.Fields.Add(box.TextFrame.TextRange, "PAGE");
+        field.Result.Text = "1";
+        Assert.Equal(field, box.TextFrame.TextRange.Fields.Single());
+
+        box.TextFrame.TextRange.InsertAfter(" of a box");
+        box.TextFrame.TextRange.InsertBefore("Page ");
+        box.TextFrame.TextRange.InsertParagraphAfter();
+        box.TextFrame.TextRange.InsertAfter("Last");
+        Assert.Equal("Page 1 of a box\rLast\r", box.TextFrame.TextRange.Text);
+        Assert.Equal(2, box.TextFrame.TextRange.Paragraphs.Count);
+
+        box.TextFrame.TextRange.Font.Bold = true;
+        Assert.True(box.TextFrame.TextRange.Font.Bold);
+        AssertValid();
+
+        box.TextFrame.TextRange.Paragraphs[0].Alignment = ParagraphAlignment.Center;
+        box.TextFrame.TextRange.Paragraphs[1].Alignment = ParagraphAlignment.Right;
+        box.TextFrame.TextRange.Delete();
+
+        Assert.Equal("\r", box.TextFrame.TextRange.Text);
+        Assert.Equal(ParagraphAlignment.Right, box.TextFrame.TextRange.Paragraphs.Single().Alignment);
+        Assert.Empty(_document.Fields);
+        Assert.Equal("Hello world again", _document.Content.Text.TrimEnd('\r'));
+        AssertValid();
+    }
+
     [Fact]
     public void ShapesOfTheGalleryAreNamedByTheirOrderAndKeepTheirType()
     {

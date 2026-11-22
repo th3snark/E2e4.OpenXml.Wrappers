@@ -6,6 +6,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ### Fixed
 - `Range.Fields` of a span of characters (a footnote's or endnote's `Range`, `Document.Range(start, end)` and the like) threw `NullReferenceException`, and so did the `TablesOfContents` and `TablesOfFigures` built on it. As in Word, a span now has the fields whose begin or end it covers; a span only within a field's code or result, or a collapsed span, has none (#88).
+- The whole text of a text box (`Shape.TextFrame.TextRange`) now takes `Fields.Add`, `InsertBefore`, `InsertAfter`, text with paragraph marks, `InsertParagraphBefore`/`After`, `Delete` and character formatting and styles, as a header or footer does; they threw `NotSupportedException`. Deleting it leaves one empty paragraph with the formatting of the last, as in Word (#89).
 
 ## [1.9.0] - 2026-11-19
 
