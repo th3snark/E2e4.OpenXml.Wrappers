@@ -474,22 +474,29 @@ internal static class FieldUpdater
         }
 
         string identifier = instruction.Arguments[0];
+        OpenXmlElement root = field.Key.GetRoot();
         long value = 0;
-        foreach (FieldWrapper other in new FieldWrapperCollection(new RangeWrapper(field.Key.GetRoot())))
+        int previousParagraph = -1;
+        Dictionary<Paragraph, int> paragraphIndexes = null;
+        List<KeyValuePair<int, int>> headings = null;
+        foreach (FieldWrapper other in new FieldWrapperCollection(new RangeWrapper(root)))
         {
             Instruction otherInstruction = ReferenceEquals(other, field) || other.Equals(field) ? instruction : Parse(other.CodeText);
             if (otherInstruction.Name == "SEQ" && otherInstruction.Arguments.Count > 0
                 && string.Equals(otherInstruction.Arguments[0], identifier, StringComparison.OrdinalIgnoreCase))
             {
-                string reset = otherInstruction.GetSwitch("r");
-                if (reset != null && long.TryParse(reset, NumberStyles.Integer, CultureInfo.InvariantCulture, out long number))
+                if (paragraphIndexes == null)
                 {
-                    value = number;
+                    paragraphIndexes = new Dictionary<Paragraph, int>();
+                    foreach (Paragraph paragraph in root.Descendants<Paragraph>())
+                    {
+                        paragraphIndexes[paragraph] = paragraphIndexes.Count;
+                    }
                 }
-                else if (otherInstruction.GetSwitch("c") == null)
-                {
-                    value++;
-                }
+                Paragraph own = other.Key.Ancestors<Paragraph>().FirstOrDefault();
+                int paragraphIndex = own != null && paragraphIndexes.TryGetValue(own, out int found) ? found : previousParagraph;
+                value = NextSequenceValue(value, otherInstruction, previousParagraph, paragraphIndex, () => headings ?? (headings = Headings(paragraphIndexes)));
+                previousParagraph = paragraphIndex;
             }
 
             if (other.Equals(field))
@@ -499,6 +506,47 @@ internal static class FieldUpdater
         }
         //The switch that hides the number leaves the result empty.
         return instruction.GetSwitch("h") != null ? string.Empty : FormatNumber(value, instruction.GetSwitch("*"));
+    }
+
+    //The number a SEQ field gives after the previous one of its sequence gave value, as Word works it out. \s n starts the count again after a
+    //heading of level n or higher that begins after the previous field of the sequence (the field's own heading paragraph counts, and so does
+    //an empty heading). Of \c (repeat) and \r (start at), the first one written wins, and Word ignores either when it comes after \s.
+    private static long NextSequenceValue(long value, Instruction instruction, int previousParagraph, int paragraph, Func<List<KeyValuePair<int, int>>> headings)
+    {
+        int restartAt = instruction.Switches.FindIndex(s => s.Key == "s");
+        if (restartAt >= 0 && int.TryParse(instruction.Switches[restartAt].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int level)
+            && headings().Any(h => h.Value <= level && h.Key > previousParagraph && h.Key <= paragraph))
+        {
+            value = 0;
+        }
+
+        int last = restartAt >= 0 ? restartAt : instruction.Switches.Count;
+        KeyValuePair<string, string> mode = instruction.Switches.Take(last).FirstOrDefault(s => s.Key == "c" || s.Key == "r");
+        if (mode.Key == "c")
+        {
+            return value;
+        }
+        if (mode.Key == "r" && long.TryParse(mode.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out long number))
+        {
+            return number;
+        }
+        return value + 1;
+    }
+
+    //The paragraphs in the built-in heading styles, as their index in document order and their level (1 to 9).
+    private static List<KeyValuePair<int, int>> Headings(Dictionary<Paragraph, int> paragraphIndexes)
+    {
+        List<KeyValuePair<int, int>> headings = new List<KeyValuePair<int, int>>();
+        foreach (KeyValuePair<Paragraph, int> paragraph in paragraphIndexes)
+        {
+            string styleId = paragraph.Key.ParagraphProperties?.ParagraphStyleId?.Val?.Value;
+            string name = styleId == null ? null : StyleHelper.GetStyleName(paragraph.Key, styleId);
+            if (name != null && name.Length == 9 && name.StartsWith("heading ", StringComparison.OrdinalIgnoreCase) && name[8] >= '1' && name[8] <= '9')
+            {
+                headings.Add(new KeyValuePair<int, int>(paragraph.Value, name[8] - '0'));
+            }
+        }
+        return headings;
     }
 
     private static string Reference(FieldWrapper field, Instruction instruction, ref bool ok)
