@@ -64,7 +64,8 @@ public partial class RangeWrapper
             target = after ? NextParagraphInStory(paragraph) ?? paragraph : paragraph;
             after = after && target == paragraph;
         }
-        else if (_startOpenXmlElement is TableCell || _startOpenXmlElement is Header || _startOpenXmlElement is Footer || _startOpenXmlElement is Document || _startOpenXmlElement is Body)
+        else if (_startOpenXmlElement is TableCell || _startOpenXmlElement is Header || _startOpenXmlElement is Footer || _startOpenXmlElement is TextBoxContent
+            || _startOpenXmlElement is Document || _startOpenXmlElement is Body)
         {
             OpenXmlElement container = _startOpenXmlElement is Document ? GetBody() : _startOpenXmlElement;
             target = (after ? container.ChildElements.LastOrDefault(e => !(e is SectionProperties)) : container.ChildElements.FirstOrDefault(e => !(e is SectionProperties || e is TableCellProperties))) as Paragraph;
@@ -142,7 +143,7 @@ public partial class RangeWrapper
         {
             InsertRunsIntoBody(GetBody(), build, after);
         }
-        else if (_startOpenXmlElement is Header || _startOpenXmlElement is Footer)
+        else if (_startOpenXmlElement is Header || _startOpenXmlElement is Footer || _startOpenXmlElement is TextBoxContent)
         {
             InsertRunsIntoBody((OpenXmlCompositeElement)_startOpenXmlElement, build, after);
         }

@@ -79,7 +79,7 @@ public partial class RangeWrapper
             return new ParagraphWrapper(after ? AddParagraphAfter(block) : AddParagraphBefore(block));
         }
         if (_startOpenXmlElement is TableCell || _startOpenXmlElement is Document || _startOpenXmlElement is Body
-            || _startOpenXmlElement is Header || _startOpenXmlElement is Footer)
+            || _startOpenXmlElement is Header || _startOpenXmlElement is Footer || _startOpenXmlElement is TextBoxContent)
         {
             OpenXmlCompositeElement container = _startOpenXmlElement is Document ? GetBody() : (OpenXmlCompositeElement)_startOpenXmlElement;
             OpenXmlElement edge = after

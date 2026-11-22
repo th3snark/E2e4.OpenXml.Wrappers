@@ -59,6 +59,10 @@ public partial class RangeWrapper
         {
             EmptyHeaderFooter(_startOpenXmlElement);
         }
+        else if (_startOpenXmlElement is TextBoxContent)
+        {
+            EmptyTextBox(_startOpenXmlElement);
+        }
         else
         {
             throw new NotSupportedException(string.Format(CultureInfo.InvariantCulture, "Deleting is not currently supported for a range starting with the type {0}", _startOpenXmlElement.GetType().Name));
@@ -162,6 +166,14 @@ public partial class RangeWrapper
         //A header or footer keeps one empty paragraph, as Word does.
         DeleteElements(headerOrFooter.ChildElements.ToList());
         headerOrFooter.AppendChild(HeaderFooterWrapper.NewParagraph(headerOrFooter));
+    }
+
+    private static void EmptyTextBox(OpenXmlElement content)
+    {
+        //As in Word, the text box keeps one empty paragraph with the formatting of its last paragraph.
+        ParagraphProperties properties = content.Elements<Paragraph>().LastOrDefault()?.ParagraphProperties?.CloneNode(true) as ParagraphProperties;
+        DeleteElements(content.ChildElements.ToList());
+        content.AppendChild(properties == null ? new Paragraph() : new Paragraph(properties));
     }
 
     private static void EmptyBody(Body body)

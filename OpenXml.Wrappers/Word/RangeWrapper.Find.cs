@@ -49,7 +49,7 @@ public partial class RangeWrapper
 
         if (_startOpenXmlElement is Paragraph || _startOpenXmlElement is TableCell || _startOpenXmlElement is TableRow || _startOpenXmlElement is Table
             || _startOpenXmlElement is Document || _startOpenXmlElement is Body || _startOpenXmlElement is Comment
-            || _startOpenXmlElement is Header || _startOpenXmlElement is Footer)
+            || _startOpenXmlElement is Header || _startOpenXmlElement is Footer || _startOpenXmlElement is TextBoxContent)
         {
             return _startOpenXmlElement.GetElements<Paragraph>()
                 .Select(p => p.Descendants<Run>().Where(r => r.Ancestors<Paragraph>().First() == p).ToList())
