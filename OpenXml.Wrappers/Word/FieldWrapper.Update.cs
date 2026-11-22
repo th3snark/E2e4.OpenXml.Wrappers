@@ -320,13 +320,16 @@ internal static class FieldUpdater
         {
             string expression = instruction.Name + string.Concat(instruction.Arguments);
             TableCell cell = field.Key.Ancestors<TableCell>().FirstOrDefault();
-            //A number format of \* (such as CardText) is not applied to a formula here, so such a field is left as it is.
-            if (instruction.Switches.Any(s => s.Key == "*" && s.Value != null && !IsTextFormat(s.Value)))
+            string result = TableFormulas.Compute(cell, expression, instruction.GetSwitch("#"))
+                ?? FieldFormulas.Compute(expression.Substring(1), field.Key.GetRoot(), cell != null, instruction.GetSwitch("#"));
+            //A number format of \* is not applied to an error of the formula here (how Word shows that is not measured), so such a field is
+            //left as it is.
+            if (result != null && result.Length > 0 && result[0] == '!'
+                && instruction.Switches.Any(s => s.Key == "*" && FieldNumberFormats.IsNumberFormat(s.Value)))
             {
                 return null;
             }
-            return TableFormulas.Compute(cell, expression, instruction.GetSwitch("#"))
-                ?? FieldFormulas.Compute(expression.Substring(1), field.Key.GetRoot(), cell != null, instruction.GetSwitch("#"));
+            return result;
         }
 
         switch (instruction.Name)
@@ -514,8 +517,11 @@ internal static class FieldUpdater
                 break;
             }
         }
-        //The switch that hides the number leaves the result empty.
-        return instruction.GetSwitch("h") != null ? string.Empty : FormatNumber(value, instruction.GetSwitch("*"));
+        //The switch that hides the number leaves the result empty, unless a number format of \* shows it after all, as in Word. The \*
+        //formats are applied to the number afterwards, as to any field's result.
+        bool shown = instruction.GetSwitch("h") == null
+            || instruction.Switches.Any(s => s.Key == "*" && FieldNumberFormats.IsNumberFormat(s.Value));
+        return shown ? value.ToString(CultureInfo.InvariantCulture) : string.Empty;
     }
 
     //The number a SEQ field gives after the previous one of its sequence gave value, as Word works it out. \s n starts the count again after a
@@ -792,84 +798,121 @@ internal static class FieldUpdater
 
     #region Formats
 
-    //The format switches of a field: \* Upper, Lower, FirstCap and Caps for text, and ARABIC, roman, ROMAN, alphabetic and ALPHABETIC for numbers.
-    //The \* formats that change the case of the text, or keep its formatting, rather than write a number.
-    private static bool IsTextFormat(string format)
-    {
-        return new[] { "Upper", "Lower", "FirstCap", "Caps", "MERGEFORMAT", "CHARFORMAT" }.Contains(format, StringComparer.OrdinalIgnoreCase);
-    }
-
+    //The \* switches of a field, applied in the order they are written, as in Word: Upper, Lower, FirstCap and Caps change the case of the
+    //text so far, and a number format (FieldNumberFormats) writes again the number the result started with, so it replaces what the switches
+    //before it did. A result that does not start with a number is left as it is by a number format. Gives null (the field is left as it is)
+    //for what is not worked out here: a number format before the \# picture switch, which Word reports as an error, or a number Word reads in
+    //its own way.
     private static string ApplyFormat(string text, Instruction instruction)
     {
+        string original = text;
+        bool? parsed = null;
+        decimal number = 0;
+        bool picture = false;
         foreach (KeyValuePair<string, string> pair in instruction.Switches)
         {
+            if (pair.Key == "#")
+            {
+                picture = true;
+            }
             if (pair.Key != "*" || pair.Value == null)
             {
                 continue;
             }
 
-            switch (pair.Value)
+            if (FieldNumberFormats.IsNumberFormat(pair.Value))
             {
-                case "Upper":
+                if (instruction.Switches.Any(s => s.Key == "#") && !picture)
+                {
+                    return null;
+                }
+                if (parsed == null)
+                {
+                    parsed = FieldNumberFormats.TryParseLeadingNumber(original, CultureInfo.CurrentCulture, out number);
+                    if (parsed == null)
+                    {
+                        return null;
+                    }
+                }
+                if (parsed == true)
+                {
+                    text = FieldNumberFormats.Format(number, pair.Value);
+                }
+                continue;
+            }
+
+            //The names are not case sensitive, as in Word.
+            switch (pair.Value.ToUpperInvariant())
+            {
+                case "UPPER":
                     text = text.ToUpperInvariant();
                     break;
-                case "Lower":
+                case "LOWER":
                     text = text.ToLowerInvariant();
                     break;
-                case "FirstCap":
-                    text = text.Length == 0 ? text : char.ToUpperInvariant(text[0]) + text.Substring(1).ToLowerInvariant();
+                case "FIRSTCAP":
+                    text = FirstCap(text);
                     break;
-                case "Caps":
-                    text = CultureInfo.InvariantCulture.TextInfo.ToTitleCase(text.ToLowerInvariant());
+                case "CAPS":
+                    text = Caps(text);
                     break;
             }
         }
         return text;
     }
 
-    private static string FormatNumber(long value, string format)
+    //FirstCap, as measured in Word: the first character after any spaces is made a capital if it is a letter; the rest is left as it is.
+    private static string FirstCap(string text)
     {
-        if (format == null || string.Equals(format, "ARABIC", StringComparison.OrdinalIgnoreCase))
+        int i = 0;
+        while (i < text.Length && char.IsWhiteSpace(text[i]))
         {
-            return value.ToString(CultureInfo.InvariantCulture);
+            i++;
         }
-        if (value <= 0)
+        if (i == text.Length || !char.IsLetter(text[i]))
         {
-            return value.ToString(CultureInfo.InvariantCulture);
+            return text;
         }
-        if (string.Equals(format, "ROMAN", StringComparison.OrdinalIgnoreCase))
-        {
-            string roman = ToRoman(value);
-            return format == "ROMAN" ? roman : roman.ToLowerInvariant();
-        }
-        if (string.Equals(format, "ALPHABETIC", StringComparison.OrdinalIgnoreCase))
-        {
-            string letters = ToLetters(value);
-            return format == "ALPHABETIC" ? letters : letters.ToLowerInvariant();
-        }
-        return value.ToString(CultureInfo.InvariantCulture);
+        char[] characters = text.ToCharArray();
+        characters[i] = char.ToUpperInvariant(characters[i]);
+        return new string(characters);
     }
 
-    private static string ToRoman(long value)
+    //Caps, as measured in Word: each word (after a space or a hyphen) starts with a capital and goes on in lowercase, except that when the
+    //text has lowercase letters a word all in capitals (such as an abbreviation) is left as it is.
+    private static string Caps(string text)
     {
-        (int Value, string Symbol)[] table = { (1000, "M"), (900, "CM"), (500, "D"), (400, "CD"), (100, "C"), (90, "XC"), (50, "L"), (40, "XL"), (10, "X"), (9, "IX"), (5, "V"), (4, "IV"), (1, "I") };
-        StringBuilder sb = new StringBuilder();
-        foreach ((int number, string symbol) in table)
+        bool keepCapitals = text.Any(char.IsLower);
+        char[] characters = text.ToCharArray();
+        int start = 0;
+        while (start < characters.Length)
         {
-            while (value >= number)
+            if (char.IsWhiteSpace(characters[start]) || characters[start] == '-')
             {
-                sb.Append(symbol);
-                value -= number;
+                start++;
+                continue;
             }
+            int end = start;
+            while (end < characters.Length && !char.IsWhiteSpace(characters[end]) && characters[end] != '-')
+            {
+                end++;
+            }
+            bool allCapitals = true;
+            for (int k = start; k < end; k++)
+            {
+                allCapitals &= !char.IsLower(characters[k]);
+            }
+            if (!(keepCapitals && allCapitals))
+            {
+                characters[start] = char.ToUpperInvariant(characters[start]);
+                for (int k = start + 1; k < end; k++)
+                {
+                    characters[k] = char.ToLowerInvariant(characters[k]);
+                }
+            }
+            start = end;
         }
-        return sb.ToString();
-    }
-
-    //A, B, ... Z, AA, BB, ... as Word numbers with letters.
-    private static string ToLetters(long value)
-    {
-        char letter = (char)('A' + (int)((value - 1) % 26));
-        return new string(letter, (int)((value - 1) / 26) + 1);
+        return new string(characters);
     }
 
     /// <summary>
