@@ -562,12 +562,29 @@ internal static class FieldUpdater
         {
             return null;
         }
-        foreach (string unsupported in new[] { "n", "r", "w", "p", "f", "t" })
+        //\f (note numbers) and \d (the separator of the number) are left for Word.
+        if (instruction.GetSwitch("f") != null || instruction.GetSwitch("d") != null)
         {
-            if (instruction.GetSwitch(unsupported) != null)
+            return null;
+        }
+        List<ListNumbering.NumberContext> contexts = new List<ListNumbering.NumberContext>();
+        foreach (KeyValuePair<string, ListNumbering.NumberContext> pair in new Dictionary<string, ListNumbering.NumberContext>
+        {
+            ["n"] = ListNumbering.NumberContext.None,
+            ["r"] = ListNumbering.NumberContext.Relative,
+            ["w"] = ListNumbering.NumberContext.Full,
+        })
+        {
+            if (instruction.Switches.Any(s => s.Key == pair.Key))
             {
-                return null;
+                contexts.Add(pair.Value);
             }
+        }
+        bool withoutWords = instruction.Switches.Any(s => s.Key == "t");
+        bool position = instruction.Switches.Any(s => s.Key == "p");
+        if (contexts.Count > 1 || (withoutWords && contexts.Count == 0))
+        {
+            return null;
         }
 
         OpenXmlElement root = field.Key.GetRoot();
@@ -577,7 +594,63 @@ internal static class FieldUpdater
             ok = false;
             return "Error! Reference source not found.";
         }
-        return new BookmarkWrapper(bookmark).Range.Text.TrimEnd('\r', '\a');
+
+        string text;
+        if (contexts.Count == 1)
+        {
+            text = ParagraphNumber(field, bookmark, contexts[0], withoutWords);
+        }
+        else
+        {
+            //With \p alone the field says only where the bookmark is.
+            text = position ? string.Empty : new BookmarkWrapper(bookmark).Range.Text.TrimEnd('\r', '\a');
+        }
+        if (text == null || !position)
+        {
+            return text;
+        }
+        if (!ReferenceEquals(StoryMap.FindRoot(bookmark), StoryMap.FindRoot(field.Key)))
+        {
+            return null;
+        }
+        string where = bookmark.IsBefore(field.Key) ? "above" : "below";
+        return text.Length == 0 ? where : text + " " + where;
+    }
+
+    //The list number of the paragraph a bookmark is in, as REF \n, \r and \w show it (and with \t without its words), measured in Word: "0"
+    //for a paragraph without a number. Relative to the list item at or before the field. Null (left for Word) for a bullet.
+    private static string ParagraphNumber(FieldWrapper field, BookmarkStart bookmark, ListNumbering.NumberContext context, bool withoutWords)
+    {
+        Paragraph target = bookmark.Ancestors<Paragraph>().FirstOrDefault() ?? bookmark.ElementsAfter().OfType<Paragraph>().FirstOrDefault();
+        if (target == null)
+        {
+            return null;
+        }
+        OpenXmlElement story = StoryMap.FindRoot(target);
+        List<ListNumbering.Item> items = ListNumbering.GetItems(story);
+        ListNumbering.Item item = items.FirstOrDefault(i => ReferenceEquals(i.Paragraph, target));
+        if (item == null)
+        {
+            return "0";
+        }
+        if (ListNumbering.TypeOf(item.Template) == ListType.Bullet)
+        {
+            return null;
+        }
+
+        ListNumbering.Item from = null;
+        Paragraph own = field.Key.Ancestors<Paragraph>().FirstOrDefault();
+        if (context == ListNumbering.NumberContext.Relative && own != null && ReferenceEquals(StoryMap.FindRoot(own), story))
+        {
+            Dictionary<Paragraph, int> order = new Dictionary<Paragraph, int>();
+            foreach (Paragraph paragraph in story.Descendants<Paragraph>())
+            {
+                order[paragraph] = order.Count;
+            }
+            int at = order.TryGetValue(own, out int index) ? index : -1;
+            from = items.LastOrDefault(i => order.TryGetValue(i.Paragraph, out int itemIndex) && itemIndex <= at);
+        }
+        return ListNumbering.NumberText(item, context, from, withoutWords);
     }
 
     //IF expression1 operator expression2 true-text false-text
