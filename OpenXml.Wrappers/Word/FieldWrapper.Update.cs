@@ -124,7 +124,7 @@ public partial class FieldWrapper
     /// <summary>
     /// Works out the result of the field again, as <c>Field.Update</c> in Word, and returns whether it did. Fields that do not depend on how
     /// the pages are laid out are worked out: the date and time, document properties (author, title, DOCPROPERTY and so on), file name, user
-    /// name, number of words and characters, SEQ, REF, IF, QUOTE and formulas (<c>=</c>, in a table or not). The switches for the format of the result (<c>\@</c> for dates and
+    /// name, number of words and characters, SEQ, REF, STYLEREF (in the main text), IF, QUOTE and formulas (<c>=</c>, in a table or not). The switches for the format of the result (<c>\@</c> for dates and
     /// <c>\*</c> for case and numbers) are applied. A locked field, and fields such as PAGE, NUMPAGES, PAGEREF, TOC and MERGEFIELD, are left as
     /// they are (the latter are marked for Word to update when the document is opened) and report false.
     /// </summary>
@@ -306,7 +306,8 @@ internal static class FieldUpdater
         {
             return null;
         }
-        return ApplyFormat(text, instruction);
+        //An error is shown as it is, without the format switches, as in Word.
+        return ok ? ApplyFormat(text, instruction) : text;
     }
 
     private static string ComputeText(FieldWrapper field, Instruction instruction, MainDocumentPart main, WordprocessingDocument document, ref bool ok)
@@ -392,6 +393,8 @@ internal static class FieldUpdater
                 return Sequence(field, instruction);
             case "REF":
                 return Reference(field, instruction, ref ok);
+            case "STYLEREF":
+                return StyleReference(field, instruction, ref ok);
             case "IF":
                 return Condition(instruction);
             case "HYPERLINK":
@@ -567,22 +570,7 @@ internal static class FieldUpdater
         {
             return null;
         }
-        List<ListNumbering.NumberContext> contexts = new List<ListNumbering.NumberContext>();
-        foreach (KeyValuePair<string, ListNumbering.NumberContext> pair in new Dictionary<string, ListNumbering.NumberContext>
-        {
-            ["n"] = ListNumbering.NumberContext.None,
-            ["r"] = ListNumbering.NumberContext.Relative,
-            ["w"] = ListNumbering.NumberContext.Full,
-        })
-        {
-            if (instruction.Switches.Any(s => s.Key == pair.Key))
-            {
-                contexts.Add(pair.Value);
-            }
-        }
-        bool withoutWords = instruction.Switches.Any(s => s.Key == "t");
-        bool position = instruction.Switches.Any(s => s.Key == "p");
-        if (contexts.Count > 1 || (withoutWords && contexts.Count == 0))
+        if (!TryGetNumberSwitches(instruction, out ListNumbering.NumberContext? context, out bool withoutWords, out bool position))
         {
             return null;
         }
@@ -596,9 +584,10 @@ internal static class FieldUpdater
         }
 
         string text;
-        if (contexts.Count == 1)
+        if (context.HasValue)
         {
-            text = ParagraphNumber(field, bookmark, contexts[0], withoutWords);
+            Paragraph target = bookmark.Ancestors<Paragraph>().FirstOrDefault() ?? bookmark.ElementsAfter().OfType<Paragraph>().FirstOrDefault();
+            text = target == null ? null : ParagraphNumber(field, target, context.Value, withoutWords);
         }
         else
         {
@@ -617,15 +606,110 @@ internal static class FieldUpdater
         return text.Length == 0 ? where : text + " " + where;
     }
 
-    //The list number of the paragraph a bookmark is in, as REF \n, \r and \w show it (and with \t without its words), measured in Word: "0"
-    //for a paragraph without a number. Relative to the list item at or before the field. Null (left for Word) for a bullet.
-    private static string ParagraphNumber(FieldWrapper field, BookmarkStart bookmark, ListNumbering.NumberContext context, bool withoutWords)
+    //The list-number switches of REF and STYLEREF: at most one of \n, \r and \w (the context), \t (without words, only with one of them) and
+    //\p (above or below). False for a combination that is left for Word.
+    private static bool TryGetNumberSwitches(Instruction instruction, out ListNumbering.NumberContext? context, out bool withoutWords, out bool position)
     {
-        Paragraph target = bookmark.Ancestors<Paragraph>().FirstOrDefault() ?? bookmark.ElementsAfter().OfType<Paragraph>().FirstOrDefault();
-        if (target == null)
+        List<ListNumbering.NumberContext> contexts = new List<ListNumbering.NumberContext>();
+        foreach (KeyValuePair<string, ListNumbering.NumberContext> pair in new Dictionary<string, ListNumbering.NumberContext>
+        {
+            ["n"] = ListNumbering.NumberContext.None,
+            ["r"] = ListNumbering.NumberContext.Relative,
+            ["w"] = ListNumbering.NumberContext.Full,
+        })
+        {
+            if (instruction.Switches.Any(s => s.Key == pair.Key))
+            {
+                contexts.Add(pair.Value);
+            }
+        }
+        context = contexts.Count == 1 ? contexts[0] : null;
+        withoutWords = instruction.Switches.Any(s => s.Key == "t");
+        position = instruction.Switches.Any(s => s.Key == "p");
+        return contexts.Count <= 1 && (!withoutWords || contexts.Count == 1);
+    }
+
+    //STYLEREF in the main text, as measured in Word: the nearest paragraph in the style, looking back from the field's own paragraph and then
+    //forward, gives its text, or with \n, \r or \w its list number ("0" without one), and with \p "above" or "below". The field's own
+    //paragraph gives no text or position (a self-reference error) but does give its number. "STYLEREF 1" is Heading 1, and \l is the same as
+    //without it here. A character style, \s, and a field outside the main text (where it depends on the page) are left for Word.
+    private static string StyleReference(FieldWrapper field, Instruction instruction, ref bool ok)
+    {
+        const string SelfReference = "Error! Not a valid bookmark self-reference.";
+        if (instruction.Arguments.Count == 0 || instruction.GetSwitch("s") != null)
         {
             return null;
         }
+        if (!TryGetNumberSwitches(instruction, out ListNumbering.NumberContext? context, out bool withoutWords, out bool position))
+        {
+            return null;
+        }
+        Paragraph own = field.Key.Ancestors<Paragraph>().FirstOrDefault();
+        if (own == null || !(StoryMap.FindRoot(own) is Body body))
+        {
+            return null;
+        }
+
+        string name = instruction.Arguments[0];
+        if (name.Length == 1 && name[0] >= '1' && name[0] <= '9')
+        {
+            name = "Heading " + name;
+        }
+        Styles styles = StyleHelper.GetStyles(own);
+        //By name only, as in Word: "Heading1" (the id of Heading 1) is not a style to STYLEREF.
+        Style style = styles?.Elements<Style>().FirstOrDefault(s => string.Equals(StyleHelper.GetName(s), name, StringComparison.OrdinalIgnoreCase));
+        if (style == null)
+        {
+            ok = false;
+            return BuiltInStyles.IsBuiltInName(name) && string.Equals(BuiltInStyles.GetDisplayName(name), name, StringComparison.OrdinalIgnoreCase)
+                ? "Error! No text of specified style in document."
+                : string.Format(CultureInfo.InvariantCulture, "Error! Use the Home tab to apply {0} to the text that you want to appear here.", name);
+        }
+        if (style.Type != null && style.Type.HasValue && style.Type.Value != StyleValues.Paragraph)
+        {
+            return null;
+        }
+
+        string styleId = style.StyleId?.Value;
+        string defaultId = styles.Elements<Style>().FirstOrDefault(s => s.Type != null && s.Type.HasValue && s.Type.Value == StyleValues.Paragraph
+            && s.Default != null && s.Default.HasValue && s.Default.Value)?.StyleId?.Value;
+        List<Paragraph> paragraphs = body.Descendants<Paragraph>().Where(p => !p.Ancestors<TextBoxContent>().Any()).ToList();
+        int at = paragraphs.IndexOf(own);
+        bool InStyle(Paragraph p) => string.Equals(p.ParagraphProperties?.ParagraphStyleId?.Val?.Value ?? defaultId, styleId, StringComparison.Ordinal);
+        Paragraph found = paragraphs.Take(at + 1).LastOrDefault(InStyle) ?? paragraphs.Skip(at + 1).FirstOrDefault(InStyle);
+        if (found == null)
+        {
+            ok = false;
+            return "Error! No text of specified style in document.";
+        }
+
+        bool self = ReferenceEquals(found, own);
+        string text;
+        if (context.HasValue)
+        {
+            text = ParagraphNumber(field, found, context.Value, withoutWords);
+        }
+        else if (self)
+        {
+            ok = false;
+            return SelfReference;
+        }
+        else
+        {
+            text = position ? string.Empty : new RangeWrapper(found).Text.TrimEnd('\r', '\a');
+        }
+        if (text == null || !position || self)
+        {
+            return text;
+        }
+        string where = found.IsBefore(own) ? "above" : "below";
+        return text.Length == 0 ? where : text + " " + where;
+    }
+
+    //The list number of a paragraph, as REF and STYLEREF \n, \r and \w show it (and with \t without its words), measured in Word: "0" for a
+    //paragraph without a number. Relative to the list item at or before the field. Null (left for Word) for a bullet.
+    private static string ParagraphNumber(FieldWrapper field, Paragraph target, ListNumbering.NumberContext context, bool withoutWords)
+    {
         OpenXmlElement story = StoryMap.FindRoot(target);
         List<ListNumbering.Item> items = ListNumbering.GetItems(story);
         ListNumbering.Item item = items.FirstOrDefault(i => ReferenceEquals(i.Paragraph, target));

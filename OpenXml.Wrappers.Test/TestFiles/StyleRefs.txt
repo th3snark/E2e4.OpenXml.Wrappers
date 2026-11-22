@@ -1,0 +1,205 @@
+# What Word 16 shows for STYLEREF fields in the main text. Written by tools/WordReference/Measure-StyleRefs.ps1; do not edit.
+# host	code	result
+Start	STYLEREF "Heading 1"	Intro
+Start	STYLEREF "Heading 2"	Alpha
+Start	STYLEREF "heading 1"	Intro
+Start	STYLEREF Heading1	Error! Use the Home tab to apply Heading1 to the text that you want to appear here.
+Start	STYLEREF 1	Intro
+Start	STYLEREF "Normal"	Error! Not a valid bookmark self-reference.
+Start	STYLEREF "Heading 1" \n	Chapter 1
+Start	STYLEREF "Heading 2" \n	(a)
+Start	STYLEREF "Heading 2" \r	Chapter 1(a)
+Start	STYLEREF "Heading 2" \w	Chapter 1(a)
+Start	STYLEREF "Heading 1" \r	Chapter 1
+Start	STYLEREF "Heading 2" \w \t	1(a)
+Start	STYLEREF "Heading 2" \r \t	1(a)
+Start	STYLEREF "Heading 1" \n \t	1
+Start	STYLEREF "Heading 2" \p	below
+Start	STYLEREF "Heading 1" \p	below
+Start	STYLEREF "Heading 2" \n \p	(a) below
+Start	STYLEREF "Heading 1" \w \p	Chapter 1 below
+Start	STYLEREF "Normal" \n	0
+Start	STYLEREF "Normal" \w	0
+Start	STYLEREF "Normal" \p	Error! Not a valid bookmark self-reference.
+Start	STYLEREF "Normal" \n \p	0
+Start	STYLEREF "Heading 1" \l	Intro
+Start	STYLEREF "Heading 1" \* Upper	INTRO
+Start	STYLEREF "Heading 9"	Error! No text of specified style in document.
+Start	STYLEREF "Title"	Error! No text of specified style in document.
+Start	STYLEREF "No such style"	Error! Use the Home tab to apply No such style to the text that you want to appear here.
+Start	STYLEREF Strong	Strong
+Start	STYLEREF "Heading 1" \s	1
+Intro	STYLEREF "Heading 1"	Error! Not a valid bookmark self-reference.
+Intro	STYLEREF "Heading 2"	Alpha
+Intro	STYLEREF "heading 1"	Error! Not a valid bookmark self-reference.
+Intro	STYLEREF Heading1	Error! Use the Home tab to apply Heading1 to the text that you want to appear here.
+Intro	STYLEREF 1	Error! Not a valid bookmark self-reference.
+Intro	STYLEREF "Normal"	Start
+Intro	STYLEREF "Heading 1" \n	Chapter 1
+Intro	STYLEREF "Heading 2" \n	(a)
+Intro	STYLEREF "Heading 2" \r	(a)
+Intro	STYLEREF "Heading 2" \w	Chapter 1(a)
+Intro	STYLEREF "Heading 1" \r	Chapter 1
+Intro	STYLEREF "Heading 2" \w \t	1(a)
+Intro	STYLEREF "Heading 2" \r \t	(a)
+Intro	STYLEREF "Heading 1" \n \t	1
+Intro	STYLEREF "Heading 2" \p	below
+Intro	STYLEREF "Heading 1" \p	Error! Not a valid bookmark self-reference.
+Intro	STYLEREF "Heading 2" \n \p	(a) below
+Intro	STYLEREF "Heading 1" \w \p	Chapter 1
+Intro	STYLEREF "Normal" \n	0
+Intro	STYLEREF "Normal" \w	0
+Intro	STYLEREF "Normal" \p	above
+Intro	STYLEREF "Normal" \n \p	0 above
+Intro	STYLEREF "Heading 1" \l	Error! Not a valid bookmark self-reference.
+Intro	STYLEREF "Heading 1" \* Upper	Error! Not a valid bookmark self-reference.
+Intro	STYLEREF "Heading 9"	Error! No text of specified style in document.
+Intro	STYLEREF "Title"	Error! No text of specified style in document.
+Intro	STYLEREF "No such style"	Error! Use the Home tab to apply No such style to the text that you want to appear here.
+Intro	STYLEREF Strong	Strong
+Intro	STYLEREF "Heading 1" \s	1
+Alpha	STYLEREF "Heading 1"	Intro
+Alpha	STYLEREF "Heading 2"	Error! Not a valid bookmark self-reference.
+Alpha	STYLEREF "heading 1"	Intro
+Alpha	STYLEREF Heading1	Error! Use the Home tab to apply Heading1 to the text that you want to appear here.
+Alpha	STYLEREF 1	Intro
+Alpha	STYLEREF "Normal"	Start
+Alpha	STYLEREF "Heading 1" \n	Chapter 1
+Alpha	STYLEREF "Heading 2" \n	(a)
+Alpha	STYLEREF "Heading 2" \r	(a)
+Alpha	STYLEREF "Heading 2" \w	Chapter 1(a)
+Alpha	STYLEREF "Heading 1" \r	Chapter 1
+Alpha	STYLEREF "Heading 2" \w \t	1(a)
+Alpha	STYLEREF "Heading 2" \r \t	(a)
+Alpha	STYLEREF "Heading 1" \n \t	1
+Alpha	STYLEREF "Heading 2" \p	Error! Not a valid bookmark self-reference.
+Alpha	STYLEREF "Heading 1" \p	above
+Alpha	STYLEREF "Heading 2" \n \p	(a)
+Alpha	STYLEREF "Heading 1" \w \p	Chapter 1 above
+Alpha	STYLEREF "Normal" \n	0
+Alpha	STYLEREF "Normal" \w	0
+Alpha	STYLEREF "Normal" \p	above
+Alpha	STYLEREF "Normal" \n \p	0 above
+Alpha	STYLEREF "Heading 1" \l	Intro
+Alpha	STYLEREF "Heading 1" \* Upper	INTRO
+Alpha	STYLEREF "Heading 9"	Error! No text of specified style in document.
+Alpha	STYLEREF "Title"	Error! No text of specified style in document.
+Alpha	STYLEREF "No such style"	Error! Use the Home tab to apply No such style to the text that you want to appear here.
+Alpha	STYLEREF Strong	Strong
+Alpha	STYLEREF "Heading 1" \s	1
+BodyAlpha	STYLEREF "Heading 1"	Intro
+BodyAlpha	STYLEREF "Heading 2"	Alpha
+BodyAlpha	STYLEREF "heading 1"	Intro
+BodyAlpha	STYLEREF Heading1	Error! Use the Home tab to apply Heading1 to the text that you want to appear here.
+BodyAlpha	STYLEREF 1	Intro
+BodyAlpha	STYLEREF "Normal"	Error! Not a valid bookmark self-reference.
+BodyAlpha	STYLEREF "Heading 1" \n	Chapter 1
+BodyAlpha	STYLEREF "Heading 2" \n	(a)
+BodyAlpha	STYLEREF "Heading 2" \r	(a)
+BodyAlpha	STYLEREF "Heading 2" \w	Chapter 1(a)
+BodyAlpha	STYLEREF "Heading 1" \r	Chapter 1
+BodyAlpha	STYLEREF "Heading 2" \w \t	1(a)
+BodyAlpha	STYLEREF "Heading 2" \r \t	(a)
+BodyAlpha	STYLEREF "Heading 1" \n \t	1
+BodyAlpha	STYLEREF "Heading 2" \p	above
+BodyAlpha	STYLEREF "Heading 1" \p	above
+BodyAlpha	STYLEREF "Heading 2" \n \p	(a) above
+BodyAlpha	STYLEREF "Heading 1" \w \p	Chapter 1 above
+BodyAlpha	STYLEREF "Normal" \n	0
+BodyAlpha	STYLEREF "Normal" \w	0
+BodyAlpha	STYLEREF "Normal" \p	Error! Not a valid bookmark self-reference.
+BodyAlpha	STYLEREF "Normal" \n \p	0
+BodyAlpha	STYLEREF "Heading 1" \l	Intro
+BodyAlpha	STYLEREF "Heading 1" \* Upper	INTRO
+BodyAlpha	STYLEREF "Heading 9"	Error! No text of specified style in document.
+BodyAlpha	STYLEREF "Title"	Error! No text of specified style in document.
+BodyAlpha	STYLEREF "No such style"	Error! Use the Home tab to apply No such style to the text that you want to appear here.
+BodyAlpha	STYLEREF Strong	Strong
+BodyAlpha	STYLEREF "Heading 1" \s	1
+BodySecond	STYLEREF "Heading 1"	Second
+BodySecond	STYLEREF "Heading 2"	Alpha
+BodySecond	STYLEREF "heading 1"	Second
+BodySecond	STYLEREF Heading1	Error! Use the Home tab to apply Heading1 to the text that you want to appear here.
+BodySecond	STYLEREF 1	Second
+BodySecond	STYLEREF "Normal"	Error! Not a valid bookmark self-reference.
+BodySecond	STYLEREF "Heading 1" \n	Chapter 2
+BodySecond	STYLEREF "Heading 2" \n	(a)
+BodySecond	STYLEREF "Heading 2" \r	Chapter 1(a)
+BodySecond	STYLEREF "Heading 2" \w	Chapter 1(a)
+BodySecond	STYLEREF "Heading 1" \r	Chapter 2
+BodySecond	STYLEREF "Heading 2" \w \t	1(a)
+BodySecond	STYLEREF "Heading 2" \r \t	1(a)
+BodySecond	STYLEREF "Heading 1" \n \t	2
+BodySecond	STYLEREF "Heading 2" \p	above
+BodySecond	STYLEREF "Heading 1" \p	above
+BodySecond	STYLEREF "Heading 2" \n \p	(a) above
+BodySecond	STYLEREF "Heading 1" \w \p	Chapter 2 above
+BodySecond	STYLEREF "Normal" \n	0
+BodySecond	STYLEREF "Normal" \w	0
+BodySecond	STYLEREF "Normal" \p	Error! Not a valid bookmark self-reference.
+BodySecond	STYLEREF "Normal" \n \p	0
+BodySecond	STYLEREF "Heading 1" \l	Second
+BodySecond	STYLEREF "Heading 1" \* Upper	SECOND
+BodySecond	STYLEREF "Heading 9"	Error! No text of specified style in document.
+BodySecond	STYLEREF "Title"	Error! No text of specified style in document.
+BodySecond	STYLEREF "No such style"	Error! Use the Home tab to apply No such style to the text that you want to appear here.
+BodySecond	STYLEREF Strong	Strong
+BodySecond	STYLEREF "Heading 1" \s	2
+BodyEmpty	STYLEREF "Heading 1"	Second
+BodyEmpty	STYLEREF "Heading 2"	
+BodyEmpty	STYLEREF "heading 1"	Second
+BodyEmpty	STYLEREF Heading1	Error! Use the Home tab to apply Heading1 to the text that you want to appear here.
+BodyEmpty	STYLEREF 1	Second
+BodyEmpty	STYLEREF "Normal"	Error! Not a valid bookmark self-reference.
+BodyEmpty	STYLEREF "Heading 1" \n	Chapter 2
+BodyEmpty	STYLEREF "Heading 2" \n	(b)
+BodyEmpty	STYLEREF "Heading 2" \r	(b)
+BodyEmpty	STYLEREF "Heading 2" \w	Chapter 2(b)
+BodyEmpty	STYLEREF "Heading 1" \r	Chapter 2
+BodyEmpty	STYLEREF "Heading 2" \w \t	2(b)
+BodyEmpty	STYLEREF "Heading 2" \r \t	(b)
+BodyEmpty	STYLEREF "Heading 1" \n \t	2
+BodyEmpty	STYLEREF "Heading 2" \p	above
+BodyEmpty	STYLEREF "Heading 1" \p	above
+BodyEmpty	STYLEREF "Heading 2" \n \p	(b) above
+BodyEmpty	STYLEREF "Heading 1" \w \p	Chapter 2 above
+BodyEmpty	STYLEREF "Normal" \n	0
+BodyEmpty	STYLEREF "Normal" \w	0
+BodyEmpty	STYLEREF "Normal" \p	Error! Not a valid bookmark self-reference.
+BodyEmpty	STYLEREF "Normal" \n \p	0
+BodyEmpty	STYLEREF "Heading 1" \l	Second
+BodyEmpty	STYLEREF "Heading 1" \* Upper	SECOND
+BodyEmpty	STYLEREF "Heading 9"	Error! No text of specified style in document.
+BodyEmpty	STYLEREF "Title"	Error! No text of specified style in document.
+BodyEmpty	STYLEREF "No such style"	Error! Use the Home tab to apply No such style to the text that you want to appear here.
+BodyEmpty	STYLEREF Strong	Strong
+BodyEmpty	STYLEREF "Heading 1" \s	2
+Strong words here	STYLEREF "Heading 1"	Second
+Strong words here	STYLEREF "Heading 2"	
+Strong words here	STYLEREF "heading 1"	Second
+Strong words here	STYLEREF Heading1	Error! Use the Home tab to apply Heading1 to the text that you want to appear here.
+Strong words here	STYLEREF 1	Second
+Strong words here	STYLEREF "Normal"	Error! Not a valid bookmark self-reference.
+Strong words here	STYLEREF "Heading 1" \n	Chapter 2
+Strong words here	STYLEREF "Heading 2" \n	(b)
+Strong words here	STYLEREF "Heading 2" \r	(b)
+Strong words here	STYLEREF "Heading 2" \w	Chapter 2(b)
+Strong words here	STYLEREF "Heading 1" \r	Chapter 2
+Strong words here	STYLEREF "Heading 2" \w \t	2(b)
+Strong words here	STYLEREF "Heading 2" \r \t	(b)
+Strong words here	STYLEREF "Heading 1" \n \t	2
+Strong words here	STYLEREF "Heading 2" \p	above
+Strong words here	STYLEREF "Heading 1" \p	above
+Strong words here	STYLEREF "Heading 2" \n \p	(b) above
+Strong words here	STYLEREF "Heading 1" \w \p	Chapter 2 above
+Strong words here	STYLEREF "Normal" \n	0
+Strong words here	STYLEREF "Normal" \w	0
+Strong words here	STYLEREF "Normal" \p	Error! Not a valid bookmark self-reference.
+Strong words here	STYLEREF "Normal" \n \p	0
+Strong words here	STYLEREF "Heading 1" \l	Second
+Strong words here	STYLEREF "Heading 1" \* Upper	SECOND
+Strong words here	STYLEREF "Heading 9"	Error! No text of specified style in document.
+Strong words here	STYLEREF "Title"	Error! No text of specified style in document.
+Strong words here	STYLEREF "No such style"	Error! Use the Home tab to apply No such style to the text that you want to appear here.
+Strong words here	STYLEREF Strong	Strong
+Strong words here	STYLEREF "Heading 1" \s	2
