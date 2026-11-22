@@ -25,11 +25,11 @@ if (-not $WordPath) {
 
 # The levels of each template: number format and style (0 arabic, 2 lowercase roman, 4 lowercase letter). Keep in step with the test.
 $templates = [ordered]@{
-    1 = @(@('Chapter %1', 0), @('(%2)', 4), @('%3.', 2))
-    2 = @(@('%1.', 0), @('%1.%2.', 0), @('%1.%2.%3.', 0))
-    3 = @(@('%1)', 0), @('%2)', 4), @('%3)', 2))
-    4 = @(@('%1.', 0), @('%2.', 4), @('%3.', 2))
-    5 = @(@('Part %1:', 0), @('Section %1-%2', 0), @('Clause %3 of', 0))
+    '1' = @(@('Chapter %1', 0), @('(%2)', 4), @('%3.', 2))
+    '2' = @(@('%1.', 0), @('%1.%2.', 0), @('%1.%2.%3.', 0))
+    '3' = @(@('%1)', 0), @('%2)', 4), @('%3)', 2))
+    '4' = @(@('%1.', 0), @('%2.', 4), @('%3.', 2))
+    '5' = @(@('Part %1:', 0), @('Section %1-%2', 0), @('Clause %3 of', 0))
 }
 
 # The paragraphs of each layout (style and text), the paragraphs the fields go at the end of, the paragraphs they refer to and the switches.
@@ -60,7 +60,7 @@ try {
     foreach ($t in $templates.Keys) {
         foreach ($name in $layouts.Keys) {
             $layout = $layouts[$name]
-            $d = $word.Documents.Add()
+            $d = $word.Application.Documents.Add()
             try {
                 $listTemplate = $d.ListTemplates.Add($true)
                 for ($i = 1; $i -le 3; $i++) {
