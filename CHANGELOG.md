@@ -4,6 +4,9 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## [Unreleased]
 
+### Added
+- `Field.Update` works out a formula (`=`) field outside a table, and one in a table that does not use the cells: arithmetic (`+ - * / ^ %`), comparisons, `ABS`, `AND`, `AVERAGE`, `COUNT`, `DEFINED`, `FALSE`, `IF`, `INT`, `MAX`, `MIN`, `MOD`, `NOT`, `OR`, `PRODUCT`, `ROUND`, `SIGN`, `SUM` and `TRUE`, and bookmarks that hold a number, with Word's results, default number of decimals and messages for an undefined bookmark, a division by zero, an unfinished formula and a direction such as `ABOVE` outside a table, as measured in Word. A formula with a syntax error, a cell reference, a bookmark whose number has digit grouping, a result of 10^14 or more, or a `\*` number format is left as it is (#92).
+
 ### Fixed
 - `Range.Fields` of a span of characters (a footnote's or endnote's `Range`, `Document.Range(start, end)` and the like) threw `NullReferenceException`, and so did the `TablesOfContents` and `TablesOfFigures` built on it. As in Word, a span now has the fields whose begin or end it covers; a span only within a field's code or result, or a collapsed span, has none (#88).
 - The whole text of a text box (`Shape.TextFrame.TextRange`) now takes `Fields.Add`, `InsertBefore`, `InsertAfter`, text with paragraph marks, `InsertParagraphBefore`/`After`, `Delete` and character formatting and styles, as a header or footer does; they threw `NotSupportedException`. Deleting it leaves one empty paragraph with the formatting of the last, as in Word (#89).
