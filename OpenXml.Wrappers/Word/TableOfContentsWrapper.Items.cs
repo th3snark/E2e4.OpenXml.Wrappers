@@ -49,10 +49,12 @@ public partial class TableOfContentsWrapperCollection
                 continue;
             }
 
+            //Word leaves out a heading with no text, or only spaces, tabs or a section break.
             int level = LevelOf(paragraph, settings, styles);
-            if (level > 0)
+            string text = level > 0 ? TextOf(paragraph) : null;
+            if (level > 0 && !string.IsNullOrWhiteSpace(text))
             {
-                items.Add(new TocItem { Paragraph = paragraph, Level = level, Text = TextOf(paragraph) });
+                items.Add(new TocItem { Paragraph = paragraph, Level = level, Text = text });
             }
             if (settings.UseFields)
             {
