@@ -2,6 +2,11 @@
 
 All notable changes are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+- `Range.Fields` of a span of characters (a footnote's or endnote's `Range`, `Document.Range(start, end)` and the like) threw `NullReferenceException`, and so did the `TablesOfContents` and `TablesOfFigures` built on it. As in Word, a span now has the fields whose begin or end it covers; a span only within a field's code or result, or a collapsed span, has none (#88).
+
 ## [1.9.0] - 2026-11-19
 
 ### Added
