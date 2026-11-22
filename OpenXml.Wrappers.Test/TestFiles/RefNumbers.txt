@@ -1,0 +1,1154 @@
+# What Word 16 shows for REF fields with list-number switches. Written by tools/WordReference/Measure-RefNumbers.ps1; do not edit.
+# template	layout	host	target	switches	result
+1	A	Start	One	\n	Chapter 1
+1	A	Start	One	\r	Chapter 1
+1	A	Start	One	\w	Chapter 1
+1	A	Start	One	\n \t	1
+1	A	Start	One	\r \t	1
+1	A	Start	One	\w \t	1
+1	A	Start	One	\p	below
+1	A	Start	One	\r \p	Chapter 1 below
+1	A	Start	One	\n \p	Chapter 1 below
+1	A	Start	One	\w \p	Chapter 1 below
+1	A	Start	OneA	\n	(a)
+1	A	Start	OneA	\r	Chapter 1(a)
+1	A	Start	OneA	\w	Chapter 1(a)
+1	A	Start	OneA	\n \t	(a)
+1	A	Start	OneA	\r \t	1(a)
+1	A	Start	OneA	\w \t	1(a)
+1	A	Start	OneA	\p	below
+1	A	Start	OneA	\r \p	Chapter 1(a) below
+1	A	Start	OneA	\n \p	(a) below
+1	A	Start	OneA	\w \p	Chapter 1(a) below
+1	A	Start	OneAi	\n	i
+1	A	Start	OneAi	\r	Chapter 1(a)i
+1	A	Start	OneAi	\w	Chapter 1(a)i
+1	A	Start	OneAi	\n \t	i
+1	A	Start	OneAi	\r \t	1(a)i
+1	A	Start	OneAi	\w \t	1(a)i
+1	A	Start	OneAi	\p	below
+1	A	Start	OneAi	\r \p	Chapter 1(a)i below
+1	A	Start	OneAi	\n \p	i below
+1	A	Start	OneAi	\w \p	Chapter 1(a)i below
+1	A	Start	OneAii	\n	ii
+1	A	Start	OneAii	\r	Chapter 1(a)ii
+1	A	Start	OneAii	\w	Chapter 1(a)ii
+1	A	Start	OneAii	\n \t	ii
+1	A	Start	OneAii	\r \t	1(a)ii
+1	A	Start	OneAii	\w \t	1(a)ii
+1	A	Start	OneAii	\p	below
+1	A	Start	OneAii	\r \p	Chapter 1(a)ii below
+1	A	Start	OneAii	\n \p	ii below
+1	A	Start	OneAii	\w \p	Chapter 1(a)ii below
+1	A	Start	OneB	\n	(b)
+1	A	Start	OneB	\r	Chapter 1(b)
+1	A	Start	OneB	\w	Chapter 1(b)
+1	A	Start	OneB	\n \t	(b)
+1	A	Start	OneB	\r \t	1(b)
+1	A	Start	OneB	\w \t	1(b)
+1	A	Start	OneB	\p	below
+1	A	Start	OneB	\r \p	Chapter 1(b) below
+1	A	Start	OneB	\n \p	(b) below
+1	A	Start	OneB	\w \p	Chapter 1(b) below
+1	A	Start	Two	\n	Chapter 2
+1	A	Start	Two	\r	Chapter 2
+1	A	Start	Two	\w	Chapter 2
+1	A	Start	Two	\n \t	2
+1	A	Start	Two	\r \t	2
+1	A	Start	Two	\w \t	2
+1	A	Start	Two	\p	below
+1	A	Start	Two	\r \p	Chapter 2 below
+1	A	Start	Two	\n \p	Chapter 2 below
+1	A	Start	Two	\w \p	Chapter 2 below
+1	A	Start	TwoA	\n	(a)
+1	A	Start	TwoA	\r	Chapter 2(a)
+1	A	Start	TwoA	\w	Chapter 2(a)
+1	A	Start	TwoA	\n \t	(a)
+1	A	Start	TwoA	\r \t	2(a)
+1	A	Start	TwoA	\w \t	2(a)
+1	A	Start	TwoA	\p	below
+1	A	Start	TwoA	\r \p	Chapter 2(a) below
+1	A	Start	TwoA	\n \p	(a) below
+1	A	Start	TwoA	\w \p	Chapter 2(a) below
+1	A	Start	TwoAi	\n	i
+1	A	Start	TwoAi	\r	Chapter 2(a)i
+1	A	Start	TwoAi	\w	Chapter 2(a)i
+1	A	Start	TwoAi	\n \t	i
+1	A	Start	TwoAi	\r \t	2(a)i
+1	A	Start	TwoAi	\w \t	2(a)i
+1	A	Start	TwoAi	\p	below
+1	A	Start	TwoAi	\r \p	Chapter 2(a)i below
+1	A	Start	TwoAi	\n \p	i below
+1	A	Start	TwoAi	\w \p	Chapter 2(a)i below
+1	A	OneAii	One	\n	Chapter 1
+1	A	OneAii	One	\r	Chapter 1
+1	A	OneAii	One	\w	Chapter 1
+1	A	OneAii	One	\n \t	1
+1	A	OneAii	One	\r \t	1
+1	A	OneAii	One	\w \t	1
+1	A	OneAii	One	\p	above
+1	A	OneAii	One	\r \p	Chapter 1 above
+1	A	OneAii	One	\n \p	Chapter 1 above
+1	A	OneAii	One	\w \p	Chapter 1 above
+1	A	OneAii	OneA	\n	(a)
+1	A	OneAii	OneA	\r	(a)
+1	A	OneAii	OneA	\w	Chapter 1(a)
+1	A	OneAii	OneA	\n \t	(a)
+1	A	OneAii	OneA	\r \t	(a)
+1	A	OneAii	OneA	\w \t	1(a)
+1	A	OneAii	OneA	\p	above
+1	A	OneAii	OneA	\r \p	(a) above
+1	A	OneAii	OneA	\n \p	(a) above
+1	A	OneAii	OneA	\w \p	Chapter 1(a) above
+1	A	OneAii	OneAi	\n	i
+1	A	OneAii	OneAi	\r	i
+1	A	OneAii	OneAi	\w	Chapter 1(a)i
+1	A	OneAii	OneAi	\n \t	i
+1	A	OneAii	OneAi	\r \t	i
+1	A	OneAii	OneAi	\w \t	1(a)i
+1	A	OneAii	OneAi	\p	above
+1	A	OneAii	OneAi	\r \p	i above
+1	A	OneAii	OneAi	\n \p	i above
+1	A	OneAii	OneAi	\w \p	Chapter 1(a)i above
+1	A	OneAii	OneAii	\n	ii
+1	A	OneAii	OneAii	\r	ii
+1	A	OneAii	OneAii	\w	Chapter 1(a)ii
+1	A	OneAii	OneAii	\n \t	ii
+1	A	OneAii	OneAii	\r \t	ii
+1	A	OneAii	OneAii	\w \t	1(a)ii
+1	A	OneAii	OneAii	\p	above
+1	A	OneAii	OneAii	\r \p	ii above
+1	A	OneAii	OneAii	\n \p	ii above
+1	A	OneAii	OneAii	\w \p	Chapter 1(a)ii above
+1	A	OneAii	OneB	\n	(b)
+1	A	OneAii	OneB	\r	(b)
+1	A	OneAii	OneB	\w	Chapter 1(b)
+1	A	OneAii	OneB	\n \t	(b)
+1	A	OneAii	OneB	\r \t	(b)
+1	A	OneAii	OneB	\w \t	1(b)
+1	A	OneAii	OneB	\p	below
+1	A	OneAii	OneB	\r \p	(b) below
+1	A	OneAii	OneB	\n \p	(b) below
+1	A	OneAii	OneB	\w \p	Chapter 1(b) below
+1	A	OneAii	Two	\n	Chapter 2
+1	A	OneAii	Two	\r	Chapter 2
+1	A	OneAii	Two	\w	Chapter 2
+1	A	OneAii	Two	\n \t	2
+1	A	OneAii	Two	\r \t	2
+1	A	OneAii	Two	\w \t	2
+1	A	OneAii	Two	\p	below
+1	A	OneAii	Two	\r \p	Chapter 2 below
+1	A	OneAii	Two	\n \p	Chapter 2 below
+1	A	OneAii	Two	\w \p	Chapter 2 below
+1	A	OneAii	TwoA	\n	(a)
+1	A	OneAii	TwoA	\r	Chapter 2(a)
+1	A	OneAii	TwoA	\w	Chapter 2(a)
+1	A	OneAii	TwoA	\n \t	(a)
+1	A	OneAii	TwoA	\r \t	2(a)
+1	A	OneAii	TwoA	\w \t	2(a)
+1	A	OneAii	TwoA	\p	below
+1	A	OneAii	TwoA	\r \p	Chapter 2(a) below
+1	A	OneAii	TwoA	\n \p	(a) below
+1	A	OneAii	TwoA	\w \p	Chapter 2(a) below
+1	A	OneAii	TwoAi	\n	i
+1	A	OneAii	TwoAi	\r	Chapter 2(a)i
+1	A	OneAii	TwoAi	\w	Chapter 2(a)i
+1	A	OneAii	TwoAi	\n \t	i
+1	A	OneAii	TwoAi	\r \t	2(a)i
+1	A	OneAii	TwoAi	\w \t	2(a)i
+1	A	OneAii	TwoAi	\p	below
+1	A	OneAii	TwoAi	\r \p	Chapter 2(a)i below
+1	A	OneAii	TwoAi	\n \p	i below
+1	A	OneAii	TwoAi	\w \p	Chapter 2(a)i below
+1	A	TwoAi	One	\n	Chapter 1
+1	A	TwoAi	One	\r	Chapter 1
+1	A	TwoAi	One	\w	Chapter 1
+1	A	TwoAi	One	\n \t	1
+1	A	TwoAi	One	\r \t	1
+1	A	TwoAi	One	\w \t	1
+1	A	TwoAi	One	\p	above
+1	A	TwoAi	One	\r \p	Chapter 1 above
+1	A	TwoAi	One	\n \p	Chapter 1 above
+1	A	TwoAi	One	\w \p	Chapter 1 above
+1	A	TwoAi	OneA	\n	(a)
+1	A	TwoAi	OneA	\r	Chapter 1(a)
+1	A	TwoAi	OneA	\w	Chapter 1(a)
+1	A	TwoAi	OneA	\n \t	(a)
+1	A	TwoAi	OneA	\r \t	1(a)
+1	A	TwoAi	OneA	\w \t	1(a)
+1	A	TwoAi	OneA	\p	above
+1	A	TwoAi	OneA	\r \p	Chapter 1(a) above
+1	A	TwoAi	OneA	\n \p	(a) above
+1	A	TwoAi	OneA	\w \p	Chapter 1(a) above
+1	A	TwoAi	OneAi	\n	i
+1	A	TwoAi	OneAi	\r	Chapter 1(a)i
+1	A	TwoAi	OneAi	\w	Chapter 1(a)i
+1	A	TwoAi	OneAi	\n \t	i
+1	A	TwoAi	OneAi	\r \t	1(a)i
+1	A	TwoAi	OneAi	\w \t	1(a)i
+1	A	TwoAi	OneAi	\p	above
+1	A	TwoAi	OneAi	\r \p	Chapter 1(a)i above
+1	A	TwoAi	OneAi	\n \p	i above
+1	A	TwoAi	OneAi	\w \p	Chapter 1(a)i above
+1	A	TwoAi	OneAii	\n	ii
+1	A	TwoAi	OneAii	\r	Chapter 1(a)ii
+1	A	TwoAi	OneAii	\w	Chapter 1(a)ii
+1	A	TwoAi	OneAii	\n \t	ii
+1	A	TwoAi	OneAii	\r \t	1(a)ii
+1	A	TwoAi	OneAii	\w \t	1(a)ii
+1	A	TwoAi	OneAii	\p	above
+1	A	TwoAi	OneAii	\r \p	Chapter 1(a)ii above
+1	A	TwoAi	OneAii	\n \p	ii above
+1	A	TwoAi	OneAii	\w \p	Chapter 1(a)ii above
+1	A	TwoAi	OneB	\n	(b)
+1	A	TwoAi	OneB	\r	Chapter 1(b)
+1	A	TwoAi	OneB	\w	Chapter 1(b)
+1	A	TwoAi	OneB	\n \t	(b)
+1	A	TwoAi	OneB	\r \t	1(b)
+1	A	TwoAi	OneB	\w \t	1(b)
+1	A	TwoAi	OneB	\p	above
+1	A	TwoAi	OneB	\r \p	Chapter 1(b) above
+1	A	TwoAi	OneB	\n \p	(b) above
+1	A	TwoAi	OneB	\w \p	Chapter 1(b) above
+1	A	TwoAi	Two	\n	Chapter 2
+1	A	TwoAi	Two	\r	Chapter 2
+1	A	TwoAi	Two	\w	Chapter 2
+1	A	TwoAi	Two	\n \t	2
+1	A	TwoAi	Two	\r \t	2
+1	A	TwoAi	Two	\w \t	2
+1	A	TwoAi	Two	\p	above
+1	A	TwoAi	Two	\r \p	Chapter 2 above
+1	A	TwoAi	Two	\n \p	Chapter 2 above
+1	A	TwoAi	Two	\w \p	Chapter 2 above
+1	A	TwoAi	TwoA	\n	(a)
+1	A	TwoAi	TwoA	\r	(a)
+1	A	TwoAi	TwoA	\w	Chapter 2(a)
+1	A	TwoAi	TwoA	\n \t	(a)
+1	A	TwoAi	TwoA	\r \t	(a)
+1	A	TwoAi	TwoA	\w \t	2(a)
+1	A	TwoAi	TwoA	\p	above
+1	A	TwoAi	TwoA	\r \p	(a) above
+1	A	TwoAi	TwoA	\n \p	(a) above
+1	A	TwoAi	TwoA	\w \p	Chapter 2(a) above
+1	A	TwoAi	TwoAi	\n	i
+1	A	TwoAi	TwoAi	\r	i
+1	A	TwoAi	TwoAi	\w	Chapter 2(a)i
+1	A	TwoAi	TwoAi	\n \t	i
+1	A	TwoAi	TwoAi	\r \t	i
+1	A	TwoAi	TwoAi	\w \t	2(a)i
+1	A	TwoAi	TwoAi	\p	above
+1	A	TwoAi	TwoAi	\r \p	i above
+1	A	TwoAi	TwoAi	\n \p	i above
+1	A	TwoAi	TwoAi	\w \p	Chapter 2(a)i above
+2	A	Start	One	\n	1
+2	A	Start	One	\r	1
+2	A	Start	One	\w	1
+2	A	Start	One	\n \t	1
+2	A	Start	One	\r \t	1
+2	A	Start	One	\w \t	1
+2	A	Start	One	\p	below
+2	A	Start	One	\r \p	1 below
+2	A	Start	One	\n \p	1 below
+2	A	Start	One	\w \p	1 below
+2	A	Start	OneA	\n	1.1
+2	A	Start	OneA	\r	1.1
+2	A	Start	OneA	\w	1.1
+2	A	Start	OneA	\n \t	1.1
+2	A	Start	OneA	\r \t	1.1
+2	A	Start	OneA	\w \t	1.1
+2	A	Start	OneA	\p	below
+2	A	Start	OneA	\r \p	1.1 below
+2	A	Start	OneA	\n \p	1.1 below
+2	A	Start	OneA	\w \p	1.1 below
+2	A	Start	OneAi	\n	1.1.1
+2	A	Start	OneAi	\r	1.1.1
+2	A	Start	OneAi	\w	1.1.1
+2	A	Start	OneAi	\n \t	1.1.1
+2	A	Start	OneAi	\r \t	1.1.1
+2	A	Start	OneAi	\w \t	1.1.1
+2	A	Start	OneAi	\p	below
+2	A	Start	OneAi	\r \p	1.1.1 below
+2	A	Start	OneAi	\n \p	1.1.1 below
+2	A	Start	OneAi	\w \p	1.1.1 below
+2	A	Start	OneAii	\n	1.1.2
+2	A	Start	OneAii	\r	1.1.2
+2	A	Start	OneAii	\w	1.1.2
+2	A	Start	OneAii	\n \t	1.1.2
+2	A	Start	OneAii	\r \t	1.1.2
+2	A	Start	OneAii	\w \t	1.1.2
+2	A	Start	OneAii	\p	below
+2	A	Start	OneAii	\r \p	1.1.2 below
+2	A	Start	OneAii	\n \p	1.1.2 below
+2	A	Start	OneAii	\w \p	1.1.2 below
+2	A	Start	OneB	\n	1.2
+2	A	Start	OneB	\r	1.2
+2	A	Start	OneB	\w	1.2
+2	A	Start	OneB	\n \t	1.2
+2	A	Start	OneB	\r \t	1.2
+2	A	Start	OneB	\w \t	1.2
+2	A	Start	OneB	\p	below
+2	A	Start	OneB	\r \p	1.2 below
+2	A	Start	OneB	\n \p	1.2 below
+2	A	Start	OneB	\w \p	1.2 below
+2	A	Start	Two	\n	2
+2	A	Start	Two	\r	2
+2	A	Start	Two	\w	2
+2	A	Start	Two	\n \t	2
+2	A	Start	Two	\r \t	2
+2	A	Start	Two	\w \t	2
+2	A	Start	Two	\p	below
+2	A	Start	Two	\r \p	2 below
+2	A	Start	Two	\n \p	2 below
+2	A	Start	Two	\w \p	2 below
+2	A	Start	TwoA	\n	2.1
+2	A	Start	TwoA	\r	2.1
+2	A	Start	TwoA	\w	2.1
+2	A	Start	TwoA	\n \t	2.1
+2	A	Start	TwoA	\r \t	2.1
+2	A	Start	TwoA	\w \t	2.1
+2	A	Start	TwoA	\p	below
+2	A	Start	TwoA	\r \p	2.1 below
+2	A	Start	TwoA	\n \p	2.1 below
+2	A	Start	TwoA	\w \p	2.1 below
+2	A	Start	TwoAi	\n	2.1.1
+2	A	Start	TwoAi	\r	2.1.1
+2	A	Start	TwoAi	\w	2.1.1
+2	A	Start	TwoAi	\n \t	2.1.1
+2	A	Start	TwoAi	\r \t	2.1.1
+2	A	Start	TwoAi	\w \t	2.1.1
+2	A	Start	TwoAi	\p	below
+2	A	Start	TwoAi	\r \p	2.1.1 below
+2	A	Start	TwoAi	\n \p	2.1.1 below
+2	A	Start	TwoAi	\w \p	2.1.1 below
+2	A	OneAii	One	\n	1
+2	A	OneAii	One	\r	1
+2	A	OneAii	One	\w	1
+2	A	OneAii	One	\n \t	1
+2	A	OneAii	One	\r \t	1
+2	A	OneAii	One	\w \t	1
+2	A	OneAii	One	\p	above
+2	A	OneAii	One	\r \p	1 above
+2	A	OneAii	One	\n \p	1 above
+2	A	OneAii	One	\w \p	1 above
+2	A	OneAii	OneA	\n	1.1
+2	A	OneAii	OneA	\r	1.1
+2	A	OneAii	OneA	\w	1.1
+2	A	OneAii	OneA	\n \t	1.1
+2	A	OneAii	OneA	\r \t	1.1
+2	A	OneAii	OneA	\w \t	1.1
+2	A	OneAii	OneA	\p	above
+2	A	OneAii	OneA	\r \p	1.1 above
+2	A	OneAii	OneA	\n \p	1.1 above
+2	A	OneAii	OneA	\w \p	1.1 above
+2	A	OneAii	OneAi	\n	1.1.1
+2	A	OneAii	OneAi	\r	1.1.1
+2	A	OneAii	OneAi	\w	1.1.1
+2	A	OneAii	OneAi	\n \t	1.1.1
+2	A	OneAii	OneAi	\r \t	1.1.1
+2	A	OneAii	OneAi	\w \t	1.1.1
+2	A	OneAii	OneAi	\p	above
+2	A	OneAii	OneAi	\r \p	1.1.1 above
+2	A	OneAii	OneAi	\n \p	1.1.1 above
+2	A	OneAii	OneAi	\w \p	1.1.1 above
+2	A	OneAii	OneAii	\n	1.1.2
+2	A	OneAii	OneAii	\r	1.1.2
+2	A	OneAii	OneAii	\w	1.1.2
+2	A	OneAii	OneAii	\n \t	1.1.2
+2	A	OneAii	OneAii	\r \t	1.1.2
+2	A	OneAii	OneAii	\w \t	1.1.2
+2	A	OneAii	OneAii	\p	above
+2	A	OneAii	OneAii	\r \p	1.1.2 above
+2	A	OneAii	OneAii	\n \p	1.1.2 above
+2	A	OneAii	OneAii	\w \p	1.1.2 above
+2	A	OneAii	OneB	\n	1.2
+2	A	OneAii	OneB	\r	1.2
+2	A	OneAii	OneB	\w	1.2
+2	A	OneAii	OneB	\n \t	1.2
+2	A	OneAii	OneB	\r \t	1.2
+2	A	OneAii	OneB	\w \t	1.2
+2	A	OneAii	OneB	\p	below
+2	A	OneAii	OneB	\r \p	1.2 below
+2	A	OneAii	OneB	\n \p	1.2 below
+2	A	OneAii	OneB	\w \p	1.2 below
+2	A	OneAii	Two	\n	2
+2	A	OneAii	Two	\r	2
+2	A	OneAii	Two	\w	2
+2	A	OneAii	Two	\n \t	2
+2	A	OneAii	Two	\r \t	2
+2	A	OneAii	Two	\w \t	2
+2	A	OneAii	Two	\p	below
+2	A	OneAii	Two	\r \p	2 below
+2	A	OneAii	Two	\n \p	2 below
+2	A	OneAii	Two	\w \p	2 below
+2	A	OneAii	TwoA	\n	2.1
+2	A	OneAii	TwoA	\r	2.1
+2	A	OneAii	TwoA	\w	2.1
+2	A	OneAii	TwoA	\n \t	2.1
+2	A	OneAii	TwoA	\r \t	2.1
+2	A	OneAii	TwoA	\w \t	2.1
+2	A	OneAii	TwoA	\p	below
+2	A	OneAii	TwoA	\r \p	2.1 below
+2	A	OneAii	TwoA	\n \p	2.1 below
+2	A	OneAii	TwoA	\w \p	2.1 below
+2	A	OneAii	TwoAi	\n	2.1.1
+2	A	OneAii	TwoAi	\r	2.1.1
+2	A	OneAii	TwoAi	\w	2.1.1
+2	A	OneAii	TwoAi	\n \t	2.1.1
+2	A	OneAii	TwoAi	\r \t	2.1.1
+2	A	OneAii	TwoAi	\w \t	2.1.1
+2	A	OneAii	TwoAi	\p	below
+2	A	OneAii	TwoAi	\r \p	2.1.1 below
+2	A	OneAii	TwoAi	\n \p	2.1.1 below
+2	A	OneAii	TwoAi	\w \p	2.1.1 below
+2	A	TwoAi	One	\n	1
+2	A	TwoAi	One	\r	1
+2	A	TwoAi	One	\w	1
+2	A	TwoAi	One	\n \t	1
+2	A	TwoAi	One	\r \t	1
+2	A	TwoAi	One	\w \t	1
+2	A	TwoAi	One	\p	above
+2	A	TwoAi	One	\r \p	1 above
+2	A	TwoAi	One	\n \p	1 above
+2	A	TwoAi	One	\w \p	1 above
+2	A	TwoAi	OneA	\n	1.1
+2	A	TwoAi	OneA	\r	1.1
+2	A	TwoAi	OneA	\w	1.1
+2	A	TwoAi	OneA	\n \t	1.1
+2	A	TwoAi	OneA	\r \t	1.1
+2	A	TwoAi	OneA	\w \t	1.1
+2	A	TwoAi	OneA	\p	above
+2	A	TwoAi	OneA	\r \p	1.1 above
+2	A	TwoAi	OneA	\n \p	1.1 above
+2	A	TwoAi	OneA	\w \p	1.1 above
+2	A	TwoAi	OneAi	\n	1.1.1
+2	A	TwoAi	OneAi	\r	1.1.1
+2	A	TwoAi	OneAi	\w	1.1.1
+2	A	TwoAi	OneAi	\n \t	1.1.1
+2	A	TwoAi	OneAi	\r \t	1.1.1
+2	A	TwoAi	OneAi	\w \t	1.1.1
+2	A	TwoAi	OneAi	\p	above
+2	A	TwoAi	OneAi	\r \p	1.1.1 above
+2	A	TwoAi	OneAi	\n \p	1.1.1 above
+2	A	TwoAi	OneAi	\w \p	1.1.1 above
+2	A	TwoAi	OneAii	\n	1.1.2
+2	A	TwoAi	OneAii	\r	1.1.2
+2	A	TwoAi	OneAii	\w	1.1.2
+2	A	TwoAi	OneAii	\n \t	1.1.2
+2	A	TwoAi	OneAii	\r \t	1.1.2
+2	A	TwoAi	OneAii	\w \t	1.1.2
+2	A	TwoAi	OneAii	\p	above
+2	A	TwoAi	OneAii	\r \p	1.1.2 above
+2	A	TwoAi	OneAii	\n \p	1.1.2 above
+2	A	TwoAi	OneAii	\w \p	1.1.2 above
+2	A	TwoAi	OneB	\n	1.2
+2	A	TwoAi	OneB	\r	1.2
+2	A	TwoAi	OneB	\w	1.2
+2	A	TwoAi	OneB	\n \t	1.2
+2	A	TwoAi	OneB	\r \t	1.2
+2	A	TwoAi	OneB	\w \t	1.2
+2	A	TwoAi	OneB	\p	above
+2	A	TwoAi	OneB	\r \p	1.2 above
+2	A	TwoAi	OneB	\n \p	1.2 above
+2	A	TwoAi	OneB	\w \p	1.2 above
+2	A	TwoAi	Two	\n	2
+2	A	TwoAi	Two	\r	2
+2	A	TwoAi	Two	\w	2
+2	A	TwoAi	Two	\n \t	2
+2	A	TwoAi	Two	\r \t	2
+2	A	TwoAi	Two	\w \t	2
+2	A	TwoAi	Two	\p	above
+2	A	TwoAi	Two	\r \p	2 above
+2	A	TwoAi	Two	\n \p	2 above
+2	A	TwoAi	Two	\w \p	2 above
+2	A	TwoAi	TwoA	\n	2.1
+2	A	TwoAi	TwoA	\r	2.1
+2	A	TwoAi	TwoA	\w	2.1
+2	A	TwoAi	TwoA	\n \t	2.1
+2	A	TwoAi	TwoA	\r \t	2.1
+2	A	TwoAi	TwoA	\w \t	2.1
+2	A	TwoAi	TwoA	\p	above
+2	A	TwoAi	TwoA	\r \p	2.1 above
+2	A	TwoAi	TwoA	\n \p	2.1 above
+2	A	TwoAi	TwoA	\w \p	2.1 above
+2	A	TwoAi	TwoAi	\n	2.1.1
+2	A	TwoAi	TwoAi	\r	2.1.1
+2	A	TwoAi	TwoAi	\w	2.1.1
+2	A	TwoAi	TwoAi	\n \t	2.1.1
+2	A	TwoAi	TwoAi	\r \t	2.1.1
+2	A	TwoAi	TwoAi	\w \t	2.1.1
+2	A	TwoAi	TwoAi	\p	above
+2	A	TwoAi	TwoAi	\r \p	2.1.1 above
+2	A	TwoAi	TwoAi	\n \p	2.1.1 above
+2	A	TwoAi	TwoAi	\w \p	2.1.1 above
+3	A	Start	One	\n	1)
+3	A	Start	One	\r	1)
+3	A	Start	One	\w	1)
+3	A	Start	One	\n \t	1)
+3	A	Start	One	\r \t	1)
+3	A	Start	One	\w \t	1)
+3	A	Start	One	\p	below
+3	A	Start	One	\r \p	1) below
+3	A	Start	One	\n \p	1) below
+3	A	Start	One	\w \p	1) below
+3	A	Start	OneA	\n	a)
+3	A	Start	OneA	\r	1)a)
+3	A	Start	OneA	\w	1)a)
+3	A	Start	OneA	\n \t	a)
+3	A	Start	OneA	\r \t	1)a)
+3	A	Start	OneA	\w \t	1)a)
+3	A	Start	OneA	\p	below
+3	A	Start	OneA	\r \p	1)a) below
+3	A	Start	OneA	\n \p	a) below
+3	A	Start	OneA	\w \p	1)a) below
+3	A	Start	OneAi	\n	i)
+3	A	Start	OneAi	\r	1)a)i)
+3	A	Start	OneAi	\w	1)a)i)
+3	A	Start	OneAi	\n \t	i)
+3	A	Start	OneAi	\r \t	1)a)i)
+3	A	Start	OneAi	\w \t	1)a)i)
+3	A	Start	OneAi	\p	below
+3	A	Start	OneAi	\r \p	1)a)i) below
+3	A	Start	OneAi	\n \p	i) below
+3	A	Start	OneAi	\w \p	1)a)i) below
+3	A	Start	OneAii	\n	ii)
+3	A	Start	OneAii	\r	1)a)ii)
+3	A	Start	OneAii	\w	1)a)ii)
+3	A	Start	OneAii	\n \t	ii)
+3	A	Start	OneAii	\r \t	1)a)ii)
+3	A	Start	OneAii	\w \t	1)a)ii)
+3	A	Start	OneAii	\p	below
+3	A	Start	OneAii	\r \p	1)a)ii) below
+3	A	Start	OneAii	\n \p	ii) below
+3	A	Start	OneAii	\w \p	1)a)ii) below
+3	A	Start	OneB	\n	b)
+3	A	Start	OneB	\r	1)b)
+3	A	Start	OneB	\w	1)b)
+3	A	Start	OneB	\n \t	b)
+3	A	Start	OneB	\r \t	1)b)
+3	A	Start	OneB	\w \t	1)b)
+3	A	Start	OneB	\p	below
+3	A	Start	OneB	\r \p	1)b) below
+3	A	Start	OneB	\n \p	b) below
+3	A	Start	OneB	\w \p	1)b) below
+3	A	Start	Two	\n	2)
+3	A	Start	Two	\r	2)
+3	A	Start	Two	\w	2)
+3	A	Start	Two	\n \t	2)
+3	A	Start	Two	\r \t	2)
+3	A	Start	Two	\w \t	2)
+3	A	Start	Two	\p	below
+3	A	Start	Two	\r \p	2) below
+3	A	Start	Two	\n \p	2) below
+3	A	Start	Two	\w \p	2) below
+3	A	Start	TwoA	\n	a)
+3	A	Start	TwoA	\r	2)a)
+3	A	Start	TwoA	\w	2)a)
+3	A	Start	TwoA	\n \t	a)
+3	A	Start	TwoA	\r \t	2)a)
+3	A	Start	TwoA	\w \t	2)a)
+3	A	Start	TwoA	\p	below
+3	A	Start	TwoA	\r \p	2)a) below
+3	A	Start	TwoA	\n \p	a) below
+3	A	Start	TwoA	\w \p	2)a) below
+3	A	Start	TwoAi	\n	i)
+3	A	Start	TwoAi	\r	2)a)i)
+3	A	Start	TwoAi	\w	2)a)i)
+3	A	Start	TwoAi	\n \t	i)
+3	A	Start	TwoAi	\r \t	2)a)i)
+3	A	Start	TwoAi	\w \t	2)a)i)
+3	A	Start	TwoAi	\p	below
+3	A	Start	TwoAi	\r \p	2)a)i) below
+3	A	Start	TwoAi	\n \p	i) below
+3	A	Start	TwoAi	\w \p	2)a)i) below
+3	A	OneAii	One	\n	1)
+3	A	OneAii	One	\r	1)
+3	A	OneAii	One	\w	1)
+3	A	OneAii	One	\n \t	1)
+3	A	OneAii	One	\r \t	1)
+3	A	OneAii	One	\w \t	1)
+3	A	OneAii	One	\p	above
+3	A	OneAii	One	\r \p	1) above
+3	A	OneAii	One	\n \p	1) above
+3	A	OneAii	One	\w \p	1) above
+3	A	OneAii	OneA	\n	a)
+3	A	OneAii	OneA	\r	a)
+3	A	OneAii	OneA	\w	1)a)
+3	A	OneAii	OneA	\n \t	a)
+3	A	OneAii	OneA	\r \t	a)
+3	A	OneAii	OneA	\w \t	1)a)
+3	A	OneAii	OneA	\p	above
+3	A	OneAii	OneA	\r \p	a) above
+3	A	OneAii	OneA	\n \p	a) above
+3	A	OneAii	OneA	\w \p	1)a) above
+3	A	OneAii	OneAi	\n	i)
+3	A	OneAii	OneAi	\r	i)
+3	A	OneAii	OneAi	\w	1)a)i)
+3	A	OneAii	OneAi	\n \t	i)
+3	A	OneAii	OneAi	\r \t	i)
+3	A	OneAii	OneAi	\w \t	1)a)i)
+3	A	OneAii	OneAi	\p	above
+3	A	OneAii	OneAi	\r \p	i) above
+3	A	OneAii	OneAi	\n \p	i) above
+3	A	OneAii	OneAi	\w \p	1)a)i) above
+3	A	OneAii	OneAii	\n	ii)
+3	A	OneAii	OneAii	\r	ii)
+3	A	OneAii	OneAii	\w	1)a)ii)
+3	A	OneAii	OneAii	\n \t	ii)
+3	A	OneAii	OneAii	\r \t	ii)
+3	A	OneAii	OneAii	\w \t	1)a)ii)
+3	A	OneAii	OneAii	\p	above
+3	A	OneAii	OneAii	\r \p	ii) above
+3	A	OneAii	OneAii	\n \p	ii) above
+3	A	OneAii	OneAii	\w \p	1)a)ii) above
+3	A	OneAii	OneB	\n	b)
+3	A	OneAii	OneB	\r	b)
+3	A	OneAii	OneB	\w	1)b)
+3	A	OneAii	OneB	\n \t	b)
+3	A	OneAii	OneB	\r \t	b)
+3	A	OneAii	OneB	\w \t	1)b)
+3	A	OneAii	OneB	\p	below
+3	A	OneAii	OneB	\r \p	b) below
+3	A	OneAii	OneB	\n \p	b) below
+3	A	OneAii	OneB	\w \p	1)b) below
+3	A	OneAii	Two	\n	2)
+3	A	OneAii	Two	\r	2)
+3	A	OneAii	Two	\w	2)
+3	A	OneAii	Two	\n \t	2)
+3	A	OneAii	Two	\r \t	2)
+3	A	OneAii	Two	\w \t	2)
+3	A	OneAii	Two	\p	below
+3	A	OneAii	Two	\r \p	2) below
+3	A	OneAii	Two	\n \p	2) below
+3	A	OneAii	Two	\w \p	2) below
+3	A	OneAii	TwoA	\n	a)
+3	A	OneAii	TwoA	\r	2)a)
+3	A	OneAii	TwoA	\w	2)a)
+3	A	OneAii	TwoA	\n \t	a)
+3	A	OneAii	TwoA	\r \t	2)a)
+3	A	OneAii	TwoA	\w \t	2)a)
+3	A	OneAii	TwoA	\p	below
+3	A	OneAii	TwoA	\r \p	2)a) below
+3	A	OneAii	TwoA	\n \p	a) below
+3	A	OneAii	TwoA	\w \p	2)a) below
+3	A	OneAii	TwoAi	\n	i)
+3	A	OneAii	TwoAi	\r	2)a)i)
+3	A	OneAii	TwoAi	\w	2)a)i)
+3	A	OneAii	TwoAi	\n \t	i)
+3	A	OneAii	TwoAi	\r \t	2)a)i)
+3	A	OneAii	TwoAi	\w \t	2)a)i)
+3	A	OneAii	TwoAi	\p	below
+3	A	OneAii	TwoAi	\r \p	2)a)i) below
+3	A	OneAii	TwoAi	\n \p	i) below
+3	A	OneAii	TwoAi	\w \p	2)a)i) below
+3	A	TwoAi	One	\n	1)
+3	A	TwoAi	One	\r	1)
+3	A	TwoAi	One	\w	1)
+3	A	TwoAi	One	\n \t	1)
+3	A	TwoAi	One	\r \t	1)
+3	A	TwoAi	One	\w \t	1)
+3	A	TwoAi	One	\p	above
+3	A	TwoAi	One	\r \p	1) above
+3	A	TwoAi	One	\n \p	1) above
+3	A	TwoAi	One	\w \p	1) above
+3	A	TwoAi	OneA	\n	a)
+3	A	TwoAi	OneA	\r	1)a)
+3	A	TwoAi	OneA	\w	1)a)
+3	A	TwoAi	OneA	\n \t	a)
+3	A	TwoAi	OneA	\r \t	1)a)
+3	A	TwoAi	OneA	\w \t	1)a)
+3	A	TwoAi	OneA	\p	above
+3	A	TwoAi	OneA	\r \p	1)a) above
+3	A	TwoAi	OneA	\n \p	a) above
+3	A	TwoAi	OneA	\w \p	1)a) above
+3	A	TwoAi	OneAi	\n	i)
+3	A	TwoAi	OneAi	\r	1)a)i)
+3	A	TwoAi	OneAi	\w	1)a)i)
+3	A	TwoAi	OneAi	\n \t	i)
+3	A	TwoAi	OneAi	\r \t	1)a)i)
+3	A	TwoAi	OneAi	\w \t	1)a)i)
+3	A	TwoAi	OneAi	\p	above
+3	A	TwoAi	OneAi	\r \p	1)a)i) above
+3	A	TwoAi	OneAi	\n \p	i) above
+3	A	TwoAi	OneAi	\w \p	1)a)i) above
+3	A	TwoAi	OneAii	\n	ii)
+3	A	TwoAi	OneAii	\r	1)a)ii)
+3	A	TwoAi	OneAii	\w	1)a)ii)
+3	A	TwoAi	OneAii	\n \t	ii)
+3	A	TwoAi	OneAii	\r \t	1)a)ii)
+3	A	TwoAi	OneAii	\w \t	1)a)ii)
+3	A	TwoAi	OneAii	\p	above
+3	A	TwoAi	OneAii	\r \p	1)a)ii) above
+3	A	TwoAi	OneAii	\n \p	ii) above
+3	A	TwoAi	OneAii	\w \p	1)a)ii) above
+3	A	TwoAi	OneB	\n	b)
+3	A	TwoAi	OneB	\r	1)b)
+3	A	TwoAi	OneB	\w	1)b)
+3	A	TwoAi	OneB	\n \t	b)
+3	A	TwoAi	OneB	\r \t	1)b)
+3	A	TwoAi	OneB	\w \t	1)b)
+3	A	TwoAi	OneB	\p	above
+3	A	TwoAi	OneB	\r \p	1)b) above
+3	A	TwoAi	OneB	\n \p	b) above
+3	A	TwoAi	OneB	\w \p	1)b) above
+3	A	TwoAi	Two	\n	2)
+3	A	TwoAi	Two	\r	2)
+3	A	TwoAi	Two	\w	2)
+3	A	TwoAi	Two	\n \t	2)
+3	A	TwoAi	Two	\r \t	2)
+3	A	TwoAi	Two	\w \t	2)
+3	A	TwoAi	Two	\p	above
+3	A	TwoAi	Two	\r \p	2) above
+3	A	TwoAi	Two	\n \p	2) above
+3	A	TwoAi	Two	\w \p	2) above
+3	A	TwoAi	TwoA	\n	a)
+3	A	TwoAi	TwoA	\r	a)
+3	A	TwoAi	TwoA	\w	2)a)
+3	A	TwoAi	TwoA	\n \t	a)
+3	A	TwoAi	TwoA	\r \t	a)
+3	A	TwoAi	TwoA	\w \t	2)a)
+3	A	TwoAi	TwoA	\p	above
+3	A	TwoAi	TwoA	\r \p	a) above
+3	A	TwoAi	TwoA	\n \p	a) above
+3	A	TwoAi	TwoA	\w \p	2)a) above
+3	A	TwoAi	TwoAi	\n	i)
+3	A	TwoAi	TwoAi	\r	i)
+3	A	TwoAi	TwoAi	\w	2)a)i)
+3	A	TwoAi	TwoAi	\n \t	i)
+3	A	TwoAi	TwoAi	\r \t	i)
+3	A	TwoAi	TwoAi	\w \t	2)a)i)
+3	A	TwoAi	TwoAi	\p	above
+3	A	TwoAi	TwoAi	\r \p	i) above
+3	A	TwoAi	TwoAi	\n \p	i) above
+3	A	TwoAi	TwoAi	\w \p	2)a)i) above
+1	B	BodyOne	One	\n	Chapter 1
+1	B	BodyOne	One	\r	Chapter 1
+1	B	BodyOne	One	\w	Chapter 1
+1	B	BodyOne	One	\n \t	1
+1	B	BodyOne	One	\r \t	1
+1	B	BodyOne	One	\w \t	1
+1	B	BodyOne	OneA	\n	(a)
+1	B	BodyOne	OneA	\r	(a)
+1	B	BodyOne	OneA	\w	Chapter 1(a)
+1	B	BodyOne	OneA	\n \t	(a)
+1	B	BodyOne	OneA	\r \t	(a)
+1	B	BodyOne	OneA	\w \t	1(a)
+1	B	BodyOne	OneAi	\n	i
+1	B	BodyOne	OneAi	\r	(a)i
+1	B	BodyOne	OneAi	\w	Chapter 1(a)i
+1	B	BodyOne	OneAi	\n \t	i
+1	B	BodyOne	OneAi	\r \t	(a)i
+1	B	BodyOne	OneAi	\w \t	1(a)i
+1	B	BodyOne	Plain	\n	0
+1	B	BodyOne	Plain	\r	0
+1	B	BodyOne	Plain	\w	0
+1	B	BodyOne	Plain	\n \t	0
+1	B	BodyOne	Plain	\r \t	0
+1	B	BodyOne	Plain	\w \t	0
+1	B	BodyOne	OneB	\n	(b)
+1	B	BodyOne	OneB	\r	(b)
+1	B	BodyOne	OneB	\w	Chapter 1(b)
+1	B	BodyOne	OneB	\n \t	(b)
+1	B	BodyOne	OneB	\r \t	(b)
+1	B	BodyOne	OneB	\w \t	1(b)
+1	B	BodyOne	Two	\n	Chapter 2
+1	B	BodyOne	Two	\r	Chapter 2
+1	B	BodyOne	Two	\w	Chapter 2
+1	B	BodyOne	Two	\n \t	2
+1	B	BodyOne	Two	\r \t	2
+1	B	BodyOne	Two	\w \t	2
+1	B	BodyOneAi	One	\n	Chapter 1
+1	B	BodyOneAi	One	\r	Chapter 1
+1	B	BodyOneAi	One	\w	Chapter 1
+1	B	BodyOneAi	One	\n \t	1
+1	B	BodyOneAi	One	\r \t	1
+1	B	BodyOneAi	One	\w \t	1
+1	B	BodyOneAi	OneA	\n	(a)
+1	B	BodyOneAi	OneA	\r	(a)
+1	B	BodyOneAi	OneA	\w	Chapter 1(a)
+1	B	BodyOneAi	OneA	\n \t	(a)
+1	B	BodyOneAi	OneA	\r \t	(a)
+1	B	BodyOneAi	OneA	\w \t	1(a)
+1	B	BodyOneAi	OneAi	\n	i
+1	B	BodyOneAi	OneAi	\r	i
+1	B	BodyOneAi	OneAi	\w	Chapter 1(a)i
+1	B	BodyOneAi	OneAi	\n \t	i
+1	B	BodyOneAi	OneAi	\r \t	i
+1	B	BodyOneAi	OneAi	\w \t	1(a)i
+1	B	BodyOneAi	Plain	\n	0
+1	B	BodyOneAi	Plain	\r	0
+1	B	BodyOneAi	Plain	\w	0
+1	B	BodyOneAi	Plain	\n \t	0
+1	B	BodyOneAi	Plain	\r \t	0
+1	B	BodyOneAi	Plain	\w \t	0
+1	B	BodyOneAi	OneB	\n	(b)
+1	B	BodyOneAi	OneB	\r	(b)
+1	B	BodyOneAi	OneB	\w	Chapter 1(b)
+1	B	BodyOneAi	OneB	\n \t	(b)
+1	B	BodyOneAi	OneB	\r \t	(b)
+1	B	BodyOneAi	OneB	\w \t	1(b)
+1	B	BodyOneAi	Two	\n	Chapter 2
+1	B	BodyOneAi	Two	\r	Chapter 2
+1	B	BodyOneAi	Two	\w	Chapter 2
+1	B	BodyOneAi	Two	\n \t	2
+1	B	BodyOneAi	Two	\r \t	2
+1	B	BodyOneAi	Two	\w \t	2
+1	B	Plain	One	\n	Chapter 1
+1	B	Plain	One	\r	Chapter 1
+1	B	Plain	One	\w	Chapter 1
+1	B	Plain	One	\n \t	1
+1	B	Plain	One	\r \t	1
+1	B	Plain	One	\w \t	1
+1	B	Plain	OneA	\n	(a)
+1	B	Plain	OneA	\r	(a)
+1	B	Plain	OneA	\w	Chapter 1(a)
+1	B	Plain	OneA	\n \t	(a)
+1	B	Plain	OneA	\r \t	(a)
+1	B	Plain	OneA	\w \t	1(a)
+1	B	Plain	OneAi	\n	i
+1	B	Plain	OneAi	\r	i
+1	B	Plain	OneAi	\w	Chapter 1(a)i
+1	B	Plain	OneAi	\n \t	i
+1	B	Plain	OneAi	\r \t	i
+1	B	Plain	OneAi	\w \t	1(a)i
+1	B	Plain	Plain	\n	0
+1	B	Plain	Plain	\r	0
+1	B	Plain	Plain	\w	0
+1	B	Plain	Plain	\n \t	0
+1	B	Plain	Plain	\r \t	0
+1	B	Plain	Plain	\w \t	0
+1	B	Plain	OneB	\n	(b)
+1	B	Plain	OneB	\r	(b)
+1	B	Plain	OneB	\w	Chapter 1(b)
+1	B	Plain	OneB	\n \t	(b)
+1	B	Plain	OneB	\r \t	(b)
+1	B	Plain	OneB	\w \t	1(b)
+1	B	Plain	Two	\n	Chapter 2
+1	B	Plain	Two	\r	Chapter 2
+1	B	Plain	Two	\w	Chapter 2
+1	B	Plain	Two	\n \t	2
+1	B	Plain	Two	\r \t	2
+1	B	Plain	Two	\w \t	2
+1	B	BodyTwo	One	\n	Chapter 1
+1	B	BodyTwo	One	\r	Chapter 1
+1	B	BodyTwo	One	\w	Chapter 1
+1	B	BodyTwo	One	\n \t	1
+1	B	BodyTwo	One	\r \t	1
+1	B	BodyTwo	One	\w \t	1
+1	B	BodyTwo	OneA	\n	(a)
+1	B	BodyTwo	OneA	\r	Chapter 1(a)
+1	B	BodyTwo	OneA	\w	Chapter 1(a)
+1	B	BodyTwo	OneA	\n \t	(a)
+1	B	BodyTwo	OneA	\r \t	1(a)
+1	B	BodyTwo	OneA	\w \t	1(a)
+1	B	BodyTwo	OneAi	\n	i
+1	B	BodyTwo	OneAi	\r	Chapter 1(a)i
+1	B	BodyTwo	OneAi	\w	Chapter 1(a)i
+1	B	BodyTwo	OneAi	\n \t	i
+1	B	BodyTwo	OneAi	\r \t	1(a)i
+1	B	BodyTwo	OneAi	\w \t	1(a)i
+1	B	BodyTwo	Plain	\n	0
+1	B	BodyTwo	Plain	\r	0
+1	B	BodyTwo	Plain	\w	0
+1	B	BodyTwo	Plain	\n \t	0
+1	B	BodyTwo	Plain	\r \t	0
+1	B	BodyTwo	Plain	\w \t	0
+1	B	BodyTwo	OneB	\n	(b)
+1	B	BodyTwo	OneB	\r	Chapter 1(b)
+1	B	BodyTwo	OneB	\w	Chapter 1(b)
+1	B	BodyTwo	OneB	\n \t	(b)
+1	B	BodyTwo	OneB	\r \t	1(b)
+1	B	BodyTwo	OneB	\w \t	1(b)
+1	B	BodyTwo	Two	\n	Chapter 2
+1	B	BodyTwo	Two	\r	Chapter 2
+1	B	BodyTwo	Two	\w	Chapter 2
+1	B	BodyTwo	Two	\n \t	2
+1	B	BodyTwo	Two	\r \t	2
+1	B	BodyTwo	Two	\w \t	2
+4	B	BodyOne	One	\n	1
+4	B	BodyOne	One	\r	1
+4	B	BodyOne	One	\w	1
+4	B	BodyOne	One	\n \t	1
+4	B	BodyOne	One	\r \t	1
+4	B	BodyOne	One	\w \t	1
+4	B	BodyOne	OneA	\n	a
+4	B	BodyOne	OneA	\r	a
+4	B	BodyOne	OneA	\w	1.a
+4	B	BodyOne	OneA	\n \t	a
+4	B	BodyOne	OneA	\r \t	a
+4	B	BodyOne	OneA	\w \t	1.a
+4	B	BodyOne	OneAi	\n	i
+4	B	BodyOne	OneAi	\r	a.i
+4	B	BodyOne	OneAi	\w	1.a.i
+4	B	BodyOne	OneAi	\n \t	i
+4	B	BodyOne	OneAi	\r \t	a.i
+4	B	BodyOne	OneAi	\w \t	1.a.i
+4	B	BodyOne	Plain	\n	0
+4	B	BodyOne	Plain	\r	0
+4	B	BodyOne	Plain	\w	0
+4	B	BodyOne	Plain	\n \t	0
+4	B	BodyOne	Plain	\r \t	0
+4	B	BodyOne	Plain	\w \t	0
+4	B	BodyOne	OneB	\n	b
+4	B	BodyOne	OneB	\r	b
+4	B	BodyOne	OneB	\w	1.b
+4	B	BodyOne	OneB	\n \t	b
+4	B	BodyOne	OneB	\r \t	b
+4	B	BodyOne	OneB	\w \t	1.b
+4	B	BodyOne	Two	\n	2
+4	B	BodyOne	Two	\r	2
+4	B	BodyOne	Two	\w	2
+4	B	BodyOne	Two	\n \t	2
+4	B	BodyOne	Two	\r \t	2
+4	B	BodyOne	Two	\w \t	2
+4	B	BodyOneAi	One	\n	1
+4	B	BodyOneAi	One	\r	1
+4	B	BodyOneAi	One	\w	1
+4	B	BodyOneAi	One	\n \t	1
+4	B	BodyOneAi	One	\r \t	1
+4	B	BodyOneAi	One	\w \t	1
+4	B	BodyOneAi	OneA	\n	a
+4	B	BodyOneAi	OneA	\r	a
+4	B	BodyOneAi	OneA	\w	1.a
+4	B	BodyOneAi	OneA	\n \t	a
+4	B	BodyOneAi	OneA	\r \t	a
+4	B	BodyOneAi	OneA	\w \t	1.a
+4	B	BodyOneAi	OneAi	\n	i
+4	B	BodyOneAi	OneAi	\r	i
+4	B	BodyOneAi	OneAi	\w	1.a.i
+4	B	BodyOneAi	OneAi	\n \t	i
+4	B	BodyOneAi	OneAi	\r \t	i
+4	B	BodyOneAi	OneAi	\w \t	1.a.i
+4	B	BodyOneAi	Plain	\n	0
+4	B	BodyOneAi	Plain	\r	0
+4	B	BodyOneAi	Plain	\w	0
+4	B	BodyOneAi	Plain	\n \t	0
+4	B	BodyOneAi	Plain	\r \t	0
+4	B	BodyOneAi	Plain	\w \t	0
+4	B	BodyOneAi	OneB	\n	b
+4	B	BodyOneAi	OneB	\r	b
+4	B	BodyOneAi	OneB	\w	1.b
+4	B	BodyOneAi	OneB	\n \t	b
+4	B	BodyOneAi	OneB	\r \t	b
+4	B	BodyOneAi	OneB	\w \t	1.b
+4	B	BodyOneAi	Two	\n	2
+4	B	BodyOneAi	Two	\r	2
+4	B	BodyOneAi	Two	\w	2
+4	B	BodyOneAi	Two	\n \t	2
+4	B	BodyOneAi	Two	\r \t	2
+4	B	BodyOneAi	Two	\w \t	2
+4	B	Plain	One	\n	1
+4	B	Plain	One	\r	1
+4	B	Plain	One	\w	1
+4	B	Plain	One	\n \t	1
+4	B	Plain	One	\r \t	1
+4	B	Plain	One	\w \t	1
+4	B	Plain	OneA	\n	a
+4	B	Plain	OneA	\r	a
+4	B	Plain	OneA	\w	1.a
+4	B	Plain	OneA	\n \t	a
+4	B	Plain	OneA	\r \t	a
+4	B	Plain	OneA	\w \t	1.a
+4	B	Plain	OneAi	\n	i
+4	B	Plain	OneAi	\r	i
+4	B	Plain	OneAi	\w	1.a.i
+4	B	Plain	OneAi	\n \t	i
+4	B	Plain	OneAi	\r \t	i
+4	B	Plain	OneAi	\w \t	1.a.i
+4	B	Plain	Plain	\n	0
+4	B	Plain	Plain	\r	0
+4	B	Plain	Plain	\w	0
+4	B	Plain	Plain	\n \t	0
+4	B	Plain	Plain	\r \t	0
+4	B	Plain	Plain	\w \t	0
+4	B	Plain	OneB	\n	b
+4	B	Plain	OneB	\r	b
+4	B	Plain	OneB	\w	1.b
+4	B	Plain	OneB	\n \t	b
+4	B	Plain	OneB	\r \t	b
+4	B	Plain	OneB	\w \t	1.b
+4	B	Plain	Two	\n	2
+4	B	Plain	Two	\r	2
+4	B	Plain	Two	\w	2
+4	B	Plain	Two	\n \t	2
+4	B	Plain	Two	\r \t	2
+4	B	Plain	Two	\w \t	2
+4	B	BodyTwo	One	\n	1
+4	B	BodyTwo	One	\r	1
+4	B	BodyTwo	One	\w	1
+4	B	BodyTwo	One	\n \t	1
+4	B	BodyTwo	One	\r \t	1
+4	B	BodyTwo	One	\w \t	1
+4	B	BodyTwo	OneA	\n	a
+4	B	BodyTwo	OneA	\r	1.a
+4	B	BodyTwo	OneA	\w	1.a
+4	B	BodyTwo	OneA	\n \t	a
+4	B	BodyTwo	OneA	\r \t	1.a
+4	B	BodyTwo	OneA	\w \t	1.a
+4	B	BodyTwo	OneAi	\n	i
+4	B	BodyTwo	OneAi	\r	1.a.i
+4	B	BodyTwo	OneAi	\w	1.a.i
+4	B	BodyTwo	OneAi	\n \t	i
+4	B	BodyTwo	OneAi	\r \t	1.a.i
+4	B	BodyTwo	OneAi	\w \t	1.a.i
+4	B	BodyTwo	Plain	\n	0
+4	B	BodyTwo	Plain	\r	0
+4	B	BodyTwo	Plain	\w	0
+4	B	BodyTwo	Plain	\n \t	0
+4	B	BodyTwo	Plain	\r \t	0
+4	B	BodyTwo	Plain	\w \t	0
+4	B	BodyTwo	OneB	\n	b
+4	B	BodyTwo	OneB	\r	1.b
+4	B	BodyTwo	OneB	\w	1.b
+4	B	BodyTwo	OneB	\n \t	b
+4	B	BodyTwo	OneB	\r \t	1.b
+4	B	BodyTwo	OneB	\w \t	1.b
+4	B	BodyTwo	Two	\n	2
+4	B	BodyTwo	Two	\r	2
+4	B	BodyTwo	Two	\w	2
+4	B	BodyTwo	Two	\n \t	2
+4	B	BodyTwo	Two	\r \t	2
+4	B	BodyTwo	Two	\w \t	2
+5	B	BodyOne	One	\n	Part 1:
+5	B	BodyOne	One	\r	Part 1:
+5	B	BodyOne	One	\w	Part 1:
+5	B	BodyOne	One	\n \t	1:
+5	B	BodyOne	One	\r \t	1:
+5	B	BodyOne	One	\w \t	1:
+5	B	BodyOne	OneA	\n	Section 1-1
+5	B	BodyOne	OneA	\r	Section 1-1
+5	B	BodyOne	OneA	\w	Section 1-1
+5	B	BodyOne	OneA	\n \t	1-1
+5	B	BodyOne	OneA	\r \t	1-1
+5	B	BodyOne	OneA	\w \t	1-1
+5	B	BodyOne	OneAi	\n	Clause 1 of
+5	B	BodyOne	OneAi	\r	Section 1-1Clause 1 of
+5	B	BodyOne	OneAi	\w	Section 1-1Clause 1 of
+5	B	BodyOne	OneAi	\n \t	1
+5	B	BodyOne	OneAi	\r \t	1-11
+5	B	BodyOne	OneAi	\w \t	1-11
+5	B	BodyOne	Plain	\n	0
+5	B	BodyOne	Plain	\r	0
+5	B	BodyOne	Plain	\w	0
+5	B	BodyOne	Plain	\n \t	0
+5	B	BodyOne	Plain	\r \t	0
+5	B	BodyOne	Plain	\w \t	0
+5	B	BodyOne	OneB	\n	Section 1-2
+5	B	BodyOne	OneB	\r	Section 1-2
+5	B	BodyOne	OneB	\w	Section 1-2
+5	B	BodyOne	OneB	\n \t	1-2
+5	B	BodyOne	OneB	\r \t	1-2
+5	B	BodyOne	OneB	\w \t	1-2
+5	B	BodyOne	Two	\n	Part 2:
+5	B	BodyOne	Two	\r	Part 2:
+5	B	BodyOne	Two	\w	Part 2:
+5	B	BodyOne	Two	\n \t	2:
+5	B	BodyOne	Two	\r \t	2:
+5	B	BodyOne	Two	\w \t	2:
+5	B	BodyOneAi	One	\n	Part 1:
+5	B	BodyOneAi	One	\r	Part 1:
+5	B	BodyOneAi	One	\w	Part 1:
+5	B	BodyOneAi	One	\n \t	1:
+5	B	BodyOneAi	One	\r \t	1:
+5	B	BodyOneAi	One	\w \t	1:
+5	B	BodyOneAi	OneA	\n	Section 1-1
+5	B	BodyOneAi	OneA	\r	Section 1-1
+5	B	BodyOneAi	OneA	\w	Section 1-1
+5	B	BodyOneAi	OneA	\n \t	1-1
+5	B	BodyOneAi	OneA	\r \t	1-1
+5	B	BodyOneAi	OneA	\w \t	1-1
+5	B	BodyOneAi	OneAi	\n	Clause 1 of
+5	B	BodyOneAi	OneAi	\r	Clause 1 of
+5	B	BodyOneAi	OneAi	\w	Section 1-1Clause 1 of
+5	B	BodyOneAi	OneAi	\n \t	1
+5	B	BodyOneAi	OneAi	\r \t	1
+5	B	BodyOneAi	OneAi	\w \t	1-11
+5	B	BodyOneAi	Plain	\n	0
+5	B	BodyOneAi	Plain	\r	0
+5	B	BodyOneAi	Plain	\w	0
+5	B	BodyOneAi	Plain	\n \t	0
+5	B	BodyOneAi	Plain	\r \t	0
+5	B	BodyOneAi	Plain	\w \t	0
+5	B	BodyOneAi	OneB	\n	Section 1-2
+5	B	BodyOneAi	OneB	\r	Section 1-2
+5	B	BodyOneAi	OneB	\w	Section 1-2
+5	B	BodyOneAi	OneB	\n \t	1-2
+5	B	BodyOneAi	OneB	\r \t	1-2
+5	B	BodyOneAi	OneB	\w \t	1-2
+5	B	BodyOneAi	Two	\n	Part 2:
+5	B	BodyOneAi	Two	\r	Part 2:
+5	B	BodyOneAi	Two	\w	Part 2:
+5	B	BodyOneAi	Two	\n \t	2:
+5	B	BodyOneAi	Two	\r \t	2:
+5	B	BodyOneAi	Two	\w \t	2:
+5	B	Plain	One	\n	Part 1:
+5	B	Plain	One	\r	Part 1:
+5	B	Plain	One	\w	Part 1:
+5	B	Plain	One	\n \t	1:
+5	B	Plain	One	\r \t	1:
+5	B	Plain	One	\w \t	1:
+5	B	Plain	OneA	\n	Section 1-1
+5	B	Plain	OneA	\r	Section 1-1
+5	B	Plain	OneA	\w	Section 1-1
+5	B	Plain	OneA	\n \t	1-1
+5	B	Plain	OneA	\r \t	1-1
+5	B	Plain	OneA	\w \t	1-1
+5	B	Plain	OneAi	\n	Clause 1 of
+5	B	Plain	OneAi	\r	Clause 1 of
+5	B	Plain	OneAi	\w	Section 1-1Clause 1 of
+5	B	Plain	OneAi	\n \t	1
+5	B	Plain	OneAi	\r \t	1
+5	B	Plain	OneAi	\w \t	1-11
+5	B	Plain	Plain	\n	0
+5	B	Plain	Plain	\r	0
+5	B	Plain	Plain	\w	0
+5	B	Plain	Plain	\n \t	0
+5	B	Plain	Plain	\r \t	0
+5	B	Plain	Plain	\w \t	0
+5	B	Plain	OneB	\n	Section 1-2
+5	B	Plain	OneB	\r	Section 1-2
+5	B	Plain	OneB	\w	Section 1-2
+5	B	Plain	OneB	\n \t	1-2
+5	B	Plain	OneB	\r \t	1-2
+5	B	Plain	OneB	\w \t	1-2
+5	B	Plain	Two	\n	Part 2:
+5	B	Plain	Two	\r	Part 2:
+5	B	Plain	Two	\w	Part 2:
+5	B	Plain	Two	\n \t	2:
+5	B	Plain	Two	\r \t	2:
+5	B	Plain	Two	\w \t	2:
+5	B	BodyTwo	One	\n	Part 1:
+5	B	BodyTwo	One	\r	Part 1:
+5	B	BodyTwo	One	\w	Part 1:
+5	B	BodyTwo	One	\n \t	1:
+5	B	BodyTwo	One	\r \t	1:
+5	B	BodyTwo	One	\w \t	1:
+5	B	BodyTwo	OneA	\n	Section 1-1
+5	B	BodyTwo	OneA	\r	Section 1-1
+5	B	BodyTwo	OneA	\w	Section 1-1
+5	B	BodyTwo	OneA	\n \t	1-1
+5	B	BodyTwo	OneA	\r \t	1-1
+5	B	BodyTwo	OneA	\w \t	1-1
+5	B	BodyTwo	OneAi	\n	Clause 1 of
+5	B	BodyTwo	OneAi	\r	Section 1-1Clause 1 of
+5	B	BodyTwo	OneAi	\w	Section 1-1Clause 1 of
+5	B	BodyTwo	OneAi	\n \t	1
+5	B	BodyTwo	OneAi	\r \t	1-11
+5	B	BodyTwo	OneAi	\w \t	1-11
+5	B	BodyTwo	Plain	\n	0
+5	B	BodyTwo	Plain	\r	0
+5	B	BodyTwo	Plain	\w	0
+5	B	BodyTwo	Plain	\n \t	0
+5	B	BodyTwo	Plain	\r \t	0
+5	B	BodyTwo	Plain	\w \t	0
+5	B	BodyTwo	OneB	\n	Section 1-2
+5	B	BodyTwo	OneB	\r	Section 1-2
+5	B	BodyTwo	OneB	\w	Section 1-2
+5	B	BodyTwo	OneB	\n \t	1-2
+5	B	BodyTwo	OneB	\r \t	1-2
+5	B	BodyTwo	OneB	\w \t	1-2
+5	B	BodyTwo	Two	\n	Part 2:
+5	B	BodyTwo	Two	\r	Part 2:
+5	B	BodyTwo	Two	\w	Part 2:
+5	B	BodyTwo	Two	\n \t	2:
+5	B	BodyTwo	Two	\r \t	2:
+5	B	BodyTwo	Two	\w \t	2:

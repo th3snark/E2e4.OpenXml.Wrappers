@@ -25,6 +25,22 @@ internal static class ListNumbering
         public int Level;
         public int Value;
         public string Text;
+
+        /// <summary>The number of each level from the first to the item's own, as the item's text shows them.</summary>
+        public int[] Values;
+    }
+
+    /// <summary>How much of the number of a list item to show, as the switches of Word's REF and STYLEREF fields choose.</summary>
+    internal enum NumberContext
+    {
+        /// <summary>The item's own level only (<c>\n</c>).</summary>
+        None,
+
+        /// <summary>The levels that differ from where the number is shown (<c>\r</c>).</summary>
+        Relative,
+
+        /// <summary>Every level (<c>\w</c>).</summary>
+        Full,
     }
 
     internal static Numbering GetNumbering(OpenXmlElement context)
@@ -136,15 +152,15 @@ internal static class ListNumbering
 
             int value = count[level].Value;
             string text = FormatText(template, level, l => count[l] ?? start(l));
-            items.Add(new Item() { Paragraph = paragraph, Num = num, Template = template, Level = level, Value = value, Text = text });
+            int[] values = Enumerable.Range(0, level + 1).Select(l => count[l] ?? start(l)).ToArray();
+            items.Add(new Item() { Paragraph = paragraph, Num = num, Template = template, Level = level, Value = value, Text = text, Values = values });
         }
         return items;
     }
 
-    private static string FormatText(AbstractNum template, int level, Func<int, int> value)
+    private static string FormatText(AbstractNum template, int level, Func<int, int> value, bool withoutWords = false)
     {
-        Level definition = FindLevel(template, level);
-        string pattern = definition?.LevelText?.Val?.Value ?? string.Empty;
+        string pattern = LevelPattern(template, level);
         StringBuilder text = new StringBuilder();
         for (int i = 0; i < pattern.Length; i++)
         {
@@ -154,12 +170,71 @@ internal static class ListNumbering
                 text.Append(FormatNumber(FindLevel(template, number)?.NumberingFormat?.Val?.Value, value(number)));
                 i++;
             }
-            else
+            else if (!withoutWords || !(char.IsLetter(pattern[i]) || char.IsWhiteSpace(pattern[i])))
             {
                 text.Append(pattern[i]);
             }
         }
         return text.ToString();
+    }
+
+    private static string LevelPattern(AbstractNum template, int level)
+    {
+        return FindLevel(template, level)?.LevelText?.Val?.Value ?? string.Empty;
+    }
+
+    //The first level whose number a level's text shows (the level itself when it shows none): "%1.%2." starts at the first, "(%2)" at the second.
+    private static int FirstShownLevel(AbstractNum template, int level)
+    {
+        string pattern = LevelPattern(template, level);
+        int first = level;
+        for (int i = 0; i + 1 < pattern.Length; i++)
+        {
+            if (pattern[i] == '%' && pattern[i + 1] >= '1' && pattern[i + 1] <= '9')
+            {
+                first = Math.Min(first, pattern[i + 1] - '1');
+            }
+        }
+        return first;
+    }
+
+    /// <summary>
+    /// The number of a list item as Word's REF and STYLEREF fields show it, as measured in Word. Its own level's text, preceded for
+    /// <see cref="NumberContext.Full"/> by the text of the levels that text does not show (so "Chapter 1(a)i" for the levels "Chapter %1",
+    /// "(%2)" and "%3.", and "1.1.1" for "%1.%2.%3."); for <see cref="NumberContext.Relative"/> the leading levels that are the same as those of
+    /// <paramref name="from"/> (the list item at or before where the number is shown, or null) are left out. Without words leaves out the letters
+    /// and spaces of the text around the numbers ("Chapter 1" is "1"). A final full stop is left out.
+    /// </summary>
+    internal static string NumberText(Item item, NumberContext context, Item from, bool withoutWords)
+    {
+        //The pieces of the number, last level first: each is a level's text and the first level it shows.
+        List<KeyValuePair<int, int>> pieces = new List<KeyValuePair<int, int>>();
+        for (int level = item.Level; level >= 0;)
+        {
+            int first = FirstShownLevel(item.Template, level);
+            pieces.Insert(0, new KeyValuePair<int, int>(level, first));
+            if (context == NumberContext.None)
+            {
+                break;
+            }
+            level = first - 1;
+        }
+
+        if (context == NumberContext.Relative && from != null && ReferenceEquals(from.Template, item.Template))
+        {
+            while (pieces.Count > 1 && Enumerable.Range(pieces[0].Value, pieces[0].Key - pieces[0].Value + 1)
+                .All(l => l <= from.Level && from.Values[l] == item.Values[l]))
+            {
+                pieces.RemoveAt(0);
+            }
+        }
+
+        StringBuilder text = new StringBuilder();
+        foreach (KeyValuePair<int, int> piece in pieces)
+        {
+            text.Append(FormatText(item.Template, piece.Key, l => l < item.Values.Length ? item.Values[l] : 1, withoutWords));
+        }
+        return text.ToString().TrimEnd('.');
     }
 
     private static string FormatNumber(NumberFormatValues? format, int number)
