@@ -1,0 +1,745 @@
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:body>
+    <w:p>
+      <w:r>
+        <w:t xml:space="preserve">Page 1 text. </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin" />
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "Apple" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end" />
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">w </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin" />
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "Fruit:Banana" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end" />
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">w </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin" />
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "fruit:cherry" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end" />
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">w </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin" />
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "Zebra" \i </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end" />
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">w </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin" />
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "Mixed" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end" />
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">w </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin" />
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "b10" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end" />
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">w </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin" />
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "b2" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end" />
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">w </w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:br w:type="page" />
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t xml:space="preserve">Page 2 text. </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin" />
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "Apple" \b </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end" />
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">w </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin" />
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "Éclair" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end" />
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">w </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin" />
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "eclair" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end" />
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">w </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin" />
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "Fruit:Banana" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end" />
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">w </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin" />
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "Fruit:Banana:Ripe" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end" />
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">w </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin" />
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "Veg" \t "See Fruit" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end" />
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">w </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin" />
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "Apple-tart" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end" />
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">w </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin" />
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "applet" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end" />
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">w </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin" />
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "1999" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end" />
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">w </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin" />
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "_under" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end" />
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">w </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin" />
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "Typed" \f "a" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end" />
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">w </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin" />
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "Mixed" \t "See Apple" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end" />
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">w </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin" />
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "Fruit" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end" />
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">w </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin" />
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "Colon\:Text" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end" />
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">w </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin" />
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "Ölfarbe" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end" />
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">w </w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:br w:type="page" />
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:bookmarkStart w:id="{bookmark1}" w:name="Span" />
+      <w:r>
+        <w:t xml:space="preserve">Page 3 text. </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin" />
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "Ranged" \r Span </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end" />
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">w </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin" />
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "Zebra" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end" />
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">w </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin" />
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "Apple" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end" />
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">w </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin" />
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "Apple" \b \i </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end" />
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">w </w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:br w:type="page" />
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t>Page 4 text. End of span.</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="{bookmark1}" />
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Index1" />
+        <w:tabs>
+          <w:tab w:leader="dot" w:pos="9016" w:val="right" />
+        </w:tabs>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:fldChar w:fldCharType="begin" />
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> INDEX \k " -- " \l " / " </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate" />
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:t>_under, 2</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Index1" />
+        <w:tabs>
+          <w:tab w:leader="dot" w:pos="9016" w:val="right" />
+        </w:tabs>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:t>1999, 2</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Index1" />
+        <w:tabs>
+          <w:tab w:leader="dot" w:pos="9016" w:val="right" />
+        </w:tabs>
+        <w:rPr>
+          <w:bCs />
+          <w:noProof />
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:t xml:space="preserve">Apple, 1 / </w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:b />
+          <w:bCs />
+          <w:noProof />
+        </w:rPr>
+        <w:t>2</w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:bCs />
+          <w:noProof />
+        </w:rPr>
+        <w:t xml:space="preserve"> / 3</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Index1" />
+        <w:tabs>
+          <w:tab w:leader="dot" w:pos="9016" w:val="right" />
+        </w:tabs>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:t>applet, 2</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Index1" />
+        <w:tabs>
+          <w:tab w:leader="dot" w:pos="9016" w:val="right" />
+        </w:tabs>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:t>Apple-tart, 2</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Index1" />
+        <w:tabs>
+          <w:tab w:leader="dot" w:pos="9016" w:val="right" />
+        </w:tabs>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:t>b10, 1</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Index1" />
+        <w:tabs>
+          <w:tab w:leader="dot" w:pos="9016" w:val="right" />
+        </w:tabs>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:t>b2, 1</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Index1" />
+        <w:tabs>
+          <w:tab w:leader="dot" w:pos="9016" w:val="right" />
+        </w:tabs>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:t>Colon:Text, 2</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Index1" />
+        <w:tabs>
+          <w:tab w:leader="dot" w:pos="9016" w:val="right" />
+        </w:tabs>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:t>eclair, 2</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Index1" />
+        <w:tabs>
+          <w:tab w:leader="dot" w:pos="9016" w:val="right" />
+        </w:tabs>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:t>Éclair, 2</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Index1" />
+        <w:tabs>
+          <w:tab w:leader="dot" w:pos="9016" w:val="right" />
+        </w:tabs>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:t>fruit</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Index2" />
+        <w:tabs>
+          <w:tab w:leader="dot" w:pos="9016" w:val="right" />
+        </w:tabs>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:t>cherry, 1</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Index1" />
+        <w:tabs>
+          <w:tab w:leader="dot" w:pos="9016" w:val="right" />
+        </w:tabs>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:t>Fruit, 2</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Index2" />
+        <w:tabs>
+          <w:tab w:leader="dot" w:pos="9016" w:val="right" />
+        </w:tabs>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:t>Banana, 1 / 2</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Index3" />
+        <w:tabs>
+          <w:tab w:leader="dot" w:pos="9016" w:val="right" />
+        </w:tabs>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:t>Ripe, 2</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Index1" />
+        <w:tabs>
+          <w:tab w:leader="dot" w:pos="9016" w:val="right" />
+        </w:tabs>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:t>Mixed, 1 / See Apple</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Index1" />
+        <w:tabs>
+          <w:tab w:leader="dot" w:pos="9016" w:val="right" />
+        </w:tabs>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:t>Ölfarbe, 2</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Index1" />
+        <w:tabs>
+          <w:tab w:leader="dot" w:pos="9016" w:val="right" />
+        </w:tabs>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:t>Ranged, 3–4</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Index1" />
+        <w:tabs>
+          <w:tab w:leader="dot" w:pos="9016" w:val="right" />
+        </w:tabs>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:t>Veg -- See Fruit</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Index1" />
+        <w:tabs>
+          <w:tab w:leader="dot" w:pos="9016" w:val="right" />
+        </w:tabs>
+        <w:rPr>
+          <w:iCs />
+          <w:noProof />
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:t xml:space="preserve">Zebra, </w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:i />
+          <w:iCs />
+          <w:noProof />
+        </w:rPr>
+        <w:t>1</w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:iCs />
+          <w:noProof />
+        </w:rPr>
+        <w:t xml:space="preserve"> / 3</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:fldChar w:fldCharType="end" />
+      </w:r>
+    </w:p>
+    <w:sectPr>
+      <w:pgSz w:h="16838" w:w="11906" />
+      <w:pgMar w:bottom="1440" w:footer="708" w:gutter="0" w:header="708" w:left="1440" w:right="1440" w:top="1440" />
+      <w:cols w:space="708" />
+      <w:docGrid w:linePitch="360" />
+    </w:sectPr>
+  </w:body>
+</w:document>

@@ -157,6 +157,12 @@ public class FieldWrapperCollection : IEnumerable<FieldWrapper>
         return AddField(range, " " + code.Trim() + " ");
     }
 
+    //Adds a field with the code as it is, spaces and all.
+    internal static FieldWrapper AddCode(RangeWrapper range, string code)
+    {
+        return AddField(range, code);
+    }
+
     //Adds the field as Word writes it: as one element when its result can be worked out here and the text around it has no formatting of its
     //own, otherwise in pieces, each with the formatting of the text around it. A result that cannot be worked out (it needs page layout, for
     //instance) is left for Word to fill in when the document is opened.

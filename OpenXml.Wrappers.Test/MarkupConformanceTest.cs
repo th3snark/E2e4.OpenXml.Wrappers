@@ -3122,6 +3122,97 @@ public class MarkupConformanceTest
                 field.Result.Text = "Z";
             },
             Body()),
+        new Scenario("index-add", d =>
+        {
+            AddIndexDocument(d);
+            d.Indexes.Add(IndexPlace(d));
+        }, Index()),
+
+        new Scenario("index-add-run-in-right-aligned", d =>
+        {
+            AddIndexDocument(d);
+            d.Indexes.Add(IndexPlace(d), HeadingSeparator.Letter, true, IndexType.RunIn);
+        }, Index()),
+
+        new Scenario("index-add-columns-blank-line", d =>
+        {
+            AddIndexDocument(d);
+            d.Indexes.Add(IndexPlace(d), HeadingSeparator.BlankLine, false, IndexType.Indent, 2);
+        }, Index()),
+
+        new Scenario("index-add-no-headings", d =>
+        {
+            AddIndexDocument(d);
+            d.Indexes.Add(IndexPlace(d), HeadingSeparator.None);
+        }, Index()),
+
+        new Scenario("index-tab-leader", d =>
+        {
+            AddIndexDocument(d);
+            d.Indexes.Add(IndexPlace(d), HeadingSeparator.Letter, true).TabLeader = TabLeader.Dashes;
+        }, Index()),
+
+        new Scenario("index-update", d =>
+        {
+            AddIndexDocument(d);
+            IndexWrapper index = d.Indexes.Add(IndexPlace(d));
+            d.Fields.Add(d.Range(0, 0), FieldType.Empty, "XE \"Late\"", false);
+            index.Update();
+        }, Index()),
+
+        new Scenario("index-field-switches", d =>
+        {
+            AddIndexDocument(d);
+            d.Fields.Add(IndexPlace(d), FieldType.Empty, "INDEX \\e \"; \" \\l \" & \" \\g \" to \" \\k \"; see \" \\h \"—A—\"", false);
+        }, Index()),
+
+        new Scenario("index-field-cross-reference", d =>
+        {
+            AddIndexDocument(d);
+            d.Fields.Add(IndexPlace(d), FieldType.Empty, "INDEX \\k \" -- \" \\l \" / \"", false);
+        }, Index()),
+
+        new Scenario("index-field-filters", d =>
+        {
+            AddIndexDocument(d);
+            d.Fields.Add(IndexPlace(d), FieldType.Empty, "INDEX \\b Span \\p \"a--z\" \\r", false);
+        }, Index()),
+
+        new Scenario("index-field-type", d =>
+        {
+            AddIndexDocument(d);
+            d.Fields.Add(IndexPlace(d), FieldType.Empty, "INDEX \\f \"a\"", false);
+        }, Index()),
+
+        new Scenario("index-field-chapters", d =>
+        {
+            RangeWrapper End() => d.Range(d.Content.End - 1, d.Content.End - 1);
+            d.Content.InsertAfter("One ");
+            d.Fields.Add(End(), FieldType.Empty, "SEQ chapter \\* ROMAN", false);
+            d.Content.InsertAfter(" ");
+            d.Fields.Add(End(), FieldType.Empty, "XE \"Alpha\"", false);
+            End().InsertBreak(BreakType.PageBreak);
+            d.Content.InsertAfter("Two ");
+            d.Fields.Add(End(), FieldType.Empty, "XE \"Alpha\"", false);
+            d.Content.InsertAfter(" ");
+            d.Fields.Add(End(), FieldType.Empty, "SEQ chapter \\* ROMAN", false);
+            d.Content.InsertAfter(" ");
+            d.Fields.Add(End(), FieldType.Empty, "XE \"Beta\"", false);
+            d.Content.InsertParagraphAfter();
+            d.Fields.Update();
+            d.Fields.Add(End(), FieldType.Empty, "INDEX \\s chapter \\d \".\"", false);
+        }, Index()),
+
+        new Scenario("index-no-entries", d => d.Indexes.Add(d.Range(0, 0)), Body()),
+
+        new Scenario("index-mark-entry", d =>
+        {
+            d.Content.InsertAfter("Marked words here");
+            d.Indexes.MarkEntry(d.Range(0, 6), "Main:Sub", null, "Other", null, null, true, true, "yomi");
+            RangeWrapper words = d.Content;
+            words.Find.Execute("words");
+            d.Indexes.MarkEntry(words, "Plain");
+        }, Body()),
 
         new Scenario("field-result-paragraphs-mid-text",
             d =>
@@ -3642,6 +3733,69 @@ public class MarkupConformanceTest
         }
         return table;
     }
+    //The paragraphs of the index, from the one its field starts in, and the section properties of the last section. The library marks a field
+    //whose page numbers it estimated for Word to update (w:dirty), which Word, having laid the pages out, does not; that mark is left out.
+    private static Comparison Index()
+    {
+        return new Comparison("document.xml index", parts => "document.xml", root =>
+        {
+            List<XElement> elements = root.Element(W + "body").Elements().ToList();
+            int first = elements.FindIndex(e => e.Descendants(W + "instrText").Any(t => t.Value.TrimStart().StartsWith("INDEX", StringComparison.Ordinal))
+                || e.Descendants(W + "fldSimple").Any(f => ((string)f.Attribute(W + "instr") ?? string.Empty).TrimStart().StartsWith("INDEX", StringComparison.Ordinal)));
+            return elements.Skip(Math.Max(first, 0)).Select(e =>
+            {
+                XElement copy = new XElement(e);
+                foreach (XAttribute dirty in copy.Descendants().Attributes(W + "dirty").ToList())
+                {
+                    dirty.Remove();
+                }
+                return copy;
+            }).ToList();
+        });
+    }
+
+    //The document of the index scenarios, as Add-IndexDocument in scenarios.ps1 makes it: four pages of text with XE fields, and the
+    //bookmark Span from page 3 to page 4.
+    private static readonly string[][] IndexPages =
+    {
+        new[] { "XE \"Apple\"", "XE \"Fruit:Banana\"", "XE \"fruit:cherry\"", "XE \"Zebra\" \\i", "XE \"Mixed\"", "XE \"b10\"", "XE \"b2\"" },
+        new[]
+        {
+            "XE \"Apple\" \\b", "XE \"Éclair\"", "XE \"eclair\"", "XE \"Fruit:Banana\"", "XE \"Fruit:Banana:Ripe\"", "XE \"Veg\" \\t \"See Fruit\"", "XE \"Apple-tart\"",
+            "XE \"applet\"", "XE \"1999\"", "XE \"_under\"", "XE \"Typed\" \\f \"a\"", "XE \"Mixed\" \\t \"See Apple\"", "XE \"Fruit\"", "XE \"Colon\\:Text\"", "XE \"Ölfarbe\"",
+        },
+        new[] { "XE \"Ranged\" \\r Span", "XE \"Zebra\"", "XE \"Apple\"", "XE \"Apple\" \\b \\i" },
+    };
+
+    private static void AddIndexDocument(WordprocessingDocumentWrapper d)
+    {
+        for (int page = 1; page <= 4; page++)
+        {
+            d.Content.InsertAfter("Page " + page.ToString(CultureInfo.InvariantCulture) + " text. ");
+            if (page <= 3)
+            {
+                foreach (string code in IndexPages[page - 1])
+                {
+                    d.Fields.Add(d.Range(d.Content.End - 1, d.Content.End - 1), FieldType.Empty, code, false);
+                    d.Content.InsertAfter("w ");
+                }
+                d.Range(d.Content.End - 1, d.Content.End - 1).InsertBreak(BreakType.PageBreak);
+            }
+        }
+        d.Content.InsertAfter("End of span.");
+        RangeWrapper from = d.Content;
+        from.Find.Execute("Page 3");
+        RangeWrapper to = d.Content;
+        to.Find.Execute("End of span.");
+        d.Bookmarks.Add("Span", d.Range(from.Start, to.End));
+        d.Content.InsertParagraphAfter();
+    }
+
+    private static RangeWrapper IndexPlace(WordprocessingDocumentWrapper d)
+    {
+        return d.Range(d.Content.End - 1, d.Content.End - 1);
+    }
+
     private static Comparison Body()
     {
         return new Comparison("document.xml body", parts => "document.xml", root => root.Element(W + "body").Elements().Where(e => e.Name != W + "sectPr"));

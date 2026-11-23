@@ -17,6 +17,42 @@ function Set-PlaceholderText($control, $range, [string]$text) {
     $second = if ($null -ne $range) { $range } else { $none }
     [void][System.__ComObject].InvokeMember('SetPlaceholderText', [Reflection.BindingFlags]::InvokeMethod, $null, $control, @($first, $second, $text))
 }
+# The XE fields of the index scenarios, page by page: entries and subentries, case, accents, symbols and digits, a hyphen, bold and italic
+# page numbers, cross-references, an entry type, an escaped colon and a page range (\r) over the bookmark Span, from page 3 to page 4.
+$script:IndexPages = @(
+    @('XE "Apple"', 'XE "Fruit:Banana"', 'XE "fruit:cherry"', 'XE "Zebra" \i', 'XE "Mixed"', 'XE "b10"', 'XE "b2"'),
+    @('XE "Apple" \b', 'XE "Éclair"', 'XE "eclair"', 'XE "Fruit:Banana"', 'XE "Fruit:Banana:Ripe"', 'XE "Veg" \t "See Fruit"', 'XE "Apple-tart"',
+        'XE "applet"', 'XE "1999"', 'XE "_under"', 'XE "Typed" \f "a"', 'XE "Mixed" \t "See Apple"', 'XE "Fruit"', 'XE "Colon\:Text"', 'XE "Ölfarbe"'),
+    @('XE "Ranged" \r Span', 'XE "Zebra"', 'XE "Apple"', 'XE "Apple" \b \i')
+)
+
+# Four pages of text with the XE fields above, page breaks between, the bookmark Span, and an empty paragraph at the end for the index.
+function Add-IndexDocument($doc) {
+    for ($page = 1; $page -le 4; $page++) {
+        $doc.Content.InsertAfter("Page $page text. ")
+        if ($page -le 3) {
+            foreach ($code in $script:IndexPages[$page - 1]) {
+                $at = $doc.Range($doc.Content.End - 1, $doc.Content.End - 1)
+                [void]$doc.Fields.Add($at, -1, $code, $false)  # wdFieldEmpty
+                $doc.Content.InsertAfter('w ')
+            }
+            $doc.Range($doc.Content.End - 1, $doc.Content.End - 1).InsertBreak(7)  # wdPageBreak
+        }
+    }
+    $doc.Content.InsertAfter('End of span.')
+    $from = $doc.Content
+    [void]$from.Find.Execute('Page 3')
+    $to = $doc.Content
+    [void]$to.Find.Execute('End of span.')
+    [void]$doc.Bookmarks.Add('Span', $doc.Range($from.Start, $to.End))
+    $doc.Content.InsertParagraphAfter()
+}
+
+# The empty paragraph at the end, where the index goes.
+function Get-IndexPlace($doc) {
+    return $doc.Range($doc.Content.End - 1, $doc.Content.End - 1)
+}
+
 # The picture the inline picture scenarios insert (40 x 20 pixels at 96 dpi).
 $script:Picture = (Resolve-Path (Join-Path $PSScriptRoot '..\..\OpenXml.Wrappers.Test\TestFiles\Pictures\blue-40x20.png')).Path
 
@@ -3445,6 +3481,108 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $doc.Paragraphs.Item(3).Style = 'Heading 3'
         $doc.Paragraphs.Item(4).Style = 'Title'
         $field.Result.Text = 'Z'
+    'index-add'                       = {
+        param($doc)
+        Add-IndexDocument $doc
+        [void]$doc.Indexes.Add((Get-IndexPlace $doc))
+    }
+
+    'index-add-run-in-right-aligned'  = {
+        param($doc)
+        Add-IndexDocument $doc
+        [void]$doc.Indexes.Add((Get-IndexPlace $doc), 2, $true, 1)  # wdHeadingSeparatorLetter, right-aligned, wdIndexRunin
+    }
+
+    'index-add-columns-blank-line'    = {
+        param($doc)
+        Add-IndexDocument $doc
+        [void]$doc.Indexes.Add((Get-IndexPlace $doc), 1, $false, 0, 2)  # wdHeadingSeparatorBlankLine, wdIndexIndent, two columns
+    }
+
+    'index-add-no-headings'           = {
+        param($doc)
+        Add-IndexDocument $doc
+        [void]$doc.Indexes.Add((Get-IndexPlace $doc), 0)  # wdHeadingSeparatorNone
+    }
+
+    'index-tab-leader'                = {
+        param($doc)
+        Add-IndexDocument $doc
+        $index = $doc.Indexes.Add((Get-IndexPlace $doc), 2, $true)
+        $index.TabLeader = 2  # wdTabLeaderDashes
+        # Word keeps the leader for the indexes it makes after, in any document: an index in a scratch document puts the dots back.
+        $scratch = $doc.Application.Documents.Add()
+        try {
+            [void]$scratch.Fields.Add($scratch.Range(0, 0), -1, 'XE "x"', $false)
+            $scratch.Indexes.Add($scratch.Range($scratch.Content.End - 1, $scratch.Content.End - 1)).TabLeader = 1  # wdTabLeaderDots
+        }
+        finally {
+            $scratch.Close(0)
+        }
+    }
+
+    'index-update'                    = {
+        param($doc)
+        Add-IndexDocument $doc
+        $index = $doc.Indexes.Add((Get-IndexPlace $doc))
+        [void]$doc.Fields.Add($doc.Range(0, 0), -1, 'XE "Late"', $false)  # wdFieldEmpty
+        $index.Update()
+    }
+
+    'index-field-switches'            = {
+        param($doc)
+        Add-IndexDocument $doc
+        [void]$doc.Fields.Add((Get-IndexPlace $doc), -1, 'INDEX \e "; " \l " & " \g " to " \k "; see " \h "—A—"', $false)  # wdFieldEmpty
+    }
+
+    'index-field-cross-reference'     = {
+        param($doc)
+        Add-IndexDocument $doc
+        [void]$doc.Fields.Add((Get-IndexPlace $doc), -1, 'INDEX \k " -- " \l " / "', $false)  # wdFieldEmpty
+    }
+
+    'index-field-filters'             = {
+        param($doc)
+        Add-IndexDocument $doc
+        [void]$doc.Fields.Add((Get-IndexPlace $doc), -1, 'INDEX \b Span \p "a--z" \r', $false)  # wdFieldEmpty
+    }
+
+    'index-field-type'                = {
+        param($doc)
+        Add-IndexDocument $doc
+        [void]$doc.Fields.Add((Get-IndexPlace $doc), -1, 'INDEX \f "a"', $false)  # wdFieldEmpty
+    }
+
+    'index-field-chapters'            = {
+        param($doc)
+        $doc.Content.InsertAfter('One ')
+        [void]$doc.Fields.Add($doc.Range($doc.Content.End - 1, $doc.Content.End - 1), -1, 'SEQ chapter \* ROMAN', $false)
+        $doc.Content.InsertAfter(' ')
+        [void]$doc.Fields.Add($doc.Range($doc.Content.End - 1, $doc.Content.End - 1), -1, 'XE "Alpha"', $false)
+        $doc.Range($doc.Content.End - 1, $doc.Content.End - 1).InsertBreak(7)  # wdPageBreak
+        $doc.Content.InsertAfter('Two ')
+        [void]$doc.Fields.Add($doc.Range($doc.Content.End - 1, $doc.Content.End - 1), -1, 'XE "Alpha"', $false)
+        $doc.Content.InsertAfter(' ')
+        [void]$doc.Fields.Add($doc.Range($doc.Content.End - 1, $doc.Content.End - 1), -1, 'SEQ chapter \* ROMAN', $false)
+        $doc.Content.InsertAfter(' ')
+        [void]$doc.Fields.Add($doc.Range($doc.Content.End - 1, $doc.Content.End - 1), -1, 'XE "Beta"', $false)
+        $doc.Content.InsertParagraphAfter()
+        $doc.Fields.Update() | Out-Null
+        [void]$doc.Fields.Add($doc.Range($doc.Content.End - 1, $doc.Content.End - 1), -1, 'INDEX \s chapter \d "."', $false)  # wdFieldEmpty
+    }
+
+    'index-no-entries'                = {
+        param($doc)
+        [void]$doc.Indexes.Add($doc.Range(0, 0))
+    }
+
+    'index-mark-entry'                = {
+        param($doc)
+        $doc.Content.InsertAfter('Marked words here')
+        [void]$doc.Indexes.MarkEntry($doc.Range(0, 6), 'Main:Sub', $null, 'Other', $null, $null, $true, $true, 'yomi')
+        $words = $doc.Content
+        [void]$words.Find.Execute('words')
+        [void]$doc.Indexes.MarkEntry($words, 'Plain')
     }
 
     'field-result-paragraphs-mid-text' = {

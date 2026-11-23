@@ -181,6 +181,12 @@ public partial class WordprocessingDocumentWrapper
         get { return new ShapeWrapperCollection(Content); }
     }
 
+    /// <summary>The indexes in the main text, as <c>Document.Indexes</c> in Word.</summary>
+    public IndexWrapperCollection Indexes
+    {
+        get { return new IndexWrapperCollection(Content); }
+    }
+
     /// <summary>The tables of contents in the main text, as <c>Document.TablesOfContents</c> in Word.</summary>
     public TableOfContentsWrapperCollection TablesOfContents
     {
