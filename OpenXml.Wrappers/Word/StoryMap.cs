@@ -163,7 +163,8 @@ internal sealed partial class StoryMap
     }
 
     /// <summary>
-    /// The element that holds the story an element is in: the body, header, footer or comment (or the top of a detached tree).
+    /// The element that holds the story an element is in: the body, header, footer, comment, footnote, endnote or the text of a text box, which
+    /// is a story of its own as in Word (or the top of a detached tree).
     /// </summary>
     public static OpenXmlElement FindRoot(OpenXmlElement element)
     {
@@ -175,7 +176,7 @@ internal sealed partial class StoryMap
         OpenXmlElement current = element;
         while (current != null)
         {
-            if (current is Body || current is Header || current is Footer || current is Comment || current is FootnoteEndnoteType)
+            if (current is Body || current is Header || current is Footer || current is Comment || current is FootnoteEndnoteType || current is TextBoxContent)
             {
                 return current;
             }
