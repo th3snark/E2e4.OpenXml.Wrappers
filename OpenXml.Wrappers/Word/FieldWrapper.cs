@@ -46,6 +46,9 @@ public partial class FieldWrapper : System.IEquatable<FieldWrapper>
         public FieldChar Separate;
         public FieldChar End;
         public readonly List<FieldCode> Codes = new List<FieldCode>();
+
+        //The code as Word keeps it: its text, and the tabs in it (w:tab between w:instrText).
+        public readonly List<OpenXmlElement> CodeParts = new List<OpenXmlElement>();
         public readonly List<Text> ResultText = new List<Text>();
         public readonly List<Run> ResultRuns = new List<Run>();
         public readonly List<Run> AllRuns = new List<Run>();
@@ -101,6 +104,11 @@ public partial class FieldWrapper : System.IEquatable<FieldWrapper>
                 else if (child is FieldCode && depth == 1 && parts.Separate == null)
                 {
                     parts.Codes.Add((FieldCode)child);
+                    parts.CodeParts.Add(child);
+                }
+                else if (child is TabChar && depth == 1 && parts.Separate == null && run.Elements<FieldCode>().Any())
+                {
+                    parts.CodeParts.Add(child);
                 }
                 else if (child is Text && parts.Separate != null)
                 {
@@ -174,7 +182,7 @@ public partial class FieldWrapper : System.IEquatable<FieldWrapper>
             {
                 return (_simpleField.Instruction?.Value ?? string.Empty).Trim();
             }
-            return string.Concat(Parse().Codes.Select(c => c.Text)).Trim();
+            return string.Concat(Parse().CodeParts.Select(c => c is FieldCode code ? code.Text : "\t")).Trim();
         }
         set
         {
@@ -190,18 +198,57 @@ public partial class FieldWrapper : System.IEquatable<FieldWrapper>
             if (parts.Codes.Count == 0)
             {
                 ((Run)_begin.Parent).InsertAfterSelf(new Run(new FieldCode(code) { Space = SpaceProcessingModeValues.Preserve }));
-                return;
             }
-            parts.Codes[0].Text = code;
-            parts.Codes[0].Space = SpaceProcessingModeValues.Preserve;
-            foreach (FieldCode other in parts.Codes.Skip(1))
+            else
             {
-                OpenXmlElement run = other.Parent;
-                other.Remove();
-                if (run is Run && !run.Elements().Any(e => !(e is RunProperties)))
+                Run first = (Run)parts.Codes[0].Parent;
+                parts.Codes[0].Text = code;
+                parts.Codes[0].Space = SpaceProcessingModeValues.Preserve;
+                foreach (OpenXmlElement old in parts.CodeParts.Skip(1))
                 {
-                    run.Remove();
+                    OpenXmlElement run = old.Parent;
+                    old.Remove();
+                    if (run is Run && run != first && !run.Elements().Any(e => !(e is RunProperties)))
+                    {
+                        run.Remove();
+                    }
                 }
+            }
+            WriteCodeTabs();
+        }
+    }
+
+    //A tab in the code is a w:tab, as Word writes it: the text after it goes in a run of its own, which starts with the tab.
+    internal void WriteCodeTabs()
+    {
+        if (_simpleField != null)
+        {
+            return;
+        }
+        foreach (FieldCode code in Parse().Codes.Where(c => c.Text != null && c.Text.Contains('\t')).ToList())
+        {
+            Run run = (Run)code.Parent;
+            string[] pieces = code.Text.Split('\t');
+            code.Text = pieces[0];
+            OpenXmlElement after = run;
+            for (int i = 1; i < pieces.Length; i++)
+            {
+                Run next = new Run();
+                if (run.RunProperties != null)
+                {
+                    next.AppendChild(run.RunProperties.CloneNode(true));
+                }
+                next.AppendChild(new TabChar());
+                if (pieces[i].Length > 0)
+                {
+                    next.AppendChild(new FieldCode(pieces[i]) { Space = SpaceProcessingModeValues.Preserve });
+                }
+                after.InsertAfterSelf(next);
+                after = next;
+            }
+            if (pieces[0].Length == 0)
+            {
+                code.Remove();
             }
         }
     }
@@ -243,7 +290,7 @@ public partial class FieldWrapper : System.IEquatable<FieldWrapper>
         set
         {
             string text = value ?? string.Empty;
-            if (_simpleField != null && text.IndexOf('\r') < 0)
+            if (_simpleField != null && !text.Contains('\r'))
             {
                 SetSimpleResult(text);
                 return;
@@ -262,6 +309,110 @@ public partial class FieldWrapper : System.IEquatable<FieldWrapper>
         OpenXmlElement paragraph = parts.End?.Parent?.Parent;
         return (parts.Separate == null || parts.Separate.Parent.Parent == paragraph) && parts.ResultRuns.All(r => r.Parent == paragraph);
     }
+
+    #region For results of several paragraphs (INDEX)
+
+    //Makes a simple field a field of begin, code, separator and end.
+    internal void EnsureComplex()
+    {
+        if (_simpleField != null)
+        {
+            ToComplexField();
+        }
+    }
+
+    //Marks the field for Word to update when the document is opened, or takes the mark away.
+    internal void SetDirty(bool dirty)
+    {
+        if (_begin != null)
+        {
+            _begin.Dirty = dirty ? (OnOffValue)true : null;
+        }
+    }
+
+    internal FieldChar EndChar()
+    {
+        return _begin == null ? null : Parse().End;
+    }
+
+    internal void JoinResultParagraphs()
+    {
+        Parts parts = Parse();
+        if (parts.Separate != null && parts.End != null && !InOneParagraph(parts))
+        {
+            JoinResult(parts);
+        }
+    }
+
+    /// <summary>
+    /// Takes the result of a complex field away, giving it a separator if it has none, and returns the paragraphs of its separator and its end.
+    /// The paragraphs between them go, except the one that ends the section of an index in columns, the last before the end, which has no text
+    /// and ends a section when the paragraph of the separator does too.
+    /// </summary>
+    internal void ClearResult(out Paragraph beginParagraph, out Paragraph endParagraph, out Run separateRun)
+    {
+        Parts parts = Parse();
+        if (parts.End == null)
+        {
+            throw new InvalidOperationException("The field has no end character.");
+        }
+        Run endRun = (Run)parts.End.Parent;
+        if (parts.Separate == null)
+        {
+            Run separate = new Run(new FieldChar() { FieldCharType = FieldCharValues.Separate });
+            endRun.InsertBeforeSelf(separate);
+            parts = Parse();
+        }
+        separateRun = (Run)parts.Separate.Parent;
+        beginParagraph = separateRun.Parent as Paragraph;
+        endParagraph = endRun.Parent as Paragraph;
+        if (beginParagraph == null || endParagraph == null)
+        {
+            throw new NotSupportedException("The result of the field can only be written when its separator and end are directly in paragraphs.");
+        }
+
+        List<OpenXmlElement> going = new List<OpenXmlElement>();
+        if (ReferenceEquals(beginParagraph, endParagraph))
+        {
+            going.AddRange(separateRun.ElementsAfter().TakeWhile(e => e != endRun));
+        }
+        else
+        {
+            going.AddRange(separateRun.ElementsAfter());
+            Paragraph keep = null;
+            Paragraph lastBefore = endParagraph.PreviousSibling() as Paragraph;
+            if (beginParagraph.ParagraphProperties?.SectionProperties != null && lastBefore != null && !ReferenceEquals(lastBefore, beginParagraph)
+                && lastBefore.ParagraphProperties?.SectionProperties != null && !lastBefore.Descendants<Text>().Any())
+            {
+                keep = lastBefore;
+            }
+            for (OpenXmlElement between = beginParagraph.NextSibling(); between != null && between != endParagraph; between = between.NextSibling())
+            {
+                if (!ReferenceEquals(between, keep))
+                {
+                    going.Add(between);
+                }
+            }
+            going.AddRange(endRun.ElementsBefore().Where(e => !(e is ParagraphProperties)));
+        }
+        if (going.Count == 0)
+        {
+            return;
+        }
+
+        HashSet<OpenXmlElement> removed = new HashSet<OpenXmlElement>(going.SelectMany(e => e.Descendants().Prepend(e)));
+        StoryMap map = StoryMap.Build(StoryMap.FindRoot(beginParagraph));
+        if (map.TryGetAtom(parts.Separate, out Atom separator))
+        {
+            SpanRegistry.Removing(beginParagraph, removed, Anchor.At(map, separator.End));
+        }
+        foreach (OpenXmlElement element in going)
+        {
+            element.Remove();
+        }
+    }
+
+    #endregion
 
     //Writes a simple field (w:fldSimple) as a field of begin, code, separator, result and end, as Word does once it has the field.
     private void ToComplexField()
@@ -539,7 +690,7 @@ public partial class FieldWrapper : System.IEquatable<FieldWrapper>
     internal FieldWrapper ToSimpleFieldIfPlain()
     {
         Parts parts = Parse();
-        if (_begin == null || parts.AllRuns.Any(r => r.RunProperties != null && r.RunProperties.HasChildren && !parts.ResultRuns.Contains(r)))
+        if (_begin == null || !InOneParagraph(parts) || parts.AllRuns.Any(r => r.RunProperties != null && r.RunProperties.HasChildren && !parts.ResultRuns.Contains(r)))
         {
             return this;
         }

@@ -70,6 +70,12 @@ public partial class RangeWrapper : System.IEquatable<RangeWrapper>
         Document.Selection.Set(this);
     }
 
+    /// <summary>The indexes in the range, as <c>Indexes</c> in Word.</summary>
+    public IndexWrapperCollection Indexes
+    {
+        get { return new IndexWrapperCollection(this); }
+    }
+
     /// <summary>The tables of contents in the range, as <c>Range.TablesOfContents</c> in Word.</summary>
     public TableOfContentsWrapperCollection TablesOfContents
     {

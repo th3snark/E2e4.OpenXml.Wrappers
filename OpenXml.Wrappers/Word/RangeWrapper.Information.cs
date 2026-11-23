@@ -253,7 +253,7 @@ public partial class RangeWrapper
     }
 
     //The element of the main text whose section a story outside it has (the section properties, for a header or footer), or null.
-    private static OpenXmlElement SectionAnchor(OpenXmlElement element, int depth)
+    internal static OpenXmlElement SectionAnchor(OpenXmlElement element, int depth)
     {
         OpenXmlElement story = StoryMap.FindRoot(element);
         if (story is Body)

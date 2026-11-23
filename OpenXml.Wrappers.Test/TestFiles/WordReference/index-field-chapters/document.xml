@@ -1,0 +1,125 @@
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:body>
+    <w:p>
+      <w:r>
+        <w:t xml:space="preserve">One </w:t>
+      </w:r>
+      <w:fldSimple w:instr=" SEQ chapter \* ROMAN ">
+        <w:r>
+          <w:rPr>
+            <w:noProof />
+          </w:rPr>
+          <w:t>I</w:t>
+        </w:r>
+      </w:fldSimple>
+      <w:r>
+        <w:t xml:space="preserve"> </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin" />
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "Alpha" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end" />
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:br w:type="page" />
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t xml:space="preserve">Two </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin" />
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "Alpha" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end" />
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> </w:t>
+      </w:r>
+      <w:fldSimple w:instr=" SEQ chapter \* ROMAN ">
+        <w:r>
+          <w:rPr>
+            <w:noProof />
+          </w:rPr>
+          <w:t>II</w:t>
+        </w:r>
+      </w:fldSimple>
+      <w:r>
+        <w:t xml:space="preserve"> </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin" />
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "Beta" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end" />
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Index1" />
+        <w:tabs>
+          <w:tab w:leader="dot" w:pos="9016" w:val="right" />
+        </w:tabs>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:fldChar w:fldCharType="begin" />
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> INDEX \s chapter \d "." </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate" />
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:t>Alpha, I.1, I.2</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Index1" />
+        <w:tabs>
+          <w:tab w:leader="dot" w:pos="9016" w:val="right" />
+        </w:tabs>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:noProof />
+        </w:rPr>
+        <w:t>Beta, II.2</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:fldChar w:fldCharType="end" />
+      </w:r>
+    </w:p>
+    <w:sectPr>
+      <w:pgSz w:h="16838" w:w="11906" />
+      <w:pgMar w:bottom="1440" w:footer="708" w:gutter="0" w:header="708" w:left="1440" w:right="1440" w:top="1440" />
+      <w:cols w:space="708" />
+      <w:docGrid w:linePitch="360" />
+    </w:sectPr>
+  </w:body>
+</w:document>

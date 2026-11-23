@@ -136,6 +136,12 @@ public partial class FieldWrapper
         {
             return false;
         }
+        if (Type == FieldType.Index && StoryMap.FindRoot(Key) is Body)
+        {
+            //An index is paragraphs made from the XE fields, its page numbers estimated (see IndexWrapper.Update).
+            IndexBuilder.Update(this, null);
+            return true;
+        }
 
         string result = FieldUpdater.Compute(this, CodeText, out bool ok, out FieldUpdater.Mark mark);
         if (result == null)
@@ -746,6 +752,24 @@ internal static class FieldUpdater
     #endregion
 
     #region SEQ, REF and IF
+
+    /// <summary>
+    /// The number a SEQ field of the identifier stands at, in its number format, as INDEX <c>\s</c> shows it (even when <c>\h</c> hides it);
+    /// null for any other field.
+    /// </summary>
+    internal static string SequenceShown(FieldWrapper field, string identifier)
+    {
+        Instruction instruction = Parse(field.CodeText);
+        if (instruction.Name != "SEQ" || instruction.Arguments.Count == 0 || !string.Equals(instruction.Arguments[0], identifier, StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+        Instruction shown = new Instruction() { Name = instruction.Name };
+        shown.Arguments.AddRange(instruction.Arguments);
+        shown.Switches.AddRange(instruction.Switches.Where(s => s.Key != "h"));
+        string value = Sequence(field, shown);
+        return value == null ? null : ApplyFormat(value, shown, null) ?? value;
+    }
 
     private static string Sequence(FieldWrapper field, Instruction instruction)
     {
