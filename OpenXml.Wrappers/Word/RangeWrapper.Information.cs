@@ -219,17 +219,26 @@ public partial class RangeWrapper
     }
 
     /// <summary>
-    /// The sections that the range is in or touches, as <c>Range.Sections</c> in Word.
+    /// The sections that the range is in or touches, as <c>Range.Sections</c> in Word. Outside the main text it is one section, as measured
+    /// in Word: for a footnote or endnote the section of its mark, for a comment that of the text it is on, for the text of a text box that
+    /// of its anchor, and for a header or footer the first section that has it (not one that is linked to the previous section).
     /// </summary>
-    /// <exception cref="NotSupportedException">The range is not in the main text of the document.</exception>
+    /// <exception cref="NotSupportedException">The range is not in a document's main text or one of its other stories.</exception>
     public SectionWrapperCollection Sections
     {
         get
         {
             OpenXmlElement story = StoryMap.FindRoot(AnchorElement);
-            if (!(story is Body body))
+            if (!(story is Body body) || AnchorElement.Ancestors<TextBoxContent>().Any())
             {
-                throw new NotSupportedException("Sections are only counted in the main text of the document.");
+                OpenXmlElement at = SectionAnchor(AnchorElement, 0);
+                Body main = at == null ? null : StoryMap.FindRoot(at) as Body;
+                if (main == null)
+                {
+                    throw new NotSupportedException("The range is not in the main text or another story of a document.");
+                }
+                int index = at is SectionProperties properties ? SectionOfProperties(main, properties) : SectionWrapperCollection.IndexOf(main, at);
+                return new SectionWrapperCollection(main, index, index);
             }
 
             GetPositions(out StoryMap map, out int start, out int end);
@@ -241,5 +250,55 @@ public partial class RangeWrapper
             int last = ends.Count(e => e <= (end > start ? end - 1 : start));
             return new SectionWrapperCollection(body, first, last);
         }
+    }
+
+    //The element of the main text whose section a story outside it has (the section properties, for a header or footer), or null.
+    private static OpenXmlElement SectionAnchor(OpenXmlElement element, int depth)
+    {
+        OpenXmlElement story = StoryMap.FindRoot(element);
+        if (story is Body)
+        {
+            return element;
+        }
+        MainDocumentPart main = StyleHelper.GetMainDocumentPart(element);
+        Body body = main?.Document?.Body;
+        if (body == null || depth > 2)
+        {
+            return null;
+        }
+
+        OpenXmlElement anchor = null;
+        if (story is FootnoteEndnoteType note)
+        {
+            anchor = NoteOps.FindReference(main, note is Endnote, note);
+        }
+        else if (story is Comment comment)
+        {
+            string id = comment.Id?.Value;
+            IEnumerable<OpenXmlElement> stories = new OpenXmlElement[] { body }
+                .Concat(main.FootnotesPart?.Footnotes?.Elements<Footnote>() ?? Enumerable.Empty<OpenXmlElement>())
+                .Concat(main.EndnotesPart?.Endnotes?.Elements<Endnote>() ?? Enumerable.Empty<OpenXmlElement>());
+            anchor = stories.SelectMany(s => s.Descendants())
+                .FirstOrDefault(e => (e is CommentRangeStart start && start.Id?.Value == id) || (e is CommentReference reference && reference.Id?.Value == id));
+        }
+        else if (story is Header || story is Footer)
+        {
+            OpenXmlPart part = (story as OpenXmlPartRootElement)?.OpenXmlPart;
+            string relationship = part == null ? null : main.GetIdOfPart(part);
+            //The first section that refers to the part; the last section's properties are the body's own.
+            return body.Descendants<SectionProperties>()
+                .FirstOrDefault(s => s.Elements<HeaderFooterReferenceType>().Any(r => r.Id?.Value == relationship));
+        }
+        return anchor == null ? null : SectionAnchor(anchor, depth + 1);
+    }
+
+    private static int SectionOfProperties(Body body, SectionProperties properties)
+    {
+        Paragraph paragraph = properties.Parent?.Parent as Paragraph;
+        if (paragraph == null)
+        {
+            return body.Descendants<Paragraph>().Count(p => p.ParagraphProperties?.SectionProperties != null);
+        }
+        return SectionWrapperCollection.IndexOf(body, paragraph);
     }
 }

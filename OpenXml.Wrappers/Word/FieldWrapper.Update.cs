@@ -563,23 +563,9 @@ internal static class FieldUpdater
         return (SectionIndex(body, at) + 1).ToString(CultureInfo.InvariantCulture);
     }
 
-    //The 0-based index of the section an element of the body is in: the number of paragraphs that end a section before the paragraph it is in.
     private static int SectionIndex(Body body, OpenXmlElement element)
     {
-        Paragraph own = element as Paragraph ?? element.Ancestors<Paragraph>().LastOrDefault();
-        int index = 0;
-        foreach (Paragraph paragraph in body.Descendants<Paragraph>())
-        {
-            if (ReferenceEquals(paragraph, own) || (own == null && !paragraph.IsBefore(element)))
-            {
-                break;
-            }
-            if (paragraph.ParagraphProperties?.SectionProperties != null)
-            {
-                index++;
-            }
-        }
-        return index;
+        return SectionWrapperCollection.IndexOf(body, element);
     }
 
     //The properties of the sections of the body, in order: those of the paragraphs that end a section, then the body's own.
