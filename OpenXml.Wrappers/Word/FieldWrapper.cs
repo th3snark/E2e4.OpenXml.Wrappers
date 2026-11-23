@@ -18,8 +18,9 @@ namespace OpenXml.Wrappers.Word;
 /// </remarks>
 public partial class FieldWrapper : System.IEquatable<FieldWrapper>
 {
-    private readonly SimpleField _simpleField;
-    private readonly FieldChar _begin;
+    //Not read-only: a simple field given a result of several paragraphs becomes a complex field (ToComplexField).
+    private SimpleField _simpleField;
+    private FieldChar _begin;
 
     public FieldWrapper(SimpleField simpleField)
     {
@@ -135,6 +136,15 @@ public partial class FieldWrapper : System.IEquatable<FieldWrapper>
         else
         {
             Parts parts = Parse();
+            if (!code && parts.Separate != null && parts.End != null)
+            {
+                //The result is everything between the separator and the end, paragraph marks too, as in Word.
+                StoryMap map = StoryMap.Build(story);
+                if (map.TryGetAtom(parts.Separate, out Atom separate) && map.TryGetAtom(parts.End, out Atom end) && separate.End <= end.Start)
+                {
+                    return RangeWrapper.FromMap(map, separate.End, end.Start);
+                }
+            }
             runs = code ? parts.Codes.Select(c => (Run)c.Parent).Distinct().ToList() : parts.ResultRuns;
             emptyAfter = code ? _begin.Parent : parts.Separate?.Parent ?? _begin.Parent;
         }
@@ -210,10 +220,11 @@ public partial class FieldWrapper : System.IEquatable<FieldWrapper>
     }
 
     /// <summary>
-    /// The text stored as the result of the field, as <c>Field.Result.Text</c> in Word. Setting it replaces the result, keeping the formatting
-    /// of its first run.
+    /// The text stored as the result of the field, as <c>Field.Result.Text</c> in Word, with a paragraph mark (\r) between the paragraphs of a
+    /// result of several. Setting it replaces the result, keeping the formatting of its first run; a paragraph mark in the text starts a new
+    /// paragraph in the formatting of the field's own paragraph, and text without one joins the paragraphs of a result of several again, as in
+    /// Word.
     /// </summary>
-    /// <exception cref="NotSupportedException">The result is not within a single paragraph.</exception>
     internal string ResultText
     {
         get
@@ -222,26 +233,117 @@ public partial class FieldWrapper : System.IEquatable<FieldWrapper>
             {
                 return string.Concat(_simpleField.Descendants<Text>().Select(t => t.Text));
             }
-            return string.Concat(Parse().ResultText.Select(t => t.Text));
+            Parts parts = Parse();
+            if (parts.Separate != null && parts.End != null && !InOneParagraph(parts))
+            {
+                return GetPartRange(false).Text;
+            }
+            return string.Concat(parts.ResultText.Select(t => t.Text));
         }
         set
         {
             string text = value ?? string.Empty;
-            if (_simpleField != null)
+            if (_simpleField != null && text.IndexOf('\r') < 0)
             {
                 SetSimpleResult(text);
+                return;
             }
-            else
+            if (_simpleField != null)
             {
-                SetComplexResult(text);
+                ToComplexField();
+            }
+            SetComplexResult(text);
+        }
+    }
+
+    //Whether the separator, the result and the end of the field are all in one paragraph.
+    private static bool InOneParagraph(Parts parts)
+    {
+        OpenXmlElement paragraph = parts.End?.Parent?.Parent;
+        return (parts.Separate == null || parts.Separate.Parent.Parent == paragraph) && parts.ResultRuns.All(r => r.Parent == paragraph);
+    }
+
+    //Writes a simple field (w:fldSimple) as a field of begin, code, separator, result and end, as Word does once it has the field.
+    private void ToComplexField()
+    {
+        SimpleField simple = _simpleField;
+        //The begin, code, separator and end are in the formatting of the result, but not its "do not check spelling", which is the result's own.
+        RunProperties properties = simple.Elements<Run>().FirstOrDefault()?.RunProperties?.CloneNode(true) as RunProperties;
+        properties?.RemoveAllChildren<NoProof>();
+        Run Mark(OpenXmlElement content)
+        {
+            Run run = new Run(content);
+            if (properties != null && properties.HasChildren)
+            {
+                run.PrependChild(properties.CloneNode(true));
+            }
+            return run;
+        }
+
+        FieldChar begin = new FieldChar() { FieldCharType = FieldCharValues.Begin };
+        if (simple.FieldLock != null)
+        {
+            begin.FieldLock = simple.FieldLock.Value;
+        }
+        if (simple.Dirty != null)
+        {
+            begin.Dirty = simple.Dirty.Value;
+        }
+        List<OpenXmlElement> runs = new List<OpenXmlElement>
+        {
+            Mark(begin),
+            Mark(new FieldCode(simple.Instruction?.Value ?? string.Empty) { Space = SpaceProcessingModeValues.Preserve }),
+            Mark(new FieldChar() { FieldCharType = FieldCharValues.Separate }),
+        };
+        foreach (OpenXmlElement child in simple.ChildElements.Where(c => !(c is FieldData)).ToList())
+        {
+            child.Remove();
+            runs.Add(child);
+        }
+        runs.Add(Mark(new FieldChar() { FieldCharType = FieldCharValues.End }));
+        foreach (OpenXmlElement run in runs)
+        {
+            simple.InsertBeforeSelf(run);
+        }
+        simple.Remove();
+        _simpleField = null;
+        _begin = begin;
+    }
+
+    //True while the result is set through Result.Text: Word does not keep the "do not check spelling" of a result it worked out for text put in
+    //its place.
+    private bool _settingText;
+
+    internal void SetResultText(string text)
+    {
+        _settingText = true;
+        try
+        {
+            ResultText = text;
+        }
+        finally
+        {
+            _settingText = false;
+        }
+    }
+
+    private RunProperties WithoutProofing(RunProperties properties)
+    {
+        if (_settingText && properties != null)
+        {
+            properties.RemoveAllChildren<NoProof>();
+            if (!properties.HasChildren)
+            {
+                return null;
             }
         }
+        return properties;
     }
 
     private void SetSimpleResult(string text)
     {
         Run first = _simpleField.Elements<Run>().FirstOrDefault();
-        RunProperties properties = first?.RunProperties?.CloneNode(true) as RunProperties;
+        RunProperties properties = WithoutProofing(first?.RunProperties?.CloneNode(true) as RunProperties);
         _simpleField.RemoveAllChildren<Run>();
         Run run = new Run(OpenXmlExtensions.NewText(text));
         if (properties != null)
@@ -249,6 +351,118 @@ public partial class FieldWrapper : System.IEquatable<FieldWrapper>
             run.PrependChild(properties);
         }
         _simpleField.AppendChild(run);
+    }
+
+    //Gives the run, now in a paragraph of other formatting, the look it had (as Word does when it joins a result's paragraphs): as direct
+    //formatting, what the new paragraph's style would change, and the plain value of what it would add.
+    private static void KeepLook(Run run, RunProperties look)
+    {
+        Paragraph paragraph = run.Ancestors<Paragraph>().FirstOrDefault();
+        if (paragraph == null)
+        {
+            return;
+        }
+        RunProperties now = new FormattingResolver(paragraph).ResolveParagraphStyleRun(paragraph);
+        RunProperties direct = run.GetOrAddRunProperties();
+        bool HasDirect(OpenXmlElement property) => direct.ChildElements.Any(e => e.GetType() == property.GetType());
+
+        foreach (OpenXmlElement had in look.ChildElements.Where(e => !(e is NoProof) && !(e is RunStyle)))
+        {
+            OpenXmlElement given = now.ChildElements.FirstOrDefault(e => e.GetType() == had.GetType());
+            if ((given == null || given.OuterXml != had.OuterXml) && !HasDirect(had))
+            {
+                direct.SetRunProperty(had.CloneNode(true));
+            }
+        }
+        foreach (OpenXmlElement added in now.ChildElements.Where(e => !look.ChildElements.Any(l => l.GetType() == e.GetType())))
+        {
+            OpenXmlElement plain = PlainValue(added);
+            if (plain != null && !HasDirect(added))
+            {
+                direct.SetRunProperty(plain);
+            }
+        }
+        if (!direct.HasChildren)
+        {
+            direct.Remove();
+        }
+    }
+
+    //The value of a run property that gives the text nothing: 0 for spacing, kerning and position, off for a toggle, auto for colour.
+    private static OpenXmlElement PlainValue(OpenXmlElement property)
+    {
+        const string Main = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+        switch (property)
+        {
+            case Spacing _:
+                return new Spacing() { Val = 0 };
+            case Kern _:
+                return new Kern() { Val = 0U };
+            case Position _:
+                return new Position() { Val = "0" };
+            case Color _:
+                return new Color() { Val = "auto" };
+            case OnOffType _:
+                OpenXmlElement off = property.CloneNode(false);
+                off.SetAttribute(new OpenXmlAttribute("w", "val", Main, "0"));
+                return off;
+            default:
+                return null;
+        }
+    }
+
+    //Takes away a result of several paragraphs, so that the field's end, and whatever follows it in its paragraph, come back to the paragraph of
+    //the separator, which then has the formatting of the end's paragraph (its mark is the one left), as deleting the result does in Word.
+    private void JoinResult(Parts parts)
+    {
+        Run separateRun = (Run)parts.Separate.Parent;
+        Run endRun = (Run)parts.End.Parent;
+        Paragraph first = separateRun.Ancestors<Paragraph>().First();
+        Paragraph last = endRun.Ancestors<Paragraph>().First();
+        if (separateRun.Parent != first || endRun.Parent != last)
+        {
+            throw new NotSupportedException("The result of a field can only be replaced when its separator and end are directly in paragraphs.");
+        }
+
+        List<OpenXmlElement> going = separateRun.ElementsAfter().ToList();
+        for (OpenXmlElement between = first.NextSibling(); between != null && between != last; between = between.NextSibling())
+        {
+            going.Add(between);
+        }
+        going.AddRange(endRun.ElementsBefore().Where(e => !(e is ParagraphProperties)));
+        if (going.Any(e => e is Table || e is SdtBlock || (!(e is Paragraph) && !(e.Parent is Paragraph))))
+        {
+            throw new NotSupportedException("The result of a field can only be replaced when it is made of paragraphs.");
+        }
+
+        HashSet<OpenXmlElement> removed = new HashSet<OpenXmlElement>(going.SelectMany(e => e.Descendants().Prepend(e)));
+        removed.Add(last);
+        StoryMap map = StoryMap.Build(StoryMap.FindRoot(first));
+        Anchor after = map.TryGetAtom(parts.Separate, out Atom separate) ? Anchor.At(map, separate.End) : null;
+        if (after != null)
+        {
+            SpanRegistry.Removing(first, removed, after);
+        }
+        foreach (OpenXmlElement element in going)
+        {
+            element.Remove();
+        }
+
+        foreach (OpenXmlElement element in last.ChildElements.Where(e => !(e is ParagraphProperties)).ToList())
+        {
+            element.Remove();
+            first.AppendChild(element);
+        }
+        //The paragraph mark that is left is the end's, so the joined paragraph has its formatting (measured in Word).
+        first.ParagraphProperties?.Remove();
+        ParagraphProperties properties = last.ParagraphProperties;
+        if (properties != null)
+        {
+            properties.Remove();
+            first.PrependChild(properties);
+        }
+        SpanRegistry.ParagraphMerged(last, first);
+        last.Remove();
     }
 
     private void SetComplexResult(string text)
@@ -260,13 +474,40 @@ public partial class FieldWrapper : System.IEquatable<FieldWrapper>
         }
         Run endRun = (Run)parts.End.Parent;
         Run separateRun = parts.Separate == null ? null : (Run)parts.Separate.Parent;
-        if ((separateRun != null && separateRun.Parent != endRun.Parent) || parts.ResultRuns.Any(r => r.Parent != endRun.Parent))
+        if (!InOneParagraph(parts))
         {
-            throw new NotSupportedException("The result of a field can only be set when it is within a single paragraph.");
+            //A result of several paragraphs is first joined into one, as deleting it does in Word, keeping the formatting of its first run.
+            Run firstRun = parts.ResultRuns.FirstOrDefault(r => r.Elements<Text>().Any());
+            RunProperties first = WithoutProofing(firstRun?.RunProperties?.CloneNode(true) as RunProperties);
+            RunProperties look = firstRun == null ? null : new FormattingResolver(firstRun).ResolveRun(firstRun);
+            JoinResult(parts);
+            SetComplexResult(string.Empty);
+            Run joined = Parse().ResultRuns.FirstOrDefault();
+            if (first != null && joined != null)
+            {
+                joined.RunProperties?.Remove();
+                joined.PrependChild(first);
+            }
+            if (look != null && joined != null)
+            {
+                KeepLook(joined, look);
+            }
+            SetComplexResult(text);
+            return;
+        }
+        int mark = text.IndexOf('\r');
+        if (mark >= 0)
+        {
+            //The first paragraph of the text goes where the result is; the rest goes in before the end, splitting the paragraph.
+            SetComplexResult(text.Substring(0, mark));
+            RangeWrapper result = GetPartRange(false);
+            result.Collapse(CollapseDirection.End);
+            result.InsertAfter(text.Substring(mark));
+            return;
         }
 
         //A field with no result yet has its result in the formatting of the field.
-        RunProperties properties = (parts.ResultRuns.FirstOrDefault()?.RunProperties ?? ((Run)_begin.Parent).RunProperties)?.CloneNode(true) as RunProperties;
+        RunProperties properties = WithoutProofing((parts.ResultRuns.FirstOrDefault()?.RunProperties ?? ((Run)_begin.Parent).RunProperties)?.CloneNode(true) as RunProperties);
         foreach (Run old in parts.ResultRuns)
         {
             old.Remove();
