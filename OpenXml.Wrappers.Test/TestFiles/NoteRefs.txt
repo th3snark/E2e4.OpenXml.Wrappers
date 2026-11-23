@@ -1,0 +1,974 @@
+# What Word 16 shows for SECTION and NOTEREF fields. Written by tools/WordReference/Measure-NoteRefs.ps1; do not edit.
+# options	host	code	result	style
+default	HostA	SECTION	1	Default Paragraph Font
+default	HostA	SECTION \* roman	i	Default Paragraph Font
+default	HostA	SECTION \* CardText	one	Default Paragraph Font
+default	HostA	NOTEREF FnA	1	Default Paragraph Font
+default	HostA	NOTEREF FnA \f	1	
+default	HostA	NOTEREF FnA \p	1 below	Default Paragraph Font
+default	HostA	NOTEREF FnB	2	Default Paragraph Font
+default	HostA	NOTEREF FnB \f	2	
+default	HostA	NOTEREF FnB \p	2 below	Default Paragraph Font
+default	HostA	NOTEREF EnA	i	Default Paragraph Font
+default	HostA	NOTEREF EnA \f	i	
+default	HostA	NOTEREF EnA \p	i below	Default Paragraph Font
+default	HostA	NOTEREF FnC	3	Default Paragraph Font
+default	HostA	NOTEREF FnC \f	3	
+default	HostA	NOTEREF FnC \p	3 below	Default Paragraph Font
+default	HostA	NOTEREF EnB	ii	Default Paragraph Font
+default	HostA	NOTEREF EnB \f	ii	
+default	HostA	NOTEREF EnB \p	ii below	Default Paragraph Font
+default	HostA	NOTEREF NoNote	Error! Bookmark not defined.	Default Paragraph Font
+default	HostA	NOTEREF NoNote \f	Error! Bookmark not defined.	Default Paragraph Font
+default	HostA	NOTEREF NoNote \p	Error! Bookmark not defined.	Default Paragraph Font
+default	HostA	NOTEREF FnStar	*	Default Paragraph Font
+default	HostA	NOTEREF FnStar \f	*	
+default	HostA	NOTEREF FnStar \p	* below	Default Paragraph Font
+default	HostA	NOTEREF FnD	4	Default Paragraph Font
+default	HostA	NOTEREF FnD \f	4	
+default	HostA	NOTEREF FnD \p	4 below	Default Paragraph Font
+default	HostA	NOTEREF Two	*	Default Paragraph Font
+default	HostA	NOTEREF Two \f	*	
+default	HostA	NOTEREF Two \p	* below	Default Paragraph Font
+default	HostA	NOTEREF Missing	Error! Bookmark not defined.	Default Paragraph Font
+default	HostA	NOTEREF Missing \f	Error! Bookmark not defined.	Default Paragraph Font
+default	HostA	NOTEREF Missing \p	Error! Bookmark not defined.	Default Paragraph Font
+default	HostA	NOTEREF FnA \h	1	Default Paragraph Font
+default	HostA	NOTEREF FnA \f \h	1	
+default	HostA	NOTEREF FnA \p \f	1 below	
+default	HostA	NOTEREF FnA \* roman	i	Default Paragraph Font
+default	HostA	NOTEREF FnA \* Upper	1	Default Paragraph Font
+default	HostA	NOTEREF FnA \* CardText	one	Default Paragraph Font
+default	HostA	NOTEREF FnA \* ALPHABETIC	A	Default Paragraph Font
+default	HostA	NOTEREF EnA \h	i	Default Paragraph Font
+default	HostA	NOTEREF EnA \f \h	i	
+default	HostA	NOTEREF EnA \p \f	i below	
+default	HostA	NOTEREF EnA \* roman	Error! Number cannot be represented in specified format.	Default Paragraph Font
+default	HostA	NOTEREF EnA \* Upper	I	Default Paragraph Font
+default	HostA	NOTEREF EnA \* CardText	Error! Number cannot be represented in specified format.	Default Paragraph Font
+default	HostA	NOTEREF EnA \* ALPHABETIC	Error! Number cannot be represented in specified format.	Default Paragraph Font
+default	HostA	NOTEREF FnStar \h	*	Default Paragraph Font
+default	HostA	NOTEREF FnStar \f \h	*	
+default	HostA	NOTEREF FnStar \p \f	* below	
+default	HostA	NOTEREF FnStar \* roman	*	Default Paragraph Font
+default	HostA	NOTEREF FnStar \* Upper	*	Default Paragraph Font
+default	HostA	NOTEREF FnStar \* CardText	*	Default Paragraph Font
+default	HostA	NOTEREF FnStar \* ALPHABETIC	*	Default Paragraph Font
+default	HostB	SECTION	1	Default Paragraph Font
+default	HostB	SECTION \* roman	i	Default Paragraph Font
+default	HostB	SECTION \* CardText	one	Default Paragraph Font
+default	HostB	NOTEREF FnA	1	Default Paragraph Font
+default	HostB	NOTEREF FnA \f	1	
+default	HostB	NOTEREF FnA \p	1 above	Default Paragraph Font
+default	HostB	NOTEREF FnB	2	Default Paragraph Font
+default	HostB	NOTEREF FnB \f	2	
+default	HostB	NOTEREF FnB \p	2 above	Default Paragraph Font
+default	HostB	NOTEREF EnA	i	Default Paragraph Font
+default	HostB	NOTEREF EnA \f	i	
+default	HostB	NOTEREF EnA \p	i above	Default Paragraph Font
+default	HostB	NOTEREF FnC	3	Default Paragraph Font
+default	HostB	NOTEREF FnC \f	3	
+default	HostB	NOTEREF FnC \p	3 below	Default Paragraph Font
+default	HostB	NOTEREF EnB	ii	Default Paragraph Font
+default	HostB	NOTEREF EnB \f	ii	
+default	HostB	NOTEREF EnB \p	ii below	Default Paragraph Font
+default	HostB	NOTEREF NoNote	Error! Bookmark not defined.	Default Paragraph Font
+default	HostB	NOTEREF NoNote \f	Error! Bookmark not defined.	Default Paragraph Font
+default	HostB	NOTEREF NoNote \p	Error! Bookmark not defined.	Default Paragraph Font
+default	HostB	NOTEREF FnStar	*	Default Paragraph Font
+default	HostB	NOTEREF FnStar \f	*	
+default	HostB	NOTEREF FnStar \p	* below	Default Paragraph Font
+default	HostB	NOTEREF FnD	4	Default Paragraph Font
+default	HostB	NOTEREF FnD \f	4	
+default	HostB	NOTEREF FnD \p	4 below	Default Paragraph Font
+default	HostB	NOTEREF Two	*	Default Paragraph Font
+default	HostB	NOTEREF Two \f	*	
+default	HostB	NOTEREF Two \p	* below	Default Paragraph Font
+default	HostB	NOTEREF Missing	Error! Bookmark not defined.	Default Paragraph Font
+default	HostB	NOTEREF Missing \f	Error! Bookmark not defined.	Default Paragraph Font
+default	HostB	NOTEREF Missing \p	Error! Bookmark not defined.	Default Paragraph Font
+default	HostB	NOTEREF FnA \h	1	Default Paragraph Font
+default	HostB	NOTEREF FnA \f \h	1	
+default	HostB	NOTEREF FnA \p \f	1 above	
+default	HostB	NOTEREF FnA \* roman	i	Default Paragraph Font
+default	HostB	NOTEREF FnA \* Upper	1	Default Paragraph Font
+default	HostB	NOTEREF FnA \* CardText	one	Default Paragraph Font
+default	HostB	NOTEREF FnA \* ALPHABETIC	A	Default Paragraph Font
+default	HostB	NOTEREF EnA \h	i	Default Paragraph Font
+default	HostB	NOTEREF EnA \f \h	i	
+default	HostB	NOTEREF EnA \p \f	i above	
+default	HostB	NOTEREF EnA \* roman	Error! Number cannot be represented in specified format.	Default Paragraph Font
+default	HostB	NOTEREF EnA \* Upper	I	Default Paragraph Font
+default	HostB	NOTEREF EnA \* CardText	Error! Number cannot be represented in specified format.	Default Paragraph Font
+default	HostB	NOTEREF EnA \* ALPHABETIC	Error! Number cannot be represented in specified format.	Default Paragraph Font
+default	HostB	NOTEREF FnStar \h	*	Default Paragraph Font
+default	HostB	NOTEREF FnStar \f \h	*	
+default	HostB	NOTEREF FnStar \p \f	* below	
+default	HostB	NOTEREF FnStar \* roman	*	Default Paragraph Font
+default	HostB	NOTEREF FnStar \* Upper	*	Default Paragraph Font
+default	HostB	NOTEREF FnStar \* CardText	*	Default Paragraph Font
+default	HostB	NOTEREF FnStar \* ALPHABETIC	*	Default Paragraph Font
+default	HostC	SECTION	2	Default Paragraph Font
+default	HostC	SECTION \* roman	ii	Default Paragraph Font
+default	HostC	SECTION \* CardText	two	Default Paragraph Font
+default	HostC	NOTEREF FnA	1	Default Paragraph Font
+default	HostC	NOTEREF FnA \f	1	
+default	HostC	NOTEREF FnA \p	1 above	Default Paragraph Font
+default	HostC	NOTEREF FnB	2	Default Paragraph Font
+default	HostC	NOTEREF FnB \f	2	
+default	HostC	NOTEREF FnB \p	2 above	Default Paragraph Font
+default	HostC	NOTEREF EnA	i	Default Paragraph Font
+default	HostC	NOTEREF EnA \f	i	
+default	HostC	NOTEREF EnA \p	i above	Default Paragraph Font
+default	HostC	NOTEREF FnC	3	Default Paragraph Font
+default	HostC	NOTEREF FnC \f	3	
+default	HostC	NOTEREF FnC \p	3 above	Default Paragraph Font
+default	HostC	NOTEREF EnB	ii	Default Paragraph Font
+default	HostC	NOTEREF EnB \f	ii	
+default	HostC	NOTEREF EnB \p	ii below	Default Paragraph Font
+default	HostC	NOTEREF NoNote	Error! Bookmark not defined.	Default Paragraph Font
+default	HostC	NOTEREF NoNote \f	Error! Bookmark not defined.	Default Paragraph Font
+default	HostC	NOTEREF NoNote \p	Error! Bookmark not defined.	Default Paragraph Font
+default	HostC	NOTEREF FnStar	*	Default Paragraph Font
+default	HostC	NOTEREF FnStar \f	*	
+default	HostC	NOTEREF FnStar \p	* below	Default Paragraph Font
+default	HostC	NOTEREF FnD	4	Default Paragraph Font
+default	HostC	NOTEREF FnD \f	4	
+default	HostC	NOTEREF FnD \p	4 below	Default Paragraph Font
+default	HostC	NOTEREF Two	*	Default Paragraph Font
+default	HostC	NOTEREF Two \f	*	
+default	HostC	NOTEREF Two \p	* below	Default Paragraph Font
+default	HostC	NOTEREF Missing	Error! Bookmark not defined.	Default Paragraph Font
+default	HostC	NOTEREF Missing \f	Error! Bookmark not defined.	Default Paragraph Font
+default	HostC	NOTEREF Missing \p	Error! Bookmark not defined.	Default Paragraph Font
+default	HostC	NOTEREF FnA \h	1	Default Paragraph Font
+default	HostC	NOTEREF FnA \f \h	1	
+default	HostC	NOTEREF FnA \p \f	1 above	
+default	HostC	NOTEREF FnA \* roman	i	Default Paragraph Font
+default	HostC	NOTEREF FnA \* Upper	1	Default Paragraph Font
+default	HostC	NOTEREF FnA \* CardText	one	Default Paragraph Font
+default	HostC	NOTEREF FnA \* ALPHABETIC	A	Default Paragraph Font
+default	HostC	NOTEREF EnA \h	i	Default Paragraph Font
+default	HostC	NOTEREF EnA \f \h	i	
+default	HostC	NOTEREF EnA \p \f	i above	
+default	HostC	NOTEREF EnA \* roman	Error! Number cannot be represented in specified format.	Default Paragraph Font
+default	HostC	NOTEREF EnA \* Upper	I	Default Paragraph Font
+default	HostC	NOTEREF EnA \* CardText	Error! Number cannot be represented in specified format.	Default Paragraph Font
+default	HostC	NOTEREF EnA \* ALPHABETIC	Error! Number cannot be represented in specified format.	Default Paragraph Font
+default	HostC	NOTEREF FnStar \h	*	Default Paragraph Font
+default	HostC	NOTEREF FnStar \f \h	*	
+default	HostC	NOTEREF FnStar \p \f	* below	
+default	HostC	NOTEREF FnStar \* roman	*	Default Paragraph Font
+default	HostC	NOTEREF FnStar \* Upper	*	Default Paragraph Font
+default	HostC	NOTEREF FnStar \* CardText	*	Default Paragraph Font
+default	HostC	NOTEREF FnStar \* ALPHABETIC	*	Default Paragraph Font
+default	HostD	SECTION	2	Default Paragraph Font
+default	HostD	SECTION \* roman	ii	Default Paragraph Font
+default	HostD	SECTION \* CardText	two	Default Paragraph Font
+default	HostD	NOTEREF FnA	1	Default Paragraph Font
+default	HostD	NOTEREF FnA \f	1	
+default	HostD	NOTEREF FnA \p	1 above	Default Paragraph Font
+default	HostD	NOTEREF FnB	2	Default Paragraph Font
+default	HostD	NOTEREF FnB \f	2	
+default	HostD	NOTEREF FnB \p	2 above	Default Paragraph Font
+default	HostD	NOTEREF EnA	i	Default Paragraph Font
+default	HostD	NOTEREF EnA \f	i	
+default	HostD	NOTEREF EnA \p	i above	Default Paragraph Font
+default	HostD	NOTEREF FnC	3	Default Paragraph Font
+default	HostD	NOTEREF FnC \f	3	
+default	HostD	NOTEREF FnC \p	3 above	Default Paragraph Font
+default	HostD	NOTEREF EnB	ii	Default Paragraph Font
+default	HostD	NOTEREF EnB \f	ii	
+default	HostD	NOTEREF EnB \p	ii above	Default Paragraph Font
+default	HostD	NOTEREF NoNote	Error! Bookmark not defined.	Default Paragraph Font
+default	HostD	NOTEREF NoNote \f	Error! Bookmark not defined.	Default Paragraph Font
+default	HostD	NOTEREF NoNote \p	Error! Bookmark not defined.	Default Paragraph Font
+default	HostD	NOTEREF FnStar	*	Default Paragraph Font
+default	HostD	NOTEREF FnStar \f	*	
+default	HostD	NOTEREF FnStar \p	* below	Default Paragraph Font
+default	HostD	NOTEREF FnD	4	Default Paragraph Font
+default	HostD	NOTEREF FnD \f	4	
+default	HostD	NOTEREF FnD \p	4 below	Default Paragraph Font
+default	HostD	NOTEREF Two	*	Default Paragraph Font
+default	HostD	NOTEREF Two \f	*	
+default	HostD	NOTEREF Two \p	* below	Default Paragraph Font
+default	HostD	NOTEREF Missing	Error! Bookmark not defined.	Default Paragraph Font
+default	HostD	NOTEREF Missing \f	Error! Bookmark not defined.	Default Paragraph Font
+default	HostD	NOTEREF Missing \p	Error! Bookmark not defined.	Default Paragraph Font
+default	HostD	NOTEREF FnA \h	1	Default Paragraph Font
+default	HostD	NOTEREF FnA \f \h	1	
+default	HostD	NOTEREF FnA \p \f	1 above	
+default	HostD	NOTEREF FnA \* roman	i	Default Paragraph Font
+default	HostD	NOTEREF FnA \* Upper	1	Default Paragraph Font
+default	HostD	NOTEREF FnA \* CardText	one	Default Paragraph Font
+default	HostD	NOTEREF FnA \* ALPHABETIC	A	Default Paragraph Font
+default	HostD	NOTEREF EnA \h	i	Default Paragraph Font
+default	HostD	NOTEREF EnA \f \h	i	
+default	HostD	NOTEREF EnA \p \f	i above	
+default	HostD	NOTEREF EnA \* roman	Error! Number cannot be represented in specified format.	Default Paragraph Font
+default	HostD	NOTEREF EnA \* Upper	I	Default Paragraph Font
+default	HostD	NOTEREF EnA \* CardText	Error! Number cannot be represented in specified format.	Default Paragraph Font
+default	HostD	NOTEREF EnA \* ALPHABETIC	Error! Number cannot be represented in specified format.	Default Paragraph Font
+default	HostD	NOTEREF FnStar \h	*	Default Paragraph Font
+default	HostD	NOTEREF FnStar \f \h	*	
+default	HostD	NOTEREF FnStar \p \f	* below	
+default	HostD	NOTEREF FnStar \* roman	*	Default Paragraph Font
+default	HostD	NOTEREF FnStar \* Upper	*	Default Paragraph Font
+default	HostD	NOTEREF FnStar \* CardText	*	Default Paragraph Font
+default	HostD	NOTEREF FnStar \* ALPHABETIC	*	Default Paragraph Font
+default	HostE	SECTION	3	Default Paragraph Font
+default	HostE	SECTION \* roman	iii	Default Paragraph Font
+default	HostE	SECTION \* CardText	three	Default Paragraph Font
+default	HostE	NOTEREF FnA	1	Default Paragraph Font
+default	HostE	NOTEREF FnA \f	1	
+default	HostE	NOTEREF FnA \p	1 above	Default Paragraph Font
+default	HostE	NOTEREF FnB	2	Default Paragraph Font
+default	HostE	NOTEREF FnB \f	2	
+default	HostE	NOTEREF FnB \p	2 above	Default Paragraph Font
+default	HostE	NOTEREF EnA	i	Default Paragraph Font
+default	HostE	NOTEREF EnA \f	i	
+default	HostE	NOTEREF EnA \p	i above	Default Paragraph Font
+default	HostE	NOTEREF FnC	3	Default Paragraph Font
+default	HostE	NOTEREF FnC \f	3	
+default	HostE	NOTEREF FnC \p	3 above	Default Paragraph Font
+default	HostE	NOTEREF EnB	ii	Default Paragraph Font
+default	HostE	NOTEREF EnB \f	ii	
+default	HostE	NOTEREF EnB \p	ii above	Default Paragraph Font
+default	HostE	NOTEREF NoNote	Error! Bookmark not defined.	Default Paragraph Font
+default	HostE	NOTEREF NoNote \f	Error! Bookmark not defined.	Default Paragraph Font
+default	HostE	NOTEREF NoNote \p	Error! Bookmark not defined.	Default Paragraph Font
+default	HostE	NOTEREF FnStar	*	Default Paragraph Font
+default	HostE	NOTEREF FnStar \f	*	
+default	HostE	NOTEREF FnStar \p	* above	Default Paragraph Font
+default	HostE	NOTEREF FnD	4	Default Paragraph Font
+default	HostE	NOTEREF FnD \f	4	
+default	HostE	NOTEREF FnD \p	4 above	Default Paragraph Font
+default	HostE	NOTEREF Two	*	Default Paragraph Font
+default	HostE	NOTEREF Two \f	*	
+default	HostE	NOTEREF Two \p	* above	Default Paragraph Font
+default	HostE	NOTEREF Missing	Error! Bookmark not defined.	Default Paragraph Font
+default	HostE	NOTEREF Missing \f	Error! Bookmark not defined.	Default Paragraph Font
+default	HostE	NOTEREF Missing \p	Error! Bookmark not defined.	Default Paragraph Font
+default	HostE	NOTEREF FnA \h	1	Default Paragraph Font
+default	HostE	NOTEREF FnA \f \h	1	
+default	HostE	NOTEREF FnA \p \f	1 above	
+default	HostE	NOTEREF FnA \* roman	i	Default Paragraph Font
+default	HostE	NOTEREF FnA \* Upper	1	Default Paragraph Font
+default	HostE	NOTEREF FnA \* CardText	one	Default Paragraph Font
+default	HostE	NOTEREF FnA \* ALPHABETIC	A	Default Paragraph Font
+default	HostE	NOTEREF EnA \h	i	Default Paragraph Font
+default	HostE	NOTEREF EnA \f \h	i	
+default	HostE	NOTEREF EnA \p \f	i above	
+default	HostE	NOTEREF EnA \* roman	Error! Number cannot be represented in specified format.	Default Paragraph Font
+default	HostE	NOTEREF EnA \* Upper	I	Default Paragraph Font
+default	HostE	NOTEREF EnA \* CardText	Error! Number cannot be represented in specified format.	Default Paragraph Font
+default	HostE	NOTEREF EnA \* ALPHABETIC	Error! Number cannot be represented in specified format.	Default Paragraph Font
+default	HostE	NOTEREF FnStar \h	*	Default Paragraph Font
+default	HostE	NOTEREF FnStar \f \h	*	
+default	HostE	NOTEREF FnStar \p \f	* above	
+default	HostE	NOTEREF FnStar \* roman	*	Default Paragraph Font
+default	HostE	NOTEREF FnStar \* Upper	*	Default Paragraph Font
+default	HostE	NOTEREF FnStar \* CardText	*	Default Paragraph Font
+default	HostE	NOTEREF FnStar \* ALPHABETIC	*	Default Paragraph Font
+default	Note	SECTION	2	Default Paragraph Font
+default	Note	SECTION \* roman	ii	Default Paragraph Font
+default	Note	SECTION \* CardText	two	Default Paragraph Font
+default	Note	NOTEREF FnA	1	Default Paragraph Font
+default	Note	NOTEREF FnA \f	1	
+default	Note	NOTEREF FnA \p	1	Default Paragraph Font
+default	Note	NOTEREF FnB	2	Default Paragraph Font
+default	Note	NOTEREF FnB \f	2	
+default	Note	NOTEREF FnB \p	2	Default Paragraph Font
+default	Note	NOTEREF EnA	i	Default Paragraph Font
+default	Note	NOTEREF EnA \f	i	
+default	Note	NOTEREF EnA \p	i	Default Paragraph Font
+default	Note	NOTEREF FnC	3	Default Paragraph Font
+default	Note	NOTEREF FnC \f	3	
+default	Note	NOTEREF FnC \p	3	Default Paragraph Font
+default	Note	NOTEREF EnB	ii	Default Paragraph Font
+default	Note	NOTEREF EnB \f	ii	
+default	Note	NOTEREF EnB \p	ii	Default Paragraph Font
+default	Note	NOTEREF NoNote	Error! Bookmark not defined.	Default Paragraph Font
+default	Note	NOTEREF NoNote \f	Error! Bookmark not defined.	Default Paragraph Font
+default	Note	NOTEREF NoNote \p	Error! Bookmark not defined.	Default Paragraph Font
+default	Note	NOTEREF FnStar	*	Default Paragraph Font
+default	Note	NOTEREF FnStar \f	*	
+default	Note	NOTEREF FnStar \p	*	Default Paragraph Font
+default	Note	NOTEREF FnD	4	Default Paragraph Font
+default	Note	NOTEREF FnD \f	4	
+default	Note	NOTEREF FnD \p	4	Default Paragraph Font
+default	Note	NOTEREF Two	*	Default Paragraph Font
+default	Note	NOTEREF Two \f	*	
+default	Note	NOTEREF Two \p	*	Default Paragraph Font
+default	Note	NOTEREF Missing	Error! Bookmark not defined.	Default Paragraph Font
+default	Note	NOTEREF Missing \f	Error! Bookmark not defined.	Default Paragraph Font
+default	Note	NOTEREF Missing \p	Error! Bookmark not defined.	Default Paragraph Font
+default	Note	NOTEREF FnA \h	1	Default Paragraph Font
+default	Note	NOTEREF FnA \f \h	1	
+default	Note	NOTEREF FnA \p \f	1	
+default	Note	NOTEREF FnA \* roman	i	Default Paragraph Font
+default	Note	NOTEREF FnA \* Upper	1	Default Paragraph Font
+default	Note	NOTEREF FnA \* CardText	one	Default Paragraph Font
+default	Note	NOTEREF FnA \* ALPHABETIC	A	Default Paragraph Font
+default	Note	NOTEREF EnA \h	i	Default Paragraph Font
+default	Note	NOTEREF EnA \f \h	i	
+default	Note	NOTEREF EnA \p \f	i	
+default	Note	NOTEREF EnA \* roman	Error! Number cannot be represented in specified format.	Default Paragraph Font
+default	Note	NOTEREF EnA \* Upper	I	Default Paragraph Font
+default	Note	NOTEREF EnA \* CardText	Error! Number cannot be represented in specified format.	Default Paragraph Font
+default	Note	NOTEREF EnA \* ALPHABETIC	Error! Number cannot be represented in specified format.	Default Paragraph Font
+default	Note	NOTEREF FnStar \h	*	Default Paragraph Font
+default	Note	NOTEREF FnStar \f \h	*	
+default	Note	NOTEREF FnStar \p \f	*	
+default	Note	NOTEREF FnStar \* roman	*	Default Paragraph Font
+default	Note	NOTEREF FnStar \* Upper	*	Default Paragraph Font
+default	Note	NOTEREF FnStar \* CardText	*	Default Paragraph Font
+default	Note	NOTEREF FnStar \* ALPHABETIC	*	Default Paragraph Font
+roman	HostA	SECTION	1	Default Paragraph Font
+roman	HostA	SECTION \* roman	i	Default Paragraph Font
+roman	HostA	SECTION \* CardText	one	Default Paragraph Font
+roman	HostA	NOTEREF FnA	III	Default Paragraph Font
+roman	HostA	NOTEREF FnA \f	III	
+roman	HostA	NOTEREF FnA \p	III below	Default Paragraph Font
+roman	HostA	NOTEREF FnB	IV	Default Paragraph Font
+roman	HostA	NOTEREF FnB \f	IV	
+roman	HostA	NOTEREF FnB \p	IV below	Default Paragraph Font
+roman	HostA	NOTEREF EnA	1	Default Paragraph Font
+roman	HostA	NOTEREF EnA \f	1	
+roman	HostA	NOTEREF EnA \p	1 below	Default Paragraph Font
+roman	HostA	NOTEREF FnC	V	Default Paragraph Font
+roman	HostA	NOTEREF FnC \f	V	
+roman	HostA	NOTEREF FnC \p	V below	Default Paragraph Font
+roman	HostA	NOTEREF EnB	2	Default Paragraph Font
+roman	HostA	NOTEREF EnB \f	2	
+roman	HostA	NOTEREF EnB \p	2 below	Default Paragraph Font
+roman	HostA	NOTEREF NoNote	Error! Bookmark not defined.	Default Paragraph Font
+roman	HostA	NOTEREF NoNote \f	Error! Bookmark not defined.	Default Paragraph Font
+roman	HostA	NOTEREF NoNote \p	Error! Bookmark not defined.	Default Paragraph Font
+roman	HostA	NOTEREF FnStar	*	Default Paragraph Font
+roman	HostA	NOTEREF FnStar \f	*	
+roman	HostA	NOTEREF FnStar \p	* below	Default Paragraph Font
+roman	HostA	NOTEREF FnD	VI	Default Paragraph Font
+roman	HostA	NOTEREF FnD \f	VI	
+roman	HostA	NOTEREF FnD \p	VI below	Default Paragraph Font
+roman	HostA	NOTEREF Two	*	Default Paragraph Font
+roman	HostA	NOTEREF Two \f	*	
+roman	HostA	NOTEREF Two \p	* below	Default Paragraph Font
+roman	HostA	NOTEREF Missing	Error! Bookmark not defined.	Default Paragraph Font
+roman	HostA	NOTEREF Missing \f	Error! Bookmark not defined.	Default Paragraph Font
+roman	HostA	NOTEREF Missing \p	Error! Bookmark not defined.	Default Paragraph Font
+roman	HostA	NOTEREF FnA \h	III	Default Paragraph Font
+roman	HostA	NOTEREF FnA \f \h	III	
+roman	HostA	NOTEREF FnA \p \f	III below	
+roman	HostA	NOTEREF FnA \* roman	iii	Default Paragraph Font
+roman	HostA	NOTEREF FnA \* Upper	III	Default Paragraph Font
+roman	HostA	NOTEREF FnA \* CardText	three	Default Paragraph Font
+roman	HostA	NOTEREF FnA \* ALPHABETIC	C	Default Paragraph Font
+roman	HostA	NOTEREF EnA \h	1	Default Paragraph Font
+roman	HostA	NOTEREF EnA \f \h	1	
+roman	HostA	NOTEREF EnA \p \f	1 below	
+roman	HostA	NOTEREF EnA \* roman	Error! Number cannot be represented in specified format.	Default Paragraph Font
+roman	HostA	NOTEREF EnA \* Upper	1	Default Paragraph Font
+roman	HostA	NOTEREF EnA \* CardText	Error! Number cannot be represented in specified format.	Default Paragraph Font
+roman	HostA	NOTEREF EnA \* ALPHABETIC	Error! Number cannot be represented in specified format.	Default Paragraph Font
+roman	HostA	NOTEREF FnStar \h	*	Default Paragraph Font
+roman	HostA	NOTEREF FnStar \f \h	*	
+roman	HostA	NOTEREF FnStar \p \f	* below	
+roman	HostA	NOTEREF FnStar \* roman	*	Default Paragraph Font
+roman	HostA	NOTEREF FnStar \* Upper	*	Default Paragraph Font
+roman	HostA	NOTEREF FnStar \* CardText	*	Default Paragraph Font
+roman	HostA	NOTEREF FnStar \* ALPHABETIC	*	Default Paragraph Font
+roman	HostE	SECTION	3	Default Paragraph Font
+roman	HostE	SECTION \* roman	iii	Default Paragraph Font
+roman	HostE	SECTION \* CardText	three	Default Paragraph Font
+roman	HostE	NOTEREF FnA	III	Default Paragraph Font
+roman	HostE	NOTEREF FnA \f	III	
+roman	HostE	NOTEREF FnA \p	III above	Default Paragraph Font
+roman	HostE	NOTEREF FnB	IV	Default Paragraph Font
+roman	HostE	NOTEREF FnB \f	IV	
+roman	HostE	NOTEREF FnB \p	IV above	Default Paragraph Font
+roman	HostE	NOTEREF EnA	1	Default Paragraph Font
+roman	HostE	NOTEREF EnA \f	1	
+roman	HostE	NOTEREF EnA \p	1 above	Default Paragraph Font
+roman	HostE	NOTEREF FnC	V	Default Paragraph Font
+roman	HostE	NOTEREF FnC \f	V	
+roman	HostE	NOTEREF FnC \p	V above	Default Paragraph Font
+roman	HostE	NOTEREF EnB	2	Default Paragraph Font
+roman	HostE	NOTEREF EnB \f	2	
+roman	HostE	NOTEREF EnB \p	2 above	Default Paragraph Font
+roman	HostE	NOTEREF NoNote	Error! Bookmark not defined.	Default Paragraph Font
+roman	HostE	NOTEREF NoNote \f	Error! Bookmark not defined.	Default Paragraph Font
+roman	HostE	NOTEREF NoNote \p	Error! Bookmark not defined.	Default Paragraph Font
+roman	HostE	NOTEREF FnStar	*	Default Paragraph Font
+roman	HostE	NOTEREF FnStar \f	*	
+roman	HostE	NOTEREF FnStar \p	* above	Default Paragraph Font
+roman	HostE	NOTEREF FnD	VI	Default Paragraph Font
+roman	HostE	NOTEREF FnD \f	VI	
+roman	HostE	NOTEREF FnD \p	VI above	Default Paragraph Font
+roman	HostE	NOTEREF Two	*	Default Paragraph Font
+roman	HostE	NOTEREF Two \f	*	
+roman	HostE	NOTEREF Two \p	* above	Default Paragraph Font
+roman	HostE	NOTEREF Missing	Error! Bookmark not defined.	Default Paragraph Font
+roman	HostE	NOTEREF Missing \f	Error! Bookmark not defined.	Default Paragraph Font
+roman	HostE	NOTEREF Missing \p	Error! Bookmark not defined.	Default Paragraph Font
+roman	HostE	NOTEREF FnA \h	III	Default Paragraph Font
+roman	HostE	NOTEREF FnA \f \h	III	
+roman	HostE	NOTEREF FnA \p \f	III above	
+roman	HostE	NOTEREF FnA \* roman	iii	Default Paragraph Font
+roman	HostE	NOTEREF FnA \* Upper	III	Default Paragraph Font
+roman	HostE	NOTEREF FnA \* CardText	three	Default Paragraph Font
+roman	HostE	NOTEREF FnA \* ALPHABETIC	C	Default Paragraph Font
+roman	HostE	NOTEREF EnA \h	1	Default Paragraph Font
+roman	HostE	NOTEREF EnA \f \h	1	
+roman	HostE	NOTEREF EnA \p \f	1 above	
+roman	HostE	NOTEREF EnA \* roman	Error! Number cannot be represented in specified format.	Default Paragraph Font
+roman	HostE	NOTEREF EnA \* Upper	1	Default Paragraph Font
+roman	HostE	NOTEREF EnA \* CardText	Error! Number cannot be represented in specified format.	Default Paragraph Font
+roman	HostE	NOTEREF EnA \* ALPHABETIC	Error! Number cannot be represented in specified format.	Default Paragraph Font
+roman	HostE	NOTEREF FnStar \h	*	Default Paragraph Font
+roman	HostE	NOTEREF FnStar \f \h	*	
+roman	HostE	NOTEREF FnStar \p \f	* above	
+roman	HostE	NOTEREF FnStar \* roman	*	Default Paragraph Font
+roman	HostE	NOTEREF FnStar \* Upper	*	Default Paragraph Font
+roman	HostE	NOTEREF FnStar \* CardText	*	Default Paragraph Font
+roman	HostE	NOTEREF FnStar \* ALPHABETIC	*	Default Paragraph Font
+roman	Note	SECTION	2	Default Paragraph Font
+roman	Note	SECTION \* roman	ii	Default Paragraph Font
+roman	Note	SECTION \* CardText	two	Default Paragraph Font
+roman	Note	NOTEREF FnA	III	Default Paragraph Font
+roman	Note	NOTEREF FnA \f	III	
+roman	Note	NOTEREF FnA \p	III	Default Paragraph Font
+roman	Note	NOTEREF FnB	IV	Default Paragraph Font
+roman	Note	NOTEREF FnB \f	IV	
+roman	Note	NOTEREF FnB \p	IV	Default Paragraph Font
+roman	Note	NOTEREF EnA	1	Default Paragraph Font
+roman	Note	NOTEREF EnA \f	1	
+roman	Note	NOTEREF EnA \p	1	Default Paragraph Font
+roman	Note	NOTEREF FnC	V	Default Paragraph Font
+roman	Note	NOTEREF FnC \f	V	
+roman	Note	NOTEREF FnC \p	V	Default Paragraph Font
+roman	Note	NOTEREF EnB	2	Default Paragraph Font
+roman	Note	NOTEREF EnB \f	2	
+roman	Note	NOTEREF EnB \p	2	Default Paragraph Font
+roman	Note	NOTEREF NoNote	Error! Bookmark not defined.	Default Paragraph Font
+roman	Note	NOTEREF NoNote \f	Error! Bookmark not defined.	Default Paragraph Font
+roman	Note	NOTEREF NoNote \p	Error! Bookmark not defined.	Default Paragraph Font
+roman	Note	NOTEREF FnStar	*	Default Paragraph Font
+roman	Note	NOTEREF FnStar \f	*	
+roman	Note	NOTEREF FnStar \p	*	Default Paragraph Font
+roman	Note	NOTEREF FnD	VI	Default Paragraph Font
+roman	Note	NOTEREF FnD \f	VI	
+roman	Note	NOTEREF FnD \p	VI	Default Paragraph Font
+roman	Note	NOTEREF Two	*	Default Paragraph Font
+roman	Note	NOTEREF Two \f	*	
+roman	Note	NOTEREF Two \p	*	Default Paragraph Font
+roman	Note	NOTEREF Missing	Error! Bookmark not defined.	Default Paragraph Font
+roman	Note	NOTEREF Missing \f	Error! Bookmark not defined.	Default Paragraph Font
+roman	Note	NOTEREF Missing \p	Error! Bookmark not defined.	Default Paragraph Font
+roman	Note	NOTEREF FnA \h	III	Default Paragraph Font
+roman	Note	NOTEREF FnA \f \h	III	
+roman	Note	NOTEREF FnA \p \f	III	
+roman	Note	NOTEREF FnA \* roman	iii	Default Paragraph Font
+roman	Note	NOTEREF FnA \* Upper	III	Default Paragraph Font
+roman	Note	NOTEREF FnA \* CardText	three	Default Paragraph Font
+roman	Note	NOTEREF FnA \* ALPHABETIC	C	Default Paragraph Font
+roman	Note	NOTEREF EnA \h	1	Default Paragraph Font
+roman	Note	NOTEREF EnA \f \h	1	
+roman	Note	NOTEREF EnA \p \f	1	
+roman	Note	NOTEREF EnA \* roman	Error! Number cannot be represented in specified format.	Default Paragraph Font
+roman	Note	NOTEREF EnA \* Upper	1	Default Paragraph Font
+roman	Note	NOTEREF EnA \* CardText	Error! Number cannot be represented in specified format.	Default Paragraph Font
+roman	Note	NOTEREF EnA \* ALPHABETIC	Error! Number cannot be represented in specified format.	Default Paragraph Font
+roman	Note	NOTEREF FnStar \h	*	Default Paragraph Font
+roman	Note	NOTEREF FnStar \f \h	*	
+roman	Note	NOTEREF FnStar \p \f	*	
+roman	Note	NOTEREF FnStar \* roman	*	Default Paragraph Font
+roman	Note	NOTEREF FnStar \* Upper	*	Default Paragraph Font
+roman	Note	NOTEREF FnStar \* CardText	*	Default Paragraph Font
+roman	Note	NOTEREF FnStar \* ALPHABETIC	*	Default Paragraph Font
+symbol	HostA	SECTION	1	Default Paragraph Font
+symbol	HostA	SECTION \* roman	i	Default Paragraph Font
+symbol	HostA	SECTION \* CardText	one	Default Paragraph Font
+symbol	HostA	NOTEREF FnA	*	Default Paragraph Font
+symbol	HostA	NOTEREF FnA \f	*	
+symbol	HostA	NOTEREF FnA \p	* below	Default Paragraph Font
+symbol	HostA	NOTEREF FnB	†	Default Paragraph Font
+symbol	HostA	NOTEREF FnB \f	†	
+symbol	HostA	NOTEREF FnB \p	† below	Default Paragraph Font
+symbol	HostA	NOTEREF EnA	a	Default Paragraph Font
+symbol	HostA	NOTEREF EnA \f	a	
+symbol	HostA	NOTEREF EnA \p	a below	Default Paragraph Font
+symbol	HostA	NOTEREF FnC	‡	Default Paragraph Font
+symbol	HostA	NOTEREF FnC \f	‡	
+symbol	HostA	NOTEREF FnC \p	‡ below	Default Paragraph Font
+symbol	HostA	NOTEREF EnB	a	Default Paragraph Font
+symbol	HostA	NOTEREF EnB \f	a	
+symbol	HostA	NOTEREF EnB \p	a below	Default Paragraph Font
+symbol	HostA	NOTEREF NoNote	Error! Bookmark not defined.	Default Paragraph Font
+symbol	HostA	NOTEREF NoNote \f	Error! Bookmark not defined.	Default Paragraph Font
+symbol	HostA	NOTEREF NoNote \p	Error! Bookmark not defined.	Default Paragraph Font
+symbol	HostA	NOTEREF FnStar	*	Default Paragraph Font
+symbol	HostA	NOTEREF FnStar \f	*	
+symbol	HostA	NOTEREF FnStar \p	* below	Default Paragraph Font
+symbol	HostA	NOTEREF FnD	§	Default Paragraph Font
+symbol	HostA	NOTEREF FnD \f	§	
+symbol	HostA	NOTEREF FnD \p	§ below	Default Paragraph Font
+symbol	HostA	NOTEREF Two	*	Default Paragraph Font
+symbol	HostA	NOTEREF Two \f	*	
+symbol	HostA	NOTEREF Two \p	* below	Default Paragraph Font
+symbol	HostA	NOTEREF Missing	Error! Bookmark not defined.	Default Paragraph Font
+symbol	HostA	NOTEREF Missing \f	Error! Bookmark not defined.	Default Paragraph Font
+symbol	HostA	NOTEREF Missing \p	Error! Bookmark not defined.	Default Paragraph Font
+symbol	HostA	NOTEREF FnA \h	*	Default Paragraph Font
+symbol	HostA	NOTEREF FnA \f \h	*	
+symbol	HostA	NOTEREF FnA \p \f	* below	
+symbol	HostA	NOTEREF FnA \* roman	i	Default Paragraph Font
+symbol	HostA	NOTEREF FnA \* Upper	*	Default Paragraph Font
+symbol	HostA	NOTEREF FnA \* CardText	one	Default Paragraph Font
+symbol	HostA	NOTEREF FnA \* ALPHABETIC	A	Default Paragraph Font
+symbol	HostA	NOTEREF EnA \h	a	Default Paragraph Font
+symbol	HostA	NOTEREF EnA \f \h	a	
+symbol	HostA	NOTEREF EnA \p \f	a below	
+symbol	HostA	NOTEREF EnA \* roman	Error! Number cannot be represented in specified format.	Default Paragraph Font
+symbol	HostA	NOTEREF EnA \* Upper	A	Default Paragraph Font
+symbol	HostA	NOTEREF EnA \* CardText	Error! Number cannot be represented in specified format.	Default Paragraph Font
+symbol	HostA	NOTEREF EnA \* ALPHABETIC	Error! Number cannot be represented in specified format.	Default Paragraph Font
+symbol	HostA	NOTEREF FnStar \h	*	Default Paragraph Font
+symbol	HostA	NOTEREF FnStar \f \h	*	
+symbol	HostA	NOTEREF FnStar \p \f	* below	
+symbol	HostA	NOTEREF FnStar \* roman	*	Default Paragraph Font
+symbol	HostA	NOTEREF FnStar \* Upper	*	Default Paragraph Font
+symbol	HostA	NOTEREF FnStar \* CardText	*	Default Paragraph Font
+symbol	HostA	NOTEREF FnStar \* ALPHABETIC	*	Default Paragraph Font
+symbol	HostE	SECTION	3	Default Paragraph Font
+symbol	HostE	SECTION \* roman	iii	Default Paragraph Font
+symbol	HostE	SECTION \* CardText	three	Default Paragraph Font
+symbol	HostE	NOTEREF FnA	*	Default Paragraph Font
+symbol	HostE	NOTEREF FnA \f	*	
+symbol	HostE	NOTEREF FnA \p	* above	Default Paragraph Font
+symbol	HostE	NOTEREF FnB	†	Default Paragraph Font
+symbol	HostE	NOTEREF FnB \f	†	
+symbol	HostE	NOTEREF FnB \p	† above	Default Paragraph Font
+symbol	HostE	NOTEREF EnA	a	Default Paragraph Font
+symbol	HostE	NOTEREF EnA \f	a	
+symbol	HostE	NOTEREF EnA \p	a above	Default Paragraph Font
+symbol	HostE	NOTEREF FnC	‡	Default Paragraph Font
+symbol	HostE	NOTEREF FnC \f	‡	
+symbol	HostE	NOTEREF FnC \p	‡ above	Default Paragraph Font
+symbol	HostE	NOTEREF EnB	a	Default Paragraph Font
+symbol	HostE	NOTEREF EnB \f	a	
+symbol	HostE	NOTEREF EnB \p	a above	Default Paragraph Font
+symbol	HostE	NOTEREF NoNote	Error! Bookmark not defined.	Default Paragraph Font
+symbol	HostE	NOTEREF NoNote \f	Error! Bookmark not defined.	Default Paragraph Font
+symbol	HostE	NOTEREF NoNote \p	Error! Bookmark not defined.	Default Paragraph Font
+symbol	HostE	NOTEREF FnStar	*	Default Paragraph Font
+symbol	HostE	NOTEREF FnStar \f	*	
+symbol	HostE	NOTEREF FnStar \p	* above	Default Paragraph Font
+symbol	HostE	NOTEREF FnD	§	Default Paragraph Font
+symbol	HostE	NOTEREF FnD \f	§	
+symbol	HostE	NOTEREF FnD \p	§ above	Default Paragraph Font
+symbol	HostE	NOTEREF Two	*	Default Paragraph Font
+symbol	HostE	NOTEREF Two \f	*	
+symbol	HostE	NOTEREF Two \p	* above	Default Paragraph Font
+symbol	HostE	NOTEREF Missing	Error! Bookmark not defined.	Default Paragraph Font
+symbol	HostE	NOTEREF Missing \f	Error! Bookmark not defined.	Default Paragraph Font
+symbol	HostE	NOTEREF Missing \p	Error! Bookmark not defined.	Default Paragraph Font
+symbol	HostE	NOTEREF FnA \h	*	Default Paragraph Font
+symbol	HostE	NOTEREF FnA \f \h	*	
+symbol	HostE	NOTEREF FnA \p \f	* above	
+symbol	HostE	NOTEREF FnA \* roman	i	Default Paragraph Font
+symbol	HostE	NOTEREF FnA \* Upper	*	Default Paragraph Font
+symbol	HostE	NOTEREF FnA \* CardText	one	Default Paragraph Font
+symbol	HostE	NOTEREF FnA \* ALPHABETIC	A	Default Paragraph Font
+symbol	HostE	NOTEREF EnA \h	a	Default Paragraph Font
+symbol	HostE	NOTEREF EnA \f \h	a	
+symbol	HostE	NOTEREF EnA \p \f	a above	
+symbol	HostE	NOTEREF EnA \* roman	Error! Number cannot be represented in specified format.	Default Paragraph Font
+symbol	HostE	NOTEREF EnA \* Upper	A	Default Paragraph Font
+symbol	HostE	NOTEREF EnA \* CardText	Error! Number cannot be represented in specified format.	Default Paragraph Font
+symbol	HostE	NOTEREF EnA \* ALPHABETIC	Error! Number cannot be represented in specified format.	Default Paragraph Font
+symbol	HostE	NOTEREF FnStar \h	*	Default Paragraph Font
+symbol	HostE	NOTEREF FnStar \f \h	*	
+symbol	HostE	NOTEREF FnStar \p \f	* above	
+symbol	HostE	NOTEREF FnStar \* roman	*	Default Paragraph Font
+symbol	HostE	NOTEREF FnStar \* Upper	*	Default Paragraph Font
+symbol	HostE	NOTEREF FnStar \* CardText	*	Default Paragraph Font
+symbol	HostE	NOTEREF FnStar \* ALPHABETIC	*	Default Paragraph Font
+symbol	Note	SECTION	2	Default Paragraph Font
+symbol	Note	SECTION \* roman	ii	Default Paragraph Font
+symbol	Note	SECTION \* CardText	two	Default Paragraph Font
+symbol	Note	NOTEREF FnA	*	Default Paragraph Font
+symbol	Note	NOTEREF FnA \f	*	
+symbol	Note	NOTEREF FnA \p	*	Default Paragraph Font
+symbol	Note	NOTEREF FnB	†	Default Paragraph Font
+symbol	Note	NOTEREF FnB \f	†	
+symbol	Note	NOTEREF FnB \p	†	Default Paragraph Font
+symbol	Note	NOTEREF EnA	a	Default Paragraph Font
+symbol	Note	NOTEREF EnA \f	a	
+symbol	Note	NOTEREF EnA \p	a	Default Paragraph Font
+symbol	Note	NOTEREF FnC	‡	Default Paragraph Font
+symbol	Note	NOTEREF FnC \f	‡	
+symbol	Note	NOTEREF FnC \p	‡	Default Paragraph Font
+symbol	Note	NOTEREF EnB	a	Default Paragraph Font
+symbol	Note	NOTEREF EnB \f	a	
+symbol	Note	NOTEREF EnB \p	a	Default Paragraph Font
+symbol	Note	NOTEREF NoNote	Error! Bookmark not defined.	Default Paragraph Font
+symbol	Note	NOTEREF NoNote \f	Error! Bookmark not defined.	Default Paragraph Font
+symbol	Note	NOTEREF NoNote \p	Error! Bookmark not defined.	Default Paragraph Font
+symbol	Note	NOTEREF FnStar	*	Default Paragraph Font
+symbol	Note	NOTEREF FnStar \f	*	
+symbol	Note	NOTEREF FnStar \p	*	Default Paragraph Font
+symbol	Note	NOTEREF FnD	§	Default Paragraph Font
+symbol	Note	NOTEREF FnD \f	§	
+symbol	Note	NOTEREF FnD \p	§	Default Paragraph Font
+symbol	Note	NOTEREF Two	*	Default Paragraph Font
+symbol	Note	NOTEREF Two \f	*	
+symbol	Note	NOTEREF Two \p	*	Default Paragraph Font
+symbol	Note	NOTEREF Missing	Error! Bookmark not defined.	Default Paragraph Font
+symbol	Note	NOTEREF Missing \f	Error! Bookmark not defined.	Default Paragraph Font
+symbol	Note	NOTEREF Missing \p	Error! Bookmark not defined.	Default Paragraph Font
+symbol	Note	NOTEREF FnA \h	*	Default Paragraph Font
+symbol	Note	NOTEREF FnA \f \h	*	
+symbol	Note	NOTEREF FnA \p \f	*	
+symbol	Note	NOTEREF FnA \* roman	i	Default Paragraph Font
+symbol	Note	NOTEREF FnA \* Upper	*	Default Paragraph Font
+symbol	Note	NOTEREF FnA \* CardText	one	Default Paragraph Font
+symbol	Note	NOTEREF FnA \* ALPHABETIC	A	Default Paragraph Font
+symbol	Note	NOTEREF EnA \h	a	Default Paragraph Font
+symbol	Note	NOTEREF EnA \f \h	a	
+symbol	Note	NOTEREF EnA \p \f	a	
+symbol	Note	NOTEREF EnA \* roman	Error! Number cannot be represented in specified format.	Default Paragraph Font
+symbol	Note	NOTEREF EnA \* Upper	A	Default Paragraph Font
+symbol	Note	NOTEREF EnA \* CardText	Error! Number cannot be represented in specified format.	Default Paragraph Font
+symbol	Note	NOTEREF EnA \* ALPHABETIC	Error! Number cannot be represented in specified format.	Default Paragraph Font
+symbol	Note	NOTEREF FnStar \h	*	Default Paragraph Font
+symbol	Note	NOTEREF FnStar \f \h	*	
+symbol	Note	NOTEREF FnStar \p \f	*	
+symbol	Note	NOTEREF FnStar \* roman	*	Default Paragraph Font
+symbol	Note	NOTEREF FnStar \* Upper	*	Default Paragraph Font
+symbol	Note	NOTEREF FnStar \* CardText	*	Default Paragraph Font
+symbol	Note	NOTEREF FnStar \* ALPHABETIC	*	Default Paragraph Font
+restart	HostA	SECTION	1	Default Paragraph Font
+restart	HostA	SECTION \* roman	i	Default Paragraph Font
+restart	HostA	SECTION \* CardText	one	Default Paragraph Font
+restart	HostA	NOTEREF FnA	1	Default Paragraph Font
+restart	HostA	NOTEREF FnA \f	1	
+restart	HostA	NOTEREF FnA \p	1 below	Default Paragraph Font
+restart	HostA	NOTEREF FnB	2	Default Paragraph Font
+restart	HostA	NOTEREF FnB \f	2	
+restart	HostA	NOTEREF FnB \p	2 below	Default Paragraph Font
+restart	HostA	NOTEREF EnA	v	Default Paragraph Font
+restart	HostA	NOTEREF EnA \f	v	
+restart	HostA	NOTEREF EnA \p	v below	Default Paragraph Font
+restart	HostA	NOTEREF FnC	1	Default Paragraph Font
+restart	HostA	NOTEREF FnC \f	1	
+restart	HostA	NOTEREF FnC \p	1 below	Default Paragraph Font
+restart	HostA	NOTEREF EnB	vi	Default Paragraph Font
+restart	HostA	NOTEREF EnB \f	vi	
+restart	HostA	NOTEREF EnB \p	vi below	Default Paragraph Font
+restart	HostA	NOTEREF NoNote	Error! Bookmark not defined.	Default Paragraph Font
+restart	HostA	NOTEREF NoNote \f	Error! Bookmark not defined.	Default Paragraph Font
+restart	HostA	NOTEREF NoNote \p	Error! Bookmark not defined.	Default Paragraph Font
+restart	HostA	NOTEREF FnStar	*	Default Paragraph Font
+restart	HostA	NOTEREF FnStar \f	*	
+restart	HostA	NOTEREF FnStar \p	* below	Default Paragraph Font
+restart	HostA	NOTEREF FnD	1	Default Paragraph Font
+restart	HostA	NOTEREF FnD \f	1	
+restart	HostA	NOTEREF FnD \p	1 below	Default Paragraph Font
+restart	HostA	NOTEREF Two	*	Default Paragraph Font
+restart	HostA	NOTEREF Two \f	*	
+restart	HostA	NOTEREF Two \p	* below	Default Paragraph Font
+restart	HostA	NOTEREF Missing	Error! Bookmark not defined.	Default Paragraph Font
+restart	HostA	NOTEREF Missing \f	Error! Bookmark not defined.	Default Paragraph Font
+restart	HostA	NOTEREF Missing \p	Error! Bookmark not defined.	Default Paragraph Font
+restart	HostA	NOTEREF FnA \h	1	Default Paragraph Font
+restart	HostA	NOTEREF FnA \f \h	1	
+restart	HostA	NOTEREF FnA \p \f	1 below	
+restart	HostA	NOTEREF FnA \* roman	i	Default Paragraph Font
+restart	HostA	NOTEREF FnA \* Upper	1	Default Paragraph Font
+restart	HostA	NOTEREF FnA \* CardText	one	Default Paragraph Font
+restart	HostA	NOTEREF FnA \* ALPHABETIC	A	Default Paragraph Font
+restart	HostA	NOTEREF EnA \h	v	Default Paragraph Font
+restart	HostA	NOTEREF EnA \f \h	v	
+restart	HostA	NOTEREF EnA \p \f	v below	
+restart	HostA	NOTEREF EnA \* roman	Error! Number cannot be represented in specified format.	Default Paragraph Font
+restart	HostA	NOTEREF EnA \* Upper	V	Default Paragraph Font
+restart	HostA	NOTEREF EnA \* CardText	Error! Number cannot be represented in specified format.	Default Paragraph Font
+restart	HostA	NOTEREF EnA \* ALPHABETIC	Error! Number cannot be represented in specified format.	Default Paragraph Font
+restart	HostA	NOTEREF FnStar \h	*	Default Paragraph Font
+restart	HostA	NOTEREF FnStar \f \h	*	
+restart	HostA	NOTEREF FnStar \p \f	* below	
+restart	HostA	NOTEREF FnStar \* roman	*	Default Paragraph Font
+restart	HostA	NOTEREF FnStar \* Upper	*	Default Paragraph Font
+restart	HostA	NOTEREF FnStar \* CardText	*	Default Paragraph Font
+restart	HostA	NOTEREF FnStar \* ALPHABETIC	*	Default Paragraph Font
+restart	HostE	SECTION	3	Default Paragraph Font
+restart	HostE	SECTION \* roman	iii	Default Paragraph Font
+restart	HostE	SECTION \* CardText	three	Default Paragraph Font
+restart	HostE	NOTEREF FnA	1	Default Paragraph Font
+restart	HostE	NOTEREF FnA \f	1	
+restart	HostE	NOTEREF FnA \p	1 above	Default Paragraph Font
+restart	HostE	NOTEREF FnB	2	Default Paragraph Font
+restart	HostE	NOTEREF FnB \f	2	
+restart	HostE	NOTEREF FnB \p	2 above	Default Paragraph Font
+restart	HostE	NOTEREF EnA	v	Default Paragraph Font
+restart	HostE	NOTEREF EnA \f	v	
+restart	HostE	NOTEREF EnA \p	v above	Default Paragraph Font
+restart	HostE	NOTEREF FnC	1	Default Paragraph Font
+restart	HostE	NOTEREF FnC \f	1	
+restart	HostE	NOTEREF FnC \p	1 above	Default Paragraph Font
+restart	HostE	NOTEREF EnB	vi	Default Paragraph Font
+restart	HostE	NOTEREF EnB \f	vi	
+restart	HostE	NOTEREF EnB \p	vi above	Default Paragraph Font
+restart	HostE	NOTEREF NoNote	Error! Bookmark not defined.	Default Paragraph Font
+restart	HostE	NOTEREF NoNote \f	Error! Bookmark not defined.	Default Paragraph Font
+restart	HostE	NOTEREF NoNote \p	Error! Bookmark not defined.	Default Paragraph Font
+restart	HostE	NOTEREF FnStar	*	Default Paragraph Font
+restart	HostE	NOTEREF FnStar \f	*	
+restart	HostE	NOTEREF FnStar \p	* above	Default Paragraph Font
+restart	HostE	NOTEREF FnD	1	Default Paragraph Font
+restart	HostE	NOTEREF FnD \f	1	
+restart	HostE	NOTEREF FnD \p	1 above	Default Paragraph Font
+restart	HostE	NOTEREF Two	*	Default Paragraph Font
+restart	HostE	NOTEREF Two \f	*	
+restart	HostE	NOTEREF Two \p	* above	Default Paragraph Font
+restart	HostE	NOTEREF Missing	Error! Bookmark not defined.	Default Paragraph Font
+restart	HostE	NOTEREF Missing \f	Error! Bookmark not defined.	Default Paragraph Font
+restart	HostE	NOTEREF Missing \p	Error! Bookmark not defined.	Default Paragraph Font
+restart	HostE	NOTEREF FnA \h	1	Default Paragraph Font
+restart	HostE	NOTEREF FnA \f \h	1	
+restart	HostE	NOTEREF FnA \p \f	1 above	
+restart	HostE	NOTEREF FnA \* roman	i	Default Paragraph Font
+restart	HostE	NOTEREF FnA \* Upper	1	Default Paragraph Font
+restart	HostE	NOTEREF FnA \* CardText	one	Default Paragraph Font
+restart	HostE	NOTEREF FnA \* ALPHABETIC	A	Default Paragraph Font
+restart	HostE	NOTEREF EnA \h	v	Default Paragraph Font
+restart	HostE	NOTEREF EnA \f \h	v	
+restart	HostE	NOTEREF EnA \p \f	v above	
+restart	HostE	NOTEREF EnA \* roman	Error! Number cannot be represented in specified format.	Default Paragraph Font
+restart	HostE	NOTEREF EnA \* Upper	V	Default Paragraph Font
+restart	HostE	NOTEREF EnA \* CardText	Error! Number cannot be represented in specified format.	Default Paragraph Font
+restart	HostE	NOTEREF EnA \* ALPHABETIC	Error! Number cannot be represented in specified format.	Default Paragraph Font
+restart	HostE	NOTEREF FnStar \h	*	Default Paragraph Font
+restart	HostE	NOTEREF FnStar \f \h	*	
+restart	HostE	NOTEREF FnStar \p \f	* above	
+restart	HostE	NOTEREF FnStar \* roman	*	Default Paragraph Font
+restart	HostE	NOTEREF FnStar \* Upper	*	Default Paragraph Font
+restart	HostE	NOTEREF FnStar \* CardText	*	Default Paragraph Font
+restart	HostE	NOTEREF FnStar \* ALPHABETIC	*	Default Paragraph Font
+restart	Note	SECTION	2	Default Paragraph Font
+restart	Note	SECTION \* roman	ii	Default Paragraph Font
+restart	Note	SECTION \* CardText	two	Default Paragraph Font
+restart	Note	NOTEREF FnA	1	Default Paragraph Font
+restart	Note	NOTEREF FnA \f	1	
+restart	Note	NOTEREF FnA \p	1	Default Paragraph Font
+restart	Note	NOTEREF FnB	2	Default Paragraph Font
+restart	Note	NOTEREF FnB \f	2	
+restart	Note	NOTEREF FnB \p	2	Default Paragraph Font
+restart	Note	NOTEREF EnA	v	Default Paragraph Font
+restart	Note	NOTEREF EnA \f	v	
+restart	Note	NOTEREF EnA \p	v	Default Paragraph Font
+restart	Note	NOTEREF FnC	1	Default Paragraph Font
+restart	Note	NOTEREF FnC \f	1	
+restart	Note	NOTEREF FnC \p	1	Default Paragraph Font
+restart	Note	NOTEREF EnB	vi	Default Paragraph Font
+restart	Note	NOTEREF EnB \f	vi	
+restart	Note	NOTEREF EnB \p	vi	Default Paragraph Font
+restart	Note	NOTEREF NoNote	Error! Bookmark not defined.	Default Paragraph Font
+restart	Note	NOTEREF NoNote \f	Error! Bookmark not defined.	Default Paragraph Font
+restart	Note	NOTEREF NoNote \p	Error! Bookmark not defined.	Default Paragraph Font
+restart	Note	NOTEREF FnStar	*	Default Paragraph Font
+restart	Note	NOTEREF FnStar \f	*	
+restart	Note	NOTEREF FnStar \p	*	Default Paragraph Font
+restart	Note	NOTEREF FnD	1	Default Paragraph Font
+restart	Note	NOTEREF FnD \f	1	
+restart	Note	NOTEREF FnD \p	1	Default Paragraph Font
+restart	Note	NOTEREF Two	*	Default Paragraph Font
+restart	Note	NOTEREF Two \f	*	
+restart	Note	NOTEREF Two \p	*	Default Paragraph Font
+restart	Note	NOTEREF Missing	Error! Bookmark not defined.	Default Paragraph Font
+restart	Note	NOTEREF Missing \f	Error! Bookmark not defined.	Default Paragraph Font
+restart	Note	NOTEREF Missing \p	Error! Bookmark not defined.	Default Paragraph Font
+restart	Note	NOTEREF FnA \h	1	Default Paragraph Font
+restart	Note	NOTEREF FnA \f \h	1	
+restart	Note	NOTEREF FnA \p \f	1	
+restart	Note	NOTEREF FnA \* roman	i	Default Paragraph Font
+restart	Note	NOTEREF FnA \* Upper	1	Default Paragraph Font
+restart	Note	NOTEREF FnA \* CardText	one	Default Paragraph Font
+restart	Note	NOTEREF FnA \* ALPHABETIC	A	Default Paragraph Font
+restart	Note	NOTEREF EnA \h	v	Default Paragraph Font
+restart	Note	NOTEREF EnA \f \h	v	
+restart	Note	NOTEREF EnA \p \f	v	
+restart	Note	NOTEREF EnA \* roman	Error! Number cannot be represented in specified format.	Default Paragraph Font
+restart	Note	NOTEREF EnA \* Upper	V	Default Paragraph Font
+restart	Note	NOTEREF EnA \* CardText	Error! Number cannot be represented in specified format.	Default Paragraph Font
+restart	Note	NOTEREF EnA \* ALPHABETIC	Error! Number cannot be represented in specified format.	Default Paragraph Font
+restart	Note	NOTEREF FnStar \h	*	Default Paragraph Font
+restart	Note	NOTEREF FnStar \f \h	*	
+restart	Note	NOTEREF FnStar \p \f	*	
+restart	Note	NOTEREF FnStar \* roman	*	Default Paragraph Font
+restart	Note	NOTEREF FnStar \* Upper	*	Default Paragraph Font
+restart	Note	NOTEREF FnStar \* CardText	*	Default Paragraph Font
+restart	Note	NOTEREF FnStar \* ALPHABETIC	*	Default Paragraph Font
+page	HostA	SECTION	1	Default Paragraph Font
+page	HostA	SECTION \* roman	i	Default Paragraph Font
+page	HostA	SECTION \* CardText	one	Default Paragraph Font
+page	HostA	NOTEREF FnA	1	Default Paragraph Font
+page	HostA	NOTEREF FnA \f	1	
+page	HostA	NOTEREF FnA \p	1 below	Default Paragraph Font
+page	HostA	NOTEREF FnB	2	Default Paragraph Font
+page	HostA	NOTEREF FnB \f	2	
+page	HostA	NOTEREF FnB \p	2 below	Default Paragraph Font
+page	HostA	NOTEREF EnA	i	Default Paragraph Font
+page	HostA	NOTEREF EnA \f	i	
+page	HostA	NOTEREF EnA \p	i below	Default Paragraph Font
+page	HostA	NOTEREF FnC	1	Default Paragraph Font
+page	HostA	NOTEREF FnC \f	1	
+page	HostA	NOTEREF FnC \p	1 below	Default Paragraph Font
+page	HostA	NOTEREF EnB	ii	Default Paragraph Font
+page	HostA	NOTEREF EnB \f	ii	
+page	HostA	NOTEREF EnB \p	ii below	Default Paragraph Font
+page	HostA	NOTEREF NoNote	Error! Bookmark not defined.	Default Paragraph Font
+page	HostA	NOTEREF NoNote \f	Error! Bookmark not defined.	Default Paragraph Font
+page	HostA	NOTEREF NoNote \p	Error! Bookmark not defined.	Default Paragraph Font
+page	HostA	NOTEREF FnStar	*	Default Paragraph Font
+page	HostA	NOTEREF FnStar \f	*	
+page	HostA	NOTEREF FnStar \p	* below	Default Paragraph Font
+page	HostA	NOTEREF FnD	2	Default Paragraph Font
+page	HostA	NOTEREF FnD \f	2	
+page	HostA	NOTEREF FnD \p	2 below	Default Paragraph Font
+page	HostA	NOTEREF Two	*	Default Paragraph Font
+page	HostA	NOTEREF Two \f	*	
+page	HostA	NOTEREF Two \p	* below	Default Paragraph Font
+page	HostA	NOTEREF Missing	Error! Bookmark not defined.	Default Paragraph Font
+page	HostA	NOTEREF Missing \f	Error! Bookmark not defined.	Default Paragraph Font
+page	HostA	NOTEREF Missing \p	Error! Bookmark not defined.	Default Paragraph Font
+page	HostA	NOTEREF FnA \h	1	Default Paragraph Font
+page	HostA	NOTEREF FnA \f \h	1	
+page	HostA	NOTEREF FnA \p \f	1 below	
+page	HostA	NOTEREF FnA \* roman	i	Default Paragraph Font
+page	HostA	NOTEREF FnA \* Upper	1	Default Paragraph Font
+page	HostA	NOTEREF FnA \* CardText	one	Default Paragraph Font
+page	HostA	NOTEREF FnA \* ALPHABETIC	A	Default Paragraph Font
+page	HostA	NOTEREF EnA \h	i	Default Paragraph Font
+page	HostA	NOTEREF EnA \f \h	i	
+page	HostA	NOTEREF EnA \p \f	i below	
+page	HostA	NOTEREF EnA \* roman	Error! Number cannot be represented in specified format.	Default Paragraph Font
+page	HostA	NOTEREF EnA \* Upper	I	Default Paragraph Font
+page	HostA	NOTEREF EnA \* CardText	Error! Number cannot be represented in specified format.	Default Paragraph Font
+page	HostA	NOTEREF EnA \* ALPHABETIC	Error! Number cannot be represented in specified format.	Default Paragraph Font
+page	HostA	NOTEREF FnStar \h	*	Default Paragraph Font
+page	HostA	NOTEREF FnStar \f \h	*	
+page	HostA	NOTEREF FnStar \p \f	* below	
+page	HostA	NOTEREF FnStar \* roman	*	Default Paragraph Font
+page	HostA	NOTEREF FnStar \* Upper	*	Default Paragraph Font
+page	HostA	NOTEREF FnStar \* CardText	*	Default Paragraph Font
+page	HostA	NOTEREF FnStar \* ALPHABETIC	*	Default Paragraph Font
+page	HostE	SECTION	3	Default Paragraph Font
+page	HostE	SECTION \* roman	iii	Default Paragraph Font
+page	HostE	SECTION \* CardText	three	Default Paragraph Font
+page	HostE	NOTEREF FnA	1	Default Paragraph Font
+page	HostE	NOTEREF FnA \f	1	
+page	HostE	NOTEREF FnA \p	1 above	Default Paragraph Font
+page	HostE	NOTEREF FnB	2	Default Paragraph Font
+page	HostE	NOTEREF FnB \f	2	
+page	HostE	NOTEREF FnB \p	2 above	Default Paragraph Font
+page	HostE	NOTEREF EnA	i	Default Paragraph Font
+page	HostE	NOTEREF EnA \f	i	
+page	HostE	NOTEREF EnA \p	i above	Default Paragraph Font
+page	HostE	NOTEREF FnC	1	Default Paragraph Font
+page	HostE	NOTEREF FnC \f	1	
+page	HostE	NOTEREF FnC \p	1 above	Default Paragraph Font
+page	HostE	NOTEREF EnB	ii	Default Paragraph Font
+page	HostE	NOTEREF EnB \f	ii	
+page	HostE	NOTEREF EnB \p	ii above	Default Paragraph Font
+page	HostE	NOTEREF NoNote	Error! Bookmark not defined.	Default Paragraph Font
+page	HostE	NOTEREF NoNote \f	Error! Bookmark not defined.	Default Paragraph Font
+page	HostE	NOTEREF NoNote \p	Error! Bookmark not defined.	Default Paragraph Font
+page	HostE	NOTEREF FnStar	*	Default Paragraph Font
+page	HostE	NOTEREF FnStar \f	*	
+page	HostE	NOTEREF FnStar \p	* above	Default Paragraph Font
+page	HostE	NOTEREF FnD	2	Default Paragraph Font
+page	HostE	NOTEREF FnD \f	2	
+page	HostE	NOTEREF FnD \p	2 above	Default Paragraph Font
+page	HostE	NOTEREF Two	*	Default Paragraph Font
+page	HostE	NOTEREF Two \f	*	
+page	HostE	NOTEREF Two \p	* above	Default Paragraph Font
+page	HostE	NOTEREF Missing	Error! Bookmark not defined.	Default Paragraph Font
+page	HostE	NOTEREF Missing \f	Error! Bookmark not defined.	Default Paragraph Font
+page	HostE	NOTEREF Missing \p	Error! Bookmark not defined.	Default Paragraph Font
+page	HostE	NOTEREF FnA \h	1	Default Paragraph Font
+page	HostE	NOTEREF FnA \f \h	1	
+page	HostE	NOTEREF FnA \p \f	1 above	
+page	HostE	NOTEREF FnA \* roman	i	Default Paragraph Font
+page	HostE	NOTEREF FnA \* Upper	1	Default Paragraph Font
+page	HostE	NOTEREF FnA \* CardText	one	Default Paragraph Font
+page	HostE	NOTEREF FnA \* ALPHABETIC	A	Default Paragraph Font
+page	HostE	NOTEREF EnA \h	i	Default Paragraph Font
+page	HostE	NOTEREF EnA \f \h	i	
+page	HostE	NOTEREF EnA \p \f	i above	
+page	HostE	NOTEREF EnA \* roman	Error! Number cannot be represented in specified format.	Default Paragraph Font
+page	HostE	NOTEREF EnA \* Upper	I	Default Paragraph Font
+page	HostE	NOTEREF EnA \* CardText	Error! Number cannot be represented in specified format.	Default Paragraph Font
+page	HostE	NOTEREF EnA \* ALPHABETIC	Error! Number cannot be represented in specified format.	Default Paragraph Font
+page	HostE	NOTEREF FnStar \h	*	Default Paragraph Font
+page	HostE	NOTEREF FnStar \f \h	*	
+page	HostE	NOTEREF FnStar \p \f	* above	
+page	HostE	NOTEREF FnStar \* roman	*	Default Paragraph Font
+page	HostE	NOTEREF FnStar \* Upper	*	Default Paragraph Font
+page	HostE	NOTEREF FnStar \* CardText	*	Default Paragraph Font
+page	HostE	NOTEREF FnStar \* ALPHABETIC	*	Default Paragraph Font
+page	Note	SECTION	2	Default Paragraph Font
+page	Note	SECTION \* roman	ii	Default Paragraph Font
+page	Note	SECTION \* CardText	two	Default Paragraph Font
+page	Note	NOTEREF FnA	1	Default Paragraph Font
+page	Note	NOTEREF FnA \f	1	
+page	Note	NOTEREF FnA \p	1	Default Paragraph Font
+page	Note	NOTEREF FnB	2	Default Paragraph Font
+page	Note	NOTEREF FnB \f	2	
+page	Note	NOTEREF FnB \p	2	Default Paragraph Font
+page	Note	NOTEREF EnA	i	Default Paragraph Font
+page	Note	NOTEREF EnA \f	i	
+page	Note	NOTEREF EnA \p	i	Default Paragraph Font
+page	Note	NOTEREF FnC	1	Default Paragraph Font
+page	Note	NOTEREF FnC \f	1	
+page	Note	NOTEREF FnC \p	1	Default Paragraph Font
+page	Note	NOTEREF EnB	ii	Default Paragraph Font
+page	Note	NOTEREF EnB \f	ii	
+page	Note	NOTEREF EnB \p	ii	Default Paragraph Font
+page	Note	NOTEREF NoNote	Error! Bookmark not defined.	Default Paragraph Font
+page	Note	NOTEREF NoNote \f	Error! Bookmark not defined.	Default Paragraph Font
+page	Note	NOTEREF NoNote \p	Error! Bookmark not defined.	Default Paragraph Font
+page	Note	NOTEREF FnStar	*	Default Paragraph Font
+page	Note	NOTEREF FnStar \f	*	
+page	Note	NOTEREF FnStar \p	*	Default Paragraph Font
+page	Note	NOTEREF FnD	2	Default Paragraph Font
+page	Note	NOTEREF FnD \f	2	
+page	Note	NOTEREF FnD \p	2	Default Paragraph Font
+page	Note	NOTEREF Two	*	Default Paragraph Font
+page	Note	NOTEREF Two \f	*	
+page	Note	NOTEREF Two \p	*	Default Paragraph Font
+page	Note	NOTEREF Missing	Error! Bookmark not defined.	Default Paragraph Font
+page	Note	NOTEREF Missing \f	Error! Bookmark not defined.	Default Paragraph Font
+page	Note	NOTEREF Missing \p	Error! Bookmark not defined.	Default Paragraph Font
+page	Note	NOTEREF FnA \h	1	Default Paragraph Font
+page	Note	NOTEREF FnA \f \h	1	
+page	Note	NOTEREF FnA \p \f	1	
+page	Note	NOTEREF FnA \* roman	i	Default Paragraph Font
+page	Note	NOTEREF FnA \* Upper	1	Default Paragraph Font
+page	Note	NOTEREF FnA \* CardText	one	Default Paragraph Font
+page	Note	NOTEREF FnA \* ALPHABETIC	A	Default Paragraph Font
+page	Note	NOTEREF EnA \h	i	Default Paragraph Font
+page	Note	NOTEREF EnA \f \h	i	
+page	Note	NOTEREF EnA \p \f	i	
+page	Note	NOTEREF EnA \* roman	Error! Number cannot be represented in specified format.	Default Paragraph Font
+page	Note	NOTEREF EnA \* Upper	I	Default Paragraph Font
+page	Note	NOTEREF EnA \* CardText	Error! Number cannot be represented in specified format.	Default Paragraph Font
+page	Note	NOTEREF EnA \* ALPHABETIC	Error! Number cannot be represented in specified format.	Default Paragraph Font
+page	Note	NOTEREF FnStar \h	*	Default Paragraph Font
+page	Note	NOTEREF FnStar \f \h	*	
+page	Note	NOTEREF FnStar \p \f	*	
+page	Note	NOTEREF FnStar \* roman	*	Default Paragraph Font
+page	Note	NOTEREF FnStar \* Upper	*	Default Paragraph Font
+page	Note	NOTEREF FnStar \* CardText	*	Default Paragraph Font
+page	Note	NOTEREF FnStar \* ALPHABETIC	*	Default Paragraph Font

@@ -124,7 +124,7 @@ public partial class FieldWrapper
     /// <summary>
     /// Works out the result of the field again, as <c>Field.Update</c> in Word, and returns whether it did. Fields that do not depend on how
     /// the pages are laid out are worked out: the date and time, document properties (author, title, DOCPROPERTY and so on), file name, user
-    /// name, number of words and characters, SEQ, REF, STYLEREF (in the main text), IF, QUOTE and formulas (<c>=</c>, in a table or not). The switches for the format of the result (<c>\@</c> for dates and
+    /// name, number of words and characters, SEQ, REF, STYLEREF (in the main text), NOTEREF, SECTION, IF, QUOTE and formulas (<c>=</c>, in a table or not). The switches for the format of the result (<c>\@</c> for dates and
     /// <c>\*</c> for case and numbers) are applied. A locked field, and fields such as PAGE, NUMPAGES, PAGEREF, TOC and MERGEFIELD, are left as
     /// they are (the latter are marked for Word to update when the document is opened) and report false.
     /// </summary>
@@ -135,13 +135,17 @@ public partial class FieldWrapper
             return false;
         }
 
-        string result = FieldUpdater.Compute(this, CodeText, out bool ok);
+        string result = FieldUpdater.Compute(this, CodeText, out bool ok, out FieldUpdater.Mark mark);
         if (result == null)
         {
             return false;
         }
 
         ResultText = result;
+        if (mark != null)
+        {
+            SetResultMark(mark.StyleId, mark.Length);
+        }
         if (_simpleField != null)
         {
             _simpleField.Dirty = null;
@@ -151,6 +155,38 @@ public partial class FieldWrapper
             _begin.Dirty = null;
         }
         return ok;
+    }
+
+    //Gives the first characters of the result (all of it, or the number before " above") the character style of a note's mark, as NOTEREF \f
+    //does in Word; the rest of the result is left without it.
+    private void SetResultMark(string styleId, int length)
+    {
+        Run run = _simpleField != null ? _simpleField.Elements<Run>().FirstOrDefault() : Parse().ResultRuns.FirstOrDefault();
+        Text text = run?.GetFirstChild<Text>();
+        if (text == null || length <= 0)
+        {
+            return;
+        }
+        MainDocumentPart main = StyleHelper.GetMainDocumentPart(run);
+        if (main != null)
+        {
+            BuiltInStyles.GetOrCreate(main, styleId);
+        }
+        if (length < text.Text.Length)
+        {
+            Run rest = (Run)run.CloneNode(true);
+            rest.RunProperties?.RemoveRunProperty("rStyle");
+            if (rest.RunProperties != null && !rest.RunProperties.HasChildren)
+            {
+                rest.RunProperties.Remove();
+            }
+            rest.GetFirstChild<Text>().Remove();
+            rest.AppendChild(OpenXmlExtensions.NewText(text.Text.Substring(length)));
+            run.InsertAfterSelf(rest);
+            text.Remove();
+            run.AppendChild(OpenXmlExtensions.NewText(text.Text.Substring(0, length)));
+        }
+        run.GetOrAddRunProperties().SetRunProperty(new RunStyle() { Val = styleId });
     }
 
     /// <summary>
@@ -295,22 +331,48 @@ internal static class FieldUpdater
     /// Returns the new result of the field, or null when it cannot be worked out. <paramref name="ok"/> is false when a result is returned
     /// that says the field is in error, such as a reference to a bookmark that is not there.
     /// </summary>
-    public static string Compute(FieldWrapper field, string code, out bool ok)
+    public static string Compute(FieldWrapper field, string code, out bool ok, out Mark mark)
     {
         ok = true;
+        mark = null;
         Instruction instruction = Parse(code);
         MainDocumentPart main = StyleHelper.GetMainDocumentPart(field.Key);
         WordprocessingDocument document = main?.OpenXmlPackage as WordprocessingDocument;
-        string text = ComputeText(field, instruction, main, document, ref ok);
+        Extra extra = new Extra();
+        string text = ComputeText(field, instruction, main, document, extra, ref ok);
         if (text == null)
         {
             return null;
         }
         //An error is shown as it is, without the format switches, as in Word.
-        return ok ? ApplyFormat(text, instruction) : text;
+        if (!ok)
+        {
+            return text;
+        }
+        bool numberFormat = instruction.Switches.Any(s => s.Key == "*" && FieldNumberFormats.IsNumberFormat(s.Value));
+        if (extra.Mark != null && !numberFormat)
+        {
+            mark = extra.Mark;
+        }
+        return ApplyFormat(text, instruction, extra.Number);
     }
 
-    private static string ComputeText(FieldWrapper field, Instruction instruction, MainDocumentPart main, WordprocessingDocument document, ref bool ok)
+    /// <summary>The character style that the first characters of a result are given (NOTEREF \f).</summary>
+    internal sealed class Mark
+    {
+        public string StyleId;
+        public int Length;
+    }
+
+    //What a field gives besides its text: the number that the number formats of \* write (where it is not the text the result starts with),
+    //and the style of its first characters.
+    private sealed class Extra
+    {
+        public decimal? Number;
+        public Mark Mark;
+    }
+
+    private static string ComputeText(FieldWrapper field, Instruction instruction, MainDocumentPart main, WordprocessingDocument document, Extra extra, ref bool ok)
     {
         CultureInfo culture = CultureInfo.CurrentCulture;
         DocumentPropertiesWrapper properties = document == null ? null : new DocumentPropertiesWrapper(document);
@@ -398,6 +460,10 @@ internal static class FieldUpdater
                 return Reference(field, instruction, ref ok);
             case "STYLEREF":
                 return StyleReference(field, instruction, ref ok);
+            case "NOTEREF":
+                return main == null ? null : NoteReference(field, instruction, main, extra, ref ok);
+            case "SECTION":
+                return SectionNumber(field, main);
             case "IF":
                 return Condition(instruction);
             case "HYPERLINK":
@@ -473,6 +539,214 @@ internal static class FieldUpdater
     private static int CountCharacters(MainDocumentPart main)
     {
         return GetStoryText(main).Count(c => !char.IsWhiteSpace(c) && !char.IsControl(c));
+    }
+
+    #endregion
+
+    #region SECTION and NOTEREF
+
+    //The number (from 1) of the section the field is in, as Word's SECTION field shows it. In a footnote or an endnote it is the section of the
+    //note's mark. In a header, a footer or a comment it depends on the page, and is left for Word.
+    private static string SectionNumber(FieldWrapper field, MainDocumentPart main)
+    {
+        OpenXmlElement at = field.Key;
+        OpenXmlElement root = StoryMap.FindRoot(at);
+        if ((root is Footnote || root is Endnote) && main != null)
+        {
+            at = NoteOps.FindReference(main, root is Endnote, (FootnoteEndnoteType)root);
+            root = at == null ? null : StoryMap.FindRoot(at);
+        }
+        if (!(root is Body body))
+        {
+            return null;
+        }
+        return (SectionIndex(body, at) + 1).ToString(CultureInfo.InvariantCulture);
+    }
+
+    //The 0-based index of the section an element of the body is in: the number of paragraphs that end a section before the paragraph it is in.
+    private static int SectionIndex(Body body, OpenXmlElement element)
+    {
+        Paragraph own = element as Paragraph ?? element.Ancestors<Paragraph>().LastOrDefault();
+        int index = 0;
+        foreach (Paragraph paragraph in body.Descendants<Paragraph>())
+        {
+            if (ReferenceEquals(paragraph, own) || (own == null && !paragraph.IsBefore(element)))
+            {
+                break;
+            }
+            if (paragraph.ParagraphProperties?.SectionProperties != null)
+            {
+                index++;
+            }
+        }
+        return index;
+    }
+
+    //The properties of the sections of the body, in order: those of the paragraphs that end a section, then the body's own.
+    private static List<SectionProperties> SectionPropertiesOf(Body body)
+    {
+        List<SectionProperties> sections = body.Descendants<Paragraph>().Select(p => p.ParagraphProperties?.SectionProperties).Where(s => s != null).ToList();
+        SectionProperties last = body.GetFirstChild<SectionProperties>();
+        if (last != null)
+        {
+            sections.Add(last);
+        }
+        return sections;
+    }
+
+    //NOTEREF, as measured in Word: the mark of the first footnote or endnote in the bookmark, as it is shown in the text (its number in the
+    //number style of the notes, or its custom mark), with \p " above" or " below" (in the main text; in a note \p adds nothing), and \f gives
+    //it the style of a note's mark. The number formats of \* write the note's number, which Word takes to be negative for an endnote, and
+    //leave a custom mark as it is. A bookmark without a note gives an error. Left for Word: numbers that start again on each page, number
+    //styles other than Word's six, \# and \p together with \*.
+    private static string NoteReference(FieldWrapper field, Instruction instruction, MainDocumentPart main, Extra extra, ref bool ok)
+    {
+        const string NotDefined = "Error! Bookmark not defined.";
+        if (instruction.Arguments.Count == 0 || instruction.GetSwitch("#") != null)
+        {
+            return null;
+        }
+        bool position = instruction.GetSwitch("p") != null;
+        if (position && instruction.GetSwitch("*") != null)
+        {
+            return null;
+        }
+
+        string name = instruction.Arguments[0];
+        Body body = main.Document?.Body;
+        BookmarkStart bookmark = body?.Descendants<BookmarkStart>().FirstOrDefault(b => string.Equals(b.Name?.Value, name, StringComparison.OrdinalIgnoreCase));
+        FootnoteEndnoteReferenceType reference = bookmark == null ? null : FirstNoteIn(bookmark);
+        if (reference == null)
+        {
+            ok = false;
+            return NotDefined;
+        }
+
+        bool endnote = reference is EndnoteReference;
+        string text;
+        if (IsCustomMark(reference))
+        {
+            text = string.Concat(((Run)reference.Parent).Elements<Text>().Select(t => t.Text));
+        }
+        else
+        {
+            int? number = NoteNumber(body, reference, endnote, out NumberFormatValues format);
+            text = number == null ? null : FormatNoteNumber(number.Value, format);
+            if (text == null)
+            {
+                return null;
+            }
+            extra.Number = endnote ? -number.Value : number.Value;
+        }
+
+        if (instruction.GetSwitch("f") != null)
+        {
+            extra.Mark = new Mark() { StyleId = NoteOps.ReferenceStyle(endnote), Length = text.Length };
+        }
+        if (!position)
+        {
+            return text;
+        }
+        OpenXmlElement root = StoryMap.FindRoot(field.Key);
+        if (root is Footnote || root is Endnote)
+        {
+            return text;
+        }
+        if (!(root is Body))
+        {
+            return null;
+        }
+        return text + (reference.IsBefore(field.Key) ? " above" : " below");
+    }
+
+    //The first mark of a footnote or endnote between the start of a bookmark and its end.
+    private static FootnoteEndnoteReferenceType FirstNoteIn(BookmarkStart bookmark)
+    {
+        string id = bookmark.Id?.Value;
+        bool inside = false;
+        foreach (OpenXmlElement element in bookmark.GetRoot().Descendants())
+        {
+            if (ReferenceEquals(element, bookmark))
+            {
+                inside = true;
+            }
+            else if (inside && element is BookmarkEnd end && end.Id?.Value == id)
+            {
+                return null;
+            }
+            else if (inside && (element is FootnoteReference || element is EndnoteReference))
+            {
+                return (FootnoteEndnoteReferenceType)element;
+            }
+        }
+        return null;
+    }
+
+    private static bool IsCustomMark(FootnoteEndnoteReferenceType reference)
+    {
+        return reference.CustomMarkFollows != null && reference.CustomMarkFollows.HasValue && reference.CustomMarkFollows.Value;
+    }
+
+    //The number of a note as Word shows it: the notes of its kind before it without a custom mark, counted from the starting number, or from 1
+    //in its section when the numbering starts again in each section. Null when it starts again on each page.
+    private static int? NoteNumber(Body body, FootnoteEndnoteReferenceType reference, bool endnote, out NumberFormatValues format)
+    {
+        List<SectionProperties> sections = SectionPropertiesOf(body);
+        int section = SectionIndex(body, reference);
+        SectionProperties properties = section < sections.Count ? sections[section] : null;
+        OpenXmlElement own = endnote ? (OpenXmlElement)properties?.GetFirstChild<EndnoteProperties>() : properties?.GetFirstChild<FootnoteProperties>();
+        Settings settings = (body.GetRoot() as Document)?.MainDocumentPart?.DocumentSettingsPart?.Settings;
+        OpenXmlElement document = endnote ? (OpenXmlElement)settings?.GetFirstChild<EndnoteDocumentWideProperties>() : settings?.GetFirstChild<FootnoteDocumentWideProperties>();
+        T Find<T>() where T : OpenXmlElement => own?.GetFirstChild<T>() ?? document?.GetFirstChild<T>();
+
+        format = Find<NumberingFormat>()?.Val?.Value ?? (endnote ? NumberFormatValues.LowerRoman : NumberFormatValues.Decimal);
+        RestartNumberValues restart = Find<NumberingRestart>()?.Val?.Value ?? RestartNumberValues.Continuous;
+        if (restart == RestartNumberValues.EachPage)
+        {
+            return null;
+        }
+        int start = Find<NumberingStart>()?.Val?.Value ?? 1;
+
+        int count = 0;
+        IEnumerable<FootnoteEndnoteReferenceType> references = endnote
+            ? body.Descendants<EndnoteReference>().Cast<FootnoteEndnoteReferenceType>()
+            : body.Descendants<FootnoteReference>().Cast<FootnoteEndnoteReferenceType>();
+        foreach (FootnoteEndnoteReferenceType other in references)
+        {
+            if (!IsCustomMark(other) && (restart != RestartNumberValues.EachSection || SectionIndex(body, other) == section))
+            {
+                count++;
+            }
+            if (ReferenceEquals(other, reference))
+            {
+                break;
+            }
+        }
+        return restart == RestartNumberValues.EachSection ? count : start + count - 1;
+    }
+
+    //A note's number in one of the number styles Word offers for notes (Arabic, roman, letters and the symbols *, †, ‡, §, which are doubled
+    //after the first four and so on). Null for other styles.
+    private static string FormatNoteNumber(int number, NumberFormatValues format)
+    {
+        if (format == NumberFormatValues.Decimal)
+        {
+            return number.ToString(CultureInfo.InvariantCulture);
+        }
+        if (format == NumberFormatValues.UpperRoman || format == NumberFormatValues.LowerRoman)
+        {
+            return FieldNumberFormats.Format(number, format == NumberFormatValues.UpperRoman ? "ROMAN" : "roman");
+        }
+        if (format == NumberFormatValues.UpperLetter || format == NumberFormatValues.LowerLetter)
+        {
+            return FieldNumberFormats.Format(number, format == NumberFormatValues.UpperLetter ? "ALPHABETIC" : "alphabetic");
+        }
+        if (format == NumberFormatValues.Chicago && number > 0)
+        {
+            const string Symbols = "*†‡§";
+            return new string(Symbols[(number - 1) % Symbols.Length], (number - 1) / Symbols.Length + 1);
+        }
+        return null;
     }
 
     #endregion
@@ -803,7 +1077,7 @@ internal static class FieldUpdater
     //before it did. A result that does not start with a number is left as it is by a number format. Gives null (the field is left as it is)
     //for what is not worked out here: a number format before the \# picture switch, which Word reports as an error, or a number Word reads in
     //its own way.
-    private static string ApplyFormat(string text, Instruction instruction)
+    private static string ApplyFormat(string text, Instruction instruction, decimal? given)
     {
         string original = text;
         bool? parsed = null;
@@ -825,6 +1099,11 @@ internal static class FieldUpdater
                 if (instruction.Switches.Any(s => s.Key == "#") && !picture)
                 {
                     return null;
+                }
+                if (parsed == null && given.HasValue)
+                {
+                    parsed = true;
+                    number = given.Value;
                 }
                 if (parsed == null)
                 {
