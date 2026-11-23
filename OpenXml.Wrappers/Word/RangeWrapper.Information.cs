@@ -229,7 +229,7 @@ public partial class RangeWrapper
         get
         {
             OpenXmlElement story = StoryMap.FindRoot(AnchorElement);
-            if (!(story is Body body) || AnchorElement.Ancestors<TextBoxContent>().Any())
+            if (!(story is Body body))
             {
                 OpenXmlElement at = SectionAnchor(AnchorElement, 0);
                 Body main = at == null ? null : StoryMap.FindRoot(at) as Body;
@@ -260,9 +260,15 @@ public partial class RangeWrapper
         {
             return element;
         }
+        if (story is TextBoxContent && depth <= 3)
+        {
+            //The text of a text box takes the place of the run it is anchored in.
+            OpenXmlElement run = story.Ancestors<Run>().FirstOrDefault();
+            return run == null ? null : SectionAnchor(run, depth + 1);
+        }
         MainDocumentPart main = StyleHelper.GetMainDocumentPart(element);
         Body body = main?.Document?.Body;
-        if (body == null || depth > 2)
+        if (body == null || depth > 3)
         {
             return null;
         }

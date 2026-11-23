@@ -551,6 +551,12 @@ internal static class FieldUpdater
     {
         OpenXmlElement at = field.Key;
         OpenXmlElement root = StoryMap.FindRoot(at);
+        if (root is TextBoxContent)
+        {
+            //A text box has the section of where it is anchored.
+            at = root.Ancestors<Run>().FirstOrDefault();
+            root = at == null ? null : StoryMap.FindRoot(at);
+        }
         if ((root is Footnote || root is Endnote) && main != null)
         {
             at = NoteOps.FindReference(main, root is Endnote, (FootnoteEndnoteType)root);
