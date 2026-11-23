@@ -353,9 +353,66 @@ public partial class FieldWrapper : System.IEquatable<FieldWrapper>
         _simpleField.AppendChild(run);
     }
 
+    //Gives the run, now in a paragraph of other formatting, the look it had (as Word does when it joins a result's paragraphs): as direct
+    //formatting, what the new paragraph's style would change, and the plain value of what it would add.
+    private static void KeepLook(Run run, RunProperties look)
+    {
+        Paragraph paragraph = run.Ancestors<Paragraph>().FirstOrDefault();
+        if (paragraph == null)
+        {
+            return;
+        }
+        RunProperties now = new FormattingResolver(paragraph).ResolveParagraphStyleRun(paragraph);
+        RunProperties direct = run.GetOrAddRunProperties();
+        bool HasDirect(OpenXmlElement property) => direct.ChildElements.Any(e => e.GetType() == property.GetType());
+
+        foreach (OpenXmlElement had in look.ChildElements.Where(e => !(e is NoProof) && !(e is RunStyle)))
+        {
+            OpenXmlElement given = now.ChildElements.FirstOrDefault(e => e.GetType() == had.GetType());
+            if ((given == null || given.OuterXml != had.OuterXml) && !HasDirect(had))
+            {
+                direct.SetRunProperty(had.CloneNode(true));
+            }
+        }
+        foreach (OpenXmlElement added in now.ChildElements.Where(e => !look.ChildElements.Any(l => l.GetType() == e.GetType())))
+        {
+            OpenXmlElement plain = PlainValue(added);
+            if (plain != null && !HasDirect(added))
+            {
+                direct.SetRunProperty(plain);
+            }
+        }
+        if (!direct.HasChildren)
+        {
+            direct.Remove();
+        }
+    }
+
+    //The value of a run property that gives the text nothing: 0 for spacing, kerning and position, off for a toggle, auto for colour.
+    private static OpenXmlElement PlainValue(OpenXmlElement property)
+    {
+        const string Main = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+        switch (property)
+        {
+            case Spacing _:
+                return new Spacing() { Val = 0 };
+            case Kern _:
+                return new Kern() { Val = 0U };
+            case Position _:
+                return new Position() { Val = "0" };
+            case Color _:
+                return new Color() { Val = "auto" };
+            case OnOffType _:
+                OpenXmlElement off = property.CloneNode(false);
+                off.SetAttribute(new OpenXmlAttribute("w", "val", Main, "0"));
+                return off;
+            default:
+                return null;
+        }
+    }
+
     //Takes away a result of several paragraphs, so that the field's end, and whatever follows it in its paragraph, come back to the paragraph of
-    //the separator, which keeps its formatting (and the section break of the end's paragraph, if it ended one), as deleting the result does in
-    //Word.
+    //the separator, which then has the formatting of the end's paragraph (its mark is the one left), as deleting the result does in Word.
     private void JoinResult(Parts parts)
     {
         Run separateRun = (Run)parts.Separate.Parent;
@@ -391,16 +448,18 @@ public partial class FieldWrapper : System.IEquatable<FieldWrapper>
             element.Remove();
         }
 
-        SectionProperties section = last.ParagraphProperties?.GetFirstChild<SectionProperties>();
         foreach (OpenXmlElement element in last.ChildElements.Where(e => !(e is ParagraphProperties)).ToList())
         {
             element.Remove();
             first.AppendChild(element);
         }
-        if (section != null)
+        //The paragraph mark that is left is the end's, so the joined paragraph has its formatting (measured in Word).
+        first.ParagraphProperties?.Remove();
+        ParagraphProperties properties = last.ParagraphProperties;
+        if (properties != null)
         {
-            section.Remove();
-            first.GetOrAddParagraphProperties().AppendChild(section);
+            properties.Remove();
+            first.PrependChild(properties);
         }
         SpanRegistry.ParagraphMerged(last, first);
         last.Remove();
@@ -418,7 +477,9 @@ public partial class FieldWrapper : System.IEquatable<FieldWrapper>
         if (!InOneParagraph(parts))
         {
             //A result of several paragraphs is first joined into one, as deleting it does in Word, keeping the formatting of its first run.
-            RunProperties first = WithoutProofing(parts.ResultRuns.FirstOrDefault(r => r.Elements<Text>().Any())?.RunProperties?.CloneNode(true) as RunProperties);
+            Run firstRun = parts.ResultRuns.FirstOrDefault(r => r.Elements<Text>().Any());
+            RunProperties first = WithoutProofing(firstRun?.RunProperties?.CloneNode(true) as RunProperties);
+            RunProperties look = firstRun == null ? null : new FormattingResolver(firstRun).ResolveRun(firstRun);
             JoinResult(parts);
             SetComplexResult(string.Empty);
             Run joined = Parse().ResultRuns.FirstOrDefault();
@@ -426,6 +487,10 @@ public partial class FieldWrapper : System.IEquatable<FieldWrapper>
             {
                 joined.RunProperties?.Remove();
                 joined.PrependChild(first);
+            }
+            if (look != null && joined != null)
+            {
+                KeepLook(joined, look);
             }
             SetComplexResult(text);
             return;

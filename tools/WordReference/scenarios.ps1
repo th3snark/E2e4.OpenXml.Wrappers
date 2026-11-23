@@ -3433,6 +3433,20 @@ function Set-ParagraphProperty($format, [int] $index, [bool] $on) {
         $field.Result.Text = 'Z'
     }
 
+    'field-result-paragraphs-joined-styles' = {
+        param($doc)
+        $doc.Content.InsertAfter('Before')
+        $doc.Content.InsertParagraphAfter()
+        $doc.Content.InsertAfter('After')
+        $field = $doc.Fields.Add($doc.Range(6, 6), -1, 'QUOTE "x"', $false)  # wdFieldEmpty
+        $field.Result.Text = "A`rB`rC`r"
+        $doc.Paragraphs.Item(1).Style = 'Heading 1'
+        $doc.Paragraphs.Item(2).Style = 'Heading 2'
+        $doc.Paragraphs.Item(3).Style = 'Heading 3'
+        $doc.Paragraphs.Item(4).Style = 'Title'
+        $field.Result.Text = 'Z'
+    }
+
     'field-result-paragraphs-mid-text' = {
         param($doc)
         $doc.Content.InsertAfter('Before')
