@@ -214,7 +214,10 @@ public class RangeWrapperSpanDocumentTest : IDisposable
                 Assert.Empty(range.Tables);
                 Assert.Single(range.Paragraphs);
             }
-            Assert.Single(document.Range(2, 9).Sections);
+            foreach (RangeWrapper range in new[] { document.Range(2, 9), footnote.Range, endnote.Range })
+            {
+                Assert.Single(range.Sections);
+            }
             Assert.Empty(footnote.Range.Footnotes);
             Assert.Empty(endnote.Range.Endnotes);
             AssertValid(document);

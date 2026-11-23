@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
+using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace OpenXml.Wrappers.Word;
@@ -35,6 +36,30 @@ public class SectionWrapperCollection : IEnumerable<SectionWrapper>
         _body = body;
         _first = first;
         _last = last;
+    }
+
+    //The 0-based index of the section an element of the body is in: the number of paragraphs that end a section before the paragraph it is in
+    //(the outermost one, for the text of a text box).
+    internal static int IndexOf(Body body, OpenXmlElement element)
+    {
+        Paragraph own = element as Paragraph ?? element.Ancestors<Paragraph>().LastOrDefault();
+        if (own != null && own.Ancestors<Paragraph>().Any())
+        {
+            own = own.Ancestors<Paragraph>().Last();
+        }
+        int index = 0;
+        foreach (Paragraph paragraph in body.Descendants<Paragraph>())
+        {
+            if (ReferenceEquals(paragraph, own) || (own == null && !paragraph.IsBefore(element)))
+            {
+                break;
+            }
+            if (paragraph.ParagraphProperties?.SectionProperties != null)
+            {
+                index++;
+            }
+        }
+        return index;
     }
 
     /// <summary>
