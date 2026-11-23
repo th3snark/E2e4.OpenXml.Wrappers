@@ -63,10 +63,12 @@ public partial class FieldWrapper
     /// <summary>
     /// The result of the field: the text stored in the document, which Word shows until the field is updated (<c>Field.Result</c> in Word).
     /// </summary>
-    /// <exception cref="NotSupportedException">Setting the text when the result is not within a single paragraph.</exception>
+    /// <remarks>Setting its text with paragraph marks (\r) makes a result of several paragraphs, as in Word.</remarks>
+    /// <exception cref="NotSupportedException">Setting the text of a result of several paragraphs that are not all directly in the story, such as one
+    /// with a table in it.</exception>
     public FieldPartWrapper Result
     {
-        get { return new FieldPartWrapper(() => ResultText, value => ResultText = value, () => GetPartRange(false)); }
+        get { return new FieldPartWrapper(() => ResultText, SetResultText, () => GetPartRange(false)); }
     }
 
     /// <summary>

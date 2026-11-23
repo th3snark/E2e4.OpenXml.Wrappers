@@ -3083,6 +3083,39 @@ public class MarkupConformanceTest
             },
             Body()),
 
+        new Scenario("field-result-paragraphs",
+            d =>
+            {
+                d.Content.InsertAfter("Before");
+                d.Content.InsertParagraphAfter();
+                d.Content.InsertAfter("After");
+                d.Paragraphs[0].Style = "Heading 1";
+                d.Fields.Add(d.Range(6, 6), FieldType.Empty, "QUOTE \"x\"", false).Result.Text = "A\rB\rC\r";
+            },
+            Body()),
+
+        new Scenario("field-result-paragraphs-joined",
+            d =>
+            {
+                d.Content.InsertAfter("Before");
+                d.Content.InsertParagraphAfter();
+                d.Content.InsertAfter("After");
+                FieldWrapper field = d.Fields.Add(d.Range(6, 6), FieldType.Empty, "QUOTE \"x\"", false);
+                field.Result.Text = "A\rB\rC";
+                field.Result.Text = "Z";
+            },
+            Body()),
+
+        new Scenario("field-result-paragraphs-mid-text",
+            d =>
+            {
+                d.Content.InsertAfter("Before");
+                d.Content.InsertParagraphAfter();
+                d.Content.InsertAfter("After");
+                d.Fields.Add(d.Range(3, 3), FieldType.Empty, "QUOTE \"x\"", false).Result.Text = "A\rB";
+            },
+            Body()),
+
         new Scenario("table-2x4-word9-behavior", d => d.Tables.Add(d.Range(0, 0), 2, 4, DefaultTableBehavior.Word9TableBehavior, AutoFitBehavior.Fixed), Body()),
 
         new Scenario("table-autofit-content", d => d.Tables.Add(d.Range(0, 0), 1, 2, DefaultTableBehavior.Word8TableBehavior, AutoFitBehavior.Content), Body()),
